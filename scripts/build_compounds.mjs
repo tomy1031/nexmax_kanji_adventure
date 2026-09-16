@@ -31,11 +31,24 @@ if (LEVEL.size === 0) {
 const OWNED = new Set(LEVEL.keys());
 const KANJI_ONLY = /^[一-龯]{2,3}$/;
 
-// EDICT tags that mark an entry we should not put in front of a learner or
-// that is not a plain noun-ish word.
+// EDICT tags that mark a sense we should not put in front of a learner.
 const REJECT_TAGS = /\((?:vulg|derog|sl|obs|obsc|arch|rare|X|sK|iK|ok|ik|oK)\)/;
 // Parts of speech worth keeping: nouns and noun-like words make weapon names.
 const KEEP_POS = /\((?:[^)]*\b(?:n|n-adv|n-t|adj-no|adj-na|vs)\b[^)]*)\)/;
+
+/**
+ * The first sense of an entry.
+ *
+ * EDICT packs every sense of a word into one line, numbered (1), (2), … A
+ * common word often carries an archaic or rare minor sense — 先生 has an
+ * archaic "one's elder" as sense 4 — and judging the whole line by those tags
+ * threw away the word entirely. Only the first sense is ever shown to the
+ * learner, so only the first sense is judged.
+ */
+const firstSense = (body) => {
+  const second = body.search(/\(2\)/);
+  return second === -1 ? body : body.slice(0, second);
+};
 
 const lines = readFileSync(src, 'utf8').split('\n');
 
@@ -50,8 +63,9 @@ for (const line of lines) {
   if (!m) continue;
   const [, headwords, readingField, body] = m;
 
-  if (REJECT_TAGS.test(body)) continue;
-  if (!KEEP_POS.test(body)) continue;
+  const sense = firstSense(body);
+  if (REJECT_TAGS.test(sense)) continue;
+  if (!KEEP_POS.test(sense)) continue;
 
   // (P) marks a high-frequency entry — these are the words worth rewarding.
   const priority = /\/\(P\)\//.test(line) || body.includes('(P)');
@@ -64,7 +78,7 @@ for (const line of lines) {
   if (!reading) continue;
 
   // First gloss only, trimmed of EDICT's bracketed metadata.
-  const gloss = body
+  const gloss = sense
     .split('/')
     .map((g) => g.replace(/\([^)]*\)/g, '').trim())
     .filter((g) => g && !/^[A-Z]{1,4}$/.test(g))[0];
