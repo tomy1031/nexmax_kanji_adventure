@@ -13,6 +13,7 @@ import BattleScene from '../battle/BattleScene';
 import EncounterScreen from './EncounterScreen';
 import StageProgress from './StageProgress';
 import { RubyText } from '../../components/ui/Ruby';
+import { kanjiNeededFor } from '../../data/unlocks';
 
 /**
  * One stage, start to finish:
@@ -82,10 +83,19 @@ export const StagePlayer = () => {
 
   const current = remaining[drillIndex];
 
+  // The fight opens after a handful of characters, not all of them. Ten reps
+  // each is the rule; needing every character first turned stage 1 into 90
+  // reps — about 23 minutes — before the learner saw what writing was for.
+  const needed = kanjiNeededFor(stage);
+  const doneThisRun = drillIndex + 1;
+
   const afterDrill = () => {
     if (drillIndex + 1 < remaining.length) setDrillIndex((i) => i + 1);
     else setPhase('collected');
   };
+
+  /** Offered once enough characters are in hand, never forced. */
+  const canFightNow = doneThisRun >= needed && drillIndex + 1 < remaining.length;
 
   // --- お話 ---------------------------------------------------------------
   if (phase === 'story') {
@@ -112,6 +122,19 @@ export const StagePlayer = () => {
       <div className="g-stage min-h-dvh">
         <StageProgress current="drill" detail={`${drillIndex + 1} / ${remaining.length}`} />
         <KanjiDrill key={current.id} kanji={current} onObtained={afterDrill} onExit={afterDrill} />
+        {canFightNow && (
+          <div className="mx-auto max-w-md px-4 pb-6">
+            <button
+              type="button"
+              className="g-btn g-btn-ghost w-full text-sm"
+              onClick={() => setPhase('collected')}
+            >
+              <RubyText showFurigana={showFurigana}>
+                {`もう たたかえます（のこりの 漢字(かんじ)は あとでも いい）`}
+              </RubyText>
+            </button>
+          </div>
+        )}
       </div>
     );
   }
@@ -143,6 +166,13 @@ export const StagePlayer = () => {
                 この 漢字(かんじ)を 2(ふた)つ あわせると 武器(ぶき)に なります。
               </RubyText>
             </p>
+            {drillIndex + 1 < remaining.length && (
+              <p className="mt-2 text-xs" style={{ color: 'var(--ink-3)' }}>
+                <RubyText showFurigana={showFurigana}>
+                  {`のこり ${remaining.length - (drillIndex + 1)} 字(じ)は、あとで 書(か)いても いいです。`}
+                </RubyText>
+              </p>
+            )}
           </motion.div>
 
           <div className="flex w-full flex-col gap-2">

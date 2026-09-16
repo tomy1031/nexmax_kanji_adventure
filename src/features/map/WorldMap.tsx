@@ -6,6 +6,7 @@ import { RubyText } from '../../components/ui/Ruby';
 import { assetPath } from '../../lib/assetPath';
 import { useGameStore } from '../../store/gameStore';
 import { isVersusConfigured } from '../../lib/supabaseClient';
+import { Feature, FEATURE_INTRO, isFeatureUnlocked } from '../../data/unlocks';
 
 /**
  * The map: three arcs, ten stages each, walked in order.
@@ -170,16 +171,24 @@ export const WorldMap = () => {
         className="fixed right-0 bottom-0 left-0 z-20 flex justify-around border-t px-2 py-2 pb-[max(8px,env(safe-area-inset-bottom))] backdrop-blur-md"
         style={{ background: 'var(--panel)', borderColor: 'var(--line)' }}
       >
-        {[
-          { to: '/forge', label: '合成(ごうせい)', icon: '⚒' },
-          { to: '/words', label: 'ことば', icon: '⌕' },
-          { to: '/collection', label: '図鑑(ずかん)', icon: '▤' },
-          { to: '/gacha', label: 'ガチャ', icon: '◆' },
-          // Versus only appears when a relay is configured; an entry that
-          // always dead-ends is worse than no entry.
-          ...(isVersusConfigured ? [{ to: '/versus', label: 'たいせん', icon: '⚔' }] : []),
-          { to: '/daily', label: '毎日(まいにち)', icon: '✓' },
-        ].map((item) => (
+        {/*
+          One system opens per stage. Showing all six from the start is the
+          same as showing none: a menu of unexplained things is a wall, not a
+          reward. See docs/design/06_チュートリアルの理解設計.md §4.
+        */}
+        {(
+          [
+            { f: Feature.FORGE, icon: '⚒' },
+            { f: Feature.WORDS, icon: '⌕' },
+            { f: Feature.COLLECTION, icon: '▤' },
+            { f: Feature.GACHA, icon: '◆' },
+            ...(isVersusConfigured ? [{ f: Feature.VERSUS, icon: '⚔' }] : []),
+            { f: Feature.DAILY, icon: '✓' },
+          ] as const
+        )
+          .filter(({ f }) => isFeatureUnlocked(f, cleared))
+          .map(({ f, icon }) => ({ to: FEATURE_INTRO[f].to, label: FEATURE_INTRO[f].label, icon }))
+          .map((item) => (
           <button
             key={item.to}
             type="button"

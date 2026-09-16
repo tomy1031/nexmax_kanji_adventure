@@ -12,6 +12,7 @@ import DailyScreen from './features/daily/DailyScreen';
 import SettingsScreen from './features/settings/SettingsScreen';
 import VersusScreen from './features/versus/VersusScreen';
 import WordBook from './features/words/WordBook';
+import TutorialStage from './features/tutorial/TutorialStage';
 
 /**
  * Routing is hash-based: the game ships to GitHub Pages, which has no
@@ -57,6 +58,7 @@ const App = () => {
         <Route path="/daily" element={<DailyScreen />} />
         <Route path="/versus" element={<VersusScreen />} />
         <Route path="/words" element={<WordBook />} />
+        <Route path="/tutorial" element={<TutorialStage />} />
         <Route path="/settings" element={<SettingsScreen />} />
         <Route path="*" element={<TitleScreen />} />
       </Routes>

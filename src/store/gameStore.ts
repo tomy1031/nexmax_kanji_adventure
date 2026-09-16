@@ -75,7 +75,7 @@ export interface GameState {
   streak: { count: number; lastDate: string };
   settings: { furigana: boolean; muted: boolean; reducedMotion: boolean };
   /** One-off explainers the player has already been shown. */
-  tutorials: { forge: boolean };
+  tutorials: { forge: boolean; intro: boolean };
   /** Versus record. */
   versus: VersusStats;
   /**
@@ -145,7 +145,7 @@ const initialState: GameState = {
   daily: freshDaily(),
   streak: { count: 0, lastDate: '' },
   settings: { furigana: true, muted: false, reducedMotion: false },
-  tutorials: { forge: false },
+  tutorials: { forge: false, intro: false },
   versus: DEFAULT_VERSUS_STATS,
   sumi: 0,
   foundWords: {},
