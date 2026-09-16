@@ -1,40 +1,94 @@
 /**
  * Walks the game the way a learner would and screenshots each step.
  *
- * Runs against a preview server (npm run preview). The writing canvas cannot
- * be driven by synthetic strokes, so the drill is satisfied by seeding the
- * save with owned kanji before the run — everything else is real clicks.
+ * Runs against a preview server. The writing canvas cannot be driven by
+ * synthetic strokes, so the drill is satisfied by seeding the save with owned
+ * kanji before the forge and battle steps — everything else is real clicks.
  *
  *   npm run preview &
  *   node scripts/playtest.mjs [baseURL] [outDir]
  */
 import { chromium } from 'playwright';
-import { mkdirSync } from 'node:fs';
+import { mkdirSync, readFileSync } from 'node:fs';
 
 const BASE = process.argv[2] ?? 'http://127.0.0.1:4173/nexmax_kanji_adventure/';
 const OUT = process.argv[3] ?? 'playtest';
 const CHROMIUM = process.env.E2E_CHROMIUM_PATH || undefined;
+const STEP_TIMEOUT = 8000;
 
 mkdirSync(OUT, { recursive: true });
 
-// The N5 characters the first stages teach, plus enough to make real words.
-const SEED_KANJI = [
-  'n5_one_hitotsu', 'n5_two_futatsu', 'n5_person_hito', 'n5_sun_hi', 'n5_big_ookii',
-  'n5_small_chiisai', 'n5_above_ue', 'n5_below_shita', 'n5_mountain_yama', 'n5_river_kawa',
-  'n5_tree_ki', 'n5_fire_hi', 'n5_water_mizu', 'n5_earth_tsuchi', 'n5_book_hon',
-];
+// Seed ids are read out of the generated data rather than typed here, so a
+// rename in the dataset cannot leave this script silently seeding nothing.
+const generated = readFileSync('src/data/kanji.generated.ts', 'utf8');
+const idFor = (char) => {
+  const m = generated.match(new RegExp(`\\{ id:"([^"]+)", char:"${char}"`));
+  if (!m) throw new Error(`no kanji id for ${char} — regenerate src/data/kanji.generated.ts`);
+  return m[1];
+};
+const SEED_CHARS = [...'一二人日大小上下山川木火水土本'];
+const SEED_KANJI = SEED_CHARS.map(idFor);
 
 const shot = async (page, name) => {
   await page.screenshot({ path: `${OUT}/${name}.png` });
   console.log(`  📸 ${name}`);
 };
 
+/** Click, but never hang: a miss is reported and the walk continues. */
+const tryClick = async (page, locator, label) => {
+  try {
+    await locator.click({ timeout: STEP_TIMEOUT });
+    return true;
+  } catch {
+    console.log(`  ⚠ could not click: ${label}`);
+    return false;
+  }
+};
+
+const seedSave = (page) =>
+  page.evaluate((ids) => {
+    const key = 'nexmax-kanji-adventure';
+    const raw = JSON.parse(localStorage.getItem(key) ?? '{"state":{},"version":1}');
+    const now = Date.now();
+    raw.state = raw.state ?? {};
+    raw.state.progress = raw.state.progress ?? {};
+    for (const id of ids) {
+      raw.state.progress[id] = {
+        reps: 10,
+        mistakes: 0,
+        streak: 3,
+        nextReview: now + 86400000,
+        intervalDays: 1,
+        obtainedAt: now,
+      };
+    }
+    raw.state.gems = 300;
+    localStorage.setItem(key, JSON.stringify(raw));
+  }, SEED_KANJI);
+
+/**
+ * Hash routes do not reload the page, so the zustand store keeps whatever it
+ * hydrated at first load. Any navigation that must pick up a seeded save has
+ * to go through a real reload.
+ */
+const hardGoto = async (page, hash) => {
+  await page.goto(`${BASE}${hash}`, { waitUntil: 'domcontentloaded' });
+  await page.reload({ waitUntil: 'networkidle' });
+  await page.waitForTimeout(400);
+};
+
 const run = async () => {
-  const browser = await chromium.launch({ executablePath: CHROMIUM });
+  const browser = await chromium.launch({
+    executablePath: CHROMIUM,
+    // Required in the container: no user namespace for the sandbox, and
+    // /dev/shm is too small for Chromium's default shared memory.
+    args: ['--no-sandbox', '--disable-dev-shm-usage'],
+  });
   const page = await browser.newPage({
     viewport: { width: 390, height: 844 }, // a real phone
     deviceScaleFactor: 2,
   });
+  page.setDefaultTimeout(STEP_TIMEOUT);
 
   const errors = [];
   page.on('pageerror', (e) => errors.push(`pageerror: ${e.message}`));
@@ -47,96 +101,82 @@ const run = async () => {
   await shot(page, '01-title');
 
   console.log('▶ map');
-  await page.getByRole('button', { name: /はじめる|つづきから/ }).click();
+  await tryClick(page, page.getByRole('button', { name: /はじめる|つづきから/ }), 'start');
   await page.waitForTimeout(600);
   await shot(page, '02-map');
 
   console.log('▶ story');
-  await page.getByRole('button', { name: /田.*んぼの 村/ }).click();
+  await tryClick(page, page.getByRole('button', { name: /田.*んぼの 村/ }), 'stage 1');
   await page.waitForTimeout(900);
   await shot(page, '03-story');
 
-  // Advance a few lines to reach a choice.
   for (let i = 0; i < 5; i++) {
-    await page.getByRole('button', { name: 'つぎへ' }).click({ timeout: 3000 }).catch(() => {});
+    await tryClick(page, page.getByRole('button', { name: 'つぎへ' }), 'advance');
     await page.waitForTimeout(250);
   }
   await shot(page, '04-story-choice');
 
   console.log('▶ drill');
-  await page.getByRole('button', { name: 'とばす' }).click();
-  await page.waitForTimeout(1200);
+  await tryClick(page, page.getByRole('button', { name: 'とばす' }), 'skip story');
+  await page.waitForTimeout(1500);
   await shot(page, '05-drill');
 
-  // Seed owned kanji so the forge and battle can be exercised without
-  // simulating handwriting.
   console.log('▶ seeding save');
-  await page.evaluate((ids) => {
-    const key = 'nexmax-kanji-adventure';
-    const raw = JSON.parse(localStorage.getItem(key) ?? '{"state":{},"version":1}');
-    const now = Date.now();
-    raw.state = raw.state ?? {};
-    raw.state.progress = raw.state.progress ?? {};
-    for (const id of ids) {
-      raw.state.progress[id] = {
-        reps: 10, mistakes: 0, streak: 3,
-        nextReview: now + 86400000, intervalDays: 1, obtainedAt: now,
-      };
-    }
-    raw.state.gems = 300;
-    localStorage.setItem(key, JSON.stringify(raw));
-  }, SEED_KANJI);
+  await seedSave(page);
 
   console.log('▶ forge');
-  await page.goto(`${BASE}#/forge`, { waitUntil: 'networkidle' });
-  await page.waitForTimeout(600);
-  await shot(page, '06-forge-empty');
+  await hardGoto(page, '#/forge');
+  await shot(page, '06-forge');
 
-  // 火 + 山 = 火山, a real word.
-  await page.getByRole('button', { name: '火', exact: true }).first().click();
+  // 火 + 山 = 火山, a real word: the reward path.
+  const grid = page.locator('.grid button');
+  await tryClick(page, grid.filter({ hasText: /^火$/ }).first(), '火');
   await page.waitForTimeout(200);
-  await page.getByRole('button', { name: '山', exact: true }).first().click();
-  await page.waitForTimeout(500);
+  await tryClick(page, grid.filter({ hasText: /^山$/ }).first(), '山');
+  await page.waitForTimeout(600);
   await shot(page, '07-forge-kazan');
 
-  await page.getByRole('button', { name: /^作.*る$/ }).click();
-  await page.waitForTimeout(700);
+  await tryClick(page, page.getByRole('button', { name: /^作.*る$/ }), 'craft');
+  await page.waitForTimeout(800);
   await shot(page, '08-forge-made');
-  await page.mouse.click(195, 100);
+  await page.mouse.click(195, 90);
   await page.waitForTimeout(400);
+
+  // 山 + 火 = not a word: the contrast that teaches the rule.
+  await hardGoto(page, '#/forge');
+  await tryClick(page, grid.filter({ hasText: /^山$/ }).first(), '山');
+  await page.waitForTimeout(200);
+  await tryClick(page, grid.filter({ hasText: /^火$/ }).first(), '火');
+  await page.waitForTimeout(600);
+  await shot(page, '09-forge-not-a-word');
 
   console.log('▶ collection');
-  await page.goto(`${BASE}#/collection`, { waitUntil: 'networkidle' });
-  await page.waitForTimeout(600);
-  await shot(page, '09-collection');
-  await page.getByRole('button', { name: /なかま/ }).click();
+  await hardGoto(page, '#/collection');
+  await shot(page, '10-collection');
+  await tryClick(page, page.getByRole('button', { name: /なかま/ }), 'individuals tab');
   await page.waitForTimeout(400);
-  await shot(page, '10-individuals');
+  await shot(page, '11-individuals');
 
   console.log('▶ gacha');
-  await page.goto(`${BASE}#/gacha`, { waitUntil: 'networkidle' });
-  await page.waitForTimeout(600);
-  await shot(page, '11-gacha');
-  await page.getByRole('button', { name: /ひく/ }).click();
-  await page.waitForTimeout(1400);
-  await shot(page, '12-gacha-result');
+  await hardGoto(page, '#/gacha');
+  await shot(page, '12-gacha');
+  await tryClick(page, page.getByRole('button', { name: /ひく/ }), 'pull');
+  await page.waitForTimeout(1600);
+  await shot(page, '13-gacha-result');
 
   console.log('▶ daily');
-  await page.goto(`${BASE}#/daily`, { waitUntil: 'networkidle' });
-  await page.waitForTimeout(600);
-  await shot(page, '13-daily');
+  await hardGoto(page, '#/daily');
+  await shot(page, '14-daily');
 
   console.log('▶ settings');
-  await page.goto(`${BASE}#/settings`, { waitUntil: 'networkidle' });
-  await page.waitForTimeout(600);
-  await shot(page, '14-settings');
+  await hardGoto(page, '#/settings');
+  await shot(page, '15-settings');
 
   console.log('▶ battle');
-  await page.goto(`${BASE}#/stage/mukashi-1`, { waitUntil: 'networkidle' });
-  await page.waitForTimeout(800);
-  await page.getByRole('button', { name: 'とばす' }).click().catch(() => {});
-  await page.waitForTimeout(1500);
-  await shot(page, '15-battle-or-drill');
+  await hardGoto(page, '#/stage/mukashi-1');
+  await tryClick(page, page.getByRole('button', { name: 'とばす' }), 'skip story');
+  await page.waitForTimeout(1800);
+  await shot(page, '16-battle');
 
   await browser.close();
 

@@ -90,8 +90,12 @@ export const ForgeScreen = () => {
                   key={i}
                   type="button"
                   onClick={() => k && toggle(k)}
-                  className="flex h-16 w-16 items-center justify-center rounded-2xl border-2 border-dashed text-3xl font-black transition-colors"
+                  className="flex h-16 w-16 items-center justify-center rounded-2xl border-2 text-3xl font-black transition-colors"
                   style={{
+                    // Dashed while the slot is waiting, solid once it is
+                    // filled — the shape alone says whether it still needs
+                    // something, without relying on colour.
+                    borderStyle: k ? 'solid' : 'dashed',
                     borderColor: k ? 'var(--accent)' : 'var(--line)',
                     background: k ? 'var(--panel-solid)' : 'transparent',
                     color: k ? 'var(--ink)' : 'var(--ink-3)',

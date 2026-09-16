@@ -33,14 +33,29 @@ export const NovelScene = ({ script, cast, onFinish }: NovelSceneProps) => {
   /**
    * Background and sprite carry over from earlier lines, so the current
    * picture is whatever the most recent line that set one asked for.
+   *
+   * One exception: when the speaker changes and the line does not name a
+   * sprite, the new speaker's default portrait is shown. Without this a line
+   * carries the *previous* character's sprite, so the name plate says one
+   * person and the picture shows another.
    */
   const { bg, sprite } = useMemo(() => {
     let b: string | undefined;
     let s: string | undefined;
+    let lastSpeaker: string | null | undefined;
+
     for (let i = 0; i <= index; i++) {
       const l = script.lines[i];
       if (l.bg) b = l.bg;
-      if (l.sprite) s = l.sprite === 'none' ? undefined : l.sprite;
+
+      if (l.sprite) {
+        s = l.sprite === 'none' ? undefined : l.sprite;
+      } else if (l.speaker && l.speaker !== lastSpeaker) {
+        s = `${l.speaker}:normal`;
+      }
+
+      // Narration (no speaker) leaves the standing character in place.
+      if (l.speaker !== undefined && l.speaker !== null) lastSpeaker = l.speaker;
     }
     return { bg: b, sprite: s };
   }, [script, index]);
@@ -110,9 +125,35 @@ export const NovelScene = ({ script, cast, onFinish }: NovelSceneProps) => {
             exit={{ opacity: 0 }}
             transition={{ duration: 0.5 }}
             className="absolute inset-0 h-full w-full object-cover"
+            style={{
+              /*
+                The picture-book spreads still have their narration painted
+                into the art, and a portrait crop of a 2.8:1 spread lands
+                right on it. A soft blur puts the background where a novel
+                scene wants it anyway — behind the character and the text —
+                and takes the baked-in captions below the threshold of
+                reading, so they cannot compete with the real dialogue.
+                Scaled up slightly so the blur does not bleed the edges in.
+                Drop this once the text-free backgrounds are generated
+                (docs/skills/画像生成プロンプト.md §1).
+              */
+              filter: 'blur(5px) saturate(1.05)',
+              transform: 'scale(1.06)',
+            }}
           />
         )}
       </AnimatePresence>
+
+      {/* Darkens the top so the status chips and any surviving baked-in text
+          sit back, and lifts contrast under the character. */}
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-0"
+        style={{
+          background:
+            'linear-gradient(180deg, rgba(8,18,36,0.55) 0%, rgba(8,18,36,0.22) 38%, rgba(8,18,36,0.10) 70%, rgba(8,18,36,0.28) 100%)',
+        }}
+      />
 
       {/* 立ち絵 ----------------------------------------------------------- */}
       <AnimatePresence>
