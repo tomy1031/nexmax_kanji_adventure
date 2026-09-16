@@ -26,7 +26,9 @@ const idFor = (char) => {
   if (!m) throw new Error(`no kanji id for ${char} — regenerate src/data/kanji.generated.ts`);
   return m[1];
 };
-const SEED_CHARS = [...'一二人日大小上下山川木火水土本'];
+// Stage 1's nine characters (so the battle is reachable without simulating
+// handwriting) plus a few more that make real compounds in the forge.
+const SEED_CHARS = [...'一二三人日大小上下山川木火水土本'];
 const SEED_KANJI = SEED_CHARS.map(idFor);
 
 const shot = async (page, name) => {

@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import type { StageDef } from '../../data/stages';
 import type { KanjiData } from '../../types/kanji';
-import KanjiWriterCanvas from '../../components/KanjiWriterCanvas';
+import KanjiWriterCanvas, { type KanjiWriterHandle } from '../../components/KanjiWriterCanvas';
 import { RubyText } from '../../components/ui/Ruby';
 import { useCanvasSize } from '../../hooks/useCanvasSize';
 import { useGameStore } from '../../store/gameStore';
@@ -83,8 +83,11 @@ export const BattleScene = ({ stage, kanjiPool, onFinish, onFlee }: BattleSceneP
   const [rewards, setRewards] = useState<{ gems: number; individual: string | null }>({ gems: 0, individual: null });
 
   const settledRef = useRef(false);
+  const writerRef = useRef<KanjiWriterHandle>(null);
 
   const target = kanjiPool[turn % kanjiPool.length];
+  // Kun'yomi reads more naturally as a prompt; fall back to on'yomi.
+  const reading = target?.kun[0]?.replace(/\(.*\)/, '') || target?.on[0] || '';
 
   const settle = useCallback(
     (kind: 'win' | 'lose', mistakes: number, hpLeft: number) => {
@@ -181,6 +184,9 @@ export const BattleScene = ({ stage, kanjiPool, onFinish, onFlee }: BattleSceneP
         alt=""
         aria-hidden
         className="absolute inset-0 h-full w-full object-cover opacity-35"
+        // Same treatment as the novel scene: the picture-book spreads carry
+        // their narration in the art, and a portrait crop lands on it.
+        style={{ filter: 'blur(6px)', transform: 'scale(1.06)' }}
       />
 
       <div className="relative z-10 mx-auto flex w-full max-w-md flex-1 flex-col px-4 pt-3 pb-4">
@@ -246,13 +252,38 @@ export const BattleScene = ({ stage, kanjiPool, onFinish, onFlee }: BattleSceneP
           </p>
         )}
 
-        {/* 書く ---------------------------------------------------------- */}
-        <p className="mb-1.5 text-center text-xs" style={{ color: 'var(--ink-2)' }}>
-          <RubyText showFurigana={showFurigana}>この 字(じ)を 書(か)いて こうげき</RubyText>
+        {/* 書く ------------------------------------------------------------
+            The character itself is deliberately NOT shown. The learner is
+            given its reading and meaning and has to recall the shape — that
+            is the whole point of the fight, and it is what makes the ten reps
+            in the drill worth something. 書きじゅん reveals it for anyone
+            who is stuck. */}
+        <p className="text-center text-xs" style={{ color: 'var(--ink-2)' }}>
+          <RubyText showFurigana={showFurigana}>この ことばを 書(か)いて こうげき</RubyText>
+        </p>
+        <p className="g-title mb-1.5 text-center text-lg leading-tight">
+          {reading && <span>{reading}</span>}
+          <span className="ml-2 text-sm font-normal" style={{ color: 'var(--ink-2)' }}>
+            {target.meanings.join(' / ')}
+          </span>
         </p>
         <div className="flex justify-center">
-          <KanjiWriterCanvas key={`${target.id}-${turn}`} char={target.char} size={size} quizMode onComplete={handleComplete} />
+          <KanjiWriterCanvas
+            ref={writerRef}
+            key={`${target.id}-${turn}`}
+            char={target.char}
+            size={size}
+            quizMode
+            onComplete={handleComplete}
+          />
         </div>
+        <button
+          type="button"
+          className="g-btn g-btn-ghost mx-auto mt-2 !min-h-[40px] !px-4 text-xs"
+          onClick={() => writerRef.current?.animateStroke()}
+        >
+          <RubyText showFurigana={showFurigana}>わからない（書(か)きじゅんを 見(み)る）</RubyText>
+        </button>
 
         <div className="mt-2 h-10 text-center" aria-live="polite">
           <AnimatePresence mode="wait">

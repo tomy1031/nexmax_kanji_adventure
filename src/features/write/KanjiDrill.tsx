@@ -24,6 +24,9 @@ interface KanjiDrillProps {
 
 type Verdict = { kind: 'perfect' | 'clean' | 'close'; mistakes: number } | null;
 
+/** Reps that show the model underneath before the learner is on their own. */
+const SAMPLE_REPS = 3;
+
 const VERDICT_TEXT: Record<'perfect' | 'clean' | 'close', { head: string; next: string }> = {
   perfect: { head: '正(せい)かい — かんぺき', next: 'この ちょうしで つづけよう。' },
   clean: { head: '正(せい)かい', next: 'つぎは まちがえずに 書(か)いてみよう。' },
@@ -39,7 +42,14 @@ export const KanjiDrill = ({ kanji, onObtained, onExit }: KanjiDrillProps) => {
   const showFurigana = useGameStore((s) => s.settings.furigana);
   const reps = useGameStore((s) => s.progress[kanji.id]?.reps ?? 0);
 
-  const [showSample, setShowSample] = useState(false);
+  // The quiz canvas is deliberately blank — the learner writes from memory.
+  // But on a character they have never seen, blank is not a challenge, it is
+  // a dead end. So the model is shown for the first few reps and then taken
+  // away: trace it, then recall it. The toggle stays available either way.
+  const [sampleOverride, setSampleOverride] = useState<boolean | null>(null);
+  const autoSample = reps < SAMPLE_REPS;
+  const showSample = sampleOverride ?? autoSample;
+
   const [strokeMistakes, setStrokeMistakes] = useState(0);
   const [verdict, setVerdict] = useState<Verdict>(null);
   const [obtained, setObtained] = useState(false);
@@ -163,11 +173,19 @@ export const KanjiDrill = ({ kanji, onObtained, onExit }: KanjiDrillProps) => {
           type="button"
           className="g-btn g-btn-ghost flex-1"
           aria-pressed={showSample}
-          onClick={() => setShowSample((v) => !v)}
+          onClick={() => setSampleOverride(!showSample)}
         >
           手本(てほん) {showSample ? 'けす' : 'だす'}
         </button>
       </div>
+
+      {sampleOverride === null && reps === SAMPLE_REPS && (
+        <p className="text-xs" style={{ color: 'var(--ink-2)' }}>
+          <RubyText showFurigana={showFurigana}>
+            ここからは 手本(てほん)なしで 書(か)いてみよう。
+          </RubyText>
+        </p>
+      )}
 
       {strokeMistakes > 0 && (
         <p className="text-xs" style={{ color: 'var(--ink-3)' }}>
