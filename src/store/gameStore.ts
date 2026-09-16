@@ -3,6 +3,7 @@ import { persist, createJSONStorage } from 'zustand/middleware';
 import type { KanjiProgress } from '../types/kanji';
 import { REPS_TO_OBTAIN } from '../types/kanji';
 import { calculateNextReview, qualityFromMistakes } from '../lib/srs';
+import { DEFAULT_VERSUS_STATS, type VersusStats } from '../features/versus/types';
 
 /**
  * The whole save file.
@@ -74,6 +75,8 @@ export interface GameState {
   settings: { furigana: boolean; muted: boolean; reducedMotion: boolean };
   /** One-off explainers the player has already been shown. */
   tutorials: { forge: boolean };
+  /** Versus record. */
+  versus: VersusStats;
 }
 
 export interface GameActions {
@@ -94,6 +97,7 @@ export interface GameActions {
   resetPity: () => void;
   setSetting: <K extends keyof GameState['settings']>(key: K, value: GameState['settings'][K]) => void;
   markTutorialSeen: (key: keyof GameState['tutorials']) => void;
+  recordVersusResult: (won: boolean, ratingDelta: number) => void;
   hasKanji: (kanjiId: string) => boolean;
   resetSave: () => void;
 }
@@ -119,6 +123,7 @@ const initialState: GameState = {
   streak: { count: 0, lastDate: '' },
   settings: { furigana: true, muted: false, reducedMotion: false },
   tutorials: { forge: false },
+  versus: DEFAULT_VERSUS_STATS,
 };
 
 export const useGameStore = create<GameState & GameActions>()(
@@ -263,6 +268,17 @@ export const useGameStore = create<GameState & GameActions>()(
 
       markTutorialSeen: (key) => set((s) => ({ tutorials: { ...s.tutorials, [key]: true } })),
 
+      recordVersusResult: (won, ratingDelta) =>
+        set((s) => ({
+          versus: {
+            // Rating never drops below the floor: a losing streak should not
+            // leave a learner staring at a number that only goes down.
+            rating: Math.max(800, s.versus.rating + ratingDelta),
+            wins: s.versus.wins + (won ? 1 : 0),
+            losses: s.versus.losses + (won ? 0 : 1),
+          },
+        })),
+
       hasKanji: (kanjiId) => (get().progress[kanjiId]?.reps ?? 0) >= REPS_TO_OBTAIN,
 
       resetSave: () => set({ ...initialState, daily: freshDaily() }),
@@ -281,6 +297,7 @@ export const useGameStore = create<GameState & GameActions>()(
           ...p,
           settings: { ...current.settings, ...(p.settings ?? {}) },
           tutorials: { ...current.tutorials, ...(p.tutorials ?? {}) },
+          versus: { ...current.versus, ...(p.versus ?? {}) },
           daily: { ...current.daily, ...(p.daily ?? {}) },
           streak: { ...current.streak, ...(p.streak ?? {}) },
         };

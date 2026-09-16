@@ -5,6 +5,7 @@ import { Arc, LEVEL_OF_ARC } from '../../types/kanji';
 import { RubyText } from '../../components/ui/Ruby';
 import { assetPath } from '../../lib/assetPath';
 import { useGameStore } from '../../store/gameStore';
+import { isVersusConfigured } from '../../lib/supabaseClient';
 
 /**
  * The map: three arcs, ten stages each, walked in order.
@@ -173,6 +174,9 @@ export const WorldMap = () => {
           { to: '/forge', label: '合成(ごうせい)', icon: '⚒' },
           { to: '/collection', label: '図鑑(ずかん)', icon: '▤' },
           { to: '/gacha', label: 'ガチャ', icon: '◆' },
+          // Versus only appears when a relay is configured; an entry that
+          // always dead-ends is worse than no entry.
+          ...(isVersusConfigured ? [{ to: '/versus', label: 'たいせん', icon: '⚔' }] : []),
           { to: '/daily', label: '毎日(まいにち)', icon: '✓' },
         ].map((item) => (
           <button
