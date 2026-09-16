@@ -172,6 +172,7 @@ export const WorldMap = () => {
       >
         {[
           { to: '/forge', label: '合成(ごうせい)', icon: '⚒' },
+          { to: '/words', label: 'ことば', icon: '⌕' },
           { to: '/collection', label: '図鑑(ずかん)', icon: '▤' },
           { to: '/gacha', label: 'ガチャ', icon: '◆' },
           // Versus only appears when a relay is configured; an entry that

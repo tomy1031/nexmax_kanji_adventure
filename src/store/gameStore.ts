@@ -4,6 +4,7 @@ import type { KanjiProgress } from '../types/kanji';
 import { REPS_TO_OBTAIN } from '../types/kanji';
 import { calculateNextReview, qualityFromMistakes } from '../lib/srs';
 import { DEFAULT_VERSUS_STATS, type VersusStats } from '../features/versus/types';
+import { FoundVia, HINT_COST, MAX_HINT, TRY_COST_2, TRY_COST_3 } from '../lib/forge/discovery';
 
 /**
  * The whole save file.
@@ -77,6 +78,17 @@ export interface GameState {
   tutorials: { forge: boolean };
   /** Versus record. */
   versus: VersusStats;
+  /**
+   * すみ — the ink the forge spends on a guess. Earned only by writing, so
+   * trying every pair costs the same effort as learning the characters.
+   */
+  sumi: number;
+  /** Words discovered, and how. */
+  foundWords: Record<string, FoundVia>;
+  /** Hint tier opened per word. */
+  hints: Record<string, number>;
+  /** Wrong guesses per word — the answer tier needs a few. */
+  misses: Record<string, number>;
 }
 
 export interface GameActions {
@@ -98,6 +110,17 @@ export interface GameActions {
   setSetting: <K extends keyof GameState['settings']>(key: K, value: GameState['settings'][K]) => void;
   markTutorialSeen: (key: keyof GameState['tutorials']) => void;
   recordVersusResult: (won: boolean, ratingDelta: number) => void;
+  /** Spend ink on a guess. False when there is not enough. */
+  spendSumi: (n: number) => boolean;
+  /** Cost of trying a combination of this length. */
+  tryCost: (kanjiCount: number) => number;
+  /** Record a discovery. Returns false if it was already known. */
+  recordFound: (word: string, via: FoundVia) => boolean;
+  /** Buy the next hint tier for a word. Returns the tier now open, or null. */
+  buyHint: (word: string) => number | null;
+  recordMiss: (word: string) => void;
+  /** Words found by guessing — the count titles are based on. */
+  earnedFoundCount: () => number;
   hasKanji: (kanjiId: string) => boolean;
   resetSave: () => void;
 }
@@ -124,6 +147,10 @@ const initialState: GameState = {
   settings: { furigana: true, muted: false, reducedMotion: false },
   tutorials: { forge: false },
   versus: DEFAULT_VERSUS_STATS,
+  sumi: 0,
+  foundWords: {},
+  hints: {},
+  misses: {},
 };
 
 export const useGameStore = create<GameState & GameActions>()(
@@ -156,6 +183,8 @@ export const useGameStore = create<GameState & GameActions>()(
 
         set((s) => ({
           progress: { ...s.progress, [kanjiId]: next },
+          // Writing is the only source of ink.
+          sumi: s.sumi + 1,
           daily: {
             ...s.daily,
             repsToday: s.daily.repsToday + 1,
@@ -185,6 +214,7 @@ export const useGameStore = create<GameState & GameActions>()(
               streak: outcome.streak,
             },
           },
+          sumi: s.sumi + 1,
           daily: { ...s.daily, reviewsToday: s.daily.reviewsToday + 1 },
         }));
       },
@@ -268,6 +298,35 @@ export const useGameStore = create<GameState & GameActions>()(
 
       markTutorialSeen: (key) => set((s) => ({ tutorials: { ...s.tutorials, [key]: true } })),
 
+      spendSumi: (n) => {
+        if (get().sumi < n) return false;
+        set((s) => ({ sumi: s.sumi - n }));
+        return true;
+      },
+
+      tryCost: (kanjiCount) => (kanjiCount >= 3 ? TRY_COST_3 : TRY_COST_2),
+
+      recordFound: (word, via) => {
+        if (get().foundWords[word]) return false;
+        set((s) => ({ foundWords: { ...s.foundWords, [word]: via } }));
+        return true;
+      },
+
+      buyHint: (word) => {
+        const current = get().hints[word] ?? 1; // the meaning is always free
+        const next = current + 1;
+        if (next > MAX_HINT) return null;
+        if (!get().spendSumi(HINT_COST[next])) return null;
+        set((s) => ({ hints: { ...s.hints, [word]: next } }));
+        return next;
+      },
+
+      recordMiss: (word) =>
+        set((s) => ({ misses: { ...s.misses, [word]: (s.misses[word] ?? 0) + 1 } })),
+
+      earnedFoundCount: () =>
+        Object.values(get().foundWords).filter((v) => v !== FoundVia.TOLD).length,
+
       recordVersusResult: (won, ratingDelta) =>
         set((s) => ({
           versus: {
@@ -298,6 +357,9 @@ export const useGameStore = create<GameState & GameActions>()(
           settings: { ...current.settings, ...(p.settings ?? {}) },
           tutorials: { ...current.tutorials, ...(p.tutorials ?? {}) },
           versus: { ...current.versus, ...(p.versus ?? {}) },
+          foundWords: { ...current.foundWords, ...(p.foundWords ?? {}) },
+          hints: { ...current.hints, ...(p.hints ?? {}) },
+          misses: { ...current.misses, ...(p.misses ?? {}) },
           daily: { ...current.daily, ...(p.daily ?? {}) },
           streak: { ...current.streak, ...(p.streak ?? {}) },
         };
