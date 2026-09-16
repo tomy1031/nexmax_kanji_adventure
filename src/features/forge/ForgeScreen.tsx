@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useGameStore } from '../../store/gameStore';
 import { ALL_KANJI } from '../../lib/kanjiDb';
@@ -8,6 +8,7 @@ import { ELEMENT_LABEL, elementOf } from '../../lib/forge/elements';
 import { RubyText } from '../../components/ui/Ruby';
 import type { KanjiData } from '../../types/kanji';
 import { GameIcon } from '../../components/ui/GameIcon';
+import ForgeTutorial from './ForgeTutorial';
 
 /**
  * The forge.
@@ -19,6 +20,10 @@ import { GameIcon } from '../../components/ui/GameIcon';
 
 export const ForgeScreen = () => {
   const navigate = useNavigate();
+  const [params] = useSearchParams();
+  // When the forge is opened mid-stage, 'back' returns to that stage's
+  // encounter instead of dumping the player on the map.
+  const backTo = params.get('back') ?? '/map';
   const showFurigana = useGameStore((s) => s.settings.furigana);
   const progress = useGameStore((s) => s.progress);
   const weapons = useGameStore((s) => s.weapons);
@@ -60,11 +65,12 @@ export const ForgeScreen = () => {
 
   return (
     <div className="g-stage min-h-dvh pb-6">
+      <ForgeTutorial />
       <header
         className="sticky top-0 z-20 flex items-center justify-between px-4 py-3 backdrop-blur-md"
         style={{ background: 'var(--panel)' }}
       >
-        <button type="button" className="g-btn g-btn-ghost !min-h-[40px] !px-4 text-sm" onClick={() => navigate('/map')}>
+        <button type="button" className="g-btn g-btn-ghost !min-h-[40px] !px-4 text-sm" onClick={() => navigate(backTo)}>
           もどる
         </button>
         <h1 className="g-title text-base">

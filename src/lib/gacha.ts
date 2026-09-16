@@ -13,6 +13,15 @@ import { INDIVIDUALS, Rank, type Individual } from '../data/individuals';
  */
 
 export const PULL_COST = 100;
+/**
+ * Ten pulls for the price of nine, with a guarantee.
+ *
+ * At ~110 gems a day from the daily tasks, a single pull is an everyday thing
+ * and a ten-pull is a weekly event worth saving for. That rhythm is the point:
+ * the big moment should arrive about as often as a week of study does.
+ */
+export const MULTI_COUNT = 10;
+export const MULTI_COST = PULL_COST * 9;
 /** Guaranteed SPECIAL on this pull if none has landed yet. */
 export const PITY_LIMIT = 10;
 /** Gems returned when the pull is someone already owned. */
@@ -62,3 +71,42 @@ export const pull = (
 /** Pulls remaining before the ceiling forces a SPECIAL. */
 export const pullsUntilGuaranteed = (pityCount: number): number =>
   Math.max(0, PITY_LIMIT - pityCount);
+
+/**
+ * A ten-pull.
+ *
+ * Resolved as ten ordinary pulls so the odds are exactly the single-pull odds
+ * — nothing is quietly worse in bulk. The guarantee is that **at least one of
+ * the ten is a SPECIAL**: if the first nine did not produce one, the tenth is
+ * forced. That is stated on the screen rather than buried.
+ *
+ * `owned` is threaded through each pull so the run prefers characters the
+ * player does not have yet, and duplicates inside one run are not double-
+ * counted as new.
+ */
+export const pullMany = (
+  owned: string[],
+  pityCount: number,
+  random: () => number = Math.random,
+): { results: PullResult[]; pityAfter: number } => {
+  const results: PullResult[] = [];
+  const seen = [...owned];
+  let pity = pityCount;
+
+  for (let i = 0; i < MULTI_COUNT; i++) {
+    const isLast = i === MULTI_COUNT - 1;
+    const noSpecialYet = !results.some((r) => r.individual.rank === Rank.SPECIAL);
+    // The ten-pull's own promise, on top of the running pity counter.
+    const forced = isLast && noSpecialYet;
+
+    const result = forced
+      ? { ...pull(seen, PITY_LIMIT - 1, random), guaranteed: true }
+      : pull(seen, pity, random);
+
+    results.push(result);
+    if (!seen.includes(result.individual.id)) seen.push(result.individual.id);
+    pity = result.individual.rank === Rank.SPECIAL ? 0 : pity + 1;
+  }
+
+  return { results, pityAfter: pity };
+};

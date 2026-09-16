@@ -72,6 +72,8 @@ export interface GameState {
   /** Consecutive days played. */
   streak: { count: number; lastDate: string };
   settings: { furigana: boolean; muted: boolean; reducedMotion: boolean };
+  /** One-off explainers the player has already been shown. */
+  tutorials: { forge: boolean };
 }
 
 export interface GameActions {
@@ -91,6 +93,7 @@ export interface GameActions {
   bumpPity: () => void;
   resetPity: () => void;
   setSetting: <K extends keyof GameState['settings']>(key: K, value: GameState['settings'][K]) => void;
+  markTutorialSeen: (key: keyof GameState['tutorials']) => void;
   hasKanji: (kanjiId: string) => boolean;
   resetSave: () => void;
 }
@@ -115,6 +118,7 @@ const initialState: GameState = {
   daily: freshDaily(),
   streak: { count: 0, lastDate: '' },
   settings: { furigana: true, muted: false, reducedMotion: false },
+  tutorials: { forge: false },
 };
 
 export const useGameStore = create<GameState & GameActions>()(
@@ -257,6 +261,8 @@ export const useGameStore = create<GameState & GameActions>()(
 
       setSetting: (key, value) => set((s) => ({ settings: { ...s.settings, [key]: value } })),
 
+      markTutorialSeen: (key) => set((s) => ({ tutorials: { ...s.tutorials, [key]: true } })),
+
       hasKanji: (kanjiId) => (get().progress[kanjiId]?.reps ?? 0) >= REPS_TO_OBTAIN,
 
       resetSave: () => set({ ...initialState, daily: freshDaily() }),
@@ -274,6 +280,7 @@ export const useGameStore = create<GameState & GameActions>()(
           ...current,
           ...p,
           settings: { ...current.settings, ...(p.settings ?? {}) },
+          tutorials: { ...current.tutorials, ...(p.tutorials ?? {}) },
           daily: { ...current.daily, ...(p.daily ?? {}) },
           streak: { ...current.streak, ...(p.streak ?? {}) },
         };
