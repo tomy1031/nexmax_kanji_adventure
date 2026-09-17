@@ -39,6 +39,7 @@ export const WorldMap = () => {
   const gems = useGameStore((s) => s.gems);
   const showFurigana = useGameStore((s) => s.settings.furigana);
   const progress = useGameStore((s) => s.progress);
+  const seenIntro = useGameStore((s) => s.tutorials.intro);
 
   const owned = Object.values(progress).filter((p) => p.obtainedAt != null).length;
   const stages = stagesOfArc(Arc.MUKASHI);
@@ -71,6 +72,53 @@ export const WorldMap = () => {
         </p>
 
         <ol className="flex flex-col gap-3">
+          {/*
+            0話 sits in the list, not only on the "new game" path. A player who
+            already had a save never met it, and anyone can forget how tracing
+            works after a week away — so it stays open and replayable here,
+            where the stages are, rather than hidden in the settings.
+          */}
+          <li>
+            <button
+              type="button"
+              onClick={() => navigate('/tutorial')}
+              className="g-panel flex w-full items-center gap-3 p-3 text-left"
+              style={{ borderColor: seenIntro ? 'var(--color-gold)' : undefined }}
+            >
+              <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-xl">
+                <img
+                  src={assetPath('img/bg/mukashi_village.webp')}
+                  alt=""
+                  aria-hidden
+                  className="h-full w-full object-cover"
+                />
+                <span
+                  className="absolute inset-x-0 bottom-0 text-center text-[11px] font-black text-white tabular-nums"
+                  style={{ background: 'rgba(6,16,34,0.7)' }}
+                >
+                  0
+                </span>
+              </div>
+
+              <div className="min-w-0 flex-1">
+                <p className="g-title truncate text-[15px]">
+                  <RubyText showFurigana={showFurigana}>はじめの 一歩(いっぽ)</RubyText>
+                </p>
+                <p className="text-xs" style={{ color: 'var(--ink-2)' }}>
+                  <RubyText showFurigana={showFurigana}>
+                    字(じ)を 書(か)くと どう なるか。3分(ふん)
+                  </RubyText>
+                </p>
+              </div>
+
+              {seenIntro && (
+                <span className="shrink-0 text-lg" style={{ color: 'var(--color-gold)' }} aria-label="みました">
+                  ★
+                </span>
+              )}
+            </button>
+          </li>
+
           {stages.map((stage, i) => {
             const unlocked = isStageUnlocked(stage, cleared);
             const done = cleared.includes(stage.id);

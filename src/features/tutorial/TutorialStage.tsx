@@ -39,6 +39,7 @@ export const TutorialStage = () => {
   const showFurigana = useGameStore((s) => s.settings.furigana);
   const recordRep = useGameStore((s) => s.recordRep);
   const markSeen = useGameStore((s) => s.markTutorialSeen);
+  const clearedStage1 = useGameStore((s) => s.clearedStages.includes('mukashi-1'));
 
   const [phase, setPhase] = useState<Phase>('intro');
   const [done, setDone] = useState(0);
@@ -91,7 +92,10 @@ export const TutorialStage = () => {
 
   const finish = () => {
     markSeen('intro');
-    navigate('/stage/mukashi-1');
+    // First time through, 0話 hands straight over to 1話 — the stone is out of
+    // the road and the village is the next thing. A player replaying it from
+    // the map has somewhere else to be, so send them back there.
+    navigate(clearedStage1 ? '/map' : '/stage/mukashi-1');
   };
 
   if (!kanji) return null;
