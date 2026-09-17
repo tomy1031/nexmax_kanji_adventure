@@ -189,18 +189,57 @@ const nameReading = (k: KanjiData): string => {
 // The forge itself
 // ---------------------------------------------------------------------------
 
-/** Rarity from how good the recipe is. A real word is worth two whole tiers. */
+/**
+ * Rarity.
+ *
+ * The one rule this must never break: **a real word always outranks a
+ * non-word.** So the tiers are split — non-words live in ★1–★2, real words
+ * start at ★3. Nothing about stroke count or character count can cross that
+ * line.
+ *
+ * (An earlier version scored these on one scale, and three heavy unrelated
+ * characters tied 火山 on rarity while hitting four times as hard. That taught
+ * exactly the wrong lesson.)
+ */
 const rarityFor = (compound: Compound | null, kanji: KanjiData[], seed: number): Rarity => {
-  let score = 0;
-  if (compound) score += 2;
-  if (compound?.level === 'N3') score += 1;
-  if (kanji.length >= 3) score += 1;
-  // Heavier characters are rarer to obtain, so they carry a little weight.
-  if (kanji.reduce((n, k) => n + k.strokes, 0) >= 24) score += 1;
-  // A small deterministic wobble so two equally-good recipes are not identical.
-  if (seed % 5 === 0) score += 1;
+  if (!compound) {
+    // Not a word. Piling on more characters must not help, so this looks at
+    // the average character, never the total.
+    const avg = kanji.reduce((n, k) => n + k.strokes, 0) / kanji.length;
+    return (avg >= 10 ? 2 : 1) as Rarity;
+  }
 
-  return Math.min(5, Math.max(1, score + 1)) as Rarity;
+  let score = 3; // any real word starts here
+  if (compound.word.length >= 3) score += 1; // 三字熟語 are rarer and harder
+  if (compound.level === 'N3') score += 1; // harder vocabulary
+  // A small deterministic wobble so two equally good finds are not identical.
+  if (seed % 4 === 0) score += 1;
+
+  return Math.min(5, score) as Rarity;
+};
+
+/**
+ * Attack, banded by rarity so the tiers cannot overlap.
+ *
+ * Within a band, a heavier character makes a heavier weapon — but the band is
+ * set by whether the recipe is a real word, so no amount of stroke count lets
+ * a non-word reach a word.
+ */
+const ATTACK_BAND: Record<Rarity, { floor: number; span: number }> = {
+  1: { floor: 8, span: 6 },
+  2: { floor: 15, span: 8 },
+  3: { floor: 26, span: 14 },
+  4: { floor: 42, span: 20 },
+  5: { floor: 66, span: 30 },
+};
+
+const attackFor = (rarity: Rarity, kanji: KanjiData[]): number => {
+  // Average, not total: three characters must not beat two for being three.
+  const avg = kanji.reduce((n, k) => n + k.strokes, 0) / kanji.length;
+  // 1 stroke -> 0, 20+ strokes -> 1.
+  const heaviness = Math.min(1, Math.max(0, (avg - 1) / 19));
+  const { floor, span } = ATTACK_BAND[rarity];
+  return Math.round(floor + heaviness * span);
 };
 
 /**
@@ -218,13 +257,8 @@ export const forgeWeapon = (kanji: KanjiData[]): Weapon | null => {
   const weaponClass = CLASS_OF_ELEMENT[element];
   const rarity = rarityFor(compound, kanji, seed);
 
-  // Stroke count is the weapon's mass: a 24-stroke character makes a heavier
-  // thing than a 2-stroke one, which is both intuitive and true of the effort
-  // it took to earn.
   const weight = kanji.reduce((n, k) => n + k.strokes, 0);
-  const base = 6 + weight * 1.5;
-  const rarityMult = 1 + (rarity - 1) * 0.28;
-  const attack = Math.round(base * rarityMult);
+  const attack = attackFor(rarity, kanji);
 
   const pool = ICON_POOL[weaponClass];
   const icon = pool[seed % pool.length];

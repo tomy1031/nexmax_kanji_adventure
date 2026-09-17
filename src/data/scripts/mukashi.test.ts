@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { MUKASHI_SCRIPTS, MUKASHI_CAST } from './mukashi';
 import { MUKASHI_STAGES } from '../stages';
 import { unreadKanji, stripRuby } from '../../lib/ruby';
+import { TUTORIAL_INTRO, TUTORIAL_OUTRO, TUTORIAL_CAST } from './tutorial';
 
 const castIds = new Set(MUKASHI_CAST.map((c) => c.id));
 
@@ -154,5 +155,51 @@ describe('readability', () => {
       }
     }
     expect(tooLong).toEqual([]);
+  });
+});
+
+describe('0話（チュートリアル）', () => {
+  it('keeps the intro to one idea — no other system is named', () => {
+    // The whole point of 0話 is that it teaches exactly one thing. If the
+    // words 合成/ガチャ/ジェム/すみ/属性 appear here, it has stopped being a
+    // tutorial and become a manual.
+    const text = [...TUTORIAL_INTRO.lines, ...TUTORIAL_OUTRO.lines]
+      .map((l) => stripRuby(l.text))
+      .join('');
+    for (const banned of ['合成', 'ガチャ', 'ジェム', 'すみ', '属性', '対戦', '図鑑']) {
+      expect(text, `0話 should not mention ${banned}`).not.toContain(banned);
+    }
+  });
+
+  it('hands the learner the role, not just the character', () => {
+    // P1: the learner is addressed, not narrated at. Hana says "try it".
+    const text = [...TUTORIAL_INTRO.lines].map((l) => stripRuby(l.text)).join('');
+    expect(text).toContain('書いて');
+  });
+
+  it('carries furigana on every kanji, like every other script', () => {
+    const bare: string[] = [];
+    for (const line of [...TUTORIAL_INTRO.lines, ...TUTORIAL_OUTRO.lines]) {
+      for (const c of unreadKanji(line.text)) bare.push(`${c} in "${line.text}"`);
+    }
+    expect(bare).toEqual([]);
+  });
+
+  it('stays short — three or four lines a scene', () => {
+    expect(TUTORIAL_INTRO.lines.length).toBeLessThanOrEqual(5);
+    expect(TUTORIAL_OUTRO.lines.length).toBeLessThanOrEqual(5);
+  });
+
+  it('only uses cast and backgrounds that exist', () => {
+    const castIds = new Set(TUTORIAL_CAST.map((c) => c.id));
+    for (const line of [...TUTORIAL_INTRO.lines, ...TUTORIAL_OUTRO.lines]) {
+      if (line.speaker) expect(castIds, line.speaker).toContain(line.speaker);
+      if (line.sprite && line.sprite !== 'none') {
+        const [id, expr] = line.sprite.split(':');
+        const member = TUTORIAL_CAST.find((c) => c.id === id);
+        expect(member, `sprite ${id}`).toBeTruthy();
+        if (expr) expect(Object.keys(member!.sprites), `${id}:${expr}`).toContain(expr);
+      }
+    }
   });
 });

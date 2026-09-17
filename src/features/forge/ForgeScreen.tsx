@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useGameStore } from '../../store/gameStore';
 import { ALL_KANJI } from '../../lib/kanjiDb';
@@ -8,6 +8,9 @@ import { ELEMENT_LABEL, elementOf } from '../../lib/forge/elements';
 import { RubyText } from '../../components/ui/Ruby';
 import type { KanjiData } from '../../types/kanji';
 import { GameIcon } from '../../components/ui/GameIcon';
+import ForgeTutorial from './ForgeTutorial';
+import { remainingForChar, FoundVia, discoveryKind, KIND_LABEL } from '../../lib/forge/discovery';
+import { REPS_TO_OBTAIN } from '../../types/kanji';
 
 /**
  * The forge.
@@ -19,14 +22,26 @@ import { GameIcon } from '../../components/ui/GameIcon';
 
 export const ForgeScreen = () => {
   const navigate = useNavigate();
+  const [params] = useSearchParams();
+  // When the forge is opened mid-stage, 'back' returns to that stage's
+  // encounter instead of dumping the player on the map.
+  const backTo = params.get('back') ?? '/map';
   const showFurigana = useGameStore((s) => s.settings.furigana);
   const progress = useGameStore((s) => s.progress);
   const weapons = useGameStore((s) => s.weapons);
   const craftWeapon = useGameStore((s) => s.craftWeapon);
   const equipWeapon = useGameStore((s) => s.equipWeapon);
+  const sumi = useGameStore((s) => s.sumi);
+  const spendSumi = useGameStore((s) => s.spendSumi);
+  const tryCost = useGameStore((s) => s.tryCost);
+  const foundWords = useGameStore((s) => s.foundWords);
+  const recordFound = useGameStore((s) => s.recordFound);
+  const recordMiss = useGameStore((s) => s.recordMiss);
 
   const [slots, setSlots] = useState<KanjiData[]>([]);
   const [made, setMade] = useState<Weapon | null>(null);
+  /** Set when the craft just revealed a word for the first time. */
+  const [discovered, setDiscovered] = useState<string | null>(null);
 
   const owned = useMemo(
     () =>
@@ -36,7 +51,17 @@ export const ForgeScreen = () => {
     [progress],
   );
 
+  const ownedChars = useMemo(
+    () => new Set(ALL_KANJI.filter((k) => (progress[k.id]?.reps ?? 0) >= REPS_TO_OBTAIN).map((k) => k.char)),
+    [progress],
+  );
+  const foundSet = useMemo(() => new Set(Object.keys(foundWords)), [foundWords]);
+
   const preview = useMemo(() => (slots.length >= 2 ? forgeWeapon(slots) : null), [slots]);
+  /** A word already found costs nothing to remake. */
+  const previewKnown = preview ? Boolean(foundWords[preview.word]) : false;
+  const cost = preview && !previewKnown ? tryCost(slots.length) : 0;
+  const canAfford = sumi >= cost;
   const alreadyMade = preview ? weapons.some((w) => w.id === preview.id) : false;
 
   const toggle = (k: KanjiData) => {
@@ -50,30 +75,49 @@ export const ForgeScreen = () => {
   };
 
   const craft = () => {
-    if (!preview || alreadyMade) return;
+    if (!preview || alreadyMade || !canAfford) return;
+    // Ink is spent on the attempt, not the result: a guess costs the same
+    // whether it lands or not, which is what makes thinking first worthwhile.
+    if (cost > 0 && !spendSumi(cost)) return;
+
     const recipe = craftWeapon(slots.map((k) => k.id));
-    if (recipe) {
-      setMade(preview);
-      equipWeapon(recipe.id);
+    if (!recipe) return;
+
+    if (preview.compound && !foundWords[preview.word]) {
+      recordFound(preview.word, FoundVia.LUCKY);
+      setDiscovered(preview.word);
+    } else {
+      if (!preview.compound) recordMiss(preview.word);
+      setDiscovered(null);
     }
+
+    setMade(preview);
+    equipWeapon(recipe.id);
   };
 
   return (
     <div className="g-stage min-h-dvh pb-6">
+      <ForgeTutorial />
       <header
         className="sticky top-0 z-20 flex items-center justify-between px-4 py-3 backdrop-blur-md"
         style={{ background: 'var(--panel)' }}
       >
-        <button type="button" className="g-btn g-btn-ghost !min-h-[40px] !px-4 text-sm" onClick={() => navigate('/map')}>
+        <button type="button" className="g-btn g-btn-ghost !min-h-[40px] !px-4 text-sm" onClick={() => navigate(backTo)}>
           もどる
         </button>
         <h1 className="g-title text-base">
           <RubyText showFurigana={showFurigana}>合成(ごうせい)</RubyText>
         </h1>
-        <span className="g-chip text-xs">
-          <span className="tabular-nums">{owned.length}</span>
-          <RubyText showFurigana={showFurigana}>字(じ)</RubyText>
-        </span>
+        <div className="flex gap-1.5">
+          <span className="g-chip text-xs">
+            <span className="tabular-nums">{owned.length}</span>
+            <RubyText showFurigana={showFurigana}>字(じ)</RubyText>
+          </span>
+          <span className="g-chip text-xs tabular-nums" title="すみ">
+            <span aria-hidden>🖌</span>
+            {sumi}
+          </span>
+        </div>
       </header>
 
       <div className="mx-auto max-w-md px-4 pt-4">
@@ -184,11 +228,17 @@ export const ForgeScreen = () => {
               <button
                 type="button"
                 className="g-btn g-btn-primary mt-3 w-full"
-                disabled={alreadyMade}
+                disabled={alreadyMade || !canAfford}
                 onClick={craft}
               >
                 {alreadyMade ? (
                   <RubyText showFurigana={showFurigana}>もう 持(も)って います</RubyText>
+                ) : !canAfford ? (
+                  <RubyText showFurigana={showFurigana}>
+                    {`すみが たりません（🖌${cost} 要(い)ります）`}
+                  </RubyText>
+                ) : cost > 0 ? (
+                  <RubyText showFurigana={showFurigana}>{`ためす（🖌${cost}）`}</RubyText>
                 ) : (
                   <RubyText showFurigana={showFurigana}>作(つく)る</RubyText>
                 )}
@@ -212,13 +262,18 @@ export const ForgeScreen = () => {
             {owned.map((k) => {
               const picked = slots.some((s) => s.id === k.id);
               const el = ELEMENT_LABEL[elementOf(k)];
+              // How many words using this character are still unfound — the
+              // "there is more in here" signal that makes a character worth
+              // returning to.
+              const left = remainingForChar(k.char, ownedChars, foundSet);
               return (
                 <button
                   key={k.id}
                   type="button"
                   onClick={() => toggle(k)}
                   aria-pressed={picked}
-                  className="flex aspect-square items-center justify-center rounded-xl text-xl font-black transition-transform active:scale-95"
+                  aria-label={left > 0 ? `${k.char}（のこり ${left} 語）` : k.char}
+                  className="relative flex aspect-square items-center justify-center rounded-xl text-xl font-black transition-transform active:scale-95"
                   style={{
                     background: picked ? 'var(--accent)' : 'var(--panel-solid)',
                     color: picked ? '#fff' : 'var(--ink)',
@@ -226,6 +281,14 @@ export const ForgeScreen = () => {
                   }}
                 >
                   {k.char}
+                  {left > 0 && (
+                    <span
+                      className="absolute -top-1 -right-1 flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-[10px] font-black tabular-nums"
+                      style={{ background: 'var(--color-gold)', color: 'var(--color-gold-ink)' }}
+                    >
+                      {left > 9 ? '9+' : left}
+                    </span>
+                  )}
                 </button>
               );
             })}
@@ -252,7 +315,15 @@ export const ForgeScreen = () => {
               transition={{ type: 'spring', stiffness: 300, damping: 20 }}
               className="g-panel-solid w-full max-w-sm p-6 text-center"
             >
-              <p className="g-eyebrow">できた</p>
+              <p className="g-eyebrow" style={discovered ? { color: 'var(--color-gold-2)' } : undefined}>
+                {discovered ? (
+                  <RubyText showFurigana={showFurigana}>
+                    {KIND_LABEL[discoveryKind(discovered, ownedChars, foundSet)]}
+                  </RubyText>
+                ) : (
+                  'できた'
+                )}
+              </p>
               <p className="my-3 flex justify-center" style={{ color: ELEMENT_LABEL[made.element].color }}>
                 <GameIcon name={made.icon} size={72} />
               </p>

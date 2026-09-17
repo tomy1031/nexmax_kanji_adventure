@@ -5,6 +5,8 @@ import { Arc, LEVEL_OF_ARC } from '../../types/kanji';
 import { RubyText } from '../../components/ui/Ruby';
 import { assetPath } from '../../lib/assetPath';
 import { useGameStore } from '../../store/gameStore';
+import { isVersusConfigured } from '../../lib/supabaseClient';
+import { Feature, FEATURE_INTRO, isFeatureUnlocked } from '../../data/unlocks';
 
 /**
  * The map: three arcs, ten stages each, walked in order.
@@ -37,6 +39,7 @@ export const WorldMap = () => {
   const gems = useGameStore((s) => s.gems);
   const showFurigana = useGameStore((s) => s.settings.furigana);
   const progress = useGameStore((s) => s.progress);
+  const seenIntro = useGameStore((s) => s.tutorials.intro);
 
   const owned = Object.values(progress).filter((p) => p.obtainedAt != null).length;
   const stages = stagesOfArc(Arc.MUKASHI);
@@ -69,6 +72,53 @@ export const WorldMap = () => {
         </p>
 
         <ol className="flex flex-col gap-3">
+          {/*
+            0話 sits in the list, not only on the "new game" path. A player who
+            already had a save never met it, and anyone can forget how tracing
+            works after a week away — so it stays open and replayable here,
+            where the stages are, rather than hidden in the settings.
+          */}
+          <li>
+            <button
+              type="button"
+              onClick={() => navigate('/tutorial')}
+              className="g-panel flex w-full items-center gap-3 p-3 text-left"
+              style={{ borderColor: seenIntro ? 'var(--color-gold)' : undefined }}
+            >
+              <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-xl">
+                <img
+                  src={assetPath('img/bg/mukashi_village.webp')}
+                  alt=""
+                  aria-hidden
+                  className="h-full w-full object-cover"
+                />
+                <span
+                  className="absolute inset-x-0 bottom-0 text-center text-[11px] font-black text-white tabular-nums"
+                  style={{ background: 'rgba(6,16,34,0.7)' }}
+                >
+                  0
+                </span>
+              </div>
+
+              <div className="min-w-0 flex-1">
+                <p className="g-title truncate text-[15px]">
+                  <RubyText showFurigana={showFurigana}>はじめの 一歩(いっぽ)</RubyText>
+                </p>
+                <p className="text-xs" style={{ color: 'var(--ink-2)' }}>
+                  <RubyText showFurigana={showFurigana}>
+                    字(じ)を 書(か)くと どう なるか。3分(ふん)
+                  </RubyText>
+                </p>
+              </div>
+
+              {seenIntro && (
+                <span className="shrink-0 text-lg" style={{ color: 'var(--color-gold)' }} aria-label="みました">
+                  ★
+                </span>
+              )}
+            </button>
+          </li>
+
           {stages.map((stage, i) => {
             const unlocked = isStageUnlocked(stage, cleared);
             const done = cleared.includes(stage.id);
@@ -169,12 +219,24 @@ export const WorldMap = () => {
         className="fixed right-0 bottom-0 left-0 z-20 flex justify-around border-t px-2 py-2 pb-[max(8px,env(safe-area-inset-bottom))] backdrop-blur-md"
         style={{ background: 'var(--panel)', borderColor: 'var(--line)' }}
       >
-        {[
-          { to: '/forge', label: '合成(ごうせい)', icon: '⚒' },
-          { to: '/collection', label: '図鑑(ずかん)', icon: '▤' },
-          { to: '/gacha', label: 'ガチャ', icon: '◆' },
-          { to: '/daily', label: '毎日(まいにち)', icon: '✓' },
-        ].map((item) => (
+        {/*
+          One system opens per stage. Showing all six from the start is the
+          same as showing none: a menu of unexplained things is a wall, not a
+          reward. See docs/design/06_チュートリアルの理解設計.md §4.
+        */}
+        {(
+          [
+            { f: Feature.FORGE, icon: '⚒' },
+            { f: Feature.WORDS, icon: '⌕' },
+            { f: Feature.COLLECTION, icon: '▤' },
+            { f: Feature.GACHA, icon: '◆' },
+            ...(isVersusConfigured ? [{ f: Feature.VERSUS, icon: '⚔' }] : []),
+            { f: Feature.DAILY, icon: '✓' },
+          ] as const
+        )
+          .filter(({ f }) => isFeatureUnlocked(f, cleared))
+          .map(({ f, icon }) => ({ to: FEATURE_INTRO[f].to, label: FEATURE_INTRO[f].label, icon }))
+          .map((item) => (
           <button
             key={item.to}
             type="button"

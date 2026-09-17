@@ -21,6 +21,7 @@ import {
 } from '../../lib/battle';
 import { assetPath } from '../../lib/assetPath';
 import { GameIcon } from '../../components/ui/GameIcon';
+import { featuresUnlockedBy, FEATURE_INTRO } from '../../data/unlocks';
 
 /**
  * The fight.
@@ -172,6 +173,10 @@ export const BattleScene = ({ stage, kanjiPool, onFinish, onFlee }: BattleSceneP
       rust, bossHp, playerHp, settle,
     ],
   );
+
+  // What this clear opens. One per stage at most, announced with a line of
+  // why it exists — a new button appearing unexplained teaches nothing.
+  const opened = alreadyCleared ? [] : featuresUnlockedBy(stage.id);
 
   const elementLabel = ELEMENT_LABEL[stage.boss.element];
 
@@ -348,6 +353,33 @@ export const BattleScene = ({ stage, kanjiPool, onFinish, onFlee }: BattleSceneP
                       </RubyText>
                     </p>
                   )}
+
+                  {opened.map((f) => (
+                    <div
+                      key={f}
+                      className="mt-3 rounded-xl px-3 py-2.5 text-left"
+                      style={{ background: 'rgba(255,207,74,0.16)' }}
+                    >
+                      <p className="g-title text-sm" style={{ color: 'var(--color-gold-2)' }}>
+                        <RubyText showFurigana={showFurigana}>
+                          {`「${FEATURE_INTRO[f].label}」が つかえるように なりました`}
+                        </RubyText>
+                      </p>
+                      <p className="mt-0.5 text-xs" style={{ color: 'var(--ink-2)' }}>
+                        <RubyText showFurigana={showFurigana}>{FEATURE_INTRO[f].line}</RubyText>
+                      </p>
+                      <button
+                        type="button"
+                        className="g-btn g-btn-accent mt-2 w-full !min-h-[40px] text-xs"
+                        onClick={() => {
+                          onFinish();
+                          navigate(FEATURE_INTRO[f].to);
+                        }}
+                      >
+                        <RubyText showFurigana={showFurigana}>見(み)に 行(い)く</RubyText>
+                      </button>
+                    </div>
+                  ))}
                 </>
               ) : (
                 <>

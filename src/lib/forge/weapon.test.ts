@@ -98,11 +98,87 @@ describe('forgeWeapon', () => {
     }
   });
 
-  it('gives heavier characters heavier weapons', () => {
-    const light = forgeWeapon([k('一'), k('二')])!;
+  it('gives heavier characters heavier weapons within the same rarity', () => {
+    // Both must be non-words for this to compare like with like — 一二 looks
+    // like junk but is a real word (いちに), so it cannot be the light case.
+    const light = forgeWeapon([k('人'), k('日')])!;
     const heavy = forgeWeapon([k('語'), k('読')])!;
+    expect(light.compound).toBeNull();
+    expect(heavy.compound).toBeNull();
     expect(heavy.weight).toBeGreaterThan(light.weight);
     expect(heavy.attack).toBeGreaterThan(light.attack);
+  });
+});
+
+describe('a real word always beats a non-word', () => {
+  // The rule the forge exists to teach. Three unrelated heavy characters used
+  // to outrank 火山 and hit four times as hard; that must never come back.
+  const REAL_WORDS: [string, string][] = [
+    ['火', '山'],
+    ['日', '本'],
+    ['先', '生'],
+    ['大', '学'],
+    ['electric', ''], // placeholder replaced below
+  ];
+  REAL_WORDS.pop();
+
+  const JUNK_TRIPLES: [string, string, string][] = [
+    ['語', '読', '聞'],
+    ['聞', '語', '読'],
+    ['読', '聞', '語'],
+    ['高', '校', '間'],
+    ['電', '車', '語'],
+  ];
+
+  it('the specific case the player reported: 火山 beats 語読聞', () => {
+    const word = forgeWeapon([k('火'), k('山')])!;
+    const junk = forgeWeapon([k('語'), k('読'), k('聞')])!;
+    expect(word.compound).not.toBeNull();
+    expect(junk.compound).toBeNull();
+    expect(word.rarity).toBeGreaterThan(junk.rarity);
+    expect(word.attack).toBeGreaterThan(junk.attack);
+  });
+
+  it('holds for every real word against every junk triple', () => {
+    const words = REAL_WORDS.map((chars) => forgeWeapon(chars.map(k))!).filter((w) => w.compound);
+    const junk = JUNK_TRIPLES.map((chars) => forgeWeapon(chars.map(k))!);
+
+    expect(words.length).toBeGreaterThan(0);
+    expect(junk.every((j) => j.compound === null)).toBe(true);
+
+    const weakestWord = Math.min(...words.map((w) => w.attack));
+    const strongestJunk = Math.max(...junk.map((j) => j.attack));
+    expect(weakestWord).toBeGreaterThan(strongestJunk);
+
+    const lowestWordRarity = Math.min(...words.map((w) => w.rarity));
+    const highestJunkRarity = Math.max(...junk.map((j) => j.rarity));
+    expect(lowestWordRarity).toBeGreaterThan(highestJunkRarity);
+  });
+
+  it('never lets a non-word reach ★3, whatever it is made of', () => {
+    // The heaviest characters in the set, in every arrangement.
+    const heavy = ['語', '読', '聞', '電', '校', '験'].filter((c) => getKanjiByChar(c));
+    for (const a of heavy) {
+      for (const b of heavy) {
+        if (a === b) continue;
+        for (const c of [...heavy, null]) {
+          const chars = c && c !== a && c !== b ? [a, b, c] : [a, b];
+          const w = forgeWeapon(chars.map(k));
+          if (!w || w.compound) continue;
+          expect(w.rarity, `${w.word} should stay below ★3`).toBeLessThan(3);
+          expect(w.attack, `${w.word} attack`).toBeLessThan(26);
+        }
+      }
+    }
+  });
+
+  it('does not reward padding a pair out to a triple', () => {
+    // Adding a third unrelated character must not make a non-word stronger.
+    const pair = forgeWeapon([k('語'), k('読')])!;
+    const padded = forgeWeapon([k('語'), k('読'), k('聞')])!;
+    expect(pair.compound).toBeNull();
+    expect(padded.compound).toBeNull();
+    expect(padded.attack).toBeLessThanOrEqual(pair.attack);
   });
 });
 
@@ -138,6 +214,21 @@ describe('discoverableCompounds', () => {
     // 日本 needs two kanji this learner does not own yet.
     expect(found.map((c) => c.word)).not.toContain('日本');
     expect(found.every((c) => [...c.word].every((ch) => owned.has(ch)))).toBe(true);
+  });
+
+  it('includes the everyday words a learner will obviously try', () => {
+    // 先生 went missing once: EDICT lists an archaic fourth sense for it, and
+    // the extractor judged the whole entry by that tag. A learner who forges
+    // 先 + 生 and is told it is not a word loses trust in the whole mechanic,
+    // so the obvious words are pinned here.
+    const must = [
+      '先生', '学生', '大学', '日本', '電車', '火山', '毎日', '時間',
+      '今日', '名前', '会社', '午前', '午後', '半分', '友人',
+    ];
+    const owned = new Set(must.flatMap((w) => [...w]));
+    const found = new Set(discoverableCompounds(owned).map((c) => c.word));
+    const missing = must.filter((w) => !found.has(w));
+    expect(missing).toEqual([]);
   });
 
   it('finds a worthwhile number of words from the N5 set alone', () => {

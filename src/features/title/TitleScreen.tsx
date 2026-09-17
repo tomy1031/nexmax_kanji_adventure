@@ -13,6 +13,9 @@ export const TitleScreen = () => {
   const navigate = useNavigate();
   const showFurigana = useGameStore((s) => s.settings.furigana);
   const hasSave = useGameStore((s) => s.clearedStages.length > 0 || s.weapons.length > 0);
+  // A new player starts in 0話, where the one idea the game rests on —
+  // writing a character does something — is shown in three minutes.
+  const seenIntro = useGameStore((s) => s.tutorials.intro);
 
   return (
     <div className="g-stage relative flex flex-col items-center justify-end overflow-hidden">
@@ -45,7 +48,7 @@ export const TitleScreen = () => {
           </RubyText>
         </p>
 
-        <button type="button" className="g-btn g-btn-primary w-full text-lg" onClick={() => navigate('/map')}>
+        <button type="button" className="g-btn g-btn-primary w-full text-lg" onClick={() => navigate(seenIntro || hasSave ? '/map' : '/tutorial')}>
           {hasSave ? 'つづきから' : 'はじめる'}
         </button>
         <div className="flex w-full gap-2">
