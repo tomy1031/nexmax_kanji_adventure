@@ -87,6 +87,12 @@ const containsJsx = (node: ts.Node): boolean => {
   return ts.forEachChild(node, containsJsx) ?? false;
 };
 
+/** Whether an expression calls a local render helper, e.g. `ok && nodeButton(…)`. */
+const callsRenderHelper = (node: ts.Node): boolean => {
+  if (ts.isCallExpression(node) && ts.isIdentifier(node.expression) && /Button|render/i.test(node.expression.text)) return true;
+  return ts.forEachChild(node, callsRenderHelper) ?? false;
+};
+
 const scan = (file: string): Finding[] => {
   const src = readFileSync(file, 'utf8');
   const sf = ts.createSourceFile(file, src, ts.ScriptTarget.Latest, true, file.endsWith('x') ? ts.ScriptKind.TSX : ts.ScriptKind.TS);
@@ -118,7 +124,8 @@ const scan = (file: string): Finding[] => {
       !insideRubyText(node) &&
       !containsJsx(node.expression) &&
       // A local render helper (nodeButton(…)) builds its own <RubyText>.
-      !(ts.isCallExpression(node.expression) && ts.isIdentifier(node.expression.expression))
+      !(ts.isCallExpression(node.expression) && ts.isIdentifier(node.expression.expression)) &&
+      !callsRenderHelper(node.expression)
     ) {
       const expr = node.expression.getText();
       // Data that holds kanji, rendered straight into an element.

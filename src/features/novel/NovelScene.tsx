@@ -203,8 +203,9 @@ export const NovelScene = ({ script, cast, onFinish, chapter }: NovelSceneProps)
               // A paper cut-out: white rim, soft shadow — the same finish as
               // the scene, without redrawing the character.
               style={{
-                filter:
-                  'drop-shadow(2px 0 0 #fffaf0) drop-shadow(-2px 0 0 #fffaf0) drop-shadow(0 2px 0 #fffaf0) drop-shadow(0 -2px 0 #fffaf0) drop-shadow(0 8px 10px rgba(40,25,5,0.35))',
+                filter: spriteMember?.silhouette
+                  ? 'brightness(0.08) drop-shadow(0 0 14px rgba(130,70,210,0.85))'
+                  : 'drop-shadow(2px 0 0 #fffaf0) drop-shadow(-2px 0 0 #fffaf0) drop-shadow(0 2px 0 #fffaf0) drop-shadow(0 -2px 0 #fffaf0) drop-shadow(0 8px 10px rgba(40,25,5,0.35))',
               }}
               animate={{ y: [0, -5, 0] }}
               transition={{ duration: 2.6, repeat: Infinity, ease: 'easeInOut' }}

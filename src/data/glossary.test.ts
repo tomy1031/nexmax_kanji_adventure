@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { MUKASHI_SCRIPTS } from './scripts/mukashi';
+import { GENDAI_SCRIPTS } from './scripts/gendai';
 import { TUTORIAL_AFTER_DRILL, TUTORIAL_BEFORE_BATTLE, TUTORIAL_INTRO, TUTORIAL_OUTRO } from './scripts/tutorial';
 import { parseRuby } from '../lib/ruby';
 import { glossFor } from './glossary';
@@ -11,6 +12,7 @@ import type { NovelScript } from '../types/novel';
  */
 export const everyScript = (): NovelScript[] => [
   ...MUKASHI_SCRIPTS,
+  ...GENDAI_SCRIPTS,
   TUTORIAL_INTRO,
   TUTORIAL_AFTER_DRILL,
   TUTORIAL_BEFORE_BATTLE,

@@ -1,6 +1,7 @@
 import { Arc, type JlptLevel } from '../types/kanji';
 import { Element } from '../lib/forge/elements';
 import type { EnemyArtId } from '../features/battle/EnemyArt';
+import { GENDAI_STAGES } from './gendaiStages';
 
 /**
  * Stage table.
@@ -191,7 +192,7 @@ export const MUKASHI_STAGES: StageDef[] = [
   },
 ];
 
-export const ALL_STAGES: StageDef[] = [...MUKASHI_STAGES];
+export const ALL_STAGES: StageDef[] = [...MUKASHI_STAGES, ...GENDAI_STAGES];
 
 const byId = new Map(ALL_STAGES.map((s) => [s.id, s]));
 export const getStage = (id: string): StageDef | undefined => byId.get(id);
@@ -205,3 +206,4 @@ export const isStageUnlocked = (stage: StageDef, cleared: string[]): boolean => 
   const prev = stagesOfArc(stage.arc).find((s) => s.order === stage.order - 1);
   return prev ? cleared.includes(prev.id) : false;
 };
+

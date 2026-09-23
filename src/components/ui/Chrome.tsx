@@ -53,7 +53,7 @@ export const LogoTitle = ({ children, sub, size = 34 }: { children: string; sub?
   const showFurigana = useGameStore((s) => s.settings.furigana);
   return (
     <div className="flex flex-col items-center text-center">
-      <h1 className="g-title g-logo leading-[1.6] font-black" style={{ fontSize: size }}>
+      <h1 className="g-title g-logo leading-[1.6] font-black whitespace-nowrap" style={{ fontSize: size }}>
         <RubyText showFurigana={showFurigana}>{children}</RubyText>
       </h1>
       {sub && (

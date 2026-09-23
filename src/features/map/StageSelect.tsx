@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { stagesOfArc, isStageUnlocked, type StageDef } from '../../data/stages';
-import { Arc } from '../../types/kanji';
+import { Arc, LEVEL_OF_ARC } from '../../types/kanji';
 import { RubyText } from '../../components/ui/Ruby';
 import { BottomTabs } from '../../components/ui/Chrome';
 import GearHint from '../../components/ui/GearHint';
@@ -14,7 +14,7 @@ import PictureBook from '../picturebook/PictureBook';
 import { useGameStore } from '../../store/gameStore';
 import { isVersusConfigured } from '../../lib/supabaseClient';
 import { Feature, FEATURE_INTRO, isFeatureUnlocked } from '../../data/unlocks';
-import { MAP_H, MAP_W, NODE_POS, mapSvg } from './mapArt';
+import { MAP_H, MAP_W, NODE_POS, gendaiMapSvg, mapSvg } from './mapArt';
 
 /**
  * むかし編 ステージ選択 (public/img/design/むかし編_村のたのみステージ選択.png).
@@ -28,11 +28,35 @@ import { MAP_H, MAP_W, NODE_POS, mapSvg } from './mapArt';
  * how far the road goes without being told what happens next.
  */
 
-const MAP_URL = toDataUrl(mapSvg());
+/** Per arc: the map sheet, the heading, and whether 0話 sits on it. */
+const ARC_MAP: Record<'mukashi' | 'gendai', { url: () => string; title: string; sub: string; prefix: number; intro: boolean; planned: number }> = {
+  mukashi: {
+    url: () => toDataUrl(mapSvg()),
+    title: 'むかし編(へん)',
+    sub: '漢字(かんじ)の 力(ちから)で 村(むら)を たすけよう',
+    prefix: 1,
+    intro: true,
+    planned: 10,
+  },
+  gendai: {
+    url: () => toDataUrl(gendaiMapSvg()),
+    title: '現代編(げんだいへん)',
+    sub: '言葉(ことば)で なかまと つながろう',
+    prefix: 2,
+    intro: false,
+    planned: 10,
+  },
+};
+const urls = new Map<string, string>();
+const mapUrlOf = (arc: 'mukashi' | 'gendai') => {
+  if (!urls.has(arc)) urls.set(arc, ARC_MAP[arc].url());
+  return urls.get(arc)!;
+};
 
 type Choice = { kind: 'intro' } | { kind: 'stage'; stage: StageDef };
 
-export const StageSelect = () => {
+const StageSelectFor = ({ arc }: { arc: 'mukashi' | 'gendai' }) => {
+  const conf = ARC_MAP[arc];
   const navigate = useNavigate();
   const [params] = useSearchParams();
   const cleared = useGameStore((s) => s.clearedStages);
@@ -41,7 +65,8 @@ export const StageSelect = () => {
   const progress = useGameStore((s) => s.progress);
   const seenIntro = useGameStore((s) => s.tutorials.intro);
 
-  const stages = stagesOfArc(Arc.MUKASHI);
+  const stages = stagesOfArc(arc === 'gendai' ? Arc.GENDAI : Arc.MUKASHI);
+  const clearedHere = cleared.filter((c) => c.startsWith(arc)).length;
   const owned = Object.values(progress).filter((p) => p.obtainedAt != null).length;
 
   // What is selected at first: the stage named in the URL, else the next
@@ -49,7 +74,7 @@ export const StageSelect = () => {
   const initial = useMemo<Choice>(() => {
     const named = stages.find((s) => s.id === params.get('stage'));
     if (named) return { kind: 'stage', stage: named };
-    if (!seenIntro && !cleared.length) return { kind: 'intro' };
+    if (conf.intro && !seenIntro && !cleared.length) return { kind: 'intro' };
     const next = stages.find((s) => isStageUnlocked(s, cleared) && !cleared.includes(s.id));
     return { kind: 'stage', stage: next ?? stages[stages.length - 1] };
     // Only on arrival.
@@ -154,12 +179,13 @@ export const StageSelect = () => {
           <span className="tabular-nums">{owned}</span>
         </span>
         <span className="ml-auto flex h-8 min-w-0 flex-1 items-center gap-1.5 rounded-full border-2 border-white bg-[#23456e]/85 px-2.5 text-xs font-black text-white">
-          <span style={{ color: '#8fd0ff' }}>♛</span>N5
+          <span style={{ color: '#8fd0ff' }}>♛</span>
+          {LEVEL_OF_ARC[arc === 'gendai' ? Arc.GENDAI : Arc.MUKASHI]}
           <span className="h-2 min-w-0 flex-1 overflow-hidden rounded-full bg-white/25">
-            <span className="block h-full rounded-full bg-[#5cc0ff]" style={{ width: `${(cleared.filter((c) => c.startsWith('mukashi')).length / stages.length) * 100}%` }} />
+            <span className="block h-full rounded-full bg-[#5cc0ff]" style={{ width: `${(clearedHere / conf.planned) * 100}%` }} />
           </span>
           <span className="tabular-nums">
-            {cleared.filter((c) => c.startsWith('mukashi')).length}/{stages.length}
+            {clearedHere}/{conf.planned}
           </span>
         </span>
       </header>
@@ -167,31 +193,36 @@ export const StageSelect = () => {
       {/* 地図（縦に スクロール） -------------------------------------------- */}
       <div ref={scrollRef} className="absolute inset-0 overflow-y-auto overscroll-contain pb-[250px]">
         <div className="relative mx-auto w-full max-w-md" style={{ aspectRatio: `${MAP_W} / ${MAP_H}` }}>
-          <img src={MAP_URL} alt="" aria-hidden draggable={false} className="absolute inset-0 h-full w-full select-none" />
+          <img src={mapUrlOf(arc)} alt="" aria-hidden draggable={false} className="absolute inset-0 h-full w-full select-none" />
 
           <div className="g-parchment absolute top-16 left-3 z-20 px-3 py-2">
             <p className="text-2xl leading-tight font-black">
-              <RubyText showFurigana={showFurigana}>むかし編(へん)</RubyText>
+              <RubyText showFurigana={showFurigana}>{conf.title}</RubyText>
             </p>
             <p className="g-wood mt-1 px-2 text-xs font-black">
               <RubyText showFurigana={showFurigana}>ステージ選択(せんたく)</RubyText>
             </p>
             <p className="mt-1 text-[11px] leading-snug font-bold">
-              <RubyText showFurigana={showFurigana}>漢字(かんじ)の 力(ちから)で 村(むら)を たすけよう</RubyText>
+              <RubyText showFurigana={showFurigana}>{conf.sub}</RubyText>
             </p>
           </div>
 
-          {nodeButton(0, '0', 'はじめの 一歩(いっぽ)', true, seenIntro, () => setPick({ kind: 'intro' }), pick.kind === 'intro')}
+          {conf.intro &&
+            nodeButton(0, '0', 'はじめの 一歩(いっぽ)', true, seenIntro, () => setPick({ kind: 'intro' }), pick.kind === 'intro')}
           {stages.map((s) =>
             nodeButton(
               s.order,
-              `1-${s.order}`,
+              `${conf.prefix}-${s.order}`,
               s.title,
               isStageUnlocked(s, cleared),
               cleared.includes(s.id),
               () => setPick({ kind: 'stage', stage: s }),
               pick.kind === 'stage' && pick.stage.id === s.id,
             ),
+          )}
+          {/* Stages not written yet: the road goes on into the fog. */}
+          {Array.from({ length: conf.planned - stages.length }, (_, i) => stages.length + 1 + i).map((n) =>
+            nodeButton(n, `${conf.prefix}-${n}`, 'つづく', false, false, () => undefined, false),
           )}
         </div>
       </div>
@@ -233,7 +264,7 @@ export const StageSelect = () => {
               </div>
               <div className="min-w-0 flex-1">
                 <p className="text-base leading-snug font-black">
-                  <span className="mr-1.5 tabular-nums">{stage ? `1-${stage.order}` : '0'}</span>
+                  <span className="mr-1.5 tabular-nums">{stage ? `${conf.prefix}-${stage.order}` : '0'}</span>
                   <RubyText showFurigana={showFurigana}>{stage ? stage.title : 'はじめの 一歩(いっぽ)'}</RubyText>
                   {stage && cleared.includes(stage.id) && (
                     <span className="ml-1" style={{ color: '#f2a91a' }}>
@@ -315,6 +346,13 @@ export const StageSelect = () => {
       <BottomTabs current="story" />
     </div>
   );
+};
+
+/** Keyed by the arc, so switching arcs starts the screen fresh. */
+export const StageSelect = () => {
+  const { arc } = useParams<{ arc: string }>();
+  const which = arc === 'gendai' ? 'gendai' : 'mukashi';
+  return <StageSelectFor key={which} arc={which} />;
 };
 
 export default StageSelect;

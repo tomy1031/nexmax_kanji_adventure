@@ -64,4 +64,9 @@ export interface CastMember {
   sprites: Record<string, string>;
   /** Name-plate tint. */
   color?: string;
+  /**
+   * Drawn as a dark shape with no face — 現代編's 影の先輩, frightening but
+   * never a named, visible person.
+   */
+  silhouette?: boolean;
 }

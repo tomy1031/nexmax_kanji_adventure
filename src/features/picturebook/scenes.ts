@@ -20,6 +20,7 @@ import {
   tree,
   waves,
 } from './paper';
+import { GENDAI_SCENES } from './gendaiScenes';
 
 /**
  * むかし編 の 絵本 — the scenes.
@@ -595,6 +596,7 @@ const meadow: SceneDef = {
 };
 
 export const SCENES: Record<string, SceneDef> = {
+  ...GENDAI_SCENES,
   mukashi_meadow: meadow,
   mukashi_village: village,
   mukashi_mountain: mountain,
