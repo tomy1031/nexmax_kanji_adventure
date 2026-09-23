@@ -112,6 +112,12 @@ describe('2026-09-23 rules: owning a character is strength, slips wake the oppon
     expect(computeDamage({ ...base, hinted: true }).damage).toBeLessThan(plain);
   });
 
+  it('never calls a write that looked at the stroke order かんぺき', () => {
+    const base = { weapon: null, individual: null, defenderElement: Element.MU, mistakes: 0 };
+    expect(computeDamage(base).perfect).toBe(true);
+    expect(computeDamage({ ...base, hinted: true }).perfect).toBe(false);
+  });
+
   it('adds up worn gear', () => {
     const s = statsFromGear([{ hp: 20 }, { defense: 6 }, { patience: 1, attackPct: 10 }]);
     expect(s).toEqual({ maxHp: PLAYER_MAX_HP + 20, defense: 6, patience: 1, attackPct: 10 });

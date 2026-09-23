@@ -139,6 +139,13 @@ export const BattleScene = ({
   const [rewards, setRewards] = useState<{ gems: number; individual: string | null }>({ gems: 0, individual: null });
 
   const settledRef = useRef(false);
+  // The boss is down and the win is on its way (settleTimer). Nothing the
+  // learner does in that beat — a slip, a look at the stroke order — may
+  // turn it into a loss.
+  const bossDownRef = useRef(false);
+  // Slips in the current write. hanzi-writer's own count starts over when
+  // the stroke order is shown, so the write keeps its own.
+  const writeSlipsRef = useRef(0);
   // The win lands a beat after the last hit. If the screen closes in that
   // beat (にげる), the clear must not be recorded behind the learner's back.
   const settleTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -187,7 +194,7 @@ export const BattleScene = ({
    * so is struck less — which is the whole point (docs/design/07 §2).
    */
   const addSlip = useCallback(() => {
-    if (settledRef.current) return;
+    if (settledRef.current || bossDownRef.current) return;
     const next = rage + 1;
     if (next < patience) {
       setRage(next);
@@ -205,11 +212,14 @@ export const BattleScene = ({
   }, [rage, patience, stage.boss, individual, stats.defense, playerHp, enemyCtl, fieldCtl, settle, totalMistakes]);
 
   const handleMistake = useCallback(() => {
+    if (settledRef.current || bossDownRef.current) return;
+    writeSlipsRef.current += 1;
     sfx.clang();
     addSlip();
   }, [addSlip]);
 
   const showStrokeOrder = () => {
+    if (settledRef.current || bossDownRef.current) return;
     // Looking is allowed, and costs: one slip, and this write hits for half.
     if (!hinted) addSlip();
     setHinted(true);
@@ -218,8 +228,11 @@ export const BattleScene = ({
 
   const handleComplete = useCallback(
     (summary: { totalMistakes: number }) => {
-      const mistakes = summary.totalMistakes;
-      const nextMistakes = totalMistakes + mistakes;
+      if (settledRef.current || bossDownRef.current) return;
+      const mistakes = Math.max(summary.totalMistakes, writeSlipsRef.current);
+      writeSlipsRef.current = 0;
+      // A look at the stroke order counts against the stars like a slip.
+      const nextMistakes = totalMistakes + mistakes + (hinted ? 1 : 0);
       setTotalMistakes(nextMistakes);
 
       // Writing an owned character in battle is a review of it — except in
@@ -254,6 +267,8 @@ export const BattleScene = ({
       setFlash(
         result.perfect
           ? `かんぺき！ ${result.damage} ダメージ`
+          : hinted
+            ? `かきじゅんを みたので はんぶん。${result.damage} ダメージ`
           : result.elementMultiplier > 1
             ? `こうかは ばつぐん！ ${result.damage} ダメージ`
             : result.elementMultiplier < 1
@@ -262,6 +277,7 @@ export const BattleScene = ({
       );
 
       if (nextBossHp <= 0) {
+        bossDownRef.current = true;
         settleTimer.current = setTimeout(() => settle('win', nextMistakes, playerHp), 650);
         return;
       }

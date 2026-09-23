@@ -96,7 +96,8 @@ export const computeDamage = ({
     elementMultiplier,
     accuracyMultiplier: accuracy,
     favoured,
-    perfect: mistakes === 0,
+    // A write that looked at the stroke order is not かんぺき, however clean.
+    perfect: mistakes === 0 && !hinted,
   };
 };
 
