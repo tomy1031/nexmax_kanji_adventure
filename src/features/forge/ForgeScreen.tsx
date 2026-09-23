@@ -5,6 +5,7 @@ import { useGameStore } from '../../store/gameStore';
 import { ALL_KANJI } from '../../lib/kanjiDb';
 import { forgeWeapon, RARITY_LABEL, type Weapon } from '../../lib/forge/weapon';
 import { ELEMENT_LABEL, elementOf } from '../../lib/forge/elements';
+import { kanjiRuby } from '../../lib/reading';
 import { RubyText } from '../../components/ui/Ruby';
 import type { KanjiData } from '../../types/kanji';
 import { GameIcon } from '../../components/ui/GameIcon';
@@ -25,7 +26,7 @@ export const ForgeScreen = () => {
   const [params] = useSearchParams();
   // When the forge is opened mid-stage, 'back' returns to that stage's
   // encounter instead of dumping the player on the map.
-  const backTo = params.get('back') ?? '/map';
+  const backTo = params.get('back') ?? '/map/mukashi';
   const showFurigana = useGameStore((s) => s.settings.furigana);
   const progress = useGameStore((s) => s.progress);
   const weapons = useGameStore((s) => s.weapons);
@@ -146,7 +147,7 @@ export const ForgeScreen = () => {
                   }}
                   aria-label={k ? `${k.char} を はずす` : `${i + 1}つめ`}
                 >
-                  {k?.char ?? '＋'}
+                  {k ? <RubyText showFurigana={showFurigana}>{kanjiRuby(k)}</RubyText> : '＋'}
                 </button>
               );
             })}
@@ -280,7 +281,7 @@ export const ForgeScreen = () => {
                     border: `2px solid ${picked ? 'var(--accent)' : el.color + '55'}`,
                   }}
                 >
-                  {k.char}
+                  <RubyText showFurigana={showFurigana}>{kanjiRuby(k)}</RubyText>
                   {left > 0 && (
                     <span
                       className="absolute -top-1 -right-1 flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-[10px] font-black tabular-nums"

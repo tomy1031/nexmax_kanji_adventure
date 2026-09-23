@@ -1,6 +1,6 @@
 import { useCallback, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, useAnimationControls } from 'framer-motion';
 import type { StageDef } from '../../data/stages';
 import type { KanjiData } from '../../types/kanji';
 import KanjiWriterCanvas, { type KanjiWriterHandle } from '../../components/KanjiWriterCanvas';
@@ -9,9 +9,10 @@ import { useCanvasSize } from '../../hooks/useCanvasSize';
 import { useGameStore } from '../../store/gameStore';
 import { getKanjiById } from '../../lib/kanjiDb';
 import { getIndividual } from '../../data/individuals';
-import { forgeWeapon } from '../../lib/forge/weapon';
+import { weaponOf } from '../../lib/forge/weapon';
 import { ELEMENT_LABEL } from '../../lib/forge/elements';
 import { rustLevel } from '../../lib/srs';
+import { kanjiRuby, primaryReading } from '../../lib/reading';
 import {
   computeDamage,
   counterDamage,
@@ -22,6 +23,8 @@ import {
 import { assetPath } from '../../lib/assetPath';
 import { GameIcon } from '../../components/ui/GameIcon';
 import { featuresUnlockedBy, FEATURE_INTRO } from '../../data/unlocks';
+import PictureBook from '../picturebook/PictureBook';
+import EnemyArt from './EnemyArt';
 
 /**
  * The fight.
@@ -31,20 +34,30 @@ import { featuresUnlockedBy, FEATURE_INTRO } from '../../data/unlocks';
  * back. That is the entire loop, and it means the fight is a test of the same
  * thing the drill taught — with the weapon deciding how much that skill is
  * worth.
+ *
+ * Layout: public/img/design/森の漢字バトル画面.png — HP plates on top, the
+ * picture-book field with Nexmax and the opponent, 今回の漢字, the board.
  */
 
 interface BattleSceneProps {
-  stage: StageDef;
+  stage: Pick<StageDef, 'id' | 'bg' | 'boss' | 'reward' | 'grants'>;
   kanjiPool: KanjiData[];
   onFinish: () => void;
   onFlee: () => void;
+  /**
+   * `tutorial`: 0話's first fight. No rewards and no stage clear; the
+   * character is shown (the first fight is the one where the learner is
+   * told what to write — docs/design/06 §0), and a win hands straight back.
+   */
+  mode?: 'stage' | 'tutorial';
 }
 
 type Outcome = { kind: 'win'; stars: 1 | 2 | 3 } | { kind: 'lose' } | null;
 
-export const BattleScene = ({ stage, kanjiPool, onFinish, onFlee }: BattleSceneProps) => {
+export const BattleScene = ({ stage, kanjiPool, onFinish, onFlee, mode = 'stage' }: BattleSceneProps) => {
   const navigate = useNavigate();
-  const size = useCanvasSize(220, 0.26);
+  const size = useCanvasSize(210, 0.25, 96);
+  const tutorial = mode === 'tutorial';
 
   const showFurigana = useGameStore((s) => s.settings.furigana);
   const equippedId = useGameStore((s) => s.equippedWeapon);
@@ -61,7 +74,7 @@ export const BattleScene = ({ stage, kanjiPool, onFinish, onFlee }: BattleSceneP
     const recipe = weapons.find((w) => w.id === equippedId);
     if (!recipe) return null;
     const kanji = recipe.kanjiIds.map((id) => getKanjiById(id)).filter((k) => k != null);
-    return kanji.length === recipe.kanjiIds.length ? forgeWeapon(kanji) : null;
+    return kanji.length === recipe.kanjiIds.length ? weaponOf(kanji) : null;
   }, [weapons, equippedId]);
 
   const individual = activeIndividualId ? (getIndividual(activeIndividualId) ?? null) : null;
@@ -80,15 +93,18 @@ export const BattleScene = ({ stage, kanjiPool, onFinish, onFlee }: BattleSceneP
   const [totalMistakes, setTotalMistakes] = useState(0);
   const [turn, setTurn] = useState(0);
   const [flash, setFlash] = useState<string | null>(null);
+  const [hit, setHit] = useState<{ n: number; damage: number } | null>(null);
   const [outcome, setOutcome] = useState<Outcome>(null);
   const [rewards, setRewards] = useState<{ gems: number; individual: string | null }>({ gems: 0, individual: null });
 
   const settledRef = useRef(false);
   const writerRef = useRef<KanjiWriterHandle>(null);
+  const heroCtl = useAnimationControls();
+  const enemyCtl = useAnimationControls();
+  const fieldCtl = useAnimationControls();
 
   const target = kanjiPool[turn % kanjiPool.length];
-  // Kun'yomi reads more naturally as a prompt; fall back to on'yomi.
-  const reading = target?.kun[0]?.replace(/\(.*\)/, '') || target?.on[0] || '';
+  const reading = target ? primaryReading(target) : '';
 
   const settle = useCallback(
     (kind: 'win' | 'lose', mistakes: number, hpLeft: number) => {
@@ -102,6 +118,7 @@ export const BattleScene = ({ stage, kanjiPool, onFinish, onFlee }: BattleSceneP
 
       const stars = starsFor(mistakes, hpLeft);
       setOutcome({ kind: 'win', stars });
+      if (tutorial) return;
 
       // First clear pays; a replay does not, so grinding a cleared stage for
       // gems is not a strategy.
@@ -114,7 +131,7 @@ export const BattleScene = ({ stage, kanjiPool, onFinish, onFlee }: BattleSceneP
       clearStage(stage.id);
       setRewards({ gems, individual: granted });
     },
-    [alreadyCleared, stage, addGems, clearStage, grantIndividual],
+    [tutorial, alreadyCleared, stage, addGems, clearStage, grantIndividual],
   );
 
   const handleComplete = useCallback(
@@ -136,6 +153,11 @@ export const BattleScene = ({ stage, kanjiPool, onFinish, onFlee }: BattleSceneP
         rust,
       });
 
+      // The swing: Nexmax lunges, the blade crosses the opponent, it reels.
+      void heroCtl.start({ x: [0, 70, 0], rotate: [0, 8, 0], transition: { duration: 0.45 } });
+      void enemyCtl.start({ x: [0, 14, -8, 0], filter: ['brightness(1)', 'brightness(2.4)', 'brightness(1)'], transition: { duration: 0.45, delay: 0.15 } });
+      setHit({ n: turn, damage: result.damage });
+
       const nextBossHp = Math.max(0, bossHp - result.damage);
       setBossHp(nextBossHp);
 
@@ -150,7 +172,7 @@ export const BattleScene = ({ stage, kanjiPool, onFinish, onFlee }: BattleSceneP
       );
 
       if (nextBossHp <= 0) {
-        settle('win', nextMistakes, playerHp);
+        setTimeout(() => settle('win', nextMistakes, playerHp), 650);
         return;
       }
 
@@ -159,6 +181,8 @@ export const BattleScene = ({ stage, kanjiPool, onFinish, onFlee }: BattleSceneP
         const back = counterDamage(stage.boss.attack, individual, stage.boss.element);
         const nextPlayerHp = Math.max(0, playerHp - back);
         setPlayerHp(nextPlayerHp);
+        void enemyCtl.start({ x: [0, -80, 0], transition: { duration: 0.45, delay: 0.5 } });
+        void fieldCtl.start({ x: [0, -6, 6, -3, 0], transition: { duration: 0.35, delay: 0.75 } });
         setFlash(`3回(かい)いじょう まちがえた。${back} ダメージを うけた`);
         if (nextPlayerHp <= 0) {
           settle('lose', nextMistakes, 0);
@@ -170,145 +194,217 @@ export const BattleScene = ({ stage, kanjiPool, onFinish, onFlee }: BattleSceneP
     },
     [
       totalMistakes, target, progress, recordReview, weapon, individual, stage.boss,
-      rust, bossHp, playerHp, settle,
+      rust, bossHp, playerHp, settle, heroCtl, enemyCtl, fieldCtl, turn,
     ],
   );
 
   // What this clear opens. One per stage at most, announced with a line of
   // why it exists — a new button appearing unexplained teaches nothing.
-  const opened = alreadyCleared ? [] : featuresUnlockedBy(stage.id);
+  const opened = alreadyCleared || tutorial ? [] : featuresUnlockedBy(stage.id);
 
   const elementLabel = ELEMENT_LABEL[stage.boss.element];
 
   if (!target) return null;
 
-  return (
-    <div className="g-stage relative flex min-h-dvh flex-col">
-      <img
-        src={assetPath(`img/bg/${stage.bg}.webp`)}
-        alt=""
-        aria-hidden
-        className="absolute inset-0 h-full w-full object-cover opacity-35"
-        // Same treatment as the novel scene: the picture-book spreads carry
-        // their narration in the art, and a portrait crop lands on it.
-        style={{ filter: 'blur(6px)', transform: 'scale(1.06)' }}
+  const hpBar = (value: number, max: number, color: string) => (
+    <div className="h-3 overflow-hidden rounded-full border border-black/30 bg-black/35">
+      <motion.div
+        className="h-full rounded-full"
+        style={{ background: color }}
+        animate={{ width: `${(value / max) * 100}%` }}
+        transition={{ type: 'spring', stiffness: 220, damping: 26 }}
       />
+    </div>
+  );
 
-      <div className="relative z-10 mx-auto flex w-full max-w-md flex-1 flex-col px-4 pt-3 pb-4">
-        {/* 敵 ------------------------------------------------------------ */}
-        <div className="g-panel mb-2 flex items-center gap-3 p-3">
-          <span
-            className="flex h-14 w-14 shrink-0 items-center justify-center rounded-xl"
-            style={{ background: `${elementLabel.color}22`, color: elementLabel.color }}
+  return (
+    <div className="g-sky relative flex min-h-dvh flex-col">
+      {/* 戦場（絵本） ----------------------------------------------------- */}
+      <motion.div className="relative h-[40dvh] min-h-[280px] overflow-hidden" animate={fieldCtl}>
+        <PictureBook scene={stage.bg} />
+        {/* 上: HP --------------------------------------------------------- */}
+        <div className="absolute inset-x-0 top-0 z-20 flex gap-2 px-2 pt-[max(8px,env(safe-area-inset-top))]">
+          <div
+            className="flex min-w-0 flex-1 items-center gap-2 rounded-2xl border-2 border-white p-1.5 text-white"
+            style={{ background: 'linear-gradient(180deg,#4fb0f5,#1d6fc4)' }}
           >
-            <GameIcon name={stage.boss.icon} size={34} fallback="☠" />
-          </span>
-          <div className="min-w-0 flex-1">
-            <p className="g-title truncate text-sm">
-              <RubyText showFurigana={showFurigana}>{stage.boss.name}</RubyText>
-            </p>
-            <div className="mt-1 h-2.5 overflow-hidden rounded-full" style={{ background: 'var(--line)' }}>
-              <motion.div
-                className="h-full rounded-full"
-                style={{ background: 'var(--color-danger)' }}
-                animate={{ width: `${(bossHp / stage.boss.hp) * 100}%` }}
-                transition={{ type: 'spring', stiffness: 220, damping: 26 }}
-              />
+            <img src={assetPath('img/chara/cut/nexmax.webp')} alt="" aria-hidden className="h-10 w-10 rounded-xl bg-white/80 object-contain" />
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-xs font-black">ネクマックス</p>
+              {hpBar(playerHp, PLAYER_MAX_HP, 'linear-gradient(90deg,#7ed36b,#3e9b3a)')}
+              <p className="text-right text-[10px] font-bold tabular-nums">
+                HP {playerHp} / {PLAYER_MAX_HP}
+              </p>
             </div>
-            <p className="mt-0.5 text-[11px] tabular-nums" style={{ color: 'var(--ink-2)' }}>
-              {bossHp} / {stage.boss.hp}
-              <span className="ml-2">
-                <RubyText showFurigana={showFurigana}>
-                  {`${elementLabel.ja}(${elementLabel.reading})`}
-                </RubyText>
-              </span>
-            </p>
+          </div>
+          <div
+            className="flex min-w-0 flex-1 flex-row-reverse items-center gap-2 rounded-2xl border-2 border-white p-1.5 text-white"
+            style={{ background: 'linear-gradient(180deg,#8a4fd0,#4a2383)' }}
+          >
+            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-black/40" style={{ color: elementLabel.color }}>
+              <GameIcon name={stage.boss.icon} size={26} fallback="☠" />
+            </span>
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-xs font-black">
+                <RubyText showFurigana={showFurigana}>{stage.boss.name}</RubyText>
+              </p>
+              {hpBar(bossHp, stage.boss.hp, 'linear-gradient(90deg,#ff8a6a,#e0362b)')}
+              <p className="text-[10px] font-bold tabular-nums">
+                HP {bossHp} / {stage.boss.hp}{' '}
+                <RubyText showFurigana={showFurigana}>{`${elementLabel.ja}(${elementLabel.reading})`}</RubyText>
+              </p>
+            </div>
           </div>
         </div>
 
-        {/* 自分 ---------------------------------------------------------- */}
-        <div className="g-panel mb-2 flex items-center gap-2 p-2.5 text-xs">
-          <div className="min-w-0 flex-1">
-            <div className="h-2 overflow-hidden rounded-full" style={{ background: 'var(--line)' }}>
-              <motion.div
-                className="h-full rounded-full"
-                style={{ background: 'var(--color-success)' }}
-                animate={{ width: `${(playerHp / PLAYER_MAX_HP) * 100}%` }}
-              />
-            </div>
-            <p className="mt-0.5 tabular-nums" style={{ color: 'var(--ink-2)' }}>
-              HP {playerHp} / {PLAYER_MAX_HP}
-            </p>
-          </div>
-          <span className="g-chip !py-0.5 text-[11px]">
-            {weapon ? (
-              <RubyText showFurigana={showFurigana}>{weapon.name}</RubyText>
-            ) : (
-              <RubyText showFurigana={showFurigana}>武器(ぶき)なし</RubyText>
+        <div className="absolute inset-x-0 bottom-3 flex items-end justify-between px-4">
+          <motion.div className="relative" animate={heroCtl}>
+            <img
+              src={assetPath('img/chara/cut/guide.webp')}
+              alt=""
+              aria-hidden
+              className="h-[20dvh] min-h-[130px] w-auto"
+              style={{ filter: 'drop-shadow(2px 0 0 #fff) drop-shadow(-2px 0 0 #fff) drop-shadow(0 6px 8px rgba(0,0,0,0.35))' }}
+            />
+            {weapon && (
+              <span
+                className="absolute -top-4 -left-3 -rotate-12"
+                style={{ color: '#fffbe6', filter: 'drop-shadow(0 0 4px #fff) drop-shadow(0 0 10px rgba(255,200,70,1)) drop-shadow(0 2px 0 #7a4a26)' }}
+              >
+                <GameIcon name={weapon.icon} size={64} />
+              </span>
             )}
-          </span>
+          </motion.div>
+          <div className="relative">
+            <EnemyArt art={stage.boss.art} icon={stage.boss.icon} color={elementLabel.color} size={150} controls={enemyCtl} />
+            <AnimatePresence>
+              {hit && (
+                <motion.span
+                  key={hit.n}
+                  initial={{ opacity: 0, y: 0, scale: 0.6 }}
+                  animate={{ opacity: [0, 1, 1, 0], y: -50, scale: 1.2 }}
+                  transition={{ duration: 1.1, delay: 0.2 }}
+                  className="g-outline-text pointer-events-none absolute top-6 left-1/2 -translate-x-1/2 text-3xl font-black"
+                >
+                  {hit.damage}
+                </motion.span>
+              )}
+            </AnimatePresence>
+            {/* 刃のあと */}
+            <AnimatePresence>
+              {hit && (
+                <motion.div
+                  key={`slash-${hit.n}`}
+                  className="pointer-events-none absolute top-1/2 left-1/2 h-2 w-44 -translate-x-1/2 -translate-y-1/2 -rotate-[35deg] rounded-full"
+                  style={{ background: 'linear-gradient(90deg, transparent, #fff, #ffe27a, transparent)', boxShadow: '0 0 16px #ffd24a' }}
+                  initial={{ scaleX: 0, opacity: 1 }}
+                  animate={{ scaleX: 1, opacity: 0 }}
+                  transition={{ duration: 0.45, delay: 0.15 }}
+                />
+              )}
+            </AnimatePresence>
+          </div>
         </div>
+      </motion.div>
+
+      <div className="relative z-10 mx-auto -mt-3 flex w-full max-w-md flex-1 flex-col gap-2 px-3 pb-4">
+        {/* 今回の漢字 ------------------------------------------------------ */}
+        <div className="g-parchment relative px-3 pt-4 pb-2">
+          <span className="g-btn-green absolute -top-3 left-3 rounded-lg px-3 py-0.5 text-xs font-black">
+            <RubyText showFurigana={showFurigana}>今回(こんかい)の 漢字(かんじ)</RubyText>
+          </span>
+          <div className="flex items-center gap-3">
+            {tutorial && (
+              <span className="text-[40px] leading-[1.5] font-black">
+                <RubyText showFurigana={showFurigana}>{kanjiRuby(target)}</RubyText>
+              </span>
+            )}
+            <div className="min-w-0 flex-1 text-sm">
+              <p className="font-black">
+                よみ： <span className="text-2xl">{reading}</span>
+              </p>
+              <p className="truncate" style={{ color: 'var(--ink-2)' }}>
+                meaning: <b className="text-base">{target.meanings.slice(0, 2).join(' / ')}</b>
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* 書く ------------------------------------------------------------
+            Outside the tutorial the character itself is NOT shown. The
+            learner is given its reading and meaning and has to recall the
+            shape — that is what makes the ten reps in the drill worth
+            something. 書きじゅん reveals it for anyone who is stuck. */}
+        <div className="flex items-stretch justify-center gap-2">
+          <div className="rounded-2xl border-4 border-[#4fb0f5] bg-white p-1 shadow-[0_0_0_3px_#fff]">
+            <KanjiWriterCanvas
+              ref={writerRef}
+              key={`${target.id}-${turn}`}
+              char={target.char}
+              size={size}
+              quizMode
+              showSample={tutorial}
+              onComplete={handleComplete}
+            />
+          </div>
+          <div className="flex flex-col justify-between gap-2">
+            <button
+              type="button"
+              className="g-parchment flex w-16 flex-1 flex-col items-center justify-center !rounded-xl text-[10px] leading-tight font-black"
+              onClick={() => writerRef.current?.animateStroke()}
+            >
+              <span aria-hidden className="text-lg">
+                ✎
+              </span>
+              <RubyText showFurigana={showFurigana}>わからない</RubyText>
+              <RubyText showFurigana={showFurigana}>書(か)きじゅん</RubyText>
+            </button>
+            {!tutorial && (
+              <button
+                type="button"
+                className="g-parchment flex w-16 flex-1 flex-col items-center justify-center !rounded-xl text-[10px] leading-tight font-black"
+                onClick={onFlee}
+              >
+                <span aria-hidden className="text-lg">
+                  ↩
+                </span>
+                にげる
+              </button>
+            )}
+          </div>
+        </div>
+
+        <div className="g-btn-red mx-auto flex min-h-[48px] w-full max-w-xs items-center justify-center rounded-full text-lg font-black" aria-live="polite">
+          <AnimatePresence mode="wait">
+            <motion.span
+              key={flash ? flash + turn : 'idle'}
+              initial={{ opacity: 0, y: 6 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0 }}
+              className="px-3 text-center text-sm leading-snug"
+            >
+              <RubyText showFurigana={showFurigana}>{flash ?? '⚔ 書(か)くと こうげき！'}</RubyText>
+            </motion.span>
+          </AnimatePresence>
+        </div>
+
+        {weapon ? (
+          <p className="text-center text-xs font-bold" style={{ color: 'var(--ink-2)' }}>
+            <RubyText showFurigana={showFurigana}>{`そうび：${weapon.name}`}</RubyText>
+          </p>
+        ) : (
+          <p className="text-center text-xs font-bold" style={{ color: 'var(--ink-2)' }}>
+            <RubyText showFurigana={showFurigana}>そうび：武器(ぶき)なし（とても 弱(よわ)い）</RubyText>
+          </p>
+        )}
 
         {rust > 0.3 && (
-          <p className="mb-2 text-center text-[11px]" style={{ color: 'var(--color-danger)' }}>
+          <p className="text-center text-[11px]" style={{ color: 'var(--color-danger)' }}>
             <RubyText showFurigana={showFurigana}>
               武器(ぶき)が さびて います。もとの 漢字(かんじ)を 復習(ふくしゅう)すると 直(なお)ります。
             </RubyText>
           </p>
         )}
-
-        {/* 書く ------------------------------------------------------------
-            The character itself is deliberately NOT shown. The learner is
-            given its reading and meaning and has to recall the shape — that
-            is the whole point of the fight, and it is what makes the ten reps
-            in the drill worth something. 書きじゅん reveals it for anyone
-            who is stuck. */}
-        <p className="text-center text-xs" style={{ color: 'var(--ink-2)' }}>
-          <RubyText showFurigana={showFurigana}>この ことばを 書(か)いて こうげき</RubyText>
-        </p>
-        <p className="g-title mb-1.5 text-center text-lg leading-tight">
-          {reading && <span>{reading}</span>}
-          <span className="ml-2 text-sm font-normal" style={{ color: 'var(--ink-2)' }}>
-            {target.meanings.join(' / ')}
-          </span>
-        </p>
-        <div className="flex justify-center">
-          <KanjiWriterCanvas
-            ref={writerRef}
-            key={`${target.id}-${turn}`}
-            char={target.char}
-            size={size}
-            quizMode
-            onComplete={handleComplete}
-          />
-        </div>
-        <button
-          type="button"
-          className="g-btn g-btn-ghost mx-auto mt-2 !min-h-[40px] !px-4 text-xs"
-          onClick={() => writerRef.current?.animateStroke()}
-        >
-          <RubyText showFurigana={showFurigana}>わからない（書(か)きじゅんを 見(み)る）</RubyText>
-        </button>
-
-        <div className="mt-2 h-10 text-center" aria-live="polite">
-          <AnimatePresence mode="wait">
-            {flash && (
-              <motion.p
-                key={flash + turn}
-                initial={{ opacity: 0, y: 6 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0 }}
-                className="g-title text-sm"
-              >
-                <RubyText showFurigana={showFurigana}>{flash}</RubyText>
-              </motion.p>
-            )}
-          </AnimatePresence>
-        </div>
-
-        <button type="button" className="g-btn g-btn-ghost mt-auto w-full" onClick={onFlee}>
-          <RubyText showFurigana={showFurigana}>にげる（マップへ もどる）</RubyText>
-        </button>
       </div>
 
       {/* 結果 ------------------------------------------------------------ */}
@@ -323,44 +419,34 @@ export const BattleScene = ({ stage, kanjiPool, onFinish, onFlee }: BattleSceneP
               initial={{ scale: 0.88, y: 16 }}
               animate={{ scale: 1, y: 0 }}
               transition={{ type: 'spring', stiffness: 300, damping: 24 }}
-              className="g-panel-solid w-full max-w-sm p-6 text-center"
+              className="g-parchment w-full max-w-sm p-6 text-center"
             >
               {outcome.kind === 'win' ? (
                 <>
                   <p className="g-eyebrow">クリア</p>
-                  <p className="my-2 text-3xl" style={{ color: 'var(--color-gold)' }}>
+                  <p className="my-2 text-3xl" style={{ color: 'var(--color-gold-2)' }}>
                     {'★'.repeat(outcome.stars)}
                     <span style={{ color: 'var(--line)' }}>{'★'.repeat(3 - outcome.stars)}</span>
                   </p>
                   <p className="g-title text-lg">
                     <RubyText showFurigana={showFurigana}>
-                      {`${stage.boss.name} に かった！`}
+                      {tutorial ? `${stage.boss.name}は にげて いった！` : `${stage.boss.name} に かった！`}
                     </RubyText>
                   </p>
                   <p className="mt-1 text-sm" style={{ color: 'var(--ink-2)' }}>
-                    <RubyText showFurigana={showFurigana}>
-                      {`まちがえた ところ ${totalMistakes}`}
-                    </RubyText>
+                    <RubyText showFurigana={showFurigana}>{`まちがえた ところ ${totalMistakes}`}</RubyText>
                   </p>
 
-                  {rewards.gems > 0 && (
-                    <p className="g-chip g-chip-gold mt-3">◆ {rewards.gems} もらった</p>
-                  )}
+                  {rewards.gems > 0 && <p className="g-chip g-chip-gold mt-3">◆ {rewards.gems} もらった</p>}
                   {rewards.individual && (
                     <p className="mt-2 text-sm">
-                      <RubyText showFurigana={showFurigana}>
-                        新(あたら)しい なかまが 来(き)た！
-                      </RubyText>
+                      <RubyText showFurigana={showFurigana}>新(あたら)しい なかまが 来(き)た！</RubyText>
                     </p>
                   )}
 
                   {opened.map((f) => (
-                    <div
-                      key={f}
-                      className="mt-3 rounded-xl px-3 py-2.5 text-left"
-                      style={{ background: 'rgba(255,207,74,0.16)' }}
-                    >
-                      <p className="g-title text-sm" style={{ color: 'var(--color-gold-2)' }}>
+                    <div key={f} className="mt-3 rounded-xl px-3 py-2.5 text-left" style={{ background: 'rgba(255,207,74,0.2)' }}>
+                      <p className="g-title text-sm" style={{ color: '#b0741a' }}>
                         <RubyText showFurigana={showFurigana}>
                           {`「${FEATURE_INTRO[f].label}」が つかえるように なりました`}
                         </RubyText>
@@ -397,21 +483,20 @@ export const BattleScene = ({ stage, kanjiPool, onFinish, onFlee }: BattleSceneP
                 </>
               )}
 
-              <div className="mt-5 flex gap-2">
-                <button type="button" className="g-btn g-btn-ghost flex-1" onClick={() => navigate('/forge')}>
-                  <RubyText showFurigana={showFurigana}>合成(ごうせい)</RubyText>
+              {tutorial ? (
+                <button type="button" className="g-btn g-btn-primary mt-5 w-full text-lg" onClick={onFinish}>
+                  つぎへ
                 </button>
-                <button
-                  type="button"
-                  className="g-btn g-btn-primary flex-1"
-                  onClick={() => {
-                    onFinish();
-                    navigate('/map');
-                  }}
-                >
-                  <RubyText showFurigana={showFurigana}>マップへ</RubyText>
-                </button>
-              </div>
+              ) : (
+                <div className="mt-5 flex gap-2">
+                  <button type="button" className="g-btn g-btn-accent flex-1" onClick={() => navigate('/forge')}>
+                    <RubyText showFurigana={showFurigana}>合成(ごうせい)</RubyText>
+                  </button>
+                  <button type="button" className="g-btn g-btn-primary flex-1" onClick={onFinish}>
+                    <RubyText showFurigana={showFurigana}>ステージへ</RubyText>
+                  </button>
+                </div>
+              )}
             </motion.div>
           </motion.div>
         )}

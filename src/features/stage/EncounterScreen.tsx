@@ -4,10 +4,11 @@ import type { StageDef } from '../../data/stages';
 import type { KanjiData } from '../../types/kanji';
 import { RubyText } from '../../components/ui/Ruby';
 import { GameIcon } from '../../components/ui/GameIcon';
-import { assetPath } from '../../lib/assetPath';
+import { kanjiRuby } from '../../lib/reading';
+import PictureBook from '../picturebook/PictureBook';
 import { useGameStore } from '../../store/gameStore';
 import { getKanjiById } from '../../lib/kanjiDb';
-import { forgeWeapon, RARITY_LABEL } from '../../lib/forge/weapon';
+import { weaponOf, RARITY_LABEL } from '../../lib/forge/weapon';
 import { ELEMENT_LABEL, effectiveness } from '../../lib/forge/elements';
 
 /**
@@ -24,12 +25,25 @@ import { ELEMENT_LABEL, effectiveness } from '../../lib/forge/elements';
 interface EncounterScreenProps {
   stage: StageDef;
   kanjiPool: KanjiData[];
+  /** How many of the stage's kanji the learner owns, and out of how many. */
+  ownedCount: number;
+  totalCount: number;
   onFight: () => void;
   onForge: () => void;
+  onPractice: () => void;
   onBack: () => void;
 }
 
-export const EncounterScreen = ({ stage, kanjiPool, onFight, onForge, onBack }: EncounterScreenProps) => {
+export const EncounterScreen = ({
+  stage,
+  kanjiPool,
+  ownedCount,
+  totalCount,
+  onFight,
+  onForge,
+  onPractice,
+  onBack,
+}: EncounterScreenProps) => {
   const showFurigana = useGameStore((s) => s.settings.furigana);
   const weapons = useGameStore((s) => s.weapons);
   const equippedId = useGameStore((s) => s.equippedWeapon);
@@ -40,7 +54,7 @@ export const EncounterScreen = ({ stage, kanjiPool, onFight, onForge, onBack }: 
       weapons
         .map((recipe) => {
           const kanji = recipe.kanjiIds.map((id) => getKanjiById(id)).filter((k) => k != null);
-          return kanji.length === recipe.kanjiIds.length ? forgeWeapon(kanji) : null;
+          return kanji.length === recipe.kanjiIds.length ? weaponOf(kanji) : null;
         })
         .filter((w) => w != null)
         .sort((a, b) => b.attack - a.attack),
@@ -52,14 +66,8 @@ export const EncounterScreen = ({ stage, kanjiPool, onFight, onForge, onBack }: 
   const bossEl = ELEMENT_LABEL[stage.boss.element];
 
   return (
-    <div className="g-stage relative flex min-h-dvh flex-col">
-      <img
-        src={assetPath(`img/bg/${stage.bg}.webp`)}
-        alt=""
-        aria-hidden
-        className="absolute inset-0 h-full w-full object-cover opacity-40"
-        style={{ filter: 'blur(6px)', transform: 'scale(1.06)' }}
-      />
+    <div className="relative flex min-h-dvh flex-col">
+      <PictureBook scene={stage.bg} className="!fixed" />
 
       <div className="relative z-10 mx-auto flex w-full max-w-md flex-1 flex-col px-4 py-4">
         {/* 相手 ---------------------------------------------------------- */}
@@ -96,11 +104,25 @@ export const EncounterScreen = ({ stage, kanjiPool, onFight, onForge, onBack }: 
           </p>
           <div className="flex flex-wrap gap-1.5">
             {kanjiPool.map((kj) => (
-              <span key={kj.id} className="g-chip !px-2.5 !py-1 text-lg font-black">
-                {kj.char}
+              <span key={kj.id} className="g-chip !px-2.5 !py-0 text-lg leading-[1.9] font-black">
+                <RubyText showFurigana={showFurigana}>{kanjiRuby(kj)}</RubyText>
               </span>
             ))}
           </div>
+          {ownedCount < 3 && (
+            <div className="mt-2 rounded-lg px-3 py-2 text-xs" style={{ background: 'rgba(255,207,74,0.22)' }}>
+              <p>
+                <RubyText showFurigana={showFurigana}>
+                  {ownedCount === 0
+                    ? `この ステージの 漢字(かんじ)を まだ 1(ひと)つも 持(も)って いません（0 / ${totalCount}）。れんしゅうで 手(て)に 入(い)れると、書(か)く 字(じ)が わかります。`
+                    : `この ステージの 漢字(かんじ)は まだ ${ownedCount} / ${totalCount}。れんしゅうで ふやすと、もっと たたかいやすく なります。`}
+                </RubyText>
+              </p>
+              <button type="button" className="g-btn g-btn-accent mt-2 w-full !min-h-[40px] text-xs" onClick={onPractice}>
+                <RubyText showFurigana={showFurigana}>漢字(かんじ)れんしゅうへ</RubyText>
+              </button>
+            </div>
+          )}
         </div>
 
         {/* 武器 ---------------------------------------------------------- */}
@@ -139,7 +161,9 @@ export const EncounterScreen = ({ stage, kanjiPool, onFight, onForge, onBack }: 
                       }}
                     >
                       <GameIcon name={w.icon} size={26} />
-                      <span className="w-full truncate text-[10px] font-bold">{w.word}</span>
+                      <span className="w-full truncate text-[10px] font-bold">
+                        <RubyText showFurigana={showFurigana}>{w.name}</RubyText>
+                      </span>
                       <span className="text-[10px] tabular-nums">
                         {RARITY_LABEL[w.rarity].ja} {w.attack}
                       </span>

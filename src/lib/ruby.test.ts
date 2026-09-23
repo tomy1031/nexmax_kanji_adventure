@@ -47,3 +47,10 @@ describe('kanjiIn / unreadKanji', () => {
     expect(unreadKanji('村(むら)の 人(ひと)')).toEqual([]);
   });
 });
+
+describe('digits with a reading', () => {
+  it('puts the reading over the digits only', () => {
+    expect(parseRuby('2(ふた)つ')).toEqual([{ text: '2', reading: 'ふた' }, { text: 'つ' }]);
+    expect(parseRuby('10回(かい)')).toEqual([{ text: '10' }, { text: '回', reading: 'かい' }]);
+  });
+});

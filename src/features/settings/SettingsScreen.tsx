@@ -79,17 +79,22 @@ export const SettingsScreen = () => {
           </p>
           <ul className="space-y-1.5">
             <li>
-              武器(ぶき)の アイコン:{' '}
+              <RubyText showFurigana={showFurigana}>武器(ぶき)の アイコン:</RubyText>{' '}
               <a href="https://game-icons.net/" target="_blank" rel="noreferrer" className="underline">
                 Game Icons
               </a>{' '}
               (CC BY 3.0)
             </li>
             <li>
-              熟語(じゅくご)の 辞書(じしょ): EDICT2 — Electronic Dictionary Research &amp; Development Group (CC BY-SA 4.0)
+              <RubyText showFurigana={showFurigana}>熟語(じゅくご)の 辞書(じしょ):</RubyText> EDICT2 — Electronic Dictionary Research &amp;
+              Development Group (CC BY-SA 4.0)
             </li>
-            <li>書(か)きじゅん: hanzi-writer / KanjiVG</li>
-            <li>ネクマックス・絵本(えほん)の 絵(え): 株式会社(かぶしきがいしゃ)ネクストメイク</li>
+            <li>
+              <RubyText showFurigana={showFurigana}>書(か)きじゅん:</RubyText> hanzi-writer / KanjiVG
+            </li>
+            <li>
+              <RubyText showFurigana={showFurigana}>ネクマックス・絵本(えほん)の 絵(え): 株式会社(かぶしきがいしゃ)ネクストメイク</RubyText>
+            </li>
           </ul>
         </div>
 

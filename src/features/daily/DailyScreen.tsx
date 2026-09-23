@@ -1,6 +1,7 @@
 import { useNavigate } from 'react-router-dom';
 import { useGameStore } from '../../store/gameStore';
 import { DAILY_TASKS, DAILY_TOTAL, isTaskClaimable, isTaskComplete } from '../../data/dailyTasks';
+import { kanjiRuby } from '../../lib/reading';
 import { RubyText } from '../../components/ui/Ruby';
 import { getDueKanjiIds } from '../../lib/srs';
 import { getKanjiById } from '../../lib/kanjiDb';
@@ -27,7 +28,7 @@ export const DailyScreen = () => {
         className="sticky top-0 z-20 flex items-center justify-between px-4 py-3 backdrop-blur-md"
         style={{ background: 'var(--panel)' }}
       >
-        <button type="button" className="g-btn g-btn-ghost !min-h-[40px] !px-4 text-sm" onClick={() => navigate('/map')}>
+        <button type="button" className="g-btn g-btn-ghost !min-h-[40px] !px-4 text-sm" onClick={() => navigate('/map/mukashi')}>
           もどる
         </button>
         <h1 className="g-title text-base">
@@ -119,8 +120,8 @@ export const DailyScreen = () => {
               </p>
               <div className="mt-2 flex flex-wrap gap-1.5">
                 {due.slice(0, 20).map((k) => (
-                  <span key={k.id} className="g-chip !px-2.5 !py-1 text-lg font-black">
-                    {k.char}
+                  <span key={k.id} className="g-chip !px-2.5 !py-0 text-lg leading-[1.9] font-black">
+                    <RubyText showFurigana={showFurigana}>{kanjiRuby(k)}</RubyText>
                   </span>
                 ))}
               </div>

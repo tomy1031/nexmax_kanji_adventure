@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useGameStore } from '../../store/gameStore';
 import { getKanjiById } from '../../lib/kanjiDb';
-import { forgeWeapon, RARITY_LABEL, CLASS_LABEL } from '../../lib/forge/weapon';
+import { weaponOf, RARITY_LABEL, CLASS_LABEL } from '../../lib/forge/weapon';
 import { ELEMENT_LABEL } from '../../lib/forge/elements';
 import { INDIVIDUALS, getIndividual } from '../../data/individuals';
 import { RubyText } from '../../components/ui/Ruby';
@@ -33,7 +33,7 @@ export const CollectionScreen = () => {
         .map((recipe) => {
           const kanji = recipe.kanjiIds.map((id) => getKanjiById(id)).filter((k) => k != null);
           if (kanji.length !== recipe.kanjiIds.length) return null;
-          const weapon = forgeWeapon(kanji);
+          const weapon = weaponOf(kanji);
           if (!weapon) return null;
           const rust = Math.max(...recipe.kanjiIds.map((id) => rustLevel(progress[id])), 0);
           return { weapon, rust };
@@ -50,7 +50,7 @@ export const CollectionScreen = () => {
         style={{ background: 'var(--panel)' }}
       >
         <div className="flex items-center justify-between">
-          <button type="button" className="g-btn g-btn-ghost !min-h-[40px] !px-4 text-sm" onClick={() => navigate('/map')}>
+          <button type="button" className="g-btn g-btn-ghost !min-h-[40px] !px-4 text-sm" onClick={() => navigate('/map/mukashi')}>
             もどる
           </button>
           <h1 className="g-title text-base">
@@ -135,7 +135,7 @@ export const CollectionScreen = () => {
                       </div>
                       {isEquipped && (
                         <span className="g-chip !py-0.5 text-[11px]" style={{ background: 'var(--accent)', color: '#fff', borderColor: 'transparent' }}>
-                          そうび中
+                          <RubyText showFurigana={showFurigana}>そうび中(ちゅう)</RubyText>
                         </span>
                       )}
                     </button>

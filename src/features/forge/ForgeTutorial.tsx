@@ -74,9 +74,13 @@ export const ForgeTutorial = () => {
           {/* 2枚目と3枚目は、実物を見せたほうが早い */}
           {index === 1 && (
             <div className="g-panel mt-3 flex items-center justify-center gap-2 p-3 text-center">
-              <span className="text-2xl font-black">火</span>
+              <span className="text-2xl font-black">
+                <RubyText showFurigana={showFurigana}>火(ひ)</RubyText>
+              </span>
               <span style={{ color: 'var(--ink-3)' }}>＋</span>
-              <span className="text-2xl font-black">山</span>
+              <span className="text-2xl font-black">
+                <RubyText showFurigana={showFurigana}>山(やま)</RubyText>
+              </span>
               <span style={{ color: 'var(--ink-3)' }}>＝</span>
               <span className="g-chip g-chip-gold text-sm">
                 <RubyText showFurigana={showFurigana}>火山(かざん)</RubyText> ★★★★
@@ -85,12 +89,16 @@ export const ForgeTutorial = () => {
           )}
           {index === 2 && (
             <div className="g-panel mt-3 flex items-center justify-center gap-2 p-3 text-center">
-              <span className="text-2xl font-black">山</span>
+              <span className="text-2xl font-black">
+                <RubyText showFurigana={showFurigana}>山(やま)</RubyText>
+              </span>
               <span style={{ color: 'var(--ink-3)' }}>＋</span>
-              <span className="text-2xl font-black">火</span>
+              <span className="text-2xl font-black">
+                <RubyText showFurigana={showFurigana}>火(ひ)</RubyText>
+              </span>
               <span style={{ color: 'var(--ink-3)' }}>＝</span>
               <span className="g-chip text-sm" style={{ color: 'var(--ink-3)' }}>
-                山火 ★
+                <RubyText showFurigana={showFurigana}>山火(やまひ)</RubyText> ★
               </span>
             </div>
           )}

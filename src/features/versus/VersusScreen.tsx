@@ -6,7 +6,7 @@ import { RubyText } from '../../components/ui/Ruby';
 import { useCanvasSize } from '../../hooks/useCanvasSize';
 import { useGameStore } from '../../store/gameStore';
 import { getKanjiByChar, getKanjiById, ALL_KANJI } from '../../lib/kanjiDb';
-import { forgeWeapon } from '../../lib/forge/weapon';
+import { weaponOf } from '../../lib/forge/weapon';
 import { preloadCharData } from '../../lib/strokeLoader';
 import { isVersusConfigured } from '../../lib/supabaseClient';
 import { networkManager, MatchCancelledError } from './NetworkManager';
@@ -63,7 +63,7 @@ export const VersusScreen = () => {
     const recipe = weapons.find((w) => w.id === equippedId);
     if (!recipe) return null;
     const kanji = recipe.kanjiIds.map((id) => getKanjiById(id)).filter((k) => k != null);
-    return kanji.length === recipe.kanjiIds.length ? forgeWeapon(kanji) : null;
+    return kanji.length === recipe.kanjiIds.length ? weaponOf(kanji) : null;
   }, [weapons, equippedId]);
 
   /** 1.0 with nothing equipped, at most 1.2 with the best weapon. */
@@ -229,10 +229,11 @@ export const VersusScreen = () => {
           </RubyText>
         </p>
         <p className="text-xs" style={{ color: 'var(--ink-3)' }}>
-          VITE_SUPABASE_URL と VITE_SUPABASE_ANON_KEY を設定してビルドすると使えます
-          （docs/versus.md）。
+          <RubyText showFurigana={showFurigana}>
+            VITE_SUPABASE_URL と VITE_SUPABASE_ANON_KEY を 設定(せってい)して ビルドすると 使(つか)えます（docs/versus.md）。
+          </RubyText>
         </p>
-        <button type="button" className="g-btn g-btn-primary" onClick={() => navigate('/map')}>
+        <button type="button" className="g-btn g-btn-primary" onClick={() => navigate('/map/mukashi')}>
           もどる
         </button>
       </div>
@@ -250,7 +251,7 @@ export const VersusScreen = () => {
           className="g-btn g-btn-ghost !min-h-[40px] !px-4 text-sm"
           onClick={() => {
             networkManager.disconnect();
-            navigate('/map');
+            navigate('/map/mukashi');
           }}
         >
           もどる
@@ -336,7 +337,11 @@ export const VersusScreen = () => {
             <div className="g-panel mb-3 p-3">
               <p className="mb-1 text-xs" style={{ color: 'var(--ink-2)' }}>
                 <RubyText showFurigana={showFurigana}>じぶん</RubyText>
-                {weapon && <span className="ml-2">{weapon.word}</span>}
+                {weapon && (
+                  <span className="ml-2">
+                    <RubyText showFurigana={showFurigana}>{weapon.name}</RubyText>
+                  </span>
+                )}
               </p>
               <div className="h-2.5 overflow-hidden rounded-full" style={{ background: 'var(--line)' }}>
                 <motion.div
@@ -416,7 +421,7 @@ export const VersusScreen = () => {
               </p>
             )}
             <div className="flex w-full gap-2">
-              <button type="button" className="g-btn g-btn-ghost flex-1" onClick={() => navigate('/map')}>
+              <button type="button" className="g-btn g-btn-ghost flex-1" onClick={() => navigate('/map/mukashi')}>
                 もどる
               </button>
               <button

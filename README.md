@@ -11,9 +11,19 @@
 
 ## 遊びかた（1ステージの流れ）
 
+ステージ選択で、入りかたを 2つから えらびます。
+
 ```
-ストーリー  →  書取り 10回 × 新しい漢字  →  合成  →  戦闘  →  報酬
-（ノベルUI）     （漢字を手に入れる）      （武器を作る）  （書いて戦う）  （ジェム・なかま）
+漢字れんしゅう     書いた字が 刃になって 岩を斬る。1字書くと 岩が割れて かけらが1つ。10こで その漢字が手に入る
+ストーリー（バトル） 動く絵本のお話 → 相手が現れる → 持っている漢字を書いて戦う → 報酬（ジェム・なかま）
+```
+
+手に入れた漢字は **合成** で武器にします（1話のあとに開く）。
+
+### 0話（チュートリアル）
+
+```
+お話 → 「一」を10回書いて 岩を割る（一を入手）→ 一(いち)の太刀(たち)を作る → お話 → いたずらガラスと はじめての戦い → 1話へ
 ```
 
 - **漢字は書取り10回で手に入る。** 3回以上まちがえた回は数えません。
@@ -46,6 +56,13 @@ N5の85字だけでも **347語** が作れるので、最初のステージ群�
 むかし編は、いただいた絵本6ページを正典として脚色し、7〜10話で続きを書いています。
 枝のない大木は「村で覚えた字をきざんで足がかりにする」ことで登ります。
 
+**お話は JS で動く絵本**です（`src/features/picturebook/`）。元の絵本の色あいを、ちぎった紙の
+切り絵（白いふち・紙の目）で組み立て、雲が流れ、イノシシが走り、ハチが飛び、光の入口が回ります。
+各レイヤーは静的な SVG を画像として1回だけ描き、動かすのは位置と透明度だけなので、安いスマホでも重くなりません。
+ネクマックスの絵は描き起こさず、既存の画像を切り抜いて使っています（`scripts/cutout_sprites.mjs`）。
+
+画面のデザインは `public/img/design/` の参考画像に寄せています。
+
 ## コマンド
 
 ```
@@ -54,12 +71,13 @@ npm run build      # ビルド
 npm run preview    # ビルドしたものを確認
 npm run lint       # ESLint
 npm run typecheck  # tsc --noEmit
-npm test           # Vitest（68件）
+npm test           # Vitest
 
 npm run data:build # kanji_master.csv → src/data/kanji.generated.ts
 node scripts/build_compounds.mjs <edict2>      # 熟語辞書を作り直す
 node scripts/build_icon_registry.mjs           # 武器アイコンの取り込み一覧を作り直す
 node scripts/prepare_assets.mjs                # 生の画像を web サイズの webp へ
+node scripts/cutout_sprites.mjs                # キャラ画像の白い背景を抜いて 絵本用の 切り抜きを作る
 node scripts/playtest.mjs                      # 実機幅で通しプレイして画面を撮る
 ```
 
@@ -68,6 +86,8 @@ node scripts/playtest.mjs                      # 実機幅で通しプレイし�
 データの正しさは目視ではなく機械で見ています。
 
 - 本文の漢字に **ふりがなが1つも欠けていない**（`unreadKanji` が0件）
+- **画面のソースにも** ふりがな無しの漢字が無い（`src/furigana.test.ts` が TypeScript の構文木を読んで検査）
+- 絵本の **シーン名・効果名が実在する**
 - 10ステージが **N5の85字をちょうど1回ずつ** 配っている
 - ノベルの **分岐の行き先が全て存在する**（行き止まりがない）
 - 武器アイコン名が **実在し、バンドルに含まれている**
@@ -77,7 +97,7 @@ node scripts/playtest.mjs                      # 実機幅で通しプレイし�
 
 ```
 src/components/   なぞり書きキャンバス・ふりがな表示など共通UI
-src/features/     画面（title / map / novel / write / forge / battle / gacha / collection / daily / settings）
+src/features/     画面（title / map / novel / picturebook / write / forge / battle / gacha / collection / daily / settings）
 src/lib/          エンジン（forge / battle / srs / ruby / strokeLoader）
 src/data/         漢字台帳・熟語辞書・ステージ表・脚本・個体
 src/store/        セーブデータ（zustand + localStorage）

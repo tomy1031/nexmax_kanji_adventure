@@ -16,6 +16,7 @@ import {
   FoundVia,
   type WordCard,
 } from '../../lib/forge/discovery';
+import { charRuby } from '../../lib/reading';
 import { RubyText } from '../../components/ui/Ruby';
 
 /**
@@ -71,7 +72,7 @@ export const WordBook = () => {
     <div className="g-stage min-h-dvh pb-8">
       <header className="sticky top-0 z-20 px-4 py-3 backdrop-blur-md" style={{ background: 'var(--panel)' }}>
         <div className="flex items-center justify-between">
-          <button type="button" className="g-btn g-btn-ghost !min-h-[40px] !px-4 text-sm" onClick={() => navigate('/map')}>
+          <button type="button" className="g-btn g-btn-ghost !min-h-[40px] !px-4 text-sm" onClick={() => navigate('/map/mukashi')}>
             もどる
           </button>
           <h1 className="g-title text-base">
@@ -89,14 +90,14 @@ export const WordBook = () => {
           </span>
           {title && (
             <span className="g-chip g-chip-gold !py-0.5">
-              <RubyText showFurigana={showFurigana}>{`${title.word}(${title.reading})`}</RubyText>
+              <RubyText showFurigana={showFurigana}>{title.ruby}</RubyText>
             </span>
           )}
         </div>
         {upcoming && (
           <p className="mt-1 text-[11px]" style={{ color: 'var(--ink-3)' }}>
             <RubyText showFurigana={showFurigana}>
-              {`あと ${upcoming.at - earned} 語(ご)で 「${upcoming.word}(${upcoming.reading})」`}
+              {`あと ${upcoming.at - earned} 語(ご)で 「${upcoming.ruby}」`}
             </RubyText>
           </p>
         )}
@@ -178,7 +179,9 @@ export const WordBook = () => {
               .filter((c) => c.total > 0)
               .map((c) => (
                 <li key={c.char} className="g-panel flex items-center gap-3 p-2.5">
-                  <span className="text-2xl font-black">{c.char}</span>
+                  <span className="text-2xl leading-[1.6] font-black">
+                    <RubyText showFurigana={showFurigana}>{charRuby(c.char)}</RubyText>
+                  </span>
                   <div className="min-w-0 flex-1">
                     <div className="h-2 overflow-hidden rounded-full" style={{ background: 'var(--line)' }}>
                       <div

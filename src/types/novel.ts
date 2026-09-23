@@ -23,8 +23,22 @@ export interface NovelLine {
   speaker?: SpeakerId;
   /** The line itself, in furigana notation: "高(たか)い 木(き)". */
   text: string;
-  /** Background id; carries over from the previous line when omitted. */
+  /**
+   * Scene id (a picture-book scene, see features/picturebook/scenes.ts);
+   * carries over from the previous line when omitted.
+   */
   bg?: string;
+  /**
+   * Picture-book effects for this line — "boar", "rain", "portal"…
+   * Carries over like `bg`, and is cleared when the scene changes.
+   * `[]` clears it explicitly.
+   */
+  fx?: string[];
+  /**
+   * A character shown large over the scene, in furigana notation — the
+   * letter Nexmax carves, the kanji just obtained.
+   */
+  glyph?: string;
   /** Sprite id, e.g. "nexmax:think". Use "none" to clear. */
   sprite?: string;
   /**

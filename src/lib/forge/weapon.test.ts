@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { forgeWeapon, discoverableCompounds, ICON_POOL, WeaponClass } from './weapon';
+import { forgeWeapon, forgeSingleBlade, weaponOf, discoverableCompounds, ICON_POOL, WeaponClass } from './weapon';
 import { elementOf, Element, effectiveness } from './elements';
 import { getKanjiByChar } from '../kanjiDb';
 
@@ -238,5 +238,23 @@ describe('discoverableCompounds', () => {
     // A learner who finishes the N5 arc should have hundreds of real words
     // available in the forge, not a handful.
     expect(discoverableCompounds(n5).length).toBeGreaterThan(200);
+  });
+});
+
+describe('太刀 — the one-kanji blade of 0話', () => {
+  it('is named 一(いち)の 太刀(たち)', () => {
+    expect(forgeSingleBlade(k('一')).name).toBe('一(いち)の 太刀(たち)');
+  });
+
+  it('never outranks anything the real forge makes', () => {
+    const blade = forgeSingleBlade(k('一'));
+    const weakestPair = forgeWeapon([k('一'), k('二')])!;
+    expect(blade.rarity).toBe(1);
+    expect(blade.attack).toBeLessThanOrEqual(weakestPair.attack);
+  });
+
+  it('is what a one-kanji recipe resolves to, and the real forge still refuses one', () => {
+    expect(weaponOf([k('一')])?.name).toBe('一(いち)の 太刀(たち)');
+    expect(forgeWeapon([k('一')])).toBeNull();
   });
 });
