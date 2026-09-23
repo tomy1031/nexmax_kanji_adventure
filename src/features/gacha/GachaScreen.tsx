@@ -96,7 +96,7 @@ export const GachaScreen = () => {
         className="sticky top-0 z-20 flex items-center justify-between px-4 py-3 backdrop-blur-md"
         style={{ background: 'var(--panel)' }}
       >
-        <button type="button" className="g-btn g-btn-ghost !min-h-[40px] !px-4 text-sm" onClick={() => navigate('/map')}>
+        <button type="button" className="g-btn g-btn-ghost !min-h-[40px] !px-4 text-sm" onClick={() => navigate('/map/mukashi')}>
           もどる
         </button>
         <h1 className="g-title text-base">ガチャ</h1>

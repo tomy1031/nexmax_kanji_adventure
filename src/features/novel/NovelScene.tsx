@@ -3,50 +3,66 @@ import { motion, AnimatePresence } from 'framer-motion';
 import type { CastMember, NovelScript } from '../../types/novel';
 import { RubyText } from '../../components/ui/Ruby';
 import { assetPath } from '../../lib/assetPath';
+import { stripRuby } from '../../lib/ruby';
 import { useGameStore } from '../../store/gameStore';
+import PictureBook from '../picturebook/PictureBook';
 
 /**
- * The novel scene — dating-sim shaped, because that shape is good at one
- * thing this game needs: putting a small amount of text on screen at a
- * comfortable reading pace, with a face attached to it.
+ * The novel scene, set in a moving picture book.
  *
- * Layout on a phone: art fills the screen, the speaker's sprite stands on the
- * lower half, and the dialogue box owns the bottom third. Nothing important
- * ever renders under the box.
+ * Layout on a phone (public/img/design/山の向こうの生命草.png):
+ *   - the picture-book scene fills the screen and moves;
+ *   - a wooden sign top-left says where we are (むかし編 1-1 + the title);
+ *   - オート / ログ / スキップ top-right;
+ *   - the speaker stands just above the scroll-shaped dialogue box, which owns
+ *     the bottom third. Nothing important renders under the box.
  */
 
 interface NovelSceneProps {
   script: NovelScript;
   cast: CastMember[];
   onFinish: () => void;
+  /** Shown on the wooden sign, both in furigana notation. */
+  chapter?: { label: string; title: string };
 }
 
-export const NovelScene = ({ script, cast, onFinish }: NovelSceneProps) => {
+/** Reading time for auto mode: a base plus a little per character. */
+const autoDelay = (text: string) => 1600 + stripRuby(text).length * 85;
+
+export const NovelScene = ({ script, cast, onFinish, chapter }: NovelSceneProps) => {
   const showFurigana = useGameStore((s) => s.settings.furigana);
   const [index, setIndex] = useState(0);
   const [showLog, setShowLog] = useState(false);
+  const [auto, setAuto] = useState(false);
   const [seen, setSeen] = useState<number[]>([0]);
 
   const castById = useMemo(() => new Map(cast.map((c) => [c.id, c])), [cast]);
   const line = script.lines[index];
 
   /**
-   * Background and sprite carry over from earlier lines, so the current
+   * Scene, effects and sprite carry over from earlier lines, so the current
    * picture is whatever the most recent line that set one asked for.
    *
-   * One exception: when the speaker changes and the line does not name a
-   * sprite, the new speaker's default portrait is shown. Without this a line
-   * carries the *previous* character's sprite, so the name plate says one
-   * person and the picture shows another.
+   * Two rules on top of that:
+   *   - when the speaker changes and the line does not name a sprite, the new
+   *     speaker's default portrait is shown (otherwise the name plate says one
+   *     person and the picture shows another);
+   *   - a scene change clears the effects, so rain does not follow Nexmax
+   *     indoors.
    */
-  const { bg, sprite } = useMemo(() => {
+  const { bg, fx, sprite } = useMemo(() => {
     let b: string | undefined;
+    let f: string[] = [];
     let s: string | undefined;
     let lastSpeaker: string | null | undefined;
 
     for (let i = 0; i <= index; i++) {
       const l = script.lines[i];
-      if (l.bg) b = l.bg;
+      if (l.bg && l.bg !== b) {
+        b = l.bg;
+        f = [];
+      }
+      if (l.fx) f = l.fx;
 
       if (l.sprite) {
         s = l.sprite === 'none' ? undefined : l.sprite;
@@ -57,7 +73,7 @@ export const NovelScene = ({ script, cast, onFinish }: NovelSceneProps) => {
       // Narration (no speaker) leaves the standing character in place.
       if (l.speaker !== undefined && l.speaker !== null) lastSpeaker = l.speaker;
     }
-    return { bg: b, sprite: s };
+    return { bg: b ?? 'mukashi_village', fx: f, sprite: s };
   }, [script, index]);
 
   const speaker = line?.speaker ? castById.get(line.speaker) : undefined;
@@ -108,148 +124,168 @@ export const NovelScene = ({ script, cast, onFinish }: NovelSceneProps) => {
     return () => window.removeEventListener('keydown', onKey);
   }, [advance]);
 
+  // オート: turn the page after a reading pause. Choices always wait.
+  useEffect(() => {
+    if (!auto || showLog || !line || line.choices?.length) return;
+    const t = setTimeout(advance, autoDelay(line.text));
+    return () => clearTimeout(t);
+  }, [auto, showLog, line, advance]);
+
   if (!line) return null;
 
+  const topButton = 'g-btn g-btn-accent !min-h-[36px] !px-3 !gap-1 text-xs';
+
   return (
-    <div className="relative h-dvh w-full overflow-hidden bg-black">
-      {/* 背景 ------------------------------------------------------------ */}
-      <AnimatePresence mode="popLayout">
-        {bg && (
-          <motion.img
-            key={bg}
-            src={assetPath(`img/bg/${bg}.webp`)}
-            alt=""
-            aria-hidden
-            initial={{ opacity: 0, scale: 1.04 }}
+    <div className="relative h-dvh w-full overflow-hidden bg-[#cfe9f5]">
+      {/* 絵本 ------------------------------------------------------------ */}
+      <PictureBook scene={bg} fx={fx} />
+
+      {/* 大きな字（きざんだ字など） -------------------------------------- */}
+      <AnimatePresence>
+        {line.glyph && (
+          <motion.div
+            key={line.glyph}
+            initial={{ opacity: 0, scale: 1.6 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0 }}
-            transition={{ duration: 0.5 }}
-            className="absolute inset-0 h-full w-full object-cover"
+            transition={{ type: 'spring', stiffness: 220, damping: 18 }}
+            className="pointer-events-none absolute top-[16dvh] left-1/2 z-10 -translate-x-1/2 text-center text-[88px] leading-none font-black"
             style={{
-              /*
-                The picture-book spreads still have their narration painted
-                into the art, and a portrait crop of a 2.8:1 spread lands
-                right on it. A soft blur puts the background where a novel
-                scene wants it anyway — behind the character and the text —
-                and takes the baked-in captions below the threshold of
-                reading, so they cannot compete with the real dialogue.
-                Scaled up slightly so the blur does not bleed the edges in.
-                Drop this once the text-free backgrounds are generated
-                (docs/skills/画像生成プロンプト.md §1).
-              */
-              filter: 'blur(5px) saturate(1.05)',
-              transform: 'scale(1.06)',
+              color: '#fff3c2',
+              textShadow: '0 0 18px rgba(255,210,90,0.95), 0 0 42px rgba(255,190,60,0.7), 0 4px 0 #7a4a26',
             }}
-          />
+          >
+            <RubyText showFurigana>{line.glyph}</RubyText>
+          </motion.div>
         )}
       </AnimatePresence>
 
-      {/* Darkens the top so the status chips and any surviving baked-in text
-          sit back, and lifts contrast under the character. */}
-      <div
-        aria-hidden
-        className="pointer-events-none absolute inset-0"
-        style={{
-          background:
-            'linear-gradient(180deg, rgba(8,18,36,0.55) 0%, rgba(8,18,36,0.22) 38%, rgba(8,18,36,0.10) 70%, rgba(8,18,36,0.28) 100%)',
-        }}
-      />
-
-      {/* 立ち絵 ----------------------------------------------------------- */}
+      {/* 立ち絵（切り抜き） ------------------------------------------------ */}
       <AnimatePresence>
         {spriteSrc && (
-          <motion.img
+          <motion.div
             key={spriteSrc}
-            src={assetPath(spriteSrc)}
-            alt=""
-            aria-hidden
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.28 }}
+            initial={{ opacity: 0, y: 24, rotate: -3 }}
+            animate={{ opacity: 1, y: 0, rotate: 0 }}
+            exit={{ opacity: 0, y: 10 }}
+            transition={{ duration: 0.35 }}
             // Anchored above the dialogue box so the character is never cut
             // off by it.
-            className="pointer-events-none absolute bottom-[34dvh] left-1/2 max-h-[46dvh] -translate-x-1/2 object-contain drop-shadow-[0_8px_24px_rgba(0,0,0,0.45)]"
-          />
+            className="pointer-events-none absolute bottom-[33dvh] left-1/2 z-10 h-[34dvh] -translate-x-1/2"
+          >
+            <motion.img
+              src={assetPath(spriteSrc)}
+              alt=""
+              aria-hidden
+              className="h-full w-auto object-contain"
+              // A paper cut-out: white rim, soft shadow — the same finish as
+              // the scene, without redrawing the character.
+              style={{
+                filter:
+                  'drop-shadow(2px 0 0 #fffaf0) drop-shadow(-2px 0 0 #fffaf0) drop-shadow(0 2px 0 #fffaf0) drop-shadow(0 -2px 0 #fffaf0) drop-shadow(0 8px 10px rgba(40,25,5,0.35))',
+              }}
+              animate={{ y: [0, -5, 0] }}
+              transition={{ duration: 2.6, repeat: Infinity, ease: 'easeInOut' }}
+            />
+          </motion.div>
         )}
       </AnimatePresence>
 
-      {/* 上のバー -------------------------------------------------------- */}
-      <div className="absolute top-0 right-0 left-0 z-20 flex items-center justify-between px-3 pt-3">
-        <span className="g-chip !bg-black/45 !text-white !border-white/20 text-xs tabular-nums">
-          {index + 1} / {script.lines.length}
-        </span>
-        <div className="flex gap-2">
+      {/* 上: 看板とボタン ------------------------------------------------ */}
+      <div className="absolute top-0 right-0 left-0 z-20 flex items-start justify-between gap-2 px-3 pt-[max(10px,env(safe-area-inset-top))]">
+        {chapter ? (
+          <div className="flex min-w-0 flex-col items-start">
+            <div className="g-wood flex items-center gap-1.5 px-3 py-1 text-sm font-black whitespace-nowrap">
+              <span aria-hidden>📖</span>
+              <RubyText showFurigana={showFurigana}>{chapter.label}</RubyText>
+            </div>
+            <div className="g-parchment -mt-1 ml-2 max-w-[52vw] truncate !rounded-md px-3 py-0.5 text-xs font-bold">
+              <RubyText showFurigana={showFurigana}>{chapter.title}</RubyText>
+            </div>
+          </div>
+        ) : (
+          <span />
+        )}
+        <div className="flex shrink-0 gap-1.5">
           <button
             type="button"
-            className="g-btn !min-h-[36px] !px-3 !bg-black/45 !text-white text-xs"
-            onClick={() => setShowLog(true)}
+            className={topButton}
+            aria-pressed={auto}
+            style={auto ? { background: 'linear-gradient(180deg,#ffd24a,#f28a00)' } : undefined}
+            onClick={() => setAuto((a) => !a)}
           >
-            ログ
+            <span aria-hidden>▶</span>オート
           </button>
-          <button
-            type="button"
-            className="g-btn !min-h-[36px] !px-3 !bg-black/45 !text-white text-xs"
-            onClick={onFinish}
-          >
-            とばす
+          <button type="button" className={topButton} onClick={() => setShowLog(true)}>
+            <span aria-hidden>≡</span>ログ
+          </button>
+          <button type="button" className={topButton} onClick={onFinish}>
+            <span aria-hidden>»</span>スキップ
           </button>
         </div>
       </div>
 
-      {/* 会話ボックス ---------------------------------------------------- */}
+      {/* 画面ぜんたいで ページを めくる --------------------------------- */}
       <button
         type="button"
         onClick={advance}
         aria-label="つぎへ"
         className="absolute inset-0 z-10 cursor-pointer"
-        // The whole screen advances the scene, which is what a reader expects
-        // and what a thumb can reach.
         disabled={Boolean(line.choices?.length)}
       />
 
+      {/* 会話ボックス（巻物） ------------------------------------------- */}
       <div className="absolute right-0 bottom-0 left-0 z-20 p-3 pb-[max(12px,env(safe-area-inset-bottom))]">
         {speaker && (
-          <div
-            className="g-chip mb-1.5 ml-1 !border-transparent text-sm !text-white"
-            style={{ background: speaker.color ?? 'var(--accent)' }}
-          >
+          <div className="g-wood relative z-10 mb-[-10px] ml-3 inline-flex items-center px-4 py-1 text-base font-black">
             <RubyText showFurigana={showFurigana}>{speaker.name}</RubyText>
           </div>
         )}
 
-        <div className="g-novel-box min-h-[30dvh] px-4 py-3.5">
-          <p className="text-[15px] leading-[2.1] whitespace-pre-line">
-            <RubyText showFurigana={showFurigana}>{line.text}</RubyText>
-          </p>
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={index}
+            initial={{ opacity: 0.6, y: 4 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.22 }}
+            className="g-novel-box min-h-[29dvh] px-5 pt-5 pb-3"
+            onClick={advance}
+          >
+            <p className="text-[16px] leading-[2.15] font-bold whitespace-pre-line">
+              <RubyText showFurigana={showFurigana}>{line.text}</RubyText>
+            </p>
 
-          {line.choices?.length ? (
-            <div className="mt-3 flex flex-col gap-2">
-              {line.choices.map((c) => (
-                <button
-                  key={c.next}
-                  type="button"
-                  className="g-btn g-btn-accent w-full !min-h-[52px] text-sm leading-snug"
-                  onClick={() => choose(c.next)}
+            {line.choices?.length ? (
+              <div className="mt-3 flex flex-col gap-2">
+                {line.choices.map((c) => (
+                  <button
+                    key={c.next}
+                    type="button"
+                    className="g-btn g-btn-accent w-full !min-h-[52px] text-sm leading-snug"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      choose(c.next);
+                    }}
+                  >
+                    <RubyText showFurigana={showFurigana}>{c.label}</RubyText>
+                  </button>
+                ))}
+              </div>
+            ) : (
+              <div className="mt-1 flex items-center justify-end gap-1 text-xs font-bold" style={{ color: '#8a6a44' }}>
+                タップで つづく
+                <motion.span
+                  aria-hidden
+                  animate={{ y: [0, 3, 0] }}
+                  transition={{ repeat: Infinity, duration: 1.2 }}
+                  className="text-base"
                 >
-                  <RubyText showFurigana={showFurigana}>{c.label}</RubyText>
-                </button>
-              ))}
-            </div>
-          ) : (
-            <div className="mt-2 flex justify-end">
-              <motion.span
-                aria-hidden
-                animate={{ y: [0, 3, 0] }}
-                transition={{ repeat: Infinity, duration: 1.2 }}
-                className="text-xl"
-                style={{ color: 'var(--accent)' }}
-              >
-                ▼
-              </motion.span>
-            </div>
-          )}
-        </div>
+                  ▼
+                </motion.span>
+              </div>
+            )}
+          </motion.div>
+        </AnimatePresence>
       </div>
 
       {/* ログ ------------------------------------------------------------ */}
@@ -259,19 +295,15 @@ export const NovelScene = ({ script, cast, onFinish }: NovelSceneProps) => {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="absolute inset-0 z-30 flex flex-col bg-black/85 p-4"
+            className="absolute inset-0 z-30 flex flex-col bg-black/80 p-4"
           >
             <div className="mb-3 flex items-center justify-between">
               <h2 className="g-title text-white">ログ</h2>
-              <button
-                type="button"
-                className="g-btn g-btn-ghost !min-h-[40px] !bg-white/90"
-                onClick={() => setShowLog(false)}
-              >
+              <button type="button" className="g-btn g-btn-accent !min-h-[40px]" onClick={() => setShowLog(false)}>
                 とじる
               </button>
             </div>
-            <div className="flex-1 space-y-3 overflow-y-auto pb-6">
+            <div className="g-parchment flex-1 space-y-3 overflow-y-auto p-4 pb-6">
               {seen
                 .slice()
                 .sort((a, b) => a - b)
@@ -279,9 +311,9 @@ export const NovelScene = ({ script, cast, onFinish }: NovelSceneProps) => {
                   const l = script.lines[i];
                   const who = l.speaker ? castById.get(l.speaker) : undefined;
                   return (
-                    <div key={i} className="text-sm text-white/90">
+                    <div key={i} className="text-sm">
                       {who && (
-                        <span className="mr-2 font-bold" style={{ color: who.color }}>
+                        <span className="mr-2 font-black" style={{ color: who.color }}>
                           <RubyText showFurigana={showFurigana}>{who.name}</RubyText>
                         </span>
                       )}

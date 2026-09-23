@@ -3,7 +3,8 @@ import { HashRouter, Routes, Route, useLocation } from 'react-router-dom';
 import { Arc } from './types/kanji';
 import { useGameStore } from './store/gameStore';
 import TitleScreen from './features/title/TitleScreen';
-import WorldMap from './features/map/WorldMap';
+import ArcSelect from './features/map/ArcSelect';
+import StageSelect from './features/map/StageSelect';
 import StagePlayer from './features/stage/StagePlayer';
 import ForgeScreen from './features/forge/ForgeScreen';
 import GachaScreen from './features/gacha/GachaScreen';
@@ -49,8 +50,8 @@ const App = () => {
       <ArcTheme />
       <Routes>
         <Route path="/" element={<TitleScreen />} />
-        <Route path="/map" element={<WorldMap />} />
-        <Route path="/map/:arc" element={<WorldMap />} />
+        <Route path="/map" element={<ArcSelect />} />
+        <Route path="/map/:arc" element={<StageSelect />} />
         <Route path="/stage/:stageId" element={<StagePlayer />} />
         <Route path="/forge" element={<ForgeScreen />} />
         <Route path="/gacha" element={<GachaScreen />} />

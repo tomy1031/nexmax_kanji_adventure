@@ -19,9 +19,11 @@ export interface RubySegment {
   reading?: string;
 }
 
-// A run of kanji (plus 々) immediately followed by a parenthesised reading.
-// Both ASCII and full-width parens are accepted, because both get typed.
-const RUBY_RE = /([一-龯々]+)[（(]([^）)]+)[）)]/g;
+// A run of kanji (plus 々) — or a run of digits, for 「2(ふた)つ」 — immediately
+// followed by a parenthesised reading. Both ASCII and full-width parens are
+// accepted, because both get typed. Digits and kanji are separate runs, so
+// 「10回(かい)」 puts かい over 回 only.
+const RUBY_RE = /([一-龯々]+|[0-9０-９]+)[（(]([^）)]+)[）)]/g;
 
 export const parseRuby = (source: string): RubySegment[] => {
   const segments: RubySegment[] = [];

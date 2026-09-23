@@ -102,26 +102,26 @@ const run = async () => {
   await page.goto(BASE, { waitUntil: 'networkidle' });
   await shot(page, '01-title');
 
-  console.log('▶ map');
+  // A new save starts in 0話: the picture-book story, then the rock drill.
+  console.log('▶ 0話 story');
   await tryClick(page, page.getByRole('button', { name: /はじめる|つづきから/ }), 'start');
-  await page.waitForTimeout(600);
-  await shot(page, '02-map');
-
-  console.log('▶ story');
-  await tryClick(page, page.getByRole('button', { name: /田.*んぼの 村/ }), 'stage 1');
   await page.waitForTimeout(900);
-  await shot(page, '03-story');
+  await shot(page, '02-tutorial-story');
 
-  for (let i = 0; i < 5; i++) {
-    await tryClick(page, page.getByRole('button', { name: 'つぎへ' }), 'advance');
-    await page.waitForTimeout(250);
+  for (let i = 0; i < 3; i++) {
+    await tryClick(page, page.getByRole('button', { name: 'つぎへ', exact: true }), 'advance');
+    await page.waitForTimeout(300);
   }
-  await shot(page, '04-story-choice');
+  await shot(page, '03-tutorial-hana');
 
   console.log('▶ drill');
-  await tryClick(page, page.getByRole('button', { name: 'とばす' }), 'skip story');
+  await tryClick(page, page.getByRole('button', { name: /スキップ/ }), 'skip story');
   await page.waitForTimeout(1500);
   await shot(page, '05-drill');
+
+  console.log('▶ stage select');
+  await hardGoto(page, '#/map/mukashi');
+  await shot(page, '04-stage-select');
 
   console.log('▶ seeding save');
   await seedSave(page);
@@ -132,9 +132,10 @@ const run = async () => {
 
   // 火 + 山 = 火山, a real word: the reward path.
   const grid = page.locator('.grid button');
-  await tryClick(page, grid.filter({ hasText: /^火$/ }).first(), '火');
+  // Buttons read 「火ひ」 now that every character carries its reading.
+  await tryClick(page, grid.filter({ hasText: /^火/ }).first(), '火');
   await page.waitForTimeout(200);
-  await tryClick(page, grid.filter({ hasText: /^山$/ }).first(), '山');
+  await tryClick(page, grid.filter({ hasText: /^山/ }).first(), '山');
   await page.waitForTimeout(600);
   await shot(page, '07-forge-kazan');
 
@@ -146,9 +147,9 @@ const run = async () => {
 
   // 山 + 火 = not a word: the contrast that teaches the rule.
   await hardGoto(page, '#/forge');
-  await tryClick(page, grid.filter({ hasText: /^山$/ }).first(), '山');
+  await tryClick(page, grid.filter({ hasText: /^山/ }).first(), '山');
   await page.waitForTimeout(200);
-  await tryClick(page, grid.filter({ hasText: /^火$/ }).first(), '火');
+  await tryClick(page, grid.filter({ hasText: /^火/ }).first(), '火');
   await page.waitForTimeout(600);
   await shot(page, '09-forge-not-a-word');
 
@@ -175,10 +176,16 @@ const run = async () => {
   await shot(page, '15-settings');
 
   console.log('▶ battle');
-  await hardGoto(page, '#/stage/mukashi-1');
-  await tryClick(page, page.getByRole('button', { name: 'とばす' }), 'skip story');
+  await hardGoto(page, '#/stage/mukashi-1?mode=story');
+  await tryClick(page, page.getByRole('button', { name: /スキップ/ }), 'skip story');
+  await page.waitForTimeout(900);
+  await tryClick(page, page.getByRole('button', { name: /たたかう/ }), 'fight');
   await page.waitForTimeout(1800);
   await shot(page, '16-battle');
+
+  console.log('▶ practice');
+  await hardGoto(page, '#/stage/mukashi-1?mode=practice');
+  await shot(page, '17-practice');
 
   await browser.close();
 

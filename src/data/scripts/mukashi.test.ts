@@ -2,7 +2,16 @@ import { describe, it, expect } from 'vitest';
 import { MUKASHI_SCRIPTS, MUKASHI_CAST } from './mukashi';
 import { MUKASHI_STAGES } from '../stages';
 import { unreadKanji, stripRuby } from '../../lib/ruby';
-import { TUTORIAL_INTRO, TUTORIAL_OUTRO, TUTORIAL_CAST } from './tutorial';
+import {
+  TUTORIAL_AFTER_DRILL,
+  TUTORIAL_BEFORE_BATTLE,
+  TUTORIAL_CAST,
+  TUTORIAL_INTRO,
+  TUTORIAL_OUTRO,
+} from './tutorial';
+import { SCENES, fxNamesOf } from '../../features/picturebook/scenes';
+
+const TUTORIAL_SCRIPTS = [TUTORIAL_INTRO, TUTORIAL_AFTER_DRILL, TUTORIAL_BEFORE_BATTLE, TUTORIAL_OUTRO];
 
 const castIds = new Set(MUKASHI_CAST.map((c) => c.id));
 
@@ -112,15 +121,36 @@ describe('cast and art', () => {
     expect(unknown).toEqual([]);
   });
 
-  it('only uses backgrounds the stage table declares', () => {
-    const known = new Set(MUKASHI_STAGES.map((s) => s.bg));
+  it('only uses picture-book scenes that exist, with effects that scene has', () => {
+    // A typo in a scene or effect name does not crash — it silently shows the
+    // wrong page, or nothing — so it is caught here instead.
     const unknown: string[] = [];
-    for (const script of MUKASHI_SCRIPTS) {
+    for (const script of [...MUKASHI_SCRIPTS, ...TUTORIAL_SCRIPTS]) {
+      let scene = '';
       for (const line of script.lines) {
-        if (line.bg && !known.has(line.bg)) unknown.push(`${script.stageId}: ${line.bg}`);
+        if (line.bg) {
+          scene = line.bg;
+          if (!SCENES[scene]) unknown.push(`${script.stageId}: scene ${scene}`);
+        }
+        for (const fx of line.fx ?? []) {
+          if (!fxNamesOf(scene).includes(fx)) unknown.push(`${script.stageId}: ${scene} has no fx "${fx}"`);
+        }
       }
     }
+    for (const stage of MUKASHI_STAGES) {
+      if (!SCENES[stage.bg]) unknown.push(`${stage.id}: stage scene ${stage.bg}`);
+    }
     expect(unknown).toEqual([]);
+  });
+
+  it('gives the large glyphs a reading too', () => {
+    const bare: string[] = [];
+    for (const script of MUKASHI_SCRIPTS) {
+      for (const line of script.lines) {
+        if (line.glyph) for (const c of unreadKanji(line.glyph)) bare.push(`${script.stageId}: ${c}`);
+      }
+    }
+    expect(bare).toEqual([]);
   });
 
   it('opens every scene with a background', () => {
@@ -159,40 +189,44 @@ describe('readability', () => {
 });
 
 describe('0話（チュートリアル）', () => {
-  it('keeps the intro to one idea — no other system is named', () => {
-    // The whole point of 0話 is that it teaches exactly one thing. If the
-    // words 合成/ガチャ/ジェム/すみ/属性 appear here, it has stopped being a
-    // tutorial and become a manual.
-    const text = [...TUTORIAL_INTRO.lines, ...TUTORIAL_OUTRO.lines]
-      .map((l) => stripRuby(l.text))
-      .join('');
-    for (const banned of ['合成', 'ガチャ', 'ジェム', 'すみ', '属性', '対戦', '図鑑']) {
+  // 2026-09-23: 0話 now shows three things, each done once before the next
+  // is named — writing cuts stone, an owned character becomes a blade, and
+  // writing is how you fight. Everything else stays out.
+  const all = TUTORIAL_SCRIPTS.flatMap((s) => s.lines);
+
+  it('names no system beyond writing, the blade and the fight', () => {
+    const text = all.map((l) => stripRuby(l.text)).join('');
+    for (const banned of ['ガチャ', 'ジェム', 'すみ', '属性', '対戦', '図鑑', '合成']) {
       expect(text, `0話 should not mention ${banned}`).not.toContain(banned);
     }
   });
 
   it('hands the learner the role, not just the character', () => {
-    // P1: the learner is addressed, not narrated at. Hana says "try it".
-    const text = [...TUTORIAL_INTRO.lines].map((l) => stripRuby(l.text)).join('');
+    // P1: the learner is addressed, not narrated at. Hana says "write it".
+    const text = TUTORIAL_INTRO.lines.map((l) => stripRuby(l.text)).join('');
     expect(text).toContain('書いて');
+  });
+
+  it('says the ten-rep rule before the learner writes', () => {
+    const text = TUTORIAL_INTRO.lines.map((l) => stripRuby(l.text)).join('');
+    expect(text).toContain('10回');
   });
 
   it('carries furigana on every kanji, like every other script', () => {
     const bare: string[] = [];
-    for (const line of [...TUTORIAL_INTRO.lines, ...TUTORIAL_OUTRO.lines]) {
+    for (const line of all) {
       for (const c of unreadKanji(line.text)) bare.push(`${c} in "${line.text}"`);
     }
     expect(bare).toEqual([]);
   });
 
-  it('stays short — three or four lines a scene', () => {
-    expect(TUTORIAL_INTRO.lines.length).toBeLessThanOrEqual(5);
-    expect(TUTORIAL_OUTRO.lines.length).toBeLessThanOrEqual(5);
+  it('stays short — five lines a scene at most', () => {
+    for (const script of TUTORIAL_SCRIPTS) expect(script.lines.length).toBeLessThanOrEqual(5);
   });
 
-  it('only uses cast and backgrounds that exist', () => {
+  it('only uses cast that exists', () => {
     const castIds = new Set(TUTORIAL_CAST.map((c) => c.id));
-    for (const line of [...TUTORIAL_INTRO.lines, ...TUTORIAL_OUTRO.lines]) {
+    for (const line of all) {
       if (line.speaker) expect(castIds, line.speaker).toContain(line.speaker);
       if (line.sprite && line.sprite !== 'none') {
         const [id, expr] = line.sprite.split(':');

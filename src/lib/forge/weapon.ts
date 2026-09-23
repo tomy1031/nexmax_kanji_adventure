@@ -2,6 +2,7 @@ import type { KanjiData } from '../../types/kanji';
 import type { Compound } from '../../types/forge';
 import { getCompounds } from '../../data/compounds.generated';
 import { Element, elementOf, ELEMENT_LABEL } from './elements';
+import { primaryReading } from '../reading';
 
 /**
  * The forge.
@@ -306,3 +307,39 @@ export const forgeWeapon = (kanji: KanjiData[]): Weapon | null => {
  */
 export const discoverableCompounds = (ownedChars: Set<string>): Compound[] =>
   getCompounds().filter((c) => [...c.word].every((ch) => ownedChars.has(ch)));
+
+/**
+ * 太刀 — the one weapon made from a single kanji.
+ *
+ * It exists for 0話: the first character a learner owns (一) is turned
+ * straight into a blade, 一(いち)の 太刀(たち), so the promise "a character you
+ * own becomes a weapon" is kept the moment it is made — before there are two
+ * characters to combine.
+ *
+ * It sits below everything the real forge makes (★1, the floor of the lowest
+ * band), so it never competes with a combination, let alone a real word.
+ * The ordinary forge still takes two or three characters; `forgeWeapon`
+ * refuses one.
+ */
+export const forgeSingleBlade = (k: KanjiData): Weapon => {
+  const reading = primaryReading(k);
+  const element = elementOf(k);
+  return {
+    id: k.id,
+    word: k.char,
+    name: `${k.char}(${reading})の 太刀(たち)`,
+    plainName: `${k.char}の太刀`,
+    compound: null,
+    weaponClass: WeaponClass.SWORD,
+    element,
+    rarity: 1,
+    attack: ATTACK_BAND[1].floor,
+    weight: k.strokes,
+    icon: 'GiKatana',
+    blurb: `字(じ) 1(ひと)つで 作(つく)った、はじめの 太刀(たち)。字(じ)を 2(ふた)つ あわせると、もっと 強(つよ)い 武器(ぶき)に なる。`,
+  };
+};
+
+/** The weapon a saved recipe makes — one character or several. */
+export const weaponOf = (kanji: KanjiData[]): Weapon | null =>
+  kanji.length === 1 ? forgeSingleBlade(kanji[0]) : forgeWeapon(kanji);

@@ -37,16 +37,17 @@
    --------------------------------------------------------------------------- */
 :root,
 [data-arc='mukashi'] {
-  --stage: #eaf4de;
-  --stage-2: #d3e8bd;
-  --panel: rgba(255, 255, 255, 0.82);
-  --panel-solid: #fffdf6;
-  --line: rgba(60, 80, 45, 0.16);
-  --ink: #2f3d22;
-  --ink-2: rgba(47, 61, 34, 0.72);
-  --ink-3: rgba(47, 61, 34, 0.48);
-  --accent: #5a8f3c;
-  --accent-2: #3f6c28;
+  /* public/img/design/ の参考画像に寄せた 青空と 羊皮紙。 */
+  --stage: #7ec8f4;
+  --stage-2: #cdeefd;
+  --panel: rgba(255, 248, 230, 0.94);
+  --panel-solid: #fdf4dd;
+  --line: rgba(122, 82, 38, 0.28);
+  --ink: #4a3220;
+  --ink-2: rgba(74, 50, 32, 0.78);
+  --ink-3: rgba(74, 50, 32, 0.52);
+  --accent: #2f8fe0;
+  --accent-2: #1b63b0;
   --glow: rgba(255, 196, 92, 0.55);
 }
 
@@ -200,20 +201,107 @@
     cursor: not-allowed;
   }
 
+  /* 主ボタン: 参考画像の「はじめる」「スタート」。オレンジに クリーム色の ふち、
+     白い 文字に 茶色の ふち取り。 */
   .g-btn-primary {
-    background: linear-gradient(180deg, var(--color-gold) 0%, var(--color-gold-2) 100%);
-    color: var(--color-gold-ink);
-    box-shadow: 0 4px 0 #c07d00;
+    background: linear-gradient(180deg, #ffd24a 0%, #ffab1f 48%, #f28a00 100%);
+    color: #fff;
+    border: 3px solid #fff1c2;
+    text-shadow:
+      0 2px 0 #9a4f00,
+      1px 0 0 #9a4f00,
+      -1px 0 0 #9a4f00,
+      0 -1px 0 #9a4f00;
+    box-shadow:
+      0 5px 0 #b35f00,
+      0 10px 18px rgba(80, 40, 0, 0.3),
+      inset 0 2px 0 rgba(255, 255, 255, 0.55);
   }
 
   .g-btn-primary:active:not(:disabled) {
-    box-shadow: 0 2px 0 #c07d00;
+    box-shadow:
+      0 2px 0 #b35f00,
+      inset 0 2px 0 rgba(255, 255, 255, 0.55);
   }
 
+  /* 副ボタン: 参考画像の「つづきから」「オート」。 */
   .g-btn-accent {
-    background: var(--accent);
+    background: linear-gradient(180deg, #5cc0ff 0%, #2f8fe0 55%, #1d6fc4 100%);
     color: #fff;
-    box-shadow: 0 4px 0 var(--accent-2);
+    border: 2px solid rgba(255, 255, 255, 0.9);
+    text-shadow: 0 1px 0 rgba(10, 50, 110, 0.7);
+    box-shadow:
+      0 4px 0 #15529a,
+      inset 0 2px 0 rgba(255, 255, 255, 0.45);
+  }
+
+  .g-btn-green {
+    background: linear-gradient(180deg, #7fd96a 0%, #3fae3f 60%, #2b8a30 100%);
+    color: #fff;
+    border: 2px solid rgba(255, 255, 255, 0.9);
+    text-shadow: 0 1px 0 rgba(20, 70, 20, 0.7);
+    box-shadow: 0 4px 0 #1f6b24;
+  }
+
+  .g-btn-red {
+    background: linear-gradient(180deg, #ff8a6a 0%, #f2463a 55%, #c9241c 100%);
+    color: #fff;
+    border: 3px solid #ffe6a8;
+    text-shadow:
+      0 2px 0 #7a0f0a,
+      1px 0 0 #7a0f0a,
+      -1px 0 0 #7a0f0a;
+    box-shadow: 0 5px 0 #8e1a13;
+  }
+
+  .g-btn-slate {
+    background: linear-gradient(180deg, #8d9bb0 0%, #5f6f88 100%);
+    color: #fff;
+    border: 2px solid rgba(255, 255, 255, 0.85);
+    box-shadow: 0 4px 0 #3d4a5e;
+  }
+
+  /* 羊皮紙のパネル。紙の ふちが 少し 濃い。 */
+  .g-parchment {
+    background:
+      radial-gradient(ellipse at 30% 20%, rgba(255, 255, 255, 0.55), transparent 60%),
+      linear-gradient(180deg, #fdf5df 0%, #f6e7c4 100%);
+    border: 2px solid #d8b67a;
+    border-radius: 16px;
+    box-shadow:
+      inset 0 0 0 3px rgba(255, 250, 235, 0.8),
+      inset 0 0 24px rgba(168, 118, 52, 0.22),
+      0 8px 20px rgba(60, 35, 10, 0.22);
+    color: #4a3220;
+  }
+
+  /* 木の 看板。見出し・名札に 使う。 */
+  .g-wood {
+    background:
+      repeating-linear-gradient(
+        178deg,
+        rgba(255, 255, 255, 0.05) 0 3px,
+        rgba(0, 0, 0, 0.04) 3px 7px
+      ),
+      linear-gradient(180deg, #a8703a 0%, #83501f 100%);
+    border: 2px solid #5b3412;
+    border-radius: 10px;
+    color: #fff6df;
+    text-shadow: 0 1px 0 rgba(40, 20, 0, 0.7);
+    box-shadow:
+      inset 0 2px 0 rgba(255, 220, 170, 0.35),
+      0 4px 10px rgba(40, 20, 0, 0.3);
+  }
+
+  /* 空の 背景（参考画像の 青空と 雲）。 */
+  .g-sky {
+    min-height: 100dvh;
+    background:
+      radial-gradient(ellipse 60% 18% at 20% 18%, rgba(255, 255, 255, 0.85), transparent 70%),
+      radial-gradient(ellipse 50% 14% at 85% 32%, rgba(255, 255, 255, 0.75), transparent 70%),
+      radial-gradient(ellipse 70% 20% at 50% 62%, rgba(255, 255, 255, 0.55), transparent 70%),
+      linear-gradient(180deg, #3fa4ea 0%, #7cc8f5 38%, #c6ecfd 72%, #e7f7df 100%);
+    color: var(--ink);
   }
 
   .g-btn-accent:active:not(:disabled) {
@@ -245,13 +333,44 @@
     border-color: transparent;
   }
 
-  /* ノベルのテキストボックス。下 1/3 に座る。 */
+  /* ノベルのテキストボックス。下 1/3 に座る。参考画像の 巻物。 */
   .g-novel-box {
-    background: color-mix(in srgb, var(--panel-solid) 88%, transparent);
-    border: 2px solid var(--line);
-    border-radius: var(--radius-card);
-    box-shadow: var(--shadow-float);
-    backdrop-filter: blur(8px);
+    background:
+      radial-gradient(ellipse at 30% 10%, rgba(255, 255, 255, 0.6), transparent 60%),
+      linear-gradient(180deg, #fdf6e2 0%, #f5e5c0 100%);
+    border: 2px solid #caa468;
+    border-radius: 14px;
+    box-shadow:
+      inset 0 0 0 4px rgba(255, 251, 238, 0.85),
+      inset 0 0 30px rgba(168, 118, 52, 0.25),
+      0 14px 30px rgba(30, 20, 5, 0.35);
+    color: #3e2a18;
+  }
+
+  /* ロゴ文字: オレンジに 茶色の ふち。ふりがなは ふち無しで 読みやすく。 */
+  .g-logo {
+    color: #ffb21f;
+    -webkit-text-stroke: 1.6px #6b3500;
+    paint-order: stroke fill;
+    filter: drop-shadow(0 3px 0 #6b3500) drop-shadow(0 6px 8px rgba(0, 0, 0, 0.25));
+  }
+
+  .g-logo rt {
+    -webkit-text-stroke: 0;
+    color: #6b3500;
+    font-weight: 900;
+  }
+
+  /* 大きな 文字の ふち取り（見出し用） */
+  .g-outline-text {
+    color: #fff;
+    text-shadow:
+      0 3px 0 #7a3d00,
+      2px 0 0 #7a3d00,
+      -2px 0 0 #7a3d00,
+      0 -2px 0 #7a3d00,
+      2px 2px 0 #7a3d00,
+      -2px 2px 0 #7a3d00;
   }
 }
 

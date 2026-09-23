@@ -1,5 +1,6 @@
 import { Arc, type JlptLevel } from '../types/kanji';
 import { Element } from '../lib/forge/elements';
+import type { EnemyArtId } from '../features/battle/EnemyArt';
 
 /**
  * Stage table.
@@ -24,7 +25,7 @@ export interface StageDef {
   title: string;
   /** Setup shown on the map, furigana notation. */
   summary: string;
-  /** Background id used by the novel scene and the map tile. */
+  /** Picture-book scene id (features/picturebook/scenes.ts), used behind the fight and on the stage card. */
   bg: string;
   /** Kanji taught here. */
   kanji: string[];
@@ -37,6 +38,8 @@ export interface StageDef {
     attack: number;
     /** Game Icons component name. */
     icon: string;
+    /** A torn-paper cut-out to draw instead of the icon, when there is one. */
+    art?: EnemyArtId;
   };
   /** Gems awarded for the first clear. */
   reward: number;
@@ -103,7 +106,7 @@ export const MUKASHI_STAGES: StageDef[] = [
       '道(みち)は とても けわしい。\nイノシシが つっこみ、見(み)た ことも ない ハチが さします。',
     bg: 'mukashi_wildpath',
     kanji: ['虫', '中', '体', '気', '白', '見', '来', '行'],
-    boss: { name: '巨大(きょだい)バチ', element: Element.KA, hp: 130, attack: 13, icon: 'GiWaspSting' },
+    boss: { name: '巨大(きょだい)バチ', element: Element.KA, hp: 130, attack: 13, icon: 'GiWaspSting', art: 'bee' },
     reward: 40,
     grants: 'ESTP',
   },
@@ -168,7 +171,7 @@ export const MUKASHI_STAGES: StageDef[] = [
     title: '雲(くも)の 上(うえ)',
     summary:
       '雲(くも)を ぬけると、朝(あさ)の 光(ひかり)が ありました。\n生命草(せいめいそう)は、もう すぐ 上(うえ)です。',
-    bg: 'mukashi_portal',
+    bg: 'mukashi_cloudsea',
     kanji: ['雨', '車', '国', '金', '食', '休', '長'],
     boss: { name: '空(そら)の まもりて', element: Element.KOU, hp: 240, attack: 22, icon: 'GiSpikedDragonHead' },
     reward: 80,
@@ -181,7 +184,7 @@ export const MUKASHI_STAGES: StageDef[] = [
     title: '生命草(せいめいそう)',
     summary:
       'てっぺんの 葉(は)っぱに 手(て)が とどきます。\n村(むら)へ 帰(かえ)る 道(みち)は、まだ 長(なが)い。',
-    bg: 'mukashi_greattree',
+    bg: 'mukashi_treetop',
     kanji: ['生', '父', '母', '友', '男', '女', '子', '何'],
     boss: { name: '生命草(せいめいそう)の ぬし', element: Element.MOKU, hp: 300, attack: 26, icon: 'GiVineFlower' },
     reward: 120,

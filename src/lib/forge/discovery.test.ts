@@ -1,4 +1,5 @@
 import { describe, it, expect } from 'vitest';
+import { stripRuby, unreadKanji } from '../ruby';
 import {
   cardFor,
   openCards,
@@ -12,6 +13,7 @@ import {
   nextTitle,
   HINT_COST,
   TRY_COST_2,
+  TITLES,
 } from './discovery';
 import { MUKASHI_STAGES } from '../../data/stages';
 
@@ -148,5 +150,14 @@ describe('the hunt is worth hunting', () => {
     // better off asking than flailing.
     const fullHintLadder = HINT_COST[2] + HINT_COST[3];
     expect(fullHintLadder).toBeLessThan(TRY_COST_2 * 2);
+  });
+});
+
+describe('titles in furigana', () => {
+  it('spell the same word as `word`, with every kanji read', () => {
+    for (const t of TITLES) {
+      expect(stripRuby(t.ruby)).toBe(t.word);
+      expect(unreadKanji(t.ruby)).toEqual([]);
+    }
   });
 });
