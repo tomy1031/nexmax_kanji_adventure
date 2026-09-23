@@ -6,6 +6,9 @@ import {
   isFailedWrite,
   starsFor,
   PLAYER_MAX_HP,
+  statsFromGear,
+  strikeDamage,
+  basePatience,
 } from './battle';
 import { forgeWeapon } from './forge/weapon';
 import { Element } from './forge/elements';
@@ -98,5 +101,34 @@ describe('starsFor', () => {
     expect(starsFor(0, PLAYER_MAX_HP)).toBe(3);
     expect(starsFor(0, PLAYER_MAX_HP - 1)).toBe(2);
     expect(starsFor(9, 10)).toBe(1);
+  });
+});
+
+describe('2026-09-23 rules: owning a character is strength, slips wake the opponent', () => {
+  it('hits harder with a character the learner owns, softer after a hint', () => {
+    const base = { weapon: null, individual: null, defenderElement: Element.MU, mistakes: 0 };
+    const plain = computeDamage(base).damage;
+    expect(computeDamage({ ...base, owned: true }).damage).toBeGreaterThan(plain);
+    expect(computeDamage({ ...base, hinted: true }).damage).toBeLessThan(plain);
+  });
+
+  it('never calls a write that looked at the stroke order かんぺき', () => {
+    const base = { weapon: null, individual: null, defenderElement: Element.MU, mistakes: 0 };
+    expect(computeDamage(base).perfect).toBe(true);
+    expect(computeDamage({ ...base, hinted: true }).perfect).toBe(false);
+  });
+
+  it('adds up worn gear', () => {
+    const s = statsFromGear([{ hp: 20 }, { defense: 6 }, { patience: 1, attackPct: 10 }]);
+    expect(s).toEqual({ maxHp: PLAYER_MAX_HP + 20, defense: 6, patience: 1, attackPct: 10 });
+  });
+
+  it('lets a shield soften a strike but never cancel it', () => {
+    expect(strikeDamage(10, 3)).toBe(7);
+    expect(strikeDamage(5, 20)).toBe(1);
+  });
+
+  it('makes later opponents less patient', () => {
+    expect(basePatience(1)).toBeGreaterThan(basePatience(10));
   });
 });

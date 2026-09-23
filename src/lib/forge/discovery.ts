@@ -241,11 +241,13 @@ export interface Title {
 
 /** Earned on words found by guessing. Words opened with the answer do not count. */
 export const TITLES: Title[] = [
+  // Rescaled 2026-09-23 when the word table was cut to learner-level words
+  // (113 from the N5 set): the last title is still reachable within むかし編.
   { at: 10, word: '見習い', reading: 'みならい', ruby: '見習(みなら)い', en: 'apprentice' },
-  { at: 50, word: '一人前', reading: 'いちにんまえ', ruby: '一人前(いちにんまえ)', en: 'full-fledged' },
-  { at: 100, word: '名人', reading: 'めいじん', ruby: '名人(めいじん)', en: 'master' },
-  { at: 200, word: '先生', reading: 'せんせい', ruby: '先生(せんせい)', en: 'teacher' },
-  { at: 347, word: '生き字引', reading: 'いきじびき', ruby: '生(い)き字引(じびき)', en: 'walking dictionary' },
+  { at: 30, word: '一人前', reading: 'いちにんまえ', ruby: '一人前(いちにんまえ)', en: 'full-fledged' },
+  { at: 55, word: '名人', reading: 'めいじん', ruby: '名人(めいじん)', en: 'master' },
+  { at: 80, word: '先生', reading: 'せんせい', ruby: '先生(せんせい)', en: 'teacher' },
+  { at: 105, word: '生き字引', reading: 'いきじびき', ruby: '生(い)き字引(じびき)', en: 'walking dictionary' },
 ];
 
 export const titleFor = (earnedCount: number): Title | null => {

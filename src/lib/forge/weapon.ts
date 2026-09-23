@@ -2,7 +2,7 @@ import type { KanjiData } from '../../types/kanji';
 import type { Compound } from '../../types/forge';
 import { getCompounds } from '../../data/compounds.generated';
 import { Element, elementOf, ELEMENT_LABEL } from './elements';
-import { primaryReading } from '../reading';
+import { primaryStem } from '../reading';
 
 /**
  * The forge.
@@ -322,7 +322,7 @@ export const discoverableCompounds = (ownedChars: Set<string>): Compound[] =>
  * refuses one.
  */
 export const forgeSingleBlade = (k: KanjiData): Weapon => {
-  const reading = primaryReading(k);
+  const reading = primaryStem(k);
   const element = elementOf(k);
   return {
     id: k.id,

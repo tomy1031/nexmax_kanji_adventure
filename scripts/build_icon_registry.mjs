@@ -9,13 +9,13 @@
  *
  *   node scripts/build_icon_registry.mjs
  */
-import { readFileSync, writeFileSync } from 'node:fs';
+import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 
-const SOURCES = ['src/lib/forge/weapon.ts', 'src/data/stages.ts', 'src/data/scripts/tutorial.ts'];
+const SOURCES = ['src/lib/forge/weapon.ts', 'src/data/stages.ts', 'src/data/scripts/tutorial.ts', 'src/data/equipment.ts', 'src/data/gendaiStages.ts'];
 const OUT = 'src/lib/gameIcons.ts';
 
 const names = new Set();
-for (const file of SOURCES) {
+for (const file of SOURCES.filter((f) => existsSync(f))) {
   for (const m of readFileSync(file, 'utf8').matchAll(/'(Gi[A-Za-z0-9]+)'/g)) names.add(m[1]);
 }
 const sorted = [...names].sort();

@@ -38,9 +38,10 @@ const WORLDS: {
   {
     arc: Arc.GENDAI,
     title: '現代編(げんだいへん)',
-    blurb: 'インターネットで 夢(ゆめ)を 信(しん)じた ネクマックス。\nまちの くらしで よく 使(つか)う 字(じ)を 学(まな)ぼう。',
-    words: ['学校(がっこう)', '会社(かいしゃ)', '駅(えき)', '仕事(しごと)'],
-    ready: false,
+    blurb: '夢(ゆめ)を 信(しん)じて 会社(かいしゃ)に 入(はい)った ネクマックス。\n知(し)らない 場所(ばしょ)で、なかまと 言葉(ことば)を 学(まな)ぼう。',
+    words: ['会社(かいしゃ)', '仕事(しごと)', '研究(けんきゅう)', '家族(かぞく)'],
+    ready: true,
+    scene: 'gendai_hall',
     tint: '#2f6fb0',
   },
   {
@@ -59,7 +60,8 @@ export const ArcSelect = () => {
   const cleared = useGameStore((s) => s.clearedStages);
 
   return (
-    <div className="g-sky pb-28">
+    <div className="isolate relative min-h-dvh pb-28">
+      <PictureBook scene="mukashi_meadow" className="!fixed -z-10" />
       <div className="mx-auto flex max-w-md flex-col gap-4 px-3 pt-[max(14px,env(safe-area-inset-top))]">
         <div className="relative">
           <LogoTitle size={30} sub="ことばを 学(まな)んで 冒険(ぼうけん)しよう！">

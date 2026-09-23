@@ -20,6 +20,7 @@ import {
   tree,
   waves,
 } from './paper';
+import { GENDAI_SCENES } from './gendaiScenes';
 
 /**
  * むかし編 の 絵本 — the scenes.
@@ -85,6 +86,20 @@ const bob = (key: string, inner: string, dy = 6, duration = 3): Layer => ({
   transition: loop(duration),
 });
 
+/**
+ * Trees, bushes and grass moving in the wind (2026-09-23: 「木々が 少し
+ * 動いてたりも いい」). The layer leans from its base line — the trunks stay
+ * planted and the tops sway — so each row of trees is its own layer with the
+ * row's base as the pivot.
+ */
+const sway = (key: string, inner: string, baseY: number, lean = 1.2, duration = 4.5): Layer => ({
+  key,
+  svg: page(inner, key.length * 3),
+  origin: [200, baseY],
+  animate: { skewX: [-lean, lean, -lean] },
+  transition: loop(duration),
+});
+
 const overlay = (key: string, color: string, blend: Layer['blend'], opacity: number): Layer => ({
   key,
   svg: page(`<rect width="${PAGE_W}" height="${PAGE_H}" fill="${color}"/>`),
@@ -143,16 +158,14 @@ const village: SceneDef = {
     },
     { key: 'houses', svg: page(house(78, 380, 0.95) + house(318, 372, 0.8) + house(205, 360, 0.5)) },
     bob('farmers', farmer(130, 452, 1.5, '#5b7fb5') + farmer(300, 430, 1.2, '#b0584a'), 2, 1.8),
-    {
-      key: 'front',
-      svg: page(
-        `<g filter="url(#torn)" fill="#3f8b3b"><circle cx="-10" cy="470" r="62"/><circle cx="46" cy="500" r="44"/><circle cx="410" cy="462" r="58"/><circle cx="360" cy="505" r="40"/></g>`,
-        13,
-      ),
-      origin: [200, 720],
-      animate: { rotate: [-0.4, 0.4, -0.4] },
-      transition: loop(5),
-    },
+    sway('village-trees', tree(28, 402, 1.25, '#4f9a3c') + tree(376, 396, 1.15, '#57a043'), 402, 1.6, 5),
+    sway(
+      'front',
+      `<g filter="url(#torn)" fill="#3f8b3b"><circle cx="-10" cy="470" r="62"/><circle cx="46" cy="500" r="44"/><circle cx="410" cy="462" r="58"/><circle cx="360" cy="505" r="40"/></g>`,
+      540,
+      1.4,
+      3.8,
+    ),
   ],
   fx: {
     // 0話: the road is blocked by stones.
@@ -219,7 +232,8 @@ const mountain: SceneDef = {
     drift('cloud2', cloud(300, 80, 0.7), -18, 24),
     { key: 'far', svg: page(peaks(300, '#9fb9cd', 4, 200, true)) },
     { key: 'mid', svg: page(peaks(352, '#6f9468', 17, 120)) },
-    { key: 'hills', svg: page(hills(384, '#5c9b48', 23, 14) + pine(40, 392, 1) + pine(78, 398, 0.8) + pine(350, 388, 1.1)) },
+    { key: 'hills', svg: page(hills(384, '#5c9b48', 23, 14)) },
+    sway('pines', pine(40, 392, 1) + pine(78, 398, 0.8) + pine(350, 388, 1.1), 395, 1.4, 4.2),
     {
       key: 'river-back',
       svg: page(waves(410, '#8ccbee', 6, 8)),
@@ -268,8 +282,9 @@ const wildpath: SceneDef = {
     { key: 'hills', svg: page(hills(338, '#4f8f3e', 41, 22) + hills(372, '#78ad4a', 44, 14)) },
     {
       key: 'ground',
-      svg: page(`<g filter="url(#torn)"><path d="M-20 720 L-20 410 Q120 380 250 398 Q340 410 420 390 L420 720 Z" fill="#c9a263"/>${grassTufts()}</g>`, 17),
+      svg: page(`<g filter="url(#torn)"><path d="M-20 720 L-20 410 Q120 380 250 398 Q340 410 420 390 L420 720 Z" fill="#c9a263"/></g>`, 17),
     },
+    sway('grass', `<g filter="url(#rough)">${grassTufts()}</g>`, 470, 4, 2.6),
   ],
   fx: {
     boar: [
@@ -327,8 +342,10 @@ const portal: SceneDef = {
   layers: [
     { key: 'sky', svg: sky('#3a4a7c', '#9a7fa6') },
     { key: 'stars', svg: page(sparkles(5, '#fff6d8', 30, { x: 0, y: 20, w: 400, h: 240 })), animate: { opacity: [0.5, 1, 0.5] }, transition: loop(3) },
-    { key: 'trees-back', svg: page(hills(360, '#2e3b58', 51, 30) + pine(40, 380, 1.6, '#26324c') + pine(360, 372, 1.8, '#26324c')) },
-    { key: 'trees', svg: page(hills(420, '#34405e', 55, 18) + pine(90, 440, 1.3, '#2b3651') + pine(320, 430, 1.4, '#2b3651')) },
+    { key: 'trees-back', svg: page(hills(360, '#2e3b58', 51, 30)) },
+    sway('pines-back', pine(40, 380, 1.6, '#26324c') + pine(360, 372, 1.8, '#26324c'), 378, 0.8, 7),
+    { key: 'trees', svg: page(hills(420, '#34405e', 55, 18)) },
+    sway('pines-front', pine(90, 440, 1.3, '#2b3651') + pine(320, 430, 1.4, '#2b3651'), 436, 1, 6),
   ],
   fx: {
     portal: [
@@ -372,8 +389,10 @@ const forest: SceneDef = {
   layers: [
     { key: 'sky', svg: sky('#8ccbe8', '#eaf6e0') },
     drift('cloud1', cloud(100, 90, 0.7), 16, 18),
-    { key: 'back', svg: page(hills(330, '#3f7a3c', 61, 20) + forestTrees(348, 1.1, '#3c7a38', 7)) },
-    { key: 'front', svg: page(hills(400, '#6aa142', 63, 12) + forestTrees(420, 1.45, '#57a043', 11)) },
+    { key: 'back', svg: page(hills(330, '#3f7a3c', 61, 20)) },
+    sway('back-trees', forestTrees(348, 1.1, '#3c7a38', 7), 356, 1, 5.5),
+    { key: 'front', svg: page(hills(400, '#6aa142', 63, 12)) },
+    sway('front-trees', forestTrees(420, 1.45, '#57a043', 11), 430, 1.5, 4.4),
     {
       key: 'path',
       svg: page(`<path d="M150 720 Q180 560 205 430 L220 430 Q230 560 280 720 Z" fill="#d7b371" filter="url(#torn)"/>`),
@@ -422,7 +441,8 @@ const trunk = () =>
 const greattree: SceneDef = {
   layers: [
     { key: 'sky', svg: sky('#8cc3e2', '#e2f1f4') },
-    { key: 'forest', svg: page(hills(420, '#4b8a3f', 71, 16) + forestTrees(440, 0.9, '#3f7d38', 3)) },
+    { key: 'forest', svg: page(hills(420, '#4b8a3f', 71, 16)) },
+    sway('forest-trees', forestTrees(440, 0.9, '#3f7d38', 3), 448, 1.3, 5),
     { key: 'trunk', svg: page(trunk(), 19) },
     {
       key: 'cloudband',
@@ -548,7 +568,36 @@ const treetop: SceneDef = {
   },
 };
 
+// ---------------------------------------------------------------------------
+// 野原 — a quiet meadow, behind the screens that are not story (書く・そうび)
+// ---------------------------------------------------------------------------
+
+const flowers = () =>
+  Array.from({ length: 16 }, (_, i) => {
+    const x = 14 + ((i * 53) % 380);
+    const y = 470 + ((i * 37) % 200);
+    const c = ['#ffd24a', '#ffffff', '#ff9ab0'][i % 3];
+    return `<circle cx="${x}" cy="${y}" r="5" fill="${c}"/><circle cx="${x}" cy="${y}" r="2" fill="#f08a24"/>`;
+  }).join('');
+
+const meadow: SceneDef = {
+  layers: [
+    { key: 'sky', svg: sky('#5fb4ea', '#d7f1fb') },
+    drift('cloud1', cloud(80, 110, 1), 30, 22),
+    drift('cloud2', cloud(300, 170, 0.7), -24, 26),
+    drift('cloud3', cloud(190, 60, 0.55), 18, 30),
+    bob('birds', birds(250, 140, 1), 8, 2.8),
+    { key: 'far', svg: page(peaks(360, '#9fb9cd', 13, 140, true)) },
+    { key: 'hills', svg: page(hills(400, '#62ad4c', 7, 18) + hills(450, '#78b94f', 9, 12)) },
+    sway('meadow-trees', tree(40, 440, 1.3, '#4f9a3c') + tree(362, 448, 1.4, '#57a043') + tree(300, 420, 0.8, '#3f8b3b'), 445, 1.6, 4.8),
+    sway('meadow-grass', `<g filter="url(#rough)">${grassTufts().replace(/fill="#6f9e3a"/g, 'fill="#4f8f3a"')}</g>${flowers()}`, 600, 3, 3.2),
+  ],
+  fx: {},
+};
+
 export const SCENES: Record<string, SceneDef> = {
+  ...GENDAI_SCENES,
+  mukashi_meadow: meadow,
   mukashi_village: village,
   mukashi_mountain: mountain,
   mukashi_wildpath: wildpath,

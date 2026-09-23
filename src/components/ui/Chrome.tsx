@@ -53,7 +53,7 @@ export const LogoTitle = ({ children, sub, size = 34 }: { children: string; sub?
   const showFurigana = useGameStore((s) => s.settings.furigana);
   return (
     <div className="flex flex-col items-center text-center">
-      <h1 className="g-title g-logo leading-[1.6] font-black" style={{ fontSize: size }}>
+      <h1 className="g-title g-logo leading-[1.6] font-black whitespace-nowrap" style={{ fontSize: size }}>
         <RubyText showFurigana={showFurigana}>{children}</RubyText>
       </h1>
       {sub && (
@@ -110,7 +110,8 @@ export const BottomTabs = ({ current }: { current: TabId }) => {
   const tabs: { id: TabId; label: string; icon: string; to: string; feature?: Feature }[] = [
     { id: 'story', label: 'ストーリー', icon: '🗺', to: '/map/mukashi' },
     { id: 'kanji', label: '漢字(かんじ)ずかん', icon: '📖', to: '/words', feature: Feature.WORDS },
-    { id: 'items', label: 'もちもの', icon: '🎒', to: '/collection', feature: Feature.COLLECTION },
+    // そうび opens from the start: 0話 already hands over the first blade.
+    { id: 'items', label: 'そうび', icon: '🎒', to: '/equip' },
     { id: 'settings', label: 'せってい', icon: '⚙', to: '/settings' },
   ];
   return (

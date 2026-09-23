@@ -12,13 +12,16 @@ import { getIndividual } from '../../data/individuals';
 import { weaponOf, type Weapon } from '../../lib/forge/weapon';
 import { ELEMENT_LABEL } from '../../lib/forge/elements';
 import { rustLevel } from '../../lib/srs';
-import { kanjiRuby, primaryReading } from '../../lib/reading';
+import { kanjiRuby } from '../../lib/reading';
+import { Readings } from '../../components/ui/Readings';
+import { getGear } from '../../data/equipment';
+import * as sfx from '../../lib/sfx';
 import {
   computeDamage,
   counterDamage,
-  isFailedWrite,
   starsFor,
-  PLAYER_MAX_HP,
+  statsFromGear,
+  strikeDamage,
 } from '../../lib/battle';
 import { assetPath } from '../../lib/assetPath';
 import { GameIcon } from '../../components/ui/GameIcon';
@@ -55,11 +58,24 @@ interface BattleSceneProps {
    * replay never swaps out the weapon a returning player has equipped.
    */
   weaponOverride?: Weapon;
+  /**
+   * Slips the opponent tolerates before it strikes, before charms. Every
+   * stroke mistake and every look at the stroke order counts one.
+   */
+  patience: number;
 }
 
 type Outcome = { kind: 'win'; stars: 1 | 2 | 3 } | { kind: 'lose' } | null;
 
-export const BattleScene = ({ stage, kanjiPool, onFinish, onFlee, mode = 'stage', weaponOverride }: BattleSceneProps) => {
+export const BattleScene = ({
+  stage,
+  kanjiPool,
+  onFinish,
+  onFlee,
+  mode = 'stage',
+  weaponOverride,
+  patience: basePatienceValue,
+}: BattleSceneProps) => {
   const navigate = useNavigate();
   const size = useCanvasSize(210, 0.25, 96);
   const tutorial = mode === 'tutorial';
@@ -74,6 +90,21 @@ export const BattleScene = ({ stage, kanjiPool, onFinish, onFlee, mode = 'stage'
   const grantIndividual = useGameStore((s) => s.grantIndividual);
   const recordReview = useGameStore((s) => s.recordReview);
   const alreadyCleared = useGameStore((s) => s.clearedStages.includes(stage.id));
+  const equippedGear = useGameStore((s) => s.equippedGear);
+
+  // Worn gear: shield, armour, charm. The tutorial fight is gear-less.
+  const stats = useMemo(
+    () =>
+      statsFromGear(
+        tutorial
+          ? []
+          : Object.values(equippedGear)
+              .map((id) => getGear(id))
+              .filter((g) => g != null),
+      ),
+    [equippedGear, tutorial],
+  );
+  const patience = basePatienceValue + stats.patience;
 
   const weapon = useMemo(() => {
     if (weaponOverride) return weaponOverride;
@@ -95,7 +126,11 @@ export const BattleScene = ({ stage, kanjiPool, onFinish, onFlee, mode = 'stage'
   }, [weapon, weapons, progress]);
 
   const [bossHp, setBossHp] = useState(stage.boss.hp);
-  const [playerHp, setPlayerHp] = useState(PLAYER_MAX_HP);
+  const [playerHp, setPlayerHp] = useState(stats.maxHp);
+  /** Slips since the opponent last struck. At `patience` it strikes. */
+  const [rage, setRage] = useState(0);
+  /** The stroke order was looked up during the current write. */
+  const [hinted, setHinted] = useState(false);
   const [totalMistakes, setTotalMistakes] = useState(0);
   const [turn, setTurn] = useState(0);
   const [flash, setFlash] = useState<string | null>(null);
@@ -104,6 +139,13 @@ export const BattleScene = ({ stage, kanjiPool, onFinish, onFlee, mode = 'stage'
   const [rewards, setRewards] = useState<{ gems: number; individual: string | null }>({ gems: 0, individual: null });
 
   const settledRef = useRef(false);
+  // The boss is down and the win is on its way (settleTimer). Nothing the
+  // learner does in that beat — a slip, a look at the stroke order — may
+  // turn it into a loss.
+  const bossDownRef = useRef(false);
+  // Slips in the current write. hanzi-writer's own count starts over when
+  // the stroke order is shown, so the write keeps its own.
+  const writeSlipsRef = useRef(0);
   // The win lands a beat after the last hit. If the screen closes in that
   // beat (にげる), the clear must not be recorded behind the learner's back.
   const settleTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -116,7 +158,7 @@ export const BattleScene = ({ stage, kanjiPool, onFinish, onFlee, mode = 'stage'
   const fieldCtl = useAnimationControls();
 
   const target = kanjiPool[turn % kanjiPool.length];
-  const reading = target ? primaryReading(target) : '';
+  const ownsTarget = target ? progress[target.id]?.obtainedAt != null : false;
 
   const settle = useCallback(
     (kind: 'win' | 'lose', mistakes: number, hpLeft: number) => {
@@ -128,7 +170,7 @@ export const BattleScene = ({ stage, kanjiPool, onFinish, onFlee, mode = 'stage'
         return;
       }
 
-      const stars = starsFor(mistakes, hpLeft);
+      const stars = starsFor(mistakes, hpLeft, stats.maxHp);
       setOutcome({ kind: 'win', stars });
       if (tutorial) return;
 
@@ -143,13 +185,54 @@ export const BattleScene = ({ stage, kanjiPool, onFinish, onFlee, mode = 'stage'
       clearStage(stage.id);
       setRewards({ gems, individual: granted });
     },
-    [tutorial, alreadyCleared, stage, addGems, clearStage, grantIndividual],
+    [tutorial, alreadyCleared, stage, addGems, clearStage, grantIndividual, stats.maxHp],
   );
+
+  /**
+   * One slip. When they add up to the opponent's patience it strikes, less
+   * the shield's defence. The learner who practised makes fewer slips — and
+   * so is struck less — which is the whole point (docs/design/07 §2).
+   */
+  const addSlip = useCallback(() => {
+    if (settledRef.current || bossDownRef.current) return;
+    const next = rage + 1;
+    if (next < patience) {
+      setRage(next);
+      return;
+    }
+    setRage(0);
+    const back = strikeDamage(counterDamage(stage.boss.attack, individual, stage.boss.element), stats.defense);
+    const nextPlayerHp = Math.max(0, playerHp - back);
+    setPlayerHp(nextPlayerHp);
+    sfx.hurt();
+    void enemyCtl.start({ x: [0, -80, 0], transition: { duration: 0.45 } });
+    void fieldCtl.start({ x: [0, -6, 6, -3, 0], transition: { duration: 0.35, delay: 0.25 } });
+    setFlash(`ミスが ${patience}こ たまった。${back} ダメージを うけた`);
+    if (nextPlayerHp <= 0) settle('lose', totalMistakes, 0);
+  }, [rage, patience, stage.boss, individual, stats.defense, playerHp, enemyCtl, fieldCtl, settle, totalMistakes]);
+
+  const handleMistake = useCallback(() => {
+    if (settledRef.current || bossDownRef.current) return;
+    writeSlipsRef.current += 1;
+    sfx.clang();
+    addSlip();
+  }, [addSlip]);
+
+  const showStrokeOrder = () => {
+    if (settledRef.current || bossDownRef.current) return;
+    // Looking is allowed, and costs: one slip, and this write hits for half.
+    if (!hinted) addSlip();
+    setHinted(true);
+    writerRef.current?.animateStroke();
+  };
 
   const handleComplete = useCallback(
     (summary: { totalMistakes: number }) => {
-      const mistakes = summary.totalMistakes;
-      const nextMistakes = totalMistakes + mistakes;
+      if (settledRef.current || bossDownRef.current) return;
+      const mistakes = Math.max(summary.totalMistakes, writeSlipsRef.current);
+      writeSlipsRef.current = 0;
+      // A look at the stroke order counts against the stars like a slip.
+      const nextMistakes = totalMistakes + mistakes + (hinted ? 1 : 0);
       setTotalMistakes(nextMistakes);
 
       // Writing an owned character in battle is a review of it — except in
@@ -165,7 +248,13 @@ export const BattleScene = ({ stage, kanjiPool, onFinish, onFlee, mode = 'stage'
         defenderElement: stage.boss.element,
         mistakes,
         rust,
+        attackPct: stats.attackPct,
+        owned: ownsTarget && !tutorial,
+        hinted,
       });
+      sfx.slash(1);
+      sfx.hit();
+      setHinted(false);
 
       // The swing: Nexmax lunges, the blade crosses the opponent, it reels.
       void heroCtl.start({ x: [0, 70, 0], rotate: [0, 8, 0], transition: { duration: 0.45 } });
@@ -178,6 +267,8 @@ export const BattleScene = ({ stage, kanjiPool, onFinish, onFlee, mode = 'stage'
       setFlash(
         result.perfect
           ? `かんぺき！ ${result.damage} ダメージ`
+          : hinted
+            ? `かきじゅんを みたので はんぶん。${result.damage} ダメージ`
           : result.elementMultiplier > 1
             ? `こうかは ばつぐん！ ${result.damage} ダメージ`
             : result.elementMultiplier < 1
@@ -186,29 +277,16 @@ export const BattleScene = ({ stage, kanjiPool, onFinish, onFlee, mode = 'stage'
       );
 
       if (nextBossHp <= 0) {
+        bossDownRef.current = true;
         settleTimer.current = setTimeout(() => settle('win', nextMistakes, playerHp), 650);
         return;
-      }
-
-      // Only a failed write lets the opponent through.
-      if (isFailedWrite(mistakes)) {
-        const back = counterDamage(stage.boss.attack, individual, stage.boss.element);
-        const nextPlayerHp = Math.max(0, playerHp - back);
-        setPlayerHp(nextPlayerHp);
-        void enemyCtl.start({ x: [0, -80, 0], transition: { duration: 0.45, delay: 0.5 } });
-        void fieldCtl.start({ x: [0, -6, 6, -3, 0], transition: { duration: 0.35, delay: 0.75 } });
-        setFlash(`3回(かい)いじょう まちがえた。${back} ダメージを うけた`);
-        if (nextPlayerHp <= 0) {
-          settle('lose', nextMistakes, 0);
-          return;
-        }
       }
 
       setTurn((t) => t + 1);
     },
     [
       tutorial, totalMistakes, target, progress, recordReview, weapon, individual, stage.boss,
-      rust, bossHp, playerHp, settle, heroCtl, enemyCtl, fieldCtl, turn,
+      rust, bossHp, playerHp, settle, heroCtl, enemyCtl, turn, stats.attackPct, ownsTarget, hinted,
     ],
   );
 
@@ -245,9 +323,9 @@ export const BattleScene = ({ stage, kanjiPool, onFinish, onFlee, mode = 'stage'
             <img src={assetPath('img/chara/cut/nexmax.webp')} alt="" aria-hidden className="h-10 w-10 rounded-xl bg-white/80 object-contain" />
             <div className="min-w-0 flex-1">
               <p className="truncate text-xs font-black">ネクマックス</p>
-              {hpBar(playerHp, PLAYER_MAX_HP, 'linear-gradient(90deg,#7ed36b,#3e9b3a)')}
+              {hpBar(playerHp, stats.maxHp, 'linear-gradient(90deg,#7ed36b,#3e9b3a)')}
               <p className="text-right text-[10px] font-bold tabular-nums">
-                HP {playerHp} / {PLAYER_MAX_HP}
+                HP {playerHp} / {stats.maxHp}
               </p>
             </div>
           </div>
@@ -267,6 +345,17 @@ export const BattleScene = ({ stage, kanjiPool, onFinish, onFlee, mode = 'stage'
                 HP {bossHp} / {stage.boss.hp}{' '}
                 <RubyText showFurigana={showFurigana}>{`${elementLabel.ja}(${elementLabel.reading})`}</RubyText>
               </p>
+              {/* がまん: the slips left before it strikes. */}
+              <div className="mt-0.5 flex items-center gap-1" aria-label={`ミス ${rage} / ${patience}`}>
+                <span className="text-[9px] font-black">ミス</span>
+                {Array.from({ length: patience }, (_, i) => (
+                  <motion.span
+                    key={i}
+                    className="h-2.5 w-2.5 rounded-full border border-white/70"
+                    animate={{ background: i < rage ? '#ff5a4a' : 'rgba(255,255,255,0.15)', scale: i === rage - 1 ? [1.6, 1] : 1 }}
+                  />
+                ))}
+              </div>
             </div>
           </div>
         </div>
@@ -334,14 +423,24 @@ export const BattleScene = ({ stage, kanjiPool, onFinish, onFlee, mode = 'stage'
               </span>
             )}
             <div className="min-w-0 flex-1 text-sm">
-              <p className="font-black">
-                よみ： <span className="text-2xl">{reading}</span>
-              </p>
+              <Readings kanji={target} hideKanji={!tutorial} />
               <p className="truncate" style={{ color: 'var(--ink-2)' }}>
                 meaning: <b className="text-base">{target.meanings.slice(0, 2).join(' / ')}</b>
               </p>
             </div>
           </div>
+          {!tutorial && (
+            <p
+              className="mt-1 rounded-md px-2 py-0.5 text-[11px] font-bold"
+              style={{ background: ownsTarget ? 'rgba(126,211,107,0.25)' : 'rgba(255,107,125,0.18)' }}
+            >
+              <RubyText showFurigana={showFurigana}>
+                {ownsTarget
+                  ? '持(も)っている 字(じ)。字(じ)の 力(ちから)で こうげき ＋20%'
+                  : 'まだ 持(も)っていない 字(じ)。れんしゅうすると 書(か)けるように なる'}
+              </RubyText>
+            </p>
+          )}
         </div>
 
         {/* 書く ------------------------------------------------------------
@@ -358,6 +457,8 @@ export const BattleScene = ({ stage, kanjiPool, onFinish, onFlee, mode = 'stage'
               size={size}
               quizMode
               showSample={tutorial}
+              onCorrectStroke={() => sfx.slash(0.35)}
+              onMistake={handleMistake}
               onComplete={handleComplete}
             />
           </div>
@@ -365,13 +466,15 @@ export const BattleScene = ({ stage, kanjiPool, onFinish, onFlee, mode = 'stage'
             <button
               type="button"
               className="g-parchment flex w-16 flex-1 flex-col items-center justify-center !rounded-xl text-[10px] leading-tight font-black"
-              onClick={() => writerRef.current?.animateStroke()}
+              onClick={showStrokeOrder}
             >
               <span aria-hidden className="text-lg">
                 ✎
               </span>
-              <RubyText showFurigana={showFurigana}>わからない</RubyText>
               <RubyText showFurigana={showFurigana}>書(か)きじゅん</RubyText>
+              <span className="text-[9px] font-bold" style={{ color: 'var(--color-danger)' }}>
+                ミス＋1
+              </span>
             </button>
             {!tutorial && (
               <button

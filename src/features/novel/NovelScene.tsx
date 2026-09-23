@@ -3,7 +3,9 @@ import { motion, AnimatePresence } from 'framer-motion';
 import type { CastMember, NovelScript } from '../../types/novel';
 import { RubyText } from '../../components/ui/Ruby';
 import { assetPath } from '../../lib/assetPath';
-import { stripRuby } from '../../lib/ruby';
+import { parseRuby, stripRuby } from '../../lib/ruby';
+import { glossFor } from '../../data/glossary';
+import { canSpeak, speak, stopSpeaking } from '../../lib/speech';
 import { useGameStore } from '../../store/gameStore';
 import PictureBook from '../picturebook/PictureBook';
 
@@ -26,6 +28,19 @@ interface NovelSceneProps {
   chapter?: { label: string; title: string };
 }
 
+/** The annotated words of a line, each with its English. Words without one are left out. */
+const lineWords = (text: string): { word: string; gloss: string }[] => {
+  const seen = new Set<string>();
+  const out: { word: string; gloss: string }[] = [];
+  for (const seg of parseRuby(text)) {
+    if (!seg.reading || /^[0-9０-９]/.test(seg.text) || seen.has(seg.text)) continue;
+    seen.add(seg.text);
+    const gloss = glossFor(seg.text);
+    if (gloss) out.push({ word: `${seg.text}(${seg.reading})`, gloss });
+  }
+  return out;
+};
+
 /** Reading time for auto mode: a base plus a little per character. */
 const autoDelay = (text: string) => 1600 + stripRuby(text).length * 85;
 
@@ -35,6 +50,13 @@ export const NovelScene = ({ script, cast, onFinish, chapter }: NovelSceneProps)
   const [showLog, setShowLog] = useState(false);
   const [auto, setAuto] = useState(false);
   const [seen, setSeen] = useState<number[]>([0]);
+  /**
+   * ことば: the words of this line with their English. Closed again on every
+   * new line — the learner tries the line first, then looks up what they
+   * could not read (docs/design/07 §3).
+   */
+  const [wordsFor, setWordsFor] = useState<number | null>(null);
+  useEffect(() => stopSpeaking, []);
 
   const castById = useMemo(() => new Map(cast.map((c) => [c.id, c])), [cast]);
   const line = script.lines[index];
@@ -181,8 +203,9 @@ export const NovelScene = ({ script, cast, onFinish, chapter }: NovelSceneProps)
               // A paper cut-out: white rim, soft shadow — the same finish as
               // the scene, without redrawing the character.
               style={{
-                filter:
-                  'drop-shadow(2px 0 0 #fffaf0) drop-shadow(-2px 0 0 #fffaf0) drop-shadow(0 2px 0 #fffaf0) drop-shadow(0 -2px 0 #fffaf0) drop-shadow(0 8px 10px rgba(40,25,5,0.35))',
+                filter: spriteMember?.silhouette
+                  ? 'brightness(0.08) drop-shadow(0 0 14px rgba(130,70,210,0.85))'
+                  : 'drop-shadow(2px 0 0 #fffaf0) drop-shadow(-2px 0 0 #fffaf0) drop-shadow(0 2px 0 #fffaf0) drop-shadow(0 -2px 0 #fffaf0) drop-shadow(0 8px 10px rgba(40,25,5,0.35))',
               }}
               animate={{ y: [0, -5, 0] }}
               transition={{ duration: 2.6, repeat: Infinity, ease: 'easeInOut' }}
@@ -255,6 +278,19 @@ export const NovelScene = ({ script, cast, onFinish, chapter }: NovelSceneProps)
               <RubyText showFurigana={showFurigana}>{line.text}</RubyText>
             </p>
 
+            {wordsFor === index && (
+              <div className="mt-1 flex flex-wrap gap-1.5" onClick={(e) => e.stopPropagation()}>
+                {lineWords(line.text).map(({ word, gloss }) => (
+                  <span key={word} className="rounded-lg border border-[#caa468] bg-white/80 px-2 text-[12px] leading-[2]">
+                    <RubyText showFurigana>{word}</RubyText>
+                    <span className="ml-1 font-bold" style={{ color: '#1b63b0' }}>
+                      {gloss}
+                    </span>
+                  </span>
+                ))}
+              </div>
+            )}
+
             {line.choices?.length ? (
               <div className="mt-3 flex flex-col gap-2">
                 {line.choices.map((c) => (
@@ -273,6 +309,34 @@ export const NovelScene = ({ script, cast, onFinish, chapter }: NovelSceneProps)
               </div>
             ) : (
               <div className="mt-1 flex items-center justify-end gap-1 text-xs font-bold" style={{ color: '#8a6a44' }}>
+                <div className="mr-auto flex gap-1.5">
+                  {canSpeak() && (
+                    <button
+                      type="button"
+                      aria-label="よみあげ"
+                      className="rounded-full border-2 border-[#caa468] bg-white/80 px-2.5 py-0.5 text-[12px]"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        speak(line.text);
+                      }}
+                    >
+                      🔊 よみあげ
+                    </button>
+                  )}
+                  {lineWords(line.text).length > 0 && (
+                    <button
+                      type="button"
+                      aria-pressed={wordsFor === index}
+                      className="rounded-full border-2 border-[#caa468] bg-white/80 px-2.5 py-0.5 text-[12px]"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setWordsFor(wordsFor === index ? null : index);
+                      }}
+                    >
+                      ？ ことば
+                    </button>
+                  )}
+                </div>
                 タップで つづく
                 <motion.span
                   aria-hidden

@@ -66,3 +66,36 @@ export const mapSvg = (): string =>
     MAP_W,
     MAP_H,
   );
+
+/**
+ * 現代編 の 地図: the city at the bottom, the highway out of it, the sea of
+ * trees, and the training centre — then fog, where episodes #2–#5 will go.
+ */
+const building = (x: number, base: number, w: number, h: number, color: string) =>
+  `<g filter="url(#torn)"><rect x="${x}" y="${base - h}" width="${w}" height="${h}" fill="${color}"/>
+   ${Array.from({ length: Math.floor(h / 26) }, (_, r) =>
+     Array.from({ length: Math.floor(w / 18) }, (_, c) => `<rect x="${x + 6 + c * 18}" y="${base - h + 8 + r * 26}" width="8" height="12" fill="#fff3c2" opacity="0.8"/>`).join(''),
+   ).join('')}</g>`;
+
+export const gendaiMapSvg = (): string =>
+  svgDoc(
+    `<linearGradient id="gmsky" x1="0" y1="0" x2="0" y2="1">
+       <stop offset="0" stop-color="#6b6f92"/><stop offset="0.3" stop-color="#a9b8d6"/><stop offset="1" stop-color="#cfe6f5"/>
+     </linearGradient>
+     <rect width="${MAP_W}" height="${MAP_H}" fill="url(#gmsky)" filter="url(#paint)"/>
+     ${cloud(80, 80, 1.6, '#e3e6ee')}${cloud(260, 140, 1.4, '#e8eaf0')}${cloud(150, 230, 1.2, '#eef0f4')}
+     ${peaks(420, '#8a9cc0', 5, 220, true, 1300)}
+     ${hills(430, '#2f4a3a', 17, 20, 'torn', 800)}
+     ${[20, 70, 130, 190, 250, 310, 360].map((x, i) => pine(x, 470 + (i % 2) * 14, 1.4, '#243a2e')).join('')}
+     <g filter="url(#torn)"><rect x="150" y="360" width="110" height="70" fill="#8d8478"/><path d="M140 364 L205 330 L270 364 Z" fill="#5a4f47"/></g>
+     ${hills(620, '#3f6a4a', 23, 16, 'torn', 1300)}
+     ${[40, 110, 300, 360].map((x, i) => pine(x, 660 + (i % 2) * 20, 1.2, '#2c4a36')).join('')}
+     ${hills(820, '#6aa142', 29, 12, 'torn', 1300)}
+     <path d="M-20 1300 L-20 1000 Q200 980 420 1000 L420 1300 Z" fill="#b8b8c0" filter="url(#torn)"/>
+     ${building(10, 1120, 70, 150, '#7f8fb0')}${building(90, 1120, 54, 110, '#9aa7c2')}${building(300, 1120, 90, 180, '#6f7fa2')}
+     ${building(20, 1260, 90, 90, '#a8b3c9')}${building(290, 1270, 100, 120, '#8795b3')}
+     ${road()}`,
+    9,
+    MAP_W,
+    MAP_H,
+  );

@@ -115,17 +115,17 @@ describe('titles', () => {
     expect(titleFor(0)).toBeNull();
     expect(titleFor(9)).toBeNull();
     expect(titleFor(10)?.word).toBe('見習い');
-    expect(titleFor(120)?.word).toBe('名人');
+    expect(titleFor(60)?.word).toBe('名人');
   });
 
   it('points at the next one to aim for', () => {
     expect(nextTitle(0)?.at).toBe(10);
-    expect(nextTitle(10)?.at).toBe(50);
+    expect(nextTitle(10)?.at).toBe(30);
     expect(nextTitle(999)).toBeNull();
   });
 
   it('is reachable: the N5 set alone can carry a learner to the last title', () => {
-    expect(wordsFor(N5).length).toBeGreaterThanOrEqual(347);
+    expect(wordsFor(N5).length).toBeGreaterThanOrEqual(TITLES[TITLES.length - 1].at);
   });
 });
 

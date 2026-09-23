@@ -3,16 +3,20 @@ import { useLocation, useNavigate, useParams, useSearchParams } from 'react-rout
 import { motion } from 'framer-motion';
 import { getStage } from '../../data/stages';
 import { MUKASHI_CAST, MUKASHI_SCRIPTS } from '../../data/scripts/mukashi';
+import { GENDAI_CAST, GENDAI_SCRIPTS } from '../../data/scripts/gendai';
+import { Arc } from '../../types/kanji';
 import { getKanjiByChar } from '../../lib/kanjiDb';
 import { preloadCharData } from '../../lib/strokeLoader';
-import { kanjiRuby } from '../../lib/reading';
 import { useGameStore } from '../../store/gameStore';
 import { REPS_TO_OBTAIN, type KanjiData } from '../../types/kanji';
+import { basePatience } from '../../lib/battle';
 import NovelScene from '../novel/NovelScene';
 import KanjiDrill from '../write/KanjiDrill';
 import BattleScene from '../battle/BattleScene';
 import EncounterScreen from './EncounterScreen';
 import { RubyText } from '../../components/ui/Ruby';
+import PictureBook from '../picturebook/PictureBook';
+import { KanjiWord } from '../../components/ui/Readings';
 import { NexmaxSays, TopBar } from '../../components/ui/Chrome';
 
 /**
@@ -33,6 +37,21 @@ import { NexmaxSays, TopBar } from '../../components/ui/Chrome';
 
 type StoryPhase = 'story' | 'encounter' | 'battle';
 
+/** A per-visit shuffle (Fisher–Yates, seeded by the moment the stage opened). */
+const shuffled = <T,>(items: readonly T[], salt: string): T[] => {
+  let seed = [...salt].reduce((h, c) => (h * 31 + c.charCodeAt(0)) >>> 0, Date.now() >>> 0) || 1;
+  const rnd = () => {
+    seed = (Math.imul(seed, 1664525) + 1013904223) >>> 0;
+    return seed / 0x100000000;
+  };
+  const out = [...items];
+  for (let i = out.length - 1; i > 0; i--) {
+    const j = Math.floor(rnd() * (i + 1));
+    [out[i], out[j]] = [out[j], out[i]];
+  }
+  return out;
+};
+
 const StageRun = () => {
   const { stageId } = useParams<{ stageId: string }>();
   const navigate = useNavigate();
@@ -43,7 +62,7 @@ const StageRun = () => {
   const resumeAt = params.get('at') === 'encounter' ? 'encounter' : null;
 
   const stage = stageId ? getStage(stageId) : undefined;
-  const script = useMemo(() => MUKASHI_SCRIPTS.find((s) => s.stageId === stageId), [stageId]);
+  const script = useMemo(() => [...MUKASHI_SCRIPTS, ...GENDAI_SCRIPTS].find((s) => s.stageId === stageId), [stageId]);
 
   const progress = useGameStore((s) => s.progress);
   const showFurigana = useGameStore((s) => s.settings.furigana);
@@ -55,6 +74,12 @@ const StageRun = () => {
     if (!stage) return [];
     return stage.kanji.map((c) => getKanjiByChar(c)).filter((k) => k != null);
   }, [stage]);
+
+  // Every character of the stage comes up in the fight, owned or not
+  // (docs/design/07 §2). Owning one makes it easy and strong; not owning it
+  // means looking up the stroke order — which the opponent punishes. The
+  // order is shuffled once per visit so the unfamiliar ones are not all last.
+  const [pool] = useState(() => shuffled(kanjiList, stageId ?? ''));
 
   // Warm every character in the stage so no drill ever waits on a fetch.
   useEffect(() => {
@@ -72,8 +97,12 @@ const StageRun = () => {
     );
   }
 
-  const backToSelect = () => navigate(`/map/mukashi?stage=${stage.id}`);
-  const chapter = { label: `むかし編(へん) 1-${stage.order}`, title: stage.title };
+  const backToSelect = () => navigate(`/map/${stage.arc}?stage=${stage.id}`);
+  const cast = stage.arc === Arc.GENDAI ? GENDAI_CAST : MUKASHI_CAST;
+  const chapter = {
+    label: `${stage.arc === Arc.GENDAI ? '現代編(げんだいへん)' : 'むかし編(へん)'} ${stage.order}`,
+    title: stage.title,
+  };
   const owned = kanjiList.filter((k) => (progress[k.id]?.reps ?? 0) >= REPS_TO_OBTAIN);
 
   // =========================================================================
@@ -93,8 +122,9 @@ const StageRun = () => {
     }
 
     return (
-      <div className="g-sky flex min-h-dvh flex-col items-center pb-8">
-        <TopBar onBack={backToSelect} title={`1-${stage.order} ${stage.title}`} />
+      <div className="isolate relative flex min-h-dvh flex-col items-center pb-8">
+        <PictureBook scene="mukashi_meadow" className="!fixed -z-10" />
+        <TopBar onBack={backToSelect} title={`${stage.order}話(わ) ${stage.title}`} />
         <div className="flex w-full max-w-md flex-col gap-3 px-3 pt-4">
           <div className="flex items-end justify-between gap-1">
             <div className="g-parchment min-w-0 flex-1 px-4 py-3">
@@ -131,7 +161,7 @@ const StageRun = () => {
                     </span>
                   )}
                   <span className="text-[38px] leading-[1.55] font-black">
-                    <RubyText showFurigana={showFurigana}>{kanjiRuby(k)}</RubyText>
+                    <KanjiWord kanji={k} showFurigana={showFurigana} />
                   </span>
                   <span className="truncate text-[11px]" style={{ color: 'var(--ink-2)' }}>
                     {k.meanings[0]}
@@ -165,16 +195,13 @@ const StageRun = () => {
 
   // Round-trip to the forge and back to this stage's encounter.
   const forgeHref = `/forge?back=${encodeURIComponent(`/stage/${stage.id}?mode=story&at=encounter`)}`;
-  // The fight uses what the learner owns from this stage; with nothing owned
-  // yet it falls back to the whole list (and the encounter says so).
-  const pool = owned.length ? owned : kanjiList;
 
   if (phase === 'story') {
     if (!script) {
       setPhase('encounter');
       return null;
     }
-    return <NovelScene script={script} cast={MUKASHI_CAST} chapter={chapter} onFinish={() => setPhase('encounter')} />;
+    return <NovelScene script={script} cast={cast} chapter={chapter} onFinish={() => setPhase('encounter')} />;
   }
 
   if (phase === 'encounter') {
@@ -192,7 +219,15 @@ const StageRun = () => {
     );
   }
 
-  return <BattleScene stage={stage} kanjiPool={pool} onFinish={backToSelect} onFlee={() => setPhase('encounter')} />;
+  return (
+    <BattleScene
+      stage={stage}
+      kanjiPool={pool}
+      patience={basePatience(stage.order)}
+      onFinish={backToSelect}
+      onFlee={() => setPhase('encounter')}
+    />
+  );
 };
 
 /**
