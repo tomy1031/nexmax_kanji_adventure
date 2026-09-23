@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence, useAnimationControls } from 'framer-motion';
 import type { StageDef } from '../../data/stages';
@@ -9,7 +9,7 @@ import { useCanvasSize } from '../../hooks/useCanvasSize';
 import { useGameStore } from '../../store/gameStore';
 import { getKanjiById } from '../../lib/kanjiDb';
 import { getIndividual } from '../../data/individuals';
-import { weaponOf } from '../../lib/forge/weapon';
+import { weaponOf, type Weapon } from '../../lib/forge/weapon';
 import { ELEMENT_LABEL } from '../../lib/forge/elements';
 import { rustLevel } from '../../lib/srs';
 import { kanjiRuby, primaryReading } from '../../lib/reading';
@@ -50,11 +50,16 @@ interface BattleSceneProps {
    * told what to write — docs/design/06 §0), and a win hands straight back.
    */
   mode?: 'stage' | 'tutorial';
+  /**
+   * Fight with this weapon instead of the equipped one. 0話 uses it so a
+   * replay never swaps out the weapon a returning player has equipped.
+   */
+  weaponOverride?: Weapon;
 }
 
 type Outcome = { kind: 'win'; stars: 1 | 2 | 3 } | { kind: 'lose' } | null;
 
-export const BattleScene = ({ stage, kanjiPool, onFinish, onFlee, mode = 'stage' }: BattleSceneProps) => {
+export const BattleScene = ({ stage, kanjiPool, onFinish, onFlee, mode = 'stage', weaponOverride }: BattleSceneProps) => {
   const navigate = useNavigate();
   const size = useCanvasSize(210, 0.25, 96);
   const tutorial = mode === 'tutorial';
@@ -71,11 +76,12 @@ export const BattleScene = ({ stage, kanjiPool, onFinish, onFlee, mode = 'stage'
   const alreadyCleared = useGameStore((s) => s.clearedStages.includes(stage.id));
 
   const weapon = useMemo(() => {
+    if (weaponOverride) return weaponOverride;
     const recipe = weapons.find((w) => w.id === equippedId);
     if (!recipe) return null;
     const kanji = recipe.kanjiIds.map((id) => getKanjiById(id)).filter((k) => k != null);
     return kanji.length === recipe.kanjiIds.length ? weaponOf(kanji) : null;
-  }, [weapons, equippedId]);
+  }, [weapons, equippedId, weaponOverride]);
 
   const individual = activeIndividualId ? (getIndividual(activeIndividualId) ?? null) : null;
 
@@ -98,6 +104,12 @@ export const BattleScene = ({ stage, kanjiPool, onFinish, onFlee, mode = 'stage'
   const [rewards, setRewards] = useState<{ gems: number; individual: string | null }>({ gems: 0, individual: null });
 
   const settledRef = useRef(false);
+  // The win lands a beat after the last hit. If the screen closes in that
+  // beat (にげる), the clear must not be recorded behind the learner's back.
+  const settleTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(() => () => {
+    if (settleTimer.current) clearTimeout(settleTimer.current);
+  }, []);
   const writerRef = useRef<KanjiWriterHandle>(null);
   const heroCtl = useAnimationControls();
   const enemyCtl = useAnimationControls();
@@ -140,8 +152,10 @@ export const BattleScene = ({ stage, kanjiPool, onFinish, onFlee, mode = 'stage'
       const nextMistakes = totalMistakes + mistakes;
       setTotalMistakes(nextMistakes);
 
-      // Writing an owned character in battle is a review of it.
-      if (target && progress[target.id]?.obtainedAt != null) {
+      // Writing an owned character in battle is a review of it — except in
+      // 0話, where 一 was obtained minutes ago and three quick writes would
+      // push its first review a week out.
+      if (!tutorial && target && progress[target.id]?.obtainedAt != null) {
         recordReview(target.id, mistakes);
       }
 
@@ -172,7 +186,7 @@ export const BattleScene = ({ stage, kanjiPool, onFinish, onFlee, mode = 'stage'
       );
 
       if (nextBossHp <= 0) {
-        setTimeout(() => settle('win', nextMistakes, playerHp), 650);
+        settleTimer.current = setTimeout(() => settle('win', nextMistakes, playerHp), 650);
         return;
       }
 
@@ -193,7 +207,7 @@ export const BattleScene = ({ stage, kanjiPool, onFinish, onFlee, mode = 'stage'
       setTurn((t) => t + 1);
     },
     [
-      totalMistakes, target, progress, recordReview, weapon, individual, stage.boss,
+      tutorial, totalMistakes, target, progress, recordReview, weapon, individual, stage.boss,
       rust, bossHp, playerHp, settle, heroCtl, enemyCtl, fieldCtl, turn,
     ],
   );

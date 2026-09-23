@@ -1,4 +1,4 @@
-import { forwardRef, useCallback, useImperativeHandle, useMemo, useRef, useState } from 'react';
+import { forwardRef, useCallback, useEffect, useImperativeHandle, useMemo, useRef, useState } from 'react';
 import { AnimatePresence, motion, useAnimationControls } from 'framer-motion';
 import KanjiWriterCanvas, { type KanjiWriterHandle } from '../../components/KanjiWriterCanvas';
 import { RubyText } from '../../components/ui/Ruby';
@@ -81,11 +81,29 @@ export const RockSlash = forwardRef<RockSlashHandle, RockSlashProps>(
     /** Remounts the writer after a failed write so the same rock can be retried. */
     const [attempt, setAttempt] = useState(0);
     const nextId = useRef(0);
+    /**
+     * Slips made on this rock before the learner asked to see the stroke
+     * order. hanzi-writer restarts its own count when the order is shown, so
+     * without this, asking for the hint would wipe a failing write clean.
+     */
+    const carried = useRef(0);
+    const slips = useRef(0);
+
+    // Timers for the split and the retry; cleared if the screen closes first.
+    const timers = useRef<ReturnType<typeof setTimeout>[]>([]);
+    const later = (fn: () => void, ms: number) => timers.current.push(setTimeout(fn, ms));
+    useEffect(() => () => timers.current.forEach(clearTimeout), []);
 
     const url = useMemo(() => rockUrl(seed), [seed]);
 
     useImperativeHandle(ref, () => ({
-      animateStroke: () => writerRef.current?.animateStroke(),
+      animateStroke: () => {
+        // The quiz starts over from the first stroke, so the cuts on the
+        // rock start over too.
+        carried.current = slips.current;
+        setCuts([]);
+        writerRef.current?.animateStroke();
+      },
     }));
 
     const handleStroke = useCallback(
@@ -110,6 +128,7 @@ export const RockSlash = forwardRef<RockSlashHandle, RockSlashProps>(
     );
 
     const handleMistake = useCallback(() => {
+      slips.current += 1;
       // A glancing blow: a small clank, no cut.
       void shake.start({ x: [0, 3, -3, 0], transition: { duration: 0.18 } });
       onMistake?.();
@@ -117,14 +136,16 @@ export const RockSlash = forwardRef<RockSlashHandle, RockSlashProps>(
 
     const handleComplete = useCallback(
       (summary: { totalMistakes: number }) => {
-        const passed = onWritten(summary);
+        const passed = onWritten({ totalMistakes: summary.totalMistakes + carried.current });
+        carried.current = 0;
+        slips.current = 0;
         if (passed) {
-          setTimeout(() => setSplit(true), 180);
-          setTimeout(() => onSplit?.(), 1500);
+          later(() => setSplit(true), 180);
+          later(() => onSplit?.(), 1500);
         } else {
           // Not a pass — the rock holds. Let the cuts fade, then try again.
           void shake.start({ x: [0, 6, -6, 4, -4, 0], transition: { duration: 0.4 } });
-          setTimeout(() => {
+          later(() => {
             setCuts([]);
             setAttempt((a) => a + 1);
           }, 900);

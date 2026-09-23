@@ -144,6 +144,8 @@ const KanjiWriterCanvas = forwardRef<KanjiWriterHandle, KanjiWriterCanvasProps>(
           <div style="font-size:13px;color:#78350f;margin-top:8px;">タップで つぎへ</div>
           <div style="font-size:11px;color:#a16207;margin-top:4px;"><ruby>書<rt>か</rt></ruby>きじゅんの データが ありません</div>`;
         el.onclick = () => {
+          // One tap is one rep: a second tap while the ✓ shows must not count.
+          el.onclick = null;
           el.innerHTML = `<div style="font-size:${size / 2.5}px;font-weight:800;color:#065f46;">✓</div>`;
           setTimeout(() => callbacksRef.current.onComplete?.({ character: char, totalMistakes: 0 }), 400);
         };

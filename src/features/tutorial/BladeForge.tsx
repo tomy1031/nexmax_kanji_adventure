@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import type { KanjiData } from '../../types/kanji';
 import { RubyText } from '../../components/ui/Ruby';
@@ -28,17 +28,24 @@ export const BladeForge = ({ kanji, onDone }: BladeForgeProps) => {
   const showFurigana = useGameStore((s) => s.settings.furigana);
   const craftWeapon = useGameStore((s) => s.craftWeapon);
   const equipWeapon = useGameStore((s) => s.equipWeapon);
+  const equippedId = useGameStore((s) => s.equippedWeapon);
   const [phase, setPhase] = useState<'ready' | 'forging' | 'done'>('ready');
+  const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(() => () => {
+    if (timer.current) clearTimeout(timer.current);
+  }, []);
 
   const blade = forgeSingleBlade(kanji);
   const ruby = kanjiRuby(kanji);
 
   const forge = () => {
     setPhase('forging');
-    // The store refuses a duplicate recipe; a replay of 0話 simply re-equips.
-    craftWeapon([kanji.id]);
-    equipWeapon(blade.id);
-    setTimeout(() => setPhase('done'), 1100);
+    // Equip it only when it is new or nothing is equipped. A returning
+    // player replaying 0話 keeps the weapon they had — the store refuses the
+    // duplicate recipe, and 0話's fight is handed the blade directly.
+    const made = craftWeapon([kanji.id]);
+    if (made || !equippedId) equipWeapon(blade.id);
+    timer.current = setTimeout(() => setPhase('done'), 1100);
   };
 
   return (

@@ -52,6 +52,7 @@ export const KanjiDrill = ({ kanji, onObtained, onExit, onDone, nextLabel = 'つ
   const slashRef = useRef<RockSlashHandle>(null);
 
   const recordRep = useGameStore((s) => s.recordRep);
+  const recordReview = useGameStore((s) => s.recordReview);
   const showFurigana = useGameStore((s) => s.settings.furigana);
   const reps = useGameStore((s) => s.progress[kanji.id]?.reps ?? 0);
 
@@ -66,6 +67,14 @@ export const KanjiDrill = ({ kanji, onObtained, onExit, onDone, nextLabel = 'つ
   const [strokeMistakes, setStrokeMistakes] = useState(0);
   const [verdict, setVerdict] = useState<Verdict>(null);
   const [obtained, setObtained] = useState(false);
+  /**
+   * A kanji already owned is not collected again. Writing it is a review:
+   * the first pass is recorded as one (and says so), and the rocks after
+   * that are free practice that touches nothing — no ink, no daily count,
+   * no change to the review schedule.
+   */
+  const [ownedAtStart] = useState(() => reps >= REPS_TO_OBTAIN);
+  const [reviewed, setReviewed] = useState<'no' | 'card' | 'done'>('no');
   /** Which rock this is — a new one rolls in after each split. */
   const [rockNo, setRockNo] = useState(0);
   const pendingObtained = useRef(false);
@@ -85,10 +94,17 @@ export const KanjiDrill = ({ kanji, onObtained, onExit, onDone, nextLabel = 'つ
       setStrokeMistakes(0);
       if (kind === 'close') return false;
 
+      if (ownedAtStart) {
+        if (reviewed === 'no') {
+          recordReview(kanji.id, mistakes);
+          setReviewed('card');
+        }
+        return true;
+      }
       pendingObtained.current = recordRep(kanji.id, mistakes);
       return true;
     },
-    [kanji, recordRep],
+    [kanji, recordRep, recordReview, ownedAtStart, reviewed],
   );
 
   const handleSplit = useCallback(() => {
@@ -264,7 +280,7 @@ export const KanjiDrill = ({ kanji, onObtained, onExit, onDone, nextLabel = 'つ
 
       {/* 入手 ------------------------------------------------------------ */}
       <AnimatePresence>
-        {obtained && (
+        {(obtained || reviewed === 'card') && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -278,7 +294,7 @@ export const KanjiDrill = ({ kanji, onObtained, onExit, onDone, nextLabel = 'つ
               className="g-parchment w-full max-w-sm px-6 py-6 text-center"
             >
               <div className="g-btn-red mx-auto -mt-10 mb-3 inline-block rounded-xl px-4 py-1 text-sm font-black">
-                <RubyText showFurigana={showFurigana}>10こ 集(あつ)まった！</RubyText>
+                <RubyText showFurigana={showFurigana}>{obtained ? '10こ 集(あつ)まった！' : 'ふくしゅう できた'}</RubyText>
               </div>
               <motion.div
                 initial={{ rotate: -8, scale: 0.6 }}
@@ -294,14 +310,32 @@ export const KanjiDrill = ({ kanji, onObtained, onExit, onDone, nextLabel = 'つ
                 <RubyText showFurigana>{ruby}</RubyText>
               </motion.div>
               <p className="g-title mt-4 text-lg">
-                <RubyText showFurigana={showFurigana}>{`「${ruby}」を 手(て)に 入(い)れた！`}</RubyText>
+                <RubyText showFurigana={showFurigana}>
+                  {obtained ? `「${ruby}」を 手(て)に 入(い)れた！` : `「${ruby}」は もう 持(も)っている。`}
+                </RubyText>
               </p>
               <p className="mt-1 text-sm" style={{ color: 'var(--ink-2)' }}>
-                <RubyText showFurigana={showFurigana}>この 字(じ)で 武器(ぶき)が 作(つく)れる。</RubyText>
+                <RubyText showFurigana={showFurigana}>
+                  {obtained
+                    ? 'この 字(じ)で 武器(ぶき)が 作(つく)れる。'
+                    : 'ふくしゅうとして 1回(かい) 記録(きろく)した。さびた 武器(ぶき)も 直(なお)る。'}
+                </RubyText>
               </p>
               <button type="button" className="g-btn g-btn-primary mt-5 w-full text-lg" onClick={onDone ?? onExit}>
                 <RubyText showFurigana={showFurigana}>{nextLabel}</RubyText>
               </button>
+              {!obtained && (
+                <button
+                  type="button"
+                  className="g-btn g-btn-accent mt-2 w-full"
+                  onClick={() => {
+                    setReviewed('done');
+                    setRockNo((n) => n + 1);
+                  }}
+                >
+                  <RubyText showFurigana={showFurigana}>もっと 書(か)く（記録(きろく)しない）</RubyText>
+                </button>
+              )}
             </motion.div>
           </motion.div>
         )}

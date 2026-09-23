@@ -125,7 +125,7 @@ export const ForgeScreen = () => {
         {/* スロット ----------------------------------------------------- */}
         <div className="g-panel mb-3 p-4">
           <p className="g-eyebrow mb-2">
-            <RubyText showFurigana={showFurigana}>漢字(かんじ)を 2〜3(に〜さん)つ えらぶ</RubyText>
+            <RubyText showFurigana={showFurigana}>漢字(かんじ)を 2(に)〜3(さん)つ えらぶ</RubyText>
           </p>
           <div className="flex items-center justify-center gap-2">
             {[0, 1, 2].map((i) => {

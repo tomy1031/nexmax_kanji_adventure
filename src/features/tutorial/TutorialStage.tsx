@@ -9,6 +9,7 @@ import NovelScene from '../novel/NovelScene';
 import KanjiDrill from '../write/KanjiDrill';
 import BattleScene from '../battle/BattleScene';
 import BladeForge from './BladeForge';
+import { forgeSingleBlade } from '../../lib/forge/weapon';
 import {
   TUTORIAL_AFTER_DRILL,
   TUTORIAL_BEFORE_BATTLE,
@@ -104,6 +105,7 @@ export const TutorialStage = () => {
             boss: { ...TUTORIAL_FOE, element: Element.MU },
           }}
           kanjiPool={[kanji]}
+          weaponOverride={forgeSingleBlade(kanji)}
           onFinish={() => setPhase('outro')}
           onFlee={leave}
         />
