@@ -2,11 +2,14 @@ import { useEffect, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import type { KanjiData } from '../../types/kanji';
 import { RubyText } from '../../components/ui/Ruby';
+import PictureBook from '../picturebook/PictureBook';
+import { KanjiWord } from '../../components/ui/Readings';
 import { GameIcon } from '../../components/ui/GameIcon';
 import { LogoTitle, NexmaxSays } from '../../components/ui/Chrome';
 import { useGameStore } from '../../store/gameStore';
 import { forgeSingleBlade, RARITY_LABEL } from '../../lib/forge/weapon';
 import { kanjiRuby } from '../../lib/reading';
+import * as sfx from '../../lib/sfx';
 
 /**
  * 0話 の 鍛冶場 — turning the first character into the first blade.
@@ -45,11 +48,16 @@ export const BladeForge = ({ kanji, onDone }: BladeForgeProps) => {
     // duplicate recipe, and 0話's fight is handed the blade directly.
     const made = craftWeapon([kanji.id]);
     if (made || !equippedId) equipWeapon(blade.id);
-    timer.current = setTimeout(() => setPhase('done'), 1100);
+    sfx.slash(1);
+    timer.current = setTimeout(() => {
+      sfx.chime();
+      setPhase('done');
+    }, 1100);
   };
 
   return (
-    <div className="g-sky relative flex min-h-dvh flex-col items-center overflow-hidden px-4 pt-[max(16px,env(safe-area-inset-top))] pb-6">
+    <div className="isolate relative flex min-h-dvh flex-col items-center overflow-hidden px-4 pt-[max(16px,env(safe-area-inset-top))] pb-6">
+      <PictureBook scene="mukashi_meadow" className="!fixed -z-10" />
       {/* 魔法陣 */}
       <motion.div
         aria-hidden
@@ -80,7 +88,7 @@ export const BladeForge = ({ kanji, onDone }: BladeForgeProps) => {
                 animate={phase === 'forging' ? { x: 70, scale: 0.5, rotate: 360 } : { y: [0, -6, 0] }}
                 transition={phase === 'forging' ? { duration: 0.9 } : { duration: 2, repeat: Infinity }}
               >
-                <RubyText showFurigana={showFurigana}>{ruby}</RubyText>
+                <KanjiWord kanji={kanji} showFurigana={showFurigana} />
               </motion.div>
               <span className="g-outline-text text-4xl font-black">＋</span>
               <motion.div

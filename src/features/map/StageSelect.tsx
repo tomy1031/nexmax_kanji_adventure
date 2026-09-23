@@ -5,6 +5,7 @@ import { stagesOfArc, isStageUnlocked, type StageDef } from '../../data/stages';
 import { Arc } from '../../types/kanji';
 import { RubyText } from '../../components/ui/Ruby';
 import { BottomTabs } from '../../components/ui/Chrome';
+import GearHint from '../../components/ui/GearHint';
 import { assetPath } from '../../lib/assetPath';
 import { getKanjiByChar } from '../../lib/kanjiDb';
 import { kanjiRuby } from '../../lib/reading';
@@ -272,6 +273,12 @@ export const StageSelect = () => {
                     );
                   })}
                 </div>
+              </div>
+            )}
+
+            {stage && (
+              <div className="mt-1.5">
+                <GearHint stageId={stage.id} />
               </div>
             )}
 

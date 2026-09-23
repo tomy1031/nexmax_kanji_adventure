@@ -6,6 +6,7 @@ import { RubyText } from '../../components/ui/Ruby';
 import { GameIcon } from '../../components/ui/GameIcon';
 import { kanjiRuby } from '../../lib/reading';
 import PictureBook from '../picturebook/PictureBook';
+import GearHint from '../../components/ui/GearHint';
 import { useGameStore } from '../../store/gameStore';
 import { getKanjiById } from '../../lib/kanjiDb';
 import { weaponOf, RARITY_LABEL } from '../../lib/forge/weapon';
@@ -45,6 +46,7 @@ export const EncounterScreen = ({
   onBack,
 }: EncounterScreenProps) => {
   const showFurigana = useGameStore((s) => s.settings.furigana);
+  const progress = useGameStore((s) => s.progress);
   const weapons = useGameStore((s) => s.weapons);
   const equippedId = useGameStore((s) => s.equippedWeapon);
   const equipWeapon = useGameStore((s) => s.equipWeapon);
@@ -104,18 +106,31 @@ export const EncounterScreen = ({
           </p>
           <div className="flex flex-wrap gap-1.5">
             {kanjiPool.map((kj) => (
-              <span key={kj.id} className="g-chip !px-2.5 !py-0 text-lg leading-[1.9] font-black">
+              <span
+                key={kj.id}
+                className="g-chip !px-2.5 !py-0 text-lg leading-[1.9] font-black"
+                style={
+                  progress[kj.id]?.obtainedAt != null
+                    ? { background: 'linear-gradient(160deg,#fffbe8,#ffe7a3)', borderColor: '#f2b53a' }
+                    : { opacity: 0.75, borderStyle: 'dashed' }
+                }
+              >
                 <RubyText showFurigana={showFurigana}>{kanjiRuby(kj)}</RubyText>
               </span>
             ))}
           </div>
-          {ownedCount < 3 && (
+          <p className="mt-2 text-[11px]" style={{ color: 'var(--ink-2)' }}>
+            <RubyText showFurigana={showFurigana}>
+              {`ぜんぶの 字(じ)が 出(で)ます。持(も)っている 字(じ)は ${ownedCount} / ${totalCount}。書(か)きじゅんを 見(み)ると ミスに なり、ミスが たまると 敵(てき)が こうげきして きます。`}
+            </RubyText>
+          </p>
+          {ownedCount < totalCount && (
             <div className="mt-2 rounded-lg px-3 py-2 text-xs" style={{ background: 'rgba(255,207,74,0.22)' }}>
               <p>
                 <RubyText showFurigana={showFurigana}>
                   {ownedCount === 0
-                    ? `この ステージの 漢字(かんじ)を まだ 1(ひと)つも 持(も)って いません（0 / ${totalCount}）。れんしゅうで 手(て)に 入(い)れると、書(か)く 字(じ)が わかります。`
-                    : `この ステージの 漢字(かんじ)は まだ ${ownedCount} / ${totalCount}。れんしゅうで ふやすと、もっと たたかいやすく なります。`}
+                    ? 'まだ 1(ひと)つも 持(も)って いません。このままだと、書(か)きじゅんを 見(み)ないと 書(か)けません。'
+                    : `のこり ${totalCount - ownedCount} 字(じ)は まだ 書(か)けないかも。れんしゅうすると、ミスが へって 強(つよ)く なります。`}
                 </RubyText>
               </p>
               <button type="button" className="g-btn g-btn-accent mt-2 w-full !min-h-[40px] text-xs" onClick={onPractice}>
@@ -123,6 +138,10 @@ export const EncounterScreen = ({
               </button>
             </div>
           )}
+        </div>
+
+        <div className="mt-3">
+          <GearHint stageId={stage.id} />
         </div>
 
         {/* 武器 ---------------------------------------------------------- */}

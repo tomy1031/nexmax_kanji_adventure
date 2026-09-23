@@ -1,10 +1,12 @@
 import { useCallback, useRef, useState, type ReactNode } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { RubyText } from '../../components/ui/Ruby';
+import PictureBook from '../picturebook/PictureBook';
+import { KanjiWord, Readings } from '../../components/ui/Readings';
 import { NexmaxSays, TopBar } from '../../components/ui/Chrome';
 import { useCanvasSize } from '../../hooks/useCanvasSize';
 import { useGameStore } from '../../store/gameStore';
-import { kanjiRuby, primaryReading } from '../../lib/reading';
+import { kanjiRuby } from '../../lib/reading';
 import { REPS_TO_OBTAIN, type KanjiData } from '../../types/kanji';
 import RockSlash, { type RockSlashHandle } from './RockSlash';
 
@@ -79,7 +81,6 @@ export const KanjiDrill = ({ kanji, onObtained, onExit, onDone, nextLabel = 'つ
   const [rockNo, setRockNo] = useState(0);
   const pendingObtained = useRef(false);
 
-  const reading = primaryReading(kanji);
   const ruby = kanjiRuby(kanji);
 
   const handleMistake = useCallback(() => setStrokeMistakes((m) => m + 1), []);
@@ -120,7 +121,8 @@ export const KanjiDrill = ({ kanji, onObtained, onExit, onDone, nextLabel = 'つ
   const done = Math.min(reps, REPS_TO_OBTAIN);
 
   return (
-    <div className="g-sky flex min-h-dvh flex-col items-center pb-5">
+    <div className="isolate relative flex min-h-dvh flex-col items-center pb-5">
+      <PictureBook scene="mukashi_meadow" className="!fixed -z-10" />
       <TopBar onBack={onExit} />
 
       <div className="flex w-full max-w-md flex-1 flex-col gap-3 px-3 pt-3">
@@ -128,12 +130,10 @@ export const KanjiDrill = ({ kanji, onObtained, onExit, onDone, nextLabel = 'つ
         <div className="flex items-end justify-between gap-2">
           <div className="g-parchment flex flex-1 items-center gap-3 px-4 py-2.5">
             <span className="text-[44px] leading-[1.5] font-black">
-              <RubyText showFurigana={showFurigana}>{ruby}</RubyText>
+              <KanjiWord kanji={kanji} showFurigana={showFurigana} />
             </span>
             <div className="min-w-0 text-sm leading-relaxed">
-              <p className="font-black">
-                よみ： <span className="text-xl">{reading}</span>
-              </p>
+              <Readings kanji={kanji} size="sm" />
               <p className="truncate" style={{ color: 'var(--ink-2)' }}>
                 meaning: <b>{kanji.meanings.slice(0, 2).join(' / ')}</b>
               </p>
@@ -269,7 +269,7 @@ export const KanjiDrill = ({ kanji, onObtained, onExit, onDone, nextLabel = 'つ
                     color: got ? '#4a3220' : 'rgba(122,82,38,0.3)',
                   }}
                 >
-                  {got ? <RubyText showFurigana={showFurigana}>{ruby}</RubyText> : <span className="mb-1 text-xs">♛</span>}
+                  {got ? <KanjiWord kanji={kanji} showFurigana={showFurigana} /> : <span className="mb-1 text-xs">♛</span>}
                 </motion.div>
               );
             })}
@@ -307,7 +307,7 @@ export const KanjiDrill = ({ kanji, onObtained, onExit, onDone, nextLabel = 'つ
                   boxShadow: '0 0 30px rgba(255,210,90,0.9)',
                 }}
               >
-                <RubyText showFurigana>{ruby}</RubyText>
+                <KanjiWord kanji={kanji} />
               </motion.div>
               <p className="g-title mt-4 text-lg">
                 <RubyText showFurigana={showFurigana}>

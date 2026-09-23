@@ -3,6 +3,7 @@ import { AnimatePresence, motion, useAnimationControls } from 'framer-motion';
 import KanjiWriterCanvas, { type KanjiWriterHandle } from '../../components/KanjiWriterCanvas';
 import { RubyText } from '../../components/ui/Ruby';
 import { rock as rockShape, svgDoc, toDataUrl } from '../picturebook/paper';
+import * as sfx from '../../lib/sfx';
 
 /**
  * 字の 刃 — writing a character to cut a rock.
@@ -120,15 +121,19 @@ export const RockSlash = forwardRef<RockSlashHandle, RockSlashProps>(
           [x1 + (x1 - x0) * 0.18, y1 + (y1 - y0) * 0.18],
         ];
         const cut = { id: nextId.current++, d: toD(ext) };
+        // A longer stroke is a bigger swing.
+        const len = Math.hypot(x1 - x0, y1 - y0) / size;
+        sfx.slash(Math.min(1, 0.3 + len));
         setFlash(cut);
         setCuts((c) => [...c, { ...cut, d: toD(pts) }]);
         void shake.start({ x: [0, -5, 4, -2, 0], rotate: [0, -1, 1, 0], transition: { duration: 0.28 } });
       },
-      [shake],
+      [shake, size],
     );
 
     const handleMistake = useCallback(() => {
       slips.current += 1;
+      sfx.clang();
       // A glancing blow: a small clank, no cut.
       void shake.start({ x: [0, 3, -3, 0], transition: { duration: 0.18 } });
       onMistake?.();
@@ -140,7 +145,11 @@ export const RockSlash = forwardRef<RockSlashHandle, RockSlashProps>(
         carried.current = 0;
         slips.current = 0;
         if (passed) {
-          later(() => setSplit(true), 180);
+          later(() => {
+            sfx.crack();
+            setSplit(true);
+          }, 180);
+          later(() => sfx.chime(), 520);
           later(() => onSplit?.(), 1500);
         } else {
           // Not a pass — the rock holds. Let the cuts fade, then try again.

@@ -5,6 +5,8 @@ import { REPS_TO_OBTAIN } from '../types/kanji';
 import { calculateNextReview, qualityFromMistakes } from '../lib/srs';
 import { DEFAULT_VERSUS_STATS, type VersusStats } from '../features/versus/types';
 import { FoundVia, HINT_COST, MAX_HINT, TRY_COST_2, TRY_COST_3 } from '../lib/forge/discovery';
+import { getGear, type GearSlot } from '../data/equipment';
+import { ALL_KANJI } from '../data/kanji.generated';
 
 /**
  * The whole save file.
@@ -65,6 +67,10 @@ export interface GameState {
   weapons: WeaponRecipe[];
   /** The weapon currently equipped, by recipe id. */
   equippedWeapon: string | null;
+  /** Shields, armour and charms made (data/equipment.ts ids). */
+  gear: string[];
+  /** What is worn in the three non-weapon slots. */
+  equippedGear: Record<GearSlot, string | null>;
   /** Nexmax Gems — the gacha currency. */
   gems: number;
   /** Pity counter since the last top-rarity pull. */
@@ -103,6 +109,9 @@ export interface GameActions {
   setActiveIndividual: (id: string | null) => void;
   craftWeapon: (kanjiIds: string[]) => WeaponRecipe | null;
   equipWeapon: (recipeId: string | null) => void;
+  /** Make a piece of gear. False unless every character it needs is owned. */
+  makeGear: (gearId: string) => boolean;
+  equipGear: (slot: GearSlot, gearId: string | null) => void;
   claimDailyTask: (taskId: string, reward: number) => boolean;
   rollDailyIfNeeded: () => void;
   bumpPity: () => void;
@@ -140,6 +149,8 @@ const initialState: GameState = {
   activeIndividual: null,
   weapons: [],
   equippedWeapon: null,
+  gear: [],
+  equippedGear: { shield: null, body: null, charm: null },
   gems: 0,
   pityCount: 0,
   daily: freshDaily(),
@@ -268,6 +279,30 @@ export const useGameStore = create<GameState & GameActions>()(
 
       equipWeapon: (recipeId) => set({ equippedWeapon: recipeId }),
 
+      makeGear: (gearId) => {
+        const item = getGear(gearId);
+        const state = get();
+        if (!item || state.gear.includes(gearId)) return false;
+        const owned = item.kanji.every((c) => {
+          const k = ALL_KANJI.find((x) => x.char === c);
+          return k ? state.hasKanji(k.id) : false;
+        });
+        if (!owned) return false;
+        set((s) => ({
+          gear: [...s.gear, gearId],
+          // A new piece goes straight on when the slot is empty.
+          equippedGear: s.equippedGear[item.slot]
+            ? s.equippedGear
+            : { ...s.equippedGear, [item.slot]: gearId },
+        }));
+        return true;
+      },
+
+      equipGear: (slot, gearId) => {
+        if (gearId && (!get().gear.includes(gearId) || getGear(gearId)?.slot !== slot)) return;
+        set((s) => ({ equippedGear: { ...s.equippedGear, [slot]: gearId } }));
+      },
+
       claimDailyTask: (taskId, reward) => {
         get().rollDailyIfNeeded();
         const { daily } = get();
@@ -362,6 +397,7 @@ export const useGameStore = create<GameState & GameActions>()(
           misses: { ...current.misses, ...(p.misses ?? {}) },
           daily: { ...current.daily, ...(p.daily ?? {}) },
           streak: { ...current.streak, ...(p.streak ?? {}) },
+          equippedGear: { ...current.equippedGear, ...(p.equippedGear ?? {}) },
         };
       },
     },

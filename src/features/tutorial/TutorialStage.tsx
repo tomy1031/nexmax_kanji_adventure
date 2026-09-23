@@ -106,6 +106,7 @@ export const TutorialStage = () => {
           }}
           kanjiPool={[kanji]}
           weaponOverride={forgeSingleBlade(kanji)}
+          patience={4}
           onFinish={() => setPhase('outro')}
           onFlee={leave}
         />

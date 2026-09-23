@@ -235,9 +235,11 @@ describe('discoverableCompounds', () => {
     const n5 = new Set(
       '一二七八九十人入三川山口土女子千万上下大小夕日月火水木父円本中五六分午今天友生母四左右北半目外出白年百休先名気虫見車毎体何来行西金雨学国東長食南前後時高校書話電読聞語間男',
     );
-    // A learner who finishes the N5 arc should have hundreds of real words
-    // available in the forge, not a handful.
-    expect(discoverableCompounds(n5).length).toBeGreaterThan(200);
+    // A learner who finishes the N5 arc should have a real hunt in the forge,
+    // not a handful. Since 2026-09-23 every word is one a learner at this
+    // level meets (JLPT N5–N2 lists), so the count is ~110, not the 347 of
+    // the old frequency-only table — fewer, but all of them words to keep.
+    expect(discoverableCompounds(n5).length).toBeGreaterThan(100);
   });
 });
 

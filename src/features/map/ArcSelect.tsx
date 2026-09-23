@@ -59,7 +59,8 @@ export const ArcSelect = () => {
   const cleared = useGameStore((s) => s.clearedStages);
 
   return (
-    <div className="g-sky pb-28">
+    <div className="isolate relative min-h-dvh pb-28">
+      <PictureBook scene="mukashi_meadow" className="!fixed -z-10" />
       <div className="mx-auto flex max-w-md flex-col gap-4 px-3 pt-[max(14px,env(safe-area-inset-top))]">
         <div className="relative">
           <LogoTitle size={30} sub="ことばを 学(まな)んで 冒険(ぼうけん)しよう！">
