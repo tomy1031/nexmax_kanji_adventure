@@ -1,19 +1,19 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 360 480" width="360" height="480" role="img" aria-label="イグーチ">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-40 0 440 480" width="440" height="480" role="img" aria-label="イグーチ">
 <!-- 原作「夢を信じたネクマックス」#1 の イグーチ を もとに した 仮の 立ち絵（ジャージ姿） -->
 
   <g stroke="#2b2622" stroke-linejoin="round" stroke-linecap="round">
-    <path d="M52 486 C46 420 54 370 92 348 C116 334 144 328 180 328 C216 328 244 334 268 348 C306 370 314 420 308 486 Z" fill="#e7759f" stroke-width="7"/>
-    <path d="M112 370 C100 402 100 446 108 486 M248 370 C260 402 260 446 252 486" fill="none" stroke-width="5"/>
-    <path d="M180 370 V486" fill="none" stroke-width="4"/>
-    <path d="M112 324 Q180 354 248 324 L250 350 Q180 390 110 350 Z" fill="#e7759f" stroke-width="7"/>
+    <path d="M10.8 486.0 C2.9 420.0 13.5 370.0 63.7 348.0 C95.4 334.0 132.4 328.0 180.0 328.0 C227.6 328.0 264.6 334.0 296.3 348.0 C346.5 370.0 357.1 420.0 349.2 486.0 Z" fill="#e7759f" stroke-width="7"/>
+    <path d="M90.1 370.0 C74.3 402.0 74.3 446.0 84.9 486.0 M269.9 370.0 C285.7 402.0 285.7 446.0 275.1 486.0" fill="none" stroke-width="5"/>
+    <path d="M180.0 370.0 V486.0" fill="none" stroke-width="4"/>
+    <path d="M90.1 324.0 Q180.0 354.0 269.9 324.0 L272.5 350.0 Q180.0 390.0 87.5 350.0 Z" fill="#e7759f" stroke-width="7"/>
   </g>
-  <path d="M132 342 Q180 366 228 342" fill="none" stroke="#fde3ee" stroke-width="4" stroke-linecap="round" opacity="0.8"/>
+  <path d="M116.5 342.0 Q180.0 366.0 243.5 342.0" fill="none" stroke="#fde3ee" stroke-width="4" stroke-linecap="round" opacity="0.8"/>
   <rect x="175" y="366" width="10" height="16" rx="3" fill="#fde3ee" stroke="#2b2622" stroke-width="3"/>
-  <path d="M136 72 C132 46 124 30 112 22 M224 72 C228 46 236 30 248 22" fill="none" stroke="#2b2622" stroke-width="7" stroke-linecap="round"/>
-  <rect x="62" y="68" width="236" height="250" rx="58" fill="#fffdf6" stroke="#2b2622" stroke-width="8"/>
-  <path d="M116 168 Q138 154 160 164 M200 164 Q222 154 244 168" fill="none" stroke="#2b2622" stroke-width="7" stroke-linecap="round"/>
-  <ellipse cx="140" cy="202" rx="10" ry="15" fill="#2b2622"/><ellipse cx="220" cy="202" rx="10" ry="15" fill="#2b2622"/>
-  <circle cx="143" cy="196" r="4" fill="#fff"/><circle cx="223" cy="196" r="4" fill="#fff"/>
-  <path d="M140 250 Q180 284 220 250" fill="none" stroke="#2b2622" stroke-width="7" stroke-linecap="round"/>
-  <ellipse cx="104" cy="240" rx="14" ry="8" fill="#f7a8a0" opacity="0.6"/><ellipse cx="256" cy="240" rx="14" ry="8" fill="#f7a8a0" opacity="0.6"/>
+  <path d="M126.3 97.4 C121.4 74.0 111.7 59.6 97.0 52.4 M233.7 97.4 C238.6 74.0 248.3 59.6 263.0 52.4" fill="none" stroke="#2b2622" stroke-width="7" stroke-linecap="round"/>
+  <rect x="36.0" y="93.8" width="287.9" height="225.0" rx="58" fill="#fffdf6" stroke="#2b2622" stroke-width="8"/>
+  <path d="M108.3 183.8 Q133.0 171.2 157.6 180.2 M202.4 180.2 Q227.0 171.2 251.7 183.8" fill="none" stroke="#2b2622" stroke-width="7" stroke-linecap="round"/>
+  <ellipse cx="135.2" cy="214.4" rx="10" ry="15" fill="#2b2622"/><ellipse cx="224.8" cy="214.4" rx="10" ry="15" fill="#2b2622"/>
+  <circle cx="138.6" cy="209.0" r="4" fill="#fff"/><circle cx="228.2" cy="209.0" r="4" fill="#fff"/>
+  <path d="M135.2 257.6 Q180.0 288.2 224.8 257.6" fill="none" stroke="#2b2622" stroke-width="7" stroke-linecap="round"/>
+  <ellipse cx="94.9" cy="248.6" rx="14" ry="8" fill="#f7a8a0" opacity="0.6"/><ellipse cx="265.1" cy="248.6" rx="14" ry="8" fill="#f7a8a0" opacity="0.6"/>
 </svg>
