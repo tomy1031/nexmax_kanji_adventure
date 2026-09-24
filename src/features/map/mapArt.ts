@@ -69,7 +69,8 @@ export const mapSvg = (): string =>
 
 /**
  * 現代編 の 地図: the city at the bottom, the highway out of it, the sea of
- * trees, and the training centre — then fog, where episodes #2–#5 will go.
+ * trees and the training centre (#1), the lake at dawn (#2), and the sports
+ * ground under Mt Fuji (#4–#5).
  */
 const building = (x: number, base: number, w: number, h: number, color: string) =>
   `<g filter="url(#torn)"><rect x="${x}" y="${base - h}" width="${w}" height="${h}" fill="${color}"/>
@@ -88,7 +89,10 @@ export const gendaiMapSvg = (): string =>
      ${hills(430, '#2f4a3a', 17, 20, 'torn', 800)}
      ${[20, 70, 130, 190, 250, 310, 360].map((x, i) => pine(x, 470 + (i % 2) * 14, 1.4, '#243a2e')).join('')}
      <g filter="url(#torn)"><rect x="150" y="360" width="110" height="70" fill="#8d8478"/><path d="M140 364 L205 330 L270 364 Z" fill="#5a4f47"/></g>
+     <g filter="url(#torn)"><rect x="110" y="276" width="190" height="46" rx="6" fill="#c9a877"/></g>
+     <g stroke="#fbf8ef" stroke-width="3"><path d="M124 284 V314 M286 284 V314"/></g>
      ${hills(620, '#3f6a4a', 23, 16, 'torn', 1300)}
+     <g filter="url(#torn)"><ellipse cx="330" cy="585" rx="70" ry="24" fill="#7fb2cf"/></g>
      ${[40, 110, 300, 360].map((x, i) => pine(x, 660 + (i % 2) * 20, 1.2, '#2c4a36')).join('')}
      ${hills(820, '#6aa142', 29, 12, 'torn', 1300)}
      <path d="M-20 1300 L-20 1000 Q200 980 420 1000 L420 1300 Z" fill="#b8b8c0" filter="url(#torn)"/>

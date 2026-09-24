@@ -1,14 +1,15 @@
 import type { Transition } from 'framer-motion';
-import { PAGE_H, PAGE_W, cloud, hills, peaks, pine, sparkles, svgDoc } from './paper';
+import { PAGE_H, PAGE_W, birds, cloud, hills, peaks, pine, sparkles, sun, svgDoc, tree, waves } from './paper';
 import type { Layer, SceneDef } from './scenes';
 
 /**
  * 現代編 の 絵本 — the same torn paper, a modern Japan.
  *
- * Episode #1 of the original manga, scene by scene: the entrance ceremony
- * hall, the long bus ride towards Mt Fuji, the training centre alone in the
- * sea of trees, the dining hall where the seniors wait, and the tatami room
- * where the team finally talks.
+ * The original manga #1–#5, scene by scene: the entrance ceremony hall, the
+ * long bus ride towards Mt Fuji, the training centre alone in the sea of
+ * trees, the dining hall where the seniors wait, the tatami room where the
+ * team finally talks (#1); the lake at dawn (#2); the city street and the
+ * interview room of a year before (#2–#3); the sports ground (#4–#5).
  *
  * The dining hall carries the fear (2026-09-23: 暴力は 直接 描かない。怖い
  * 雰囲気は そのまま). Nobody is struck. The fear is in the room: the clock
@@ -69,6 +70,48 @@ const shadows = (y: number) =>
   `<g filter="url(#rough)" fill="#1d1a26">${[70, 150, 250, 330]
     .map((x, i) => `<ellipse cx="${x}" cy="${y - 64 - (i % 2) * 6}" rx="20" ry="24"/><path d="M${x - 34} ${y} Q${x - 30} ${y - 50} ${x} ${y - 46} Q${x + 30} ${y - 50} ${x + 34} ${y} Z"/>`)
     .join('')}</g>`;
+
+/** A shout: the page shakes and jagged lines burst out. No one is hit. */
+const shoutLayer: Layer = {
+  key: 'shout',
+  svg: page(
+    `<g stroke="#fff4c9" stroke-width="7" stroke-linecap="round" fill="none">${Array.from({ length: 10 }, (_, i) => {
+      const a = (i / 10) * Math.PI * 2;
+      return `<path d="M${200 + Math.cos(a) * 90} ${300 + Math.sin(a) * 70} L${200 + Math.cos(a) * 170} ${300 + Math.sin(a) * 130}"/>`;
+    }).join('')}</g>`,
+  ),
+  animate: { x: [0, -8, 8, -5, 5, 0], scale: [1, 1.05, 1] },
+  transition: { duration: 0.5, repeat: Infinity, repeatDelay: 1.2 },
+  enter: { opacity: 1 },
+  exit: { opacity: 0 },
+};
+
+/** A memory: the page goes sepia, the edges darken like an old photo. */
+const memoryLayers: Layer[] = [
+  overlay('memory-sepia', '#b08a58', 'multiply', 0.35),
+  {
+    key: 'memory-edge',
+    svg: page(
+      `<radialGradient id="mem" cx="0.5" cy="0.45" r="0.75"><stop offset="0.6" stop-color="#3a2a1a" stop-opacity="0"/><stop offset="1" stop-color="#3a2a1a" stop-opacity="0.6"/></radialGradient>
+       <rect width="${PAGE_W}" height="${PAGE_H}" fill="url(#mem)"/>`,
+    ),
+    enter: { opacity: 1 },
+    exit: { opacity: 0 },
+  },
+];
+
+/** Cherry petals drifting down. */
+const petalLayer = (seed: number): Layer => ({
+  key: `petals-${seed}`,
+  svg: page(sparkles(seed, '#ffc3d6', 34, { x: 0, y: 40, w: 400, h: 560 })),
+  animate: { y: ['-3%', '5%'], x: ['0%', '-3%'], opacity: [0.9, 1, 0.9] },
+  transition: loop(5),
+  enter: { opacity: 1 },
+  exit: { opacity: 0 },
+});
+
+/** Pink cherry trees, for spring. */
+const sakura = (x: number, y: number, s: number) => tree(x, y, s, '#f7b8cc', '#6b4a3a');
 
 // ---------------------------------------------------------------------------
 // 入社式 — the ceremony hall (stage 1)
@@ -236,21 +279,7 @@ const dining: SceneDef = {
       },
     ],
     // A shout: the page shakes and jagged lines burst out. No one is hit.
-    shout: [
-      {
-        key: 'shout',
-        svg: page(
-          `<g stroke="#fff4c9" stroke-width="7" stroke-linecap="round" fill="none">${Array.from({ length: 10 }, (_, i) => {
-            const a = (i / 10) * Math.PI * 2;
-            return `<path d="M${200 + Math.cos(a) * 90} ${300 + Math.sin(a) * 70} L${200 + Math.cos(a) * 170} ${300 + Math.sin(a) * 130}"/>`;
-          }).join('')}</g>`,
-        ),
-        animate: { x: [0, -8, 8, -5, 5, 0], scale: [1, 1.05, 1] },
-        transition: { duration: 0.5, repeat: Infinity, repeatDelay: 1.2 },
-        enter: { opacity: 1 },
-        exit: { opacity: 0 },
-      },
-    ],
+    shout: [shoutLayer],
   },
 };
 
@@ -303,10 +332,165 @@ const room: SceneDef = {
   },
 };
 
+
+// ---------------------------------------------------------------------------
+// 湖 — the lake at dawn, where each one shouts his resolve (stage 7)
+// ---------------------------------------------------------------------------
+
+const lake: SceneDef = {
+  layers: [
+    { key: 'sky', svg: sky('#f6c89a', '#fbe9d2', 'lsky') },
+    { key: 'sun', svg: page(sun(90, 170, 30, '#ffb35a', '#ffcf8a')), animate: { y: [4, 0, 4] }, transition: loop(8) },
+    { key: 'fuji', svg: page(peaks(300, '#6f86b0', 3, 210, true)) },
+    { key: 'birds', svg: page(birds(80, 150, 1, '#6a5a70')), animate: { x: [0, 40, 0] }, transition: loop(14) },
+    { key: 'far-trees', svg: page(hills(318, '#3f6b4a', 41, 10)) },
+    { key: 'water', svg: page(waves(340, '#7fb2cf', 43, 6)), animate: { x: [0, -10, 0] }, transition: loop(6) },
+    {
+      key: 'glint',
+      svg: page(sparkles(47, '#fff6c9', 18, { x: 180, y: 360, w: 200, h: 120 })),
+      animate: { opacity: [0.3, 0.9, 0.3] },
+      transition: loop(2.6),
+    },
+    {
+      key: 'shore',
+      svg: page(hills(560, '#5b7a3a', 49, 12) + pine(30, 580, 1.1, '#2c5a34') + pine(370, 590, 1.2, '#2c5a34')),
+      origin: [200, 600],
+      animate: { skewX: [-0.8, 0.8, -0.8] },
+      transition: loop(5),
+    },
+  ],
+  fx: {
+    shout: [shoutLayer],
+    gloom: [overlay('lake-gloom', '#3a3550', 'multiply', 0.4)],
+  },
+};
+
+// ---------------------------------------------------------------------------
+// 町 — a city street: the job hunt a year before, and spring (stages 8–9)
+// ---------------------------------------------------------------------------
+
+const buildings = (seed: number) =>
+  `<g filter="url(#torn)">${[
+    [0, 160, 90, '#c9c2b4'],
+    [80, 110, 80, '#b5aea2'],
+    [150, 190, 110, '#d8d1c2'],
+    [250, 130, 70, '#a9a397'],
+    [310, 170, 100, '#cfc8ba'],
+  ]
+    .map(([x, y, w, c]) => `<rect x="${x}" y="${y}" width="${w}" height="${460 - (y as number)}" fill="${c}"/>`)
+    .join('')}</g>
+   <g fill="#8fb4d4">${Array.from({ length: 30 }, (_, i) => {
+     const x = 10 + (i % 10) * 38 + ((i * seed) % 7);
+     const y = 210 + Math.floor(i / 10) * 60;
+     return `<rect x="${x}" y="${y}" width="14" height="20"/>`;
+   }).join('')}</g>`;
+
+const city: SceneDef = {
+  layers: [
+    { key: 'sky', svg: sky('#a9d6f2', '#eef6f8', 'csky') },
+    { key: 'clouds', svg: page(cloud(90, 110, 1.1) + cloud(300, 80, 0.9)), animate: { x: [0, 20, 0] }, transition: loop(16) },
+    { key: 'buildings', svg: page(buildings(5), 51) },
+    { key: 'street', svg: page(`<rect y="460" width="${PAGE_W}" height="${PAGE_H - 460}" fill="#9a9488" filter="url(#paint)"/><g fill="#f4efe2"><rect x="30" y="560" width="60" height="8"/><rect x="170" y="560" width="60" height="8"/><rect x="310" y="560" width="60" height="8"/></g>`) },
+    {
+      key: 'trees',
+      svg: page(tree(40, 470, 1.1, '#5f9a48') + tree(360, 476, 1.2, '#5f9a48')),
+      origin: [200, 470],
+      animate: { skewX: [-1, 1, -1] },
+      transition: loop(5),
+    },
+  ],
+  fx: {
+    memory: memoryLayers,
+    // Spring: the trees turn pink and petals fall.
+    spring: [
+      { key: 'sakura', svg: page(sakura(40, 470, 1.1) + sakura(360, 476, 1.2) + sakura(200, 480, 0.9)), enter: { opacity: 1 }, exit: { opacity: 0 } },
+      petalLayer(53),
+    ],
+  },
+};
+
+// ---------------------------------------------------------------------------
+// 面接の 部屋 — the interview room (stages 8–9)
+// ---------------------------------------------------------------------------
+
+const office: SceneDef = {
+  layers: [
+    { key: 'wall', svg: wall('#e4e0d6', '#a79a86', 450) },
+    {
+      key: 'window',
+      svg: page(
+        `<g filter="url(#torn)"><rect x="60" y="90" width="280" height="200" fill="#bfe0f2"/>
+           <g fill="#9fb4c4">${[70, 120, 180, 230, 290].map((x, i) => `<rect x="${x}" y="${170 + (i % 2) * 30}" width="40" height="${120 - (i % 2) * 30}"/>`).join('')}</g>
+           <g stroke="#7a6a58" stroke-width="8" fill="none"><rect x="60" y="90" width="280" height="200"/><path d="M200 90 V290"/></g></g>`,
+        57,
+      ),
+    },
+    { key: 'clouds', svg: page(cloud(130, 130, 0.6) + cloud(270, 120, 0.5)), animate: { x: [0, 14, 0] }, transition: loop(12) },
+    {
+      key: 'desk',
+      svg: page(
+        `<g filter="url(#torn)"><rect x="30" y="420" width="340" height="40" fill="#6b4f36"/><rect x="50" y="460" width="14" height="90" fill="#5a4230"/><rect x="336" y="460" width="14" height="90" fill="#5a4230"/>
+           <rect x="120" y="404" width="70" height="18" fill="#f4efe2"/><rect x="210" y="406" width="60" height="16" fill="#f4efe2"/></g>`,
+        59,
+      ),
+    },
+    { key: 'plant', svg: page(tree(360, 440, 0.6, '#5f9a48', '#8a6a4a')), origin: [360, 440], animate: { skewX: [-1, 1, -1] }, transition: loop(4) },
+  ],
+  fx: {
+    memory: memoryLayers,
+    tension: [overlay('office-tension', '#1d1a2e', 'multiply', 0.35)],
+    warm: [overlay('office-warm', '#ffb870', 'soft-light', 0.5), petalLayer(61)],
+  },
+};
+
+// ---------------------------------------------------------------------------
+// グラウンド — the sports ground: the shuttle run (stage 10)
+// ---------------------------------------------------------------------------
+
+const ground: SceneDef = {
+  layers: [
+    { key: 'sky', svg: sky('#9fcbe8', '#e8f2f0', 'gsky2') },
+    { key: 'fuji', svg: page(peaks(280, '#7f9ec0', 7, 190, true)) },
+    { key: 'far-trees', svg: page(hills(300, '#35593f', 63, 14) + pine(40, 310, 0.8, '#2b4d34') + pine(360, 306, 0.9, '#2b4d34')) },
+    {
+      key: 'field',
+      svg: page(
+        `<rect y="320" width="${PAGE_W}" height="${PAGE_H - 320}" fill="#c9a877" filter="url(#paint)"/>
+         <g stroke="#fbf8ef" stroke-width="6" stroke-linecap="round"><path d="M-10 380 L410 360"/><path d="M-10 640 L410 610"/></g>
+         <g fill="#fbf8ef" font-family="sans-serif" font-weight="900" font-size="26"><text x="170" y="520">25m</text></g>
+         <g stroke="#fbf8ef" stroke-width="3" stroke-dasharray="10 12"><path d="M200 372 L200 626"/></g>`,
+        65,
+      ),
+    },
+    { key: 'dust', svg: page(cloud(90, 600, 0.5, '#e8d7b8') + cloud(300, 640, 0.6, '#e8d7b8')), opacity: 0.7, animate: { x: [0, -24, 0], opacity: [0.4, 0.8, 0.4] }, transition: loop(2.2) },
+  ],
+  fx: {
+    shout: [shoutLayer],
+    tension: [overlay('ground-tension', '#1d1a2e', 'multiply', 0.3)],
+    // Running: speed lines cross the page.
+    run: [
+      {
+        key: 'run-lines',
+        svg: page(`<g stroke="#ffffff" stroke-width="4" stroke-linecap="round" opacity="0.8">${Array.from({ length: 12 }, (_, i) => `<path d="M${(i * 67) % 400} ${120 + i * 45} l-90 0"/>`).join('')}</g>`),
+        animate: { x: ['10%', '-20%'] },
+        transition: loop(0.6, 'linear'),
+        enter: { opacity: 1 },
+        exit: { opacity: 0 },
+      },
+    ],
+    // The idea: the page brightens.
+    idea: [overlay('ground-idea', '#fff1a8', 'soft-light', 0.6), { key: 'idea-sparkle', svg: page(sparkles(67, '#fff1a8', 20)), animate: { opacity: [0.3, 1, 0.3] }, transition: loop(1.6), enter: { opacity: 1 }, exit: { opacity: 0 } }],
+  },
+};
+
 export const GENDAI_SCENES: Record<string, SceneDef> = {
   gendai_hall: hall,
   gendai_bus: bus,
   gendai_forest: forest,
   gendai_dining: dining,
   gendai_room: room,
+  gendai_lake: lake,
+  gendai_city: city,
+  gendai_office: office,
+  gendai_ground: ground,
 };

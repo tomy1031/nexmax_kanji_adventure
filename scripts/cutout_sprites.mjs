@@ -30,9 +30,10 @@ const files = [
     .map((f) => join(SRC, f)),
   join(SRC, 'types/ISTJ.webp'),
   join(SRC, 'types/ISFJ_f.webp'),
-  // 現代編: アオ, キイ, 影の先輩 (drawn as a silhouette), おかみさん
-  join(SRC, 'types/INTJ.webp'),
-  join(SRC, 'types/ESFP_f.webp'),
+  // 現代編: ソネ, ナラ, イグーチ, 影の先輩 (drawn as a silhouette), おかみさん
+  join(SRC, 'types/ESFP.webp'),
+  join(SRC, 'types/INTP.webp'),
+  join(SRC, 'types/ENFJ.webp'),
   join(SRC, 'types/ESTJ.webp'),
   join(SRC, 'types/ESFJ_f.webp'),
 ];
