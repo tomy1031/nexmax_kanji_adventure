@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { GENDAI_CAST, GENDAI_SCRIPTS } from './gendai';
 import { GENDAI_STAGES } from '../gendaiStages';
 import { MUKASHI_STAGES } from '../stages';
-import { getKanjiByChar } from '../../lib/kanjiDb';
+import { getKanjiByChar, kanjiOfLevel } from '../../lib/kanjiDb';
 import { stripRuby, unreadKanji } from '../../lib/ruby';
 import { SCENES, fxNamesOf } from '../../features/picturebook/scenes';
 
@@ -18,6 +18,28 @@ describe('現代編', () => {
       s.kanji.filter((c) => getKanjiByChar(c)?.level !== 'N4' || mukashi.has(c)).map((c) => `${s.id}: ${c}`),
     );
     expect(wrong).toEqual([]);
+  });
+
+  it('runs 1..10 and teaches every N4 character exactly once', () => {
+    expect(GENDAI_STAGES.map((s) => s.order)).toEqual([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
+    const taught = GENDAI_STAGES.flatMap((s) => s.kanji);
+    expect(new Set(taught).size).toBe(taught.length);
+    const uncovered = kanjiOfLevel('N4')
+      .map((k) => k.char)
+      .filter((c) => !taught.includes(c));
+    expect(uncovered).toEqual([]);
+  });
+
+  it('gets harder as it goes', () => {
+    const hp = GENDAI_STAGES.map((s) => s.boss.hp);
+    expect(hp).toEqual([...hp].sort((a, b) => a - b));
+  });
+
+  it('uses the original team, not invented names', () => {
+    const ids = GENDAI_CAST.map((c) => c.id);
+    for (const id of ['sone', 'nara', 'iguchi']) expect(ids).toContain(id);
+    const text = GENDAI_SCRIPTS.flatMap((s) => s.lines.map((l) => stripRuby(l.text))).join('');
+    for (const name of ['ミドリ', 'キイ']) expect(text).not.toContain(name);
   });
 
   it('carries furigana on every kanji', () => {
@@ -58,6 +80,8 @@ describe('現代編', () => {
 
   it('shows no one being struck (2026-09-23)', () => {
     const text = GENDAI_SCRIPTS.flatMap((s) => s.lines.map((l) => stripRuby(l.text))).join('');
-    for (const word of ['たたく', 'たたか', '殴', 'なぐ', '腕立て']) expect(text).not.toContain(word);
+    for (const word of ['たたく', 'たたか', '殴', 'なぐ', '腕立て', '竹刀', '正座', 'バケツ', '樹海', '行方不明', '死']) {
+      expect(text).not.toContain(word);
+    }
   });
 });
