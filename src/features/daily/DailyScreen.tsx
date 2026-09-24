@@ -1,4 +1,5 @@
 import { useNavigate } from 'react-router-dom';
+import { Backdrop } from '../../components/ui/Backdrop';
 import { useGameStore } from '../../store/gameStore';
 import { DAILY_TASKS, DAILY_TOTAL, isTaskClaimable, isTaskComplete } from '../../data/dailyTasks';
 import { kanjiRuby } from '../../lib/reading';
@@ -24,12 +25,12 @@ export const DailyScreen = () => {
 
   return (
     <div className="g-stage min-h-dvh pb-8">
+      <Backdrop fixed />
       <header
-        className="sticky top-0 z-20 flex items-center justify-between px-4 py-3 backdrop-blur-md"
-        style={{ background: 'var(--panel)' }}
+        className="g-header sticky top-0 z-20 flex items-center justify-between px-4 py-3"
       >
-        <button type="button" className="g-btn g-btn-ghost !min-h-[40px] !px-4 text-sm" onClick={() => navigate('/map/mukashi')}>
-          もどる
+        <button type="button" className="g-btn g-btn-accent !min-h-[38px] !gap-1 !px-3.5 text-sm" onClick={() => navigate('/map/mukashi')}>
+          <span aria-hidden>◀</span>もどる
         </button>
         <h1 className="g-title text-base">
           <RubyText showFurigana={showFurigana}>毎日(まいにち)の やること</RubyText>

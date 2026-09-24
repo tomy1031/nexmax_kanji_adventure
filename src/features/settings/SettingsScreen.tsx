@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Backdrop } from '../../components/ui/Backdrop';
 import { useNavigate } from 'react-router-dom';
 import { useGameStore } from '../../store/gameStore';
 import { RubyText } from '../../components/ui/Ruby';
@@ -29,12 +30,12 @@ export const SettingsScreen = () => {
 
   return (
     <div className="g-stage min-h-dvh pb-8">
+      <Backdrop fixed />
       <header
-        className="sticky top-0 z-20 flex items-center justify-between px-4 py-3 backdrop-blur-md"
-        style={{ background: 'var(--panel)' }}
+        className="g-header sticky top-0 z-20 flex items-center justify-between px-4 py-3"
       >
-        <button type="button" className="g-btn g-btn-ghost !min-h-[40px] !px-4 text-sm" onClick={() => navigate(-1)}>
-          もどる
+        <button type="button" className="g-btn g-btn-accent !min-h-[38px] !gap-1 !px-3.5 text-sm" onClick={() => navigate(-1)}>
+          <span aria-hidden>◀</span>もどる
         </button>
         <h1 className="g-title text-base">せってい</h1>
         <span className="w-16" />

@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Backdrop } from '../../components/ui/Backdrop';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useGameStore } from '../../store/gameStore';
@@ -92,68 +93,71 @@ export const GachaScreen = () => {
 
   return (
     <div className="g-stage min-h-dvh pb-8">
+      <Backdrop fixed />
       <header
-        className="sticky top-0 z-20 flex items-center justify-between px-4 py-3 backdrop-blur-md"
-        style={{ background: 'var(--panel)' }}
+        className="g-header sticky top-0 z-20 flex items-center justify-between px-4 py-3"
       >
-        <button type="button" className="g-btn g-btn-ghost !min-h-[40px] !px-4 text-sm" onClick={() => navigate('/map/mukashi')}>
-          もどる
+        <button type="button" className="g-btn g-btn-accent !min-h-[38px] !gap-1 !px-3.5 text-sm" onClick={() => navigate('/map/mukashi')}>
+          <span aria-hidden>◀</span>もどる
         </button>
         <h1 className="g-title text-base">ガチャ</h1>
         <span className="g-chip g-chip-gold text-xs tabular-nums">◆ {gems}</span>
       </header>
 
       <div className="mx-auto max-w-md px-4 pt-6 text-center">
-        <img
-          src={assetPath('img/chara/variants_sheet.webp')}
-          alt=""
-          aria-hidden
-          className="mx-auto mb-4 w-44 rounded-2xl opacity-90"
-        />
+        <div className="g-frame px-4 pt-4 pb-4">
+          <img
+            src={assetPath('img/chara/variants_sheet.webp')}
+            alt=""
+            aria-hidden
+            className="mx-auto mb-4 w-44 rounded-2xl opacity-90"
+          />
 
-        <h2 className="g-title text-lg">
-          <RubyText showFurigana={showFurigana}>ネクマックスの 個体(こたい)</RubyText>
-        </h2>
-        <p className="mt-1 text-sm" style={{ color: 'var(--ink-2)' }}>
-          <RubyText showFurigana={showFurigana}>
-            なかまが ふえると、得意(とくい)な 武器(ぶき)が つよく なります。
-          </RubyText>
-        </p>
-
-        {/* 10連を主役にする ------------------------------------------- */}
-        <button type="button" className="g-btn g-btn-primary mt-5 w-full !min-h-[64px] text-lg" disabled={!canMulti} onClick={doMulti}>
-          {busy ? (
-            '…'
-          ) : (
-            <span className="flex flex-col leading-tight">
-              <RubyText showFurigana={showFurigana}>{`10回(かい) ひく`}</RubyText>
-              <span className="text-xs font-bold opacity-80">
-                ◆{MULTI_COST}
-                <span className="mx-1">·</span>
-                <RubyText showFurigana={showFurigana}>1回(かい)ぶん おトク</RubyText>
-              </span>
-            </span>
-          )}
-        </button>
-        <p className="mt-1.5 text-xs" style={{ color: 'var(--color-gold-2)' }}>
-          <RubyText showFurigana={showFurigana}>
-            10回(かい)の 中(なか)に、めずらしい 個体(こたい)が かならず 1体(たい) 入(はい)ります。
-          </RubyText>
-        </p>
-
-        <button type="button" className="g-btn g-btn-ghost mt-3 w-full" disabled={!canSingle} onClick={doSingle}>
-          <RubyText showFurigana={showFurigana}>{`1回(かい) ひく（◆${PULL_COST}）`}</RubyText>
-        </button>
-
-        {!canMulti && (
-          <p className="mt-2 text-xs" style={{ color: 'var(--ink-2)' }}>
+          <h2 className="g-title text-lg">
+            <RubyText showFurigana={showFurigana}>ネクマックスの 個体(こたい)</RubyText>
+          </h2>
+          <p className="mt-1 text-sm" style={{ color: 'var(--ink-2)' }}>
             <RubyText showFurigana={showFurigana}>
-              {daysToMulti > 0
-                ? `10回(かい)ぶんまで あと ◆${MULTI_COST - gems}。毎日(まいにち)の やることを 全部(ぜんぶ) おわらせると、あと ${daysToMulti}日(にち)。`
-                : 'ジェムが たりません。'}
+              なかまが ふえると、得意(とくい)な 武器(ぶき)が つよく なります。
             </RubyText>
           </p>
-        )}
+
+          {/* 10連を主役にする ------------------------------------------- */}
+          <button type="button" className="g-btn g-btn-primary mt-5 w-full !min-h-[64px] text-lg" disabled={!canMulti} onClick={doMulti}>
+            {busy ? (
+              '…'
+            ) : (
+              <span className="flex flex-col leading-tight">
+                <RubyText showFurigana={showFurigana}>{`10回(かい) ひく`}</RubyText>
+                <span className="text-xs font-bold opacity-80">
+                  ◆{MULTI_COST}
+                  <span className="mx-1">·</span>
+                  <RubyText showFurigana={showFurigana}>1回(かい)ぶん おトク</RubyText>
+                </span>
+              </span>
+            )}
+          </button>
+          <p className="mt-1.5 text-xs" style={{ color: 'var(--color-gold-2)' }}>
+            <RubyText showFurigana={showFurigana}>
+              10回(かい)の 中(なか)に、めずらしい 個体(こたい)が かならず 1体(たい) 入(はい)ります。
+            </RubyText>
+          </p>
+
+          <button type="button" className="g-btn g-btn-ghost mt-3 w-full" disabled={!canSingle} onClick={doSingle}>
+            <RubyText showFurigana={showFurigana}>{`1回(かい) ひく（◆${PULL_COST}）`}</RubyText>
+          </button>
+
+          {!canMulti && (
+            <p className="mt-2 text-xs" style={{ color: 'var(--ink-2)' }}>
+              <RubyText showFurigana={showFurigana}>
+                {daysToMulti > 0
+                  ? `10回(かい)ぶんまで あと ◆${MULTI_COST - gems}。毎日(まいにち)の やることを 全部(ぜんぶ) おわらせると、あと ${daysToMulti}日(にち)。`
+                  : 'ジェムが たりません。'}
+              </RubyText>
+            </p>
+          )}
+
+        </div>
 
         {/* 確率と天井を かくさない ------------------------------------- */}
         <div className="g-panel mt-6 p-4 text-left text-xs" style={{ color: 'var(--ink-2)' }}>

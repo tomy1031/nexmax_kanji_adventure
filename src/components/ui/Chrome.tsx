@@ -2,9 +2,12 @@ import type { ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { RubyText } from './Ruby';
+import { LogoText } from './LogoText';
 import { assetPath } from '../../lib/assetPath';
 import { useGameStore } from '../../store/gameStore';
 import { Feature, isFeatureUnlocked, UNLOCKED_BY } from '../../data/unlocks';
+import { GiBackpack, GiCog, GiOpenBook, GiPadlock, GiTreasureMap } from 'react-icons/gi';
+import type { IconType } from 'react-icons';
 
 /**
  * Shared screen chrome, after the reference screens in public/img/design/:
@@ -53,11 +56,11 @@ export const LogoTitle = ({ children, sub, size = 34 }: { children: string; sub?
   const showFurigana = useGameStore((s) => s.settings.furigana);
   return (
     <div className="flex flex-col items-center text-center">
-      <h1 className="g-title g-logo leading-[1.6] font-black whitespace-nowrap" style={{ fontSize: size }}>
-        <RubyText showFurigana={showFurigana}>{children}</RubyText>
+      <h1 className="leading-[1.55] whitespace-nowrap" style={{ fontSize: size }}>
+        <LogoText showFurigana={showFurigana}>{children}</LogoText>
       </h1>
       {sub && (
-        <div className="g-parchment -mt-1 px-4 py-0.5 text-sm font-black">
+        <div className="g-ribbon -mt-1 text-[13px] leading-[1.9]">
           <RubyText showFurigana={showFurigana}>{sub}</RubyText>
         </div>
       )}
@@ -107,50 +110,59 @@ export const BottomTabs = ({ current }: { current: TabId }) => {
   const navigate = useNavigate();
   const showFurigana = useGameStore((s) => s.settings.furigana);
   const cleared = useGameStore((s) => s.clearedStages);
-  const tabs: { id: TabId; label: string; icon: string; to: string; feature?: Feature }[] = [
-    { id: 'story', label: 'ストーリー', icon: '🗺', to: '/map/mukashi' },
-    { id: 'kanji', label: '漢字(かんじ)ずかん', icon: '📖', to: '/words', feature: Feature.WORDS },
+  const tabs: { id: TabId; label: string; icon: IconType; to: string; feature?: Feature }[] = [
+    { id: 'story', label: 'ストーリー', icon: GiTreasureMap, to: '/map/mukashi' },
+    { id: 'kanji', label: '漢字(かんじ)ずかん', icon: GiOpenBook, to: '/words', feature: Feature.WORDS },
     // そうび opens from the start: 0話 already hands over the first blade.
-    { id: 'items', label: 'そうび', icon: '🎒', to: '/equip' },
-    { id: 'settings', label: 'せってい', icon: '⚙', to: '/settings' },
+    { id: 'items', label: 'そうび', icon: GiBackpack, to: '/equip' },
+    { id: 'settings', label: 'せってい', icon: GiCog, to: '/settings' },
   ];
   return (
     <nav
-      className="fixed right-0 bottom-0 left-0 z-30 flex justify-center gap-1.5 px-2 pt-1.5 pb-[max(8px,env(safe-area-inset-bottom))]"
-      style={{ background: 'linear-gradient(180deg, rgba(90,110,130,0) 0%, rgba(60,75,95,0.55) 40%)' }}
+      className="fixed right-0 bottom-0 left-0 z-30 flex justify-center px-2 pt-2 pb-[max(8px,env(safe-area-inset-bottom))]"
+      style={{
+        background:
+          'repeating-linear-gradient(178deg, rgba(255,255,255,0.05) 0 3px, rgba(0,0,0,0.05) 3px 7px), linear-gradient(180deg, #8a5a2c 0%, #5e3814 100%)',
+        borderTop: '3px solid #c9953f',
+        boxShadow: 'inset 0 2px 0 rgba(255,220,160,0.35), 0 -6px 16px rgba(20,10,0,0.35)',
+      }}
     >
-      {tabs.map((t) => {
-        const on = t.id === current;
-        // One system opens per stage (docs/design/06 §4). A tab that is not
-        // open yet stays visible, says when it opens, and does nothing.
-        const locked = t.feature ? !isFeatureUnlocked(t.feature, cleared) : false;
-        const opensAt = t.feature ? UNLOCKED_BY[t.feature].replace('mukashi-', '') : '';
-        return (
-          <button
-            key={t.id}
-            type="button"
-            disabled={locked}
-            aria-label={locked ? `${opensAt}わで ひらく` : undefined}
-            onClick={() => navigate(t.to)}
-            aria-current={on ? 'page' : undefined}
-            className="flex min-h-[58px] max-w-[110px] flex-1 flex-col items-center justify-center rounded-xl border-2 text-[11px] leading-tight font-black text-white"
-            style={{
-              background: on
-                ? 'linear-gradient(180deg, #7ed36b 0%, #3e9b3a 100%)'
-                : 'linear-gradient(180deg, #6c7f96 0%, #44546b 100%)',
-              borderColor: on ? '#fff2a8' : 'rgba(255,255,255,0.55)',
-              boxShadow: on ? '0 0 12px rgba(255,236,140,0.7)' : '0 3px 0 rgba(20,30,45,0.6)',
-              textShadow: '0 1px 0 rgba(0,0,0,0.5)',
-              opacity: locked ? 0.7 : 1,
-            }}
-          >
-            <span aria-hidden className="text-lg leading-none">
-              {locked ? '🔒' : t.icon}
-            </span>
-            <RubyText showFurigana={showFurigana}>{locked ? `${opensAt}話(わ)で ひらく` : t.label}</RubyText>
-          </button>
-        );
-      })}
+      <div className="flex w-full max-w-md gap-1.5">
+        {tabs.map((t) => {
+          const on = t.id === current;
+          // One system opens per stage (docs/design/06 §4). A tab that is not
+          // open yet stays visible, says when it opens, and does nothing.
+          const locked = t.feature ? !isFeatureUnlocked(t.feature, cleared) : false;
+          const opensAt = t.feature ? UNLOCKED_BY[t.feature].replace('mukashi-', '') : '';
+          const Icon = locked ? GiPadlock : t.icon;
+          return (
+            <motion.button
+              key={t.id}
+              type="button"
+              disabled={locked}
+              whileTap={locked ? undefined : { scale: 0.94 }}
+              aria-label={locked ? `${opensAt}わで ひらく` : undefined}
+              onClick={() => navigate(t.to)}
+              aria-current={on ? 'page' : undefined}
+              className="relative flex min-h-[60px] flex-1 flex-col items-center justify-center gap-0.5 rounded-xl border-2 text-[11px] leading-tight font-black"
+              style={{
+                background: on
+                  ? 'linear-gradient(180deg, rgba(255,255,255,0.4) 0%, rgba(255,255,255,0) 50%), linear-gradient(180deg, #ffd24a 0%, #f59a12 100%)'
+                  : 'linear-gradient(180deg, #fff3d6 0%, #ecd3a0 100%)',
+                borderColor: on ? '#fff5c4' : '#b88a4a',
+                color: on ? '#fff' : '#6b4418',
+                boxShadow: on ? '0 0 14px rgba(255,214,90,0.85), 0 3px 0 #a55e00' : '0 3px 0 #4a2c0e',
+                textShadow: on ? '0 1px 0 #9a4f00, 1px 0 0 #9a4f00, -1px 0 0 #9a4f00' : 'none',
+                opacity: locked ? 0.65 : 1,
+                transform: on ? 'translateY(-4px)' : undefined,
+              }}
+            >
+              <Icon aria-hidden size={24} style={{ filter: on ? 'drop-shadow(0 1px 0 #9a4f00)' : undefined }} />
+              <RubyText showFurigana={showFurigana}>{locked ? `${opensAt}話(わ)で ひらく` : t.label}</RubyText>
+            </motion.button>
+          );
+        })}
+      </div>
     </nav>
   );
 };

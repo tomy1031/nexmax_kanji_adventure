@@ -55,8 +55,8 @@ const tagName = (el: ts.JsxElement): string => el.openingElement.tagName.getText
 
 const insideRubyText = (node: ts.Node): boolean => {
   for (let p: ts.Node | undefined = node.parent; p; p = p.parent) {
-    // LogoTitle passes its children straight to <RubyText>.
-    if (ts.isJsxElement(p)) return ['RubyText', 'LogoTitle'].includes(tagName(p));
+    // LogoTitle, LogoText and RibbonTitle pass their children straight to <RubyText>.
+    if (ts.isJsxElement(p)) return ['RubyText', 'LogoTitle', 'LogoText', 'RibbonTitle'].includes(tagName(p));
   }
   return false;
 };
