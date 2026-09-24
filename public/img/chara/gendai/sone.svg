@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 360 480" width="360" height="480" role="img" aria-label="ソネ">
+<!-- 原作「夢を信じたネクマックス」#1 の ソネ を もとに した 仮の 立ち絵（ジャージ姿） -->
+
+  <g stroke="#2b2622" stroke-width="7" stroke-linejoin="round" stroke-linecap="round">
+    <path d="M96 470 C96 380 120 330 180 322 C240 330 264 380 264 470 Z" fill="#f3c64a"/>
+    <path d="M100 372 C70 392 62 430 70 462 L100 462" fill="#f3c64a"/>
+    <path d="M260 372 C290 392 298 430 290 462 L260 462" fill="#f3c64a"/>
+    <path d="M140 318 C150 336 210 336 220 318 L214 346 C200 356 160 356 146 346 Z" fill="#f3c64a"/>
+    <path d="M180 348 L180 470" fill="none" stroke-width="5"/>
+  </g>
+  <rect x="174" y="352" width="12" height="18" rx="3" fill="#fff4c9" stroke="#2b2622" stroke-width="3"/>
+  <path d="M112 440 H150 M210 440 H248" stroke="#fff4c9" stroke-width="6" stroke-linecap="round" opacity="0.8"/>
+  <path d="M180 34 C214 34 300 196 300 250 C300 300 250 322 180 322 C110 322 60 300 60 250 C60 196 146 34 180 34 Z" fill="#fffdf6" stroke="#2b2622" stroke-width="8" stroke-linejoin="round"/>
+  <path d="M150 78 C160 70 172 68 180 70" fill="none" stroke="#2b2622" stroke-width="5" stroke-linecap="round"/>
+  <path d="M112 182 Q134 164 156 178 M204 178 Q226 164 248 182" fill="none" stroke="#2b2622" stroke-width="7" stroke-linecap="round"/>
+  <ellipse cx="136" cy="214" rx="24" ry="27" fill="#fff" stroke="#2b2622" stroke-width="6"/>
+  <ellipse cx="224" cy="214" rx="24" ry="27" fill="#fff" stroke="#2b2622" stroke-width="6"/>
+  <circle cx="140" cy="218" r="9" fill="#2b2622"/><circle cx="220" cy="218" r="9" fill="#2b2622"/>
+  <path d="M146 262 Q180 300 214 262 Q180 272 146 262 Z" fill="#e0685a" stroke="#2b2622" stroke-width="6" stroke-linejoin="round"/>
+  <ellipse cx="106" cy="258" rx="14" ry="8" fill="#f7a8a0" opacity="0.7"/><ellipse cx="254" cy="258" rx="14" ry="8" fill="#f7a8a0" opacity="0.7"/>
+</svg>

@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 360 480" width="360" height="480" role="img" aria-label="イグーチ">
+<!-- 原作「夢を信じたネクマックス」#1 の イグーチ を もとに した 仮の 立ち絵（ジャージ姿） -->
+
+  <g stroke="#2b2622" stroke-width="7" stroke-linejoin="round" stroke-linecap="round">
+    <path d="M96 470 C96 380 120 330 180 322 C240 330 264 380 264 470 Z" fill="#e7759f"/>
+    <path d="M100 372 C70 392 62 430 70 462 L100 462" fill="#e7759f"/>
+    <path d="M260 372 C290 392 298 430 290 462 L260 462" fill="#e7759f"/>
+    <path d="M140 318 C150 336 210 336 220 318 L214 346 C200 356 160 356 146 346 Z" fill="#e7759f"/>
+    <path d="M180 348 L180 470" fill="none" stroke-width="5"/>
+  </g>
+  <rect x="174" y="352" width="12" height="18" rx="3" fill="#fde3ee" stroke="#2b2622" stroke-width="3"/>
+  <path d="M112 440 H150 M210 440 H248" stroke="#fde3ee" stroke-width="6" stroke-linecap="round" opacity="0.8"/>
+  <path d="M136 72 C132 46 124 30 112 22 M224 72 C228 46 236 30 248 22" fill="none" stroke="#2b2622" stroke-width="7" stroke-linecap="round"/>
+  <rect x="62" y="68" width="236" height="250" rx="58" fill="#fffdf6" stroke="#2b2622" stroke-width="8"/>
+  <path d="M116 168 Q138 154 160 164 M200 164 Q222 154 244 168" fill="none" stroke="#2b2622" stroke-width="7" stroke-linecap="round"/>
+  <ellipse cx="140" cy="202" rx="10" ry="15" fill="#2b2622"/><ellipse cx="220" cy="202" rx="10" ry="15" fill="#2b2622"/>
+  <circle cx="143" cy="196" r="4" fill="#fff"/><circle cx="223" cy="196" r="4" fill="#fff"/>
+  <path d="M140 250 Q180 284 220 250" fill="none" stroke="#2b2622" stroke-width="7" stroke-linecap="round"/>
+  <ellipse cx="104" cy="240" rx="14" ry="8" fill="#f7a8a0" opacity="0.6"/><ellipse cx="256" cy="240" rx="14" ry="8" fill="#f7a8a0" opacity="0.6"/>
+</svg>

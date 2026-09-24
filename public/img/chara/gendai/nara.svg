@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 360 480" width="360" height="480" role="img" aria-label="ナラ">
+<!-- 原作「夢を信じたネクマックス」#1 の ナラ を もとに した 仮の 立ち絵（ジャージ姿） -->
+
+  <g stroke="#2b2622" stroke-width="7" stroke-linejoin="round" stroke-linecap="round">
+    <path d="M96 470 C96 380 120 330 180 322 C240 330 264 380 264 470 Z" fill="#7cc37a"/>
+    <path d="M100 372 C70 392 62 430 70 462 L100 462" fill="#7cc37a"/>
+    <path d="M260 372 C290 392 298 430 290 462 L260 462" fill="#7cc37a"/>
+    <path d="M140 318 C150 336 210 336 220 318 L214 346 C200 356 160 356 146 346 Z" fill="#7cc37a"/>
+    <path d="M180 348 L180 470" fill="none" stroke-width="5"/>
+  </g>
+  <rect x="174" y="352" width="12" height="18" rx="3" fill="#e6f7e1" stroke="#2b2622" stroke-width="3"/>
+  <path d="M112 440 H150 M210 440 H248" stroke="#e6f7e1" stroke-width="6" stroke-linecap="round" opacity="0.8"/>
+  <path d="M188 68 C190 40 200 22 214 14" fill="none" stroke="#2b2622" stroke-width="7" stroke-linecap="round"/>
+  <circle cx="180" cy="196" r="128" fill="#fffdf6" stroke="#2b2622" stroke-width="8"/>
+  <path d="M130 170 Q146 160 160 168 M200 168 Q214 160 230 170" fill="none" stroke="#2b2622" stroke-width="6" stroke-linecap="round"/>
+  <ellipse cx="148" cy="204" rx="15" ry="22" fill="#fff" stroke="#2b2622" stroke-width="5"/>
+  <ellipse cx="212" cy="204" rx="15" ry="22" fill="#fff" stroke="#2b2622" stroke-width="5"/>
+  <ellipse cx="148" cy="208" rx="6" ry="9" fill="#2b2622"/><ellipse cx="212" cy="208" rx="6" ry="9" fill="#2b2622"/>
+  <path d="M148 256 Q180 280 212 256" fill="none" stroke="#2b2622" stroke-width="7" stroke-linecap="round"/>
+  <ellipse cx="112" cy="244" rx="14" ry="8" fill="#f7a8a0" opacity="0.6"/><ellipse cx="248" cy="244" rx="14" ry="8" fill="#f7a8a0" opacity="0.6"/>
+</svg>

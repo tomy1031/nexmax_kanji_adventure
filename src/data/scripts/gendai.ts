@@ -36,19 +36,19 @@ export const GENDAI_CAST: CastMember[] = [
     id: 'sone',
     name: 'ソネ',
     color: '#d9a400',
-    sprites: { normal: 'img/chara/cut/ESFP.webp' },
+    sprites: { normal: 'img/chara/gendai/sone.svg' },
   },
   {
     id: 'nara',
     name: 'ナラ',
     color: '#3e9b3a',
-    sprites: { normal: 'img/chara/cut/INTP.webp' },
+    sprites: { normal: 'img/chara/gendai/nara.svg' },
   },
   {
     id: 'iguchi',
     name: 'イグーチ',
     color: '#d0508a',
-    sprites: { normal: 'img/chara/cut/ENFJ.webp' },
+    sprites: { normal: 'img/chara/gendai/iguchi.svg' },
   },
   {
     id: 'senpai',
