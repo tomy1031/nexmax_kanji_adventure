@@ -13,8 +13,8 @@
   <path d="M122 126 Q128 104 146 88 M214 88 Q232 104 238 126" fill="none" stroke="#2b2622" stroke-width="10" stroke-linecap="round"/>
   <ellipse cx="136" cy="232" rx="32" ry="36" fill="#fff" stroke="#2b2622" stroke-width="6"/>
   <ellipse cx="226" cy="228" rx="32" ry="36" fill="#fff" stroke="#2b2622" stroke-width="6"/>
-  <path d="M106 222 Q136 198 166 216" fill="none" stroke="#2b2622" stroke-width="6" stroke-linecap="round"/>
-  <path d="M196 214 Q226 194 256 218" fill="none" stroke="#2b2622" stroke-width="6" stroke-linecap="round"/>
+  <path d="M107 220 L165 211" fill="none" stroke="#2b2622" stroke-width="6" stroke-linecap="round"/>
+  <path d="M197 207 L255 216" fill="none" stroke="#2b2622" stroke-width="6" stroke-linecap="round"/>
   <circle cx="136" cy="240" r="7" fill="#2b2622"/><circle cx="224" cy="236" r="7" fill="#2b2622"/>
   <path d="M158 284 Q182 280 206 282 Q202 306 182 307 Q162 306 158 284 Z" fill="#fff" stroke="#2b2622" stroke-width="6" stroke-linejoin="round"/>
 </svg>
