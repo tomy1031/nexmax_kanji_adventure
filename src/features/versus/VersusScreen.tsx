@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useMapPath } from '../../lib/nav';
 import { Backdrop } from '../../components/ui/Backdrop';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -36,6 +37,7 @@ type Phase = 'idle' | 'searching' | 'ready' | 'fighting' | 'over';
 
 export const VersusScreen = () => {
   const navigate = useNavigate();
+  const mapPath = useMapPath();
   const size = useCanvasSize(200, 0.24);
   const writerRef = useRef<KanjiWriterHandle>(null);
 
@@ -235,7 +237,7 @@ export const VersusScreen = () => {
             VITE_SUPABASE_URL と VITE_SUPABASE_ANON_KEY を 設定(せってい)して ビルドすると 使(つか)えます（docs/versus.md）。
           </RubyText>
         </p>
-        <button type="button" className="g-btn g-btn-primary" onClick={() => navigate('/map/mukashi')}>
+        <button type="button" className="g-btn g-btn-primary" onClick={() => navigate(mapPath)}>
           もどる
         </button>
       </div>
@@ -252,7 +254,7 @@ export const VersusScreen = () => {
           className="g-btn g-btn-ghost !min-h-[40px] !px-4 text-sm"
           onClick={() => {
             networkManager.disconnect();
-            navigate('/map/mukashi');
+            navigate(mapPath);
           }}
         >
           もどる
@@ -422,7 +424,7 @@ export const VersusScreen = () => {
               </p>
             )}
             <div className="flex w-full gap-2">
-              <button type="button" className="g-btn g-btn-ghost flex-1" onClick={() => navigate('/map/mukashi')}>
+              <button type="button" className="g-btn g-btn-ghost flex-1" onClick={() => navigate(mapPath)}>
                 もどる
               </button>
               <button

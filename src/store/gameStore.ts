@@ -82,6 +82,8 @@ export interface GameState {
   settings: { furigana: boolean; muted: boolean; reducedMotion: boolean };
   /** One-off explainers the player has already been shown. */
   tutorials: { forge: boolean; intro: boolean };
+  /** The world last played in — where つづきから, ストーリー and もどる lead back to. */
+  lastArc: 'mukashi' | 'gendai';
   /** Versus record. */
   versus: VersusStats;
   /**
@@ -118,6 +120,7 @@ export interface GameActions {
   resetPity: () => void;
   setSetting: <K extends keyof GameState['settings']>(key: K, value: GameState['settings'][K]) => void;
   markTutorialSeen: (key: keyof GameState['tutorials']) => void;
+  setLastArc: (arc: GameState['lastArc']) => void;
   recordVersusResult: (won: boolean, ratingDelta: number) => void;
   /** Spend ink on a guess. False when there is not enough. */
   spendSumi: (n: number) => boolean;
@@ -157,6 +160,7 @@ const initialState: GameState = {
   streak: { count: 0, lastDate: '' },
   settings: { furigana: true, muted: false, reducedMotion: false },
   tutorials: { forge: false, intro: false },
+  lastArc: 'mukashi',
   versus: DEFAULT_VERSUS_STATS,
   sumi: 0,
   foundWords: {},
@@ -332,6 +336,8 @@ export const useGameStore = create<GameState & GameActions>()(
       setSetting: (key, value) => set((s) => ({ settings: { ...s.settings, [key]: value } })),
 
       markTutorialSeen: (key) => set((s) => ({ tutorials: { ...s.tutorials, [key]: true } })),
+
+      setLastArc: (arc) => set((s) => (s.lastArc === arc ? s : { lastArc: arc })),
 
       spendSumi: (n) => {
         if (get().sumi < n) return false;

@@ -12,6 +12,7 @@ import { kanjiRuby } from '../../lib/reading';
 import { toDataUrl } from '../picturebook/paper';
 import PictureBook from '../picturebook/PictureBook';
 import { useGameStore } from '../../store/gameStore';
+import * as sfx from '../../lib/sfx';
 import { isVersusConfigured } from '../../lib/supabaseClient';
 import { Feature, FEATURE_INTRO, isFeatureUnlocked } from '../../data/unlocks';
 import { MAP_H, MAP_W, NODE_POS, gendaiMapSvg, mapSvg } from './mapArt';
@@ -64,6 +65,14 @@ const StageSelectFor = ({ arc }: { arc: 'mukashi' | 'gendai' }) => {
   const showFurigana = useGameStore((s) => s.settings.furigana);
   const progress = useGameStore((s) => s.progress);
   const seenIntro = useGameStore((s) => s.tutorials.intro);
+  const setLastArc = useGameStore((s) => s.setLastArc);
+  // Arriving from つぎの 話へ: the stage that just opened is lit up as new.
+  const freshId = params.get('new');
+  useEffect(() => {
+    if (freshId) sfx.chime();
+  }, [freshId]);
+  // This map is now "home": つづきから, ストーリー and もどる come back here.
+  useEffect(() => setLastArc(arc), [arc, setLastArc]);
 
   const stages = stagesOfArc(arc === 'gendai' ? Arc.GENDAI : Arc.MUKASHI);
   const clearedHere = cleared.filter((c) => c.startsWith(arc)).length;
@@ -102,7 +111,16 @@ const StageSelectFor = ({ arc }: { arc: 'mukashi' | 'gendai' }) => {
     ] as const
   ).filter(({ f }) => isFeatureUnlocked(f, cleared));
 
-  const nodeButton = (idx: number, label: string, title: string, unlocked: boolean, done: boolean, onPick: () => void, selected: boolean) => {
+  const nodeButton = (
+    idx: number,
+    label: string,
+    title: string,
+    unlocked: boolean,
+    done: boolean,
+    onPick: () => void,
+    selected: boolean,
+    fresh = false,
+  ) => {
     const [x, y] = NODE_POS[idx];
     return (
       <div
@@ -128,6 +146,31 @@ const StageSelectFor = ({ arc }: { arc: 'mukashi' | 'gendai' }) => {
           animate={selected ? { scale: [1, 1.08, 1] } : { scale: 1 }}
           transition={selected ? { duration: 1.4, repeat: Infinity } : undefined}
         >
+          {fresh && (
+            <>
+              {/* Just opened: rings of light spread out, and a NEW tag. */}
+              {[0, 1].map((r) => (
+                <motion.span
+                  key={r}
+                  aria-hidden
+                  className="absolute inset-0 rounded-full"
+                  style={{ border: '3px solid #ffe27a' }}
+                  initial={{ scale: 1, opacity: 0.9 }}
+                  animate={{ scale: 2.2, opacity: 0 }}
+                  transition={{ duration: 1.4, repeat: Infinity, delay: r * 0.7 }}
+                />
+              ))}
+              <motion.span
+                className="absolute -top-4 left-1/2 -translate-x-1/2 rounded-full px-1.5 text-[10px] leading-4 font-black text-white"
+                style={{ background: 'linear-gradient(180deg,#ff7a59,#e2472c)', border: '1.5px solid #fff' }}
+                initial={{ scale: 0 }}
+                animate={{ scale: [0, 1.3, 1] }}
+                transition={{ delay: 0.4, duration: 0.5 }}
+              >
+                NEW
+              </motion.span>
+            </>
+          )}
           {unlocked ? label.split('-').pop() : '🔒'}
           {done && (
             <span className="absolute -top-2 -right-1 text-base" style={{ color: '#f2a91a', textShadow: '0 1px 0 #7a4a00' }} aria-hidden>
@@ -218,6 +261,7 @@ const StageSelectFor = ({ arc }: { arc: 'mukashi' | 'gendai' }) => {
               cleared.includes(s.id),
               () => setPick({ kind: 'stage', stage: s }),
               pick.kind === 'stage' && pick.stage.id === s.id,
+              s.id === freshId && isStageUnlocked(s, cleared),
             ),
           )}
           {/* Stages not written yet: the road goes on into the fog. */}

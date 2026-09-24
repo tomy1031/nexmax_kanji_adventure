@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useMapPath } from '../../lib/nav';
 import { Backdrop } from '../../components/ui/Backdrop';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -29,6 +30,7 @@ import { DAILY_TOTAL } from '../../data/dailyTasks';
 
 export const GachaScreen = () => {
   const navigate = useNavigate();
+  const mapPath = useMapPath();
   const showFurigana = useGameStore((s) => s.settings.furigana);
   const gems = useGameStore((s) => s.gems);
   const owned = useGameStore((s) => s.individuals);
@@ -97,7 +99,7 @@ export const GachaScreen = () => {
       <header
         className="g-header sticky top-0 z-20 flex items-center justify-between px-4 py-3"
       >
-        <button type="button" className="g-btn g-btn-accent !min-h-[38px] !gap-1 !px-3.5 text-sm" onClick={() => navigate('/map/mukashi')}>
+        <button type="button" className="g-btn g-btn-accent !min-h-[38px] !gap-1 !px-3.5 text-sm" onClick={() => navigate(mapPath)}>
           <span aria-hidden>◀</span>もどる
         </button>
         <h1 className="g-title text-base">ガチャ</h1>

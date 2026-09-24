@@ -1,4 +1,5 @@
 import { useNavigate } from 'react-router-dom';
+import { useMapPath } from '../../lib/nav';
 import { Backdrop } from '../../components/ui/Backdrop';
 import { useGameStore } from '../../store/gameStore';
 import { DAILY_TASKS, DAILY_TOTAL, isTaskClaimable, isTaskComplete } from '../../data/dailyTasks';
@@ -10,6 +11,7 @@ import { getKanjiById } from '../../lib/kanjiDb';
 /** Today's tasks, and the review queue that feeds one of them. */
 export const DailyScreen = () => {
   const navigate = useNavigate();
+  const mapPath = useMapPath();
   const showFurigana = useGameStore((s) => s.settings.furigana);
   const daily = useGameStore((s) => s.daily);
   const streak = useGameStore((s) => s.streak);
@@ -29,7 +31,7 @@ export const DailyScreen = () => {
       <header
         className="g-header sticky top-0 z-20 flex items-center justify-between px-4 py-3"
       >
-        <button type="button" className="g-btn g-btn-accent !min-h-[38px] !gap-1 !px-3.5 text-sm" onClick={() => navigate('/map/mukashi')}>
+        <button type="button" className="g-btn g-btn-accent !min-h-[38px] !gap-1 !px-3.5 text-sm" onClick={() => navigate(mapPath)}>
           <span aria-hidden>◀</span>もどる
         </button>
         <h1 className="g-title text-base">

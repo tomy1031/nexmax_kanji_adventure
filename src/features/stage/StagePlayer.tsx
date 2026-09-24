@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useState } from 'react';
+import { useMapPath } from '../../lib/nav';
 import { useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { getStage } from '../../data/stages';
+import { getStage, stagesOfArc } from '../../data/stages';
 import { MUKASHI_CAST, MUKASHI_SCRIPTS } from '../../data/scripts/mukashi';
 import { GENDAI_CAST, GENDAI_SCRIPTS } from '../../data/scripts/gendai';
 import { Arc } from '../../types/kanji';
@@ -55,6 +56,7 @@ const shuffled = <T,>(items: readonly T[], salt: string): T[] => {
 const StageRun = () => {
   const { stageId } = useParams<{ stageId: string }>();
   const navigate = useNavigate();
+  const mapPath = useMapPath();
   const [params] = useSearchParams();
   const mode = params.get('mode') === 'practice' ? 'practice' : 'story';
   // Coming back from the forge resumes at the encounter rather than
@@ -69,6 +71,8 @@ const StageRun = () => {
 
   const [phase, setPhase] = useState<StoryPhase>(resumeAt ?? 'story');
   const [practising, setPractising] = useState<KanjiData | null>(null);
+  // Bumped by もう一度 so the fight starts again from full HP.
+  const [battleKey, setBattleKey] = useState(0);
 
   const kanjiList = useMemo(() => {
     if (!stage) return [];
@@ -90,7 +94,7 @@ const StageRun = () => {
     return (
       <div className="g-sky flex min-h-dvh flex-col items-center justify-center gap-4 p-6">
         <p className="g-title">そのステージは ありません。</p>
-        <button type="button" className="g-btn g-btn-primary" onClick={() => navigate('/map/mukashi')}>
+        <button type="button" className="g-btn g-btn-primary" onClick={() => navigate(mapPath)}>
           マップへ もどる
         </button>
       </div>
@@ -219,13 +223,20 @@ const StageRun = () => {
     );
   }
 
+  const next = stagesOfArc(stage.arc).find((s) => s.order === stage.order + 1);
   return (
     <BattleScene
+      key={battleKey}
       stage={stage}
       kanjiPool={pool}
       patience={basePatience(stage.order)}
       onFinish={backToSelect}
       onFlee={() => setPhase('encounter')}
+      // The next stage opens on the map, lit up as new (StageSelect ?new=).
+      onNext={next ? () => navigate(`/map/${stage.arc}?stage=${next.id}&new=${next.id}`) : undefined}
+      onRetry={() => setBattleKey((k) => k + 1)}
+      onPractice={() => navigate(`/stage/${stage.id}?mode=practice`)}
+      onForge={() => navigate(forgeHref)}
     />
   );
 };

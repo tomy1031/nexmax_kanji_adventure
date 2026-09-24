@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useSafeBack } from '../../lib/nav';
 import { Backdrop } from '../../components/ui/Backdrop';
 import { useNavigate } from 'react-router-dom';
 import { useGameStore } from '../../store/gameStore';
@@ -7,6 +8,7 @@ import { RubyText } from '../../components/ui/Ruby';
 /** Settings, and the credits the asset licences require. */
 export const SettingsScreen = () => {
   const navigate = useNavigate();
+  const safeBack = useSafeBack();
   const settings = useGameStore((s) => s.settings);
   const setSetting = useGameStore((s) => s.setSetting);
   const resetSave = useGameStore((s) => s.resetSave);
@@ -34,7 +36,7 @@ export const SettingsScreen = () => {
       <header
         className="g-header sticky top-0 z-20 flex items-center justify-between px-4 py-3"
       >
-        <button type="button" className="g-btn g-btn-accent !min-h-[38px] !gap-1 !px-3.5 text-sm" onClick={() => navigate(-1)}>
+        <button type="button" className="g-btn g-btn-accent !min-h-[38px] !gap-1 !px-3.5 text-sm" onClick={safeBack}>
           <span aria-hidden>◀</span>もどる
         </button>
         <h1 className="g-title text-base">せってい</h1>
