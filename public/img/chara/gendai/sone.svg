@@ -9,8 +9,8 @@
   </g>
   <path d="M116.5 342.0 Q180.0 366.0 243.5 342.0" fill="none" stroke="#fff4c9" stroke-width="4" stroke-linecap="round" opacity="0.8"/>
   <rect x="175" y="366" width="10" height="16" rx="3" fill="#fff4c9" stroke="#2b2622" stroke-width="3"/>
-  <path d="M180.0 68.6 C265.4 68.6 321.5 167.6 343.5 245.0 C358.1 295.4 326.4 326.0 253.2 327.8 H106.8 C33.6 326.0 1.9 295.4 16.5 245.0 C38.5 167.6 94.6 68.6 180.0 68.6 Z" fill="#fffdf6" stroke="#2b2622" stroke-width="8" stroke-linejoin="round"/>
-  <path d="M115.0 146.0 Q121.8 126.2 141.9 111.8 M218.1 111.8 Q238.2 126.2 245.0 146.0" fill="none" stroke="#2b2622" stroke-width="10" stroke-linecap="round"/>
+  <path d="M180.0 42.9 C265.4 42.9 321.5 151.8 343.5 236.9 C358.1 292.3 326.4 326.0 253.2 328.0 H106.8 C33.6 326.0 1.9 292.3 16.5 236.9 C38.5 151.8 94.6 42.9 180.0 42.9 Z" fill="#fffdf6" stroke="#2b2622" stroke-width="8" stroke-linejoin="round"/>
+  <path d="M115.0 128.0 Q121.8 106.2 141.9 90.4 M218.1 90.4 Q238.2 106.2 245.0 128.0" fill="none" stroke="#2b2622" stroke-width="10" stroke-linecap="round"/>
   <ellipse cx="130.7" cy="241.4" rx="32" ry="36" fill="#fff" stroke="#2b2622" stroke-width="6"/>
   <ellipse cx="231.5" cy="237.8" rx="32" ry="36" fill="#fff" stroke="#2b2622" stroke-width="6"/>
   <path d="M98.2 224.6 L163.2 216.5" fill="none" stroke="#2b2622" stroke-width="6" stroke-linecap="round"/>
