@@ -12,8 +12,8 @@ import { getIndividual } from '../../data/individuals';
 import { weaponOf, type Weapon } from '../../lib/forge/weapon';
 import { ELEMENT_LABEL } from '../../lib/forge/elements';
 import { rustLevel } from '../../lib/srs';
-import { kanjiRuby } from '../../lib/reading';
-import { Readings } from '../../components/ui/Readings';
+import { exampleWord, kanjiRuby } from '../../lib/reading';
+import { FillIn, Readings } from '../../components/ui/Readings';
 import { getGear } from '../../data/equipment';
 import * as sfx from '../../lib/sfx';
 import {
@@ -423,6 +423,16 @@ export const BattleScene = ({
               </span>
             )}
             <div className="min-w-0 flex-1 text-sm">
+              {!tutorial && exampleWord(target) && (
+                <p className="mb-0.5 flex items-center gap-2">
+                  <span className="text-[26px] leading-[1.6] font-black">
+                    <FillIn kanji={target} showFurigana={showFurigana} />
+                  </span>
+                  <span className="text-[11px] font-bold" style={{ color: 'var(--ink-2)' }}>
+                    <RubyText showFurigana={showFurigana}>□に 入(はい)る 字(じ)を 書(か)こう</RubyText>
+                  </span>
+                </p>
+              )}
               <Readings kanji={target} hideKanji={!tutorial} />
               <p className="truncate" style={{ color: 'var(--ink-2)' }}>
                 meaning: <b className="text-base">{target.meanings.slice(0, 2).join(' / ')}</b>
