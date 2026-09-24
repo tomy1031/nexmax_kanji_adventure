@@ -1,5 +1,7 @@
 import { useEffect } from 'react';
+import type { ReactNode } from 'react';
 import { HashRouter, Routes, Route, useLocation } from 'react-router-dom';
+import { motion } from 'framer-motion';
 import { Arc } from './types/kanji';
 import { useGameStore } from './store/gameStore';
 import TitleScreen from './features/title/TitleScreen';
@@ -37,6 +39,20 @@ const ArcTheme = () => {
   return null;
 };
 
+/**
+ * A short fade when the screen changes, so moving between menus feels like
+ * one game rather than pages loading. Opacity only: a transform here would
+ * become the containing block for the screens' fixed backdrops and tab bar.
+ */
+const ScreenFade = ({ children }: { children: ReactNode }) => {
+  const { pathname } = useLocation();
+  return (
+    <motion.div key={pathname} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.28, ease: 'easeOut' }}>
+      {children}
+    </motion.div>
+  );
+};
+
 const App = () => {
   const rollDailyIfNeeded = useGameStore((s) => s.rollDailyIfNeeded);
 
@@ -49,6 +65,7 @@ const App = () => {
   return (
     <HashRouter>
       <ArcTheme />
+      <ScreenFade>
       <Routes>
         <Route path="/" element={<TitleScreen />} />
         <Route path="/map" element={<ArcSelect />} />
@@ -65,6 +82,7 @@ const App = () => {
         <Route path="/settings" element={<SettingsScreen />} />
         <Route path="*" element={<TitleScreen />} />
       </Routes>
+      </ScreenFade>
     </HashRouter>
   );
 };

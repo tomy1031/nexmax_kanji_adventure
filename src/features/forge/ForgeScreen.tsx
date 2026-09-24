@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { Backdrop } from '../../components/ui/Backdrop';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useGameStore } from '../../store/gameStore';
@@ -98,13 +99,13 @@ export const ForgeScreen = () => {
 
   return (
     <div className="g-stage min-h-dvh pb-6">
+      <Backdrop fixed />
       <ForgeTutorial />
       <header
-        className="sticky top-0 z-20 flex items-center justify-between px-4 py-3 backdrop-blur-md"
-        style={{ background: 'var(--panel)' }}
+        className="g-header sticky top-0 z-20 flex items-center justify-between px-4 py-3"
       >
-        <button type="button" className="g-btn g-btn-ghost !min-h-[40px] !px-4 text-sm" onClick={() => navigate(backTo)}>
-          もどる
+        <button type="button" className="g-btn g-btn-accent !min-h-[38px] !gap-1 !px-3.5 text-sm" onClick={() => navigate(backTo)}>
+          <span aria-hidden>◀</span>もどる
         </button>
         <h1 className="g-title text-base">
           <RubyText showFurigana={showFurigana}>合成(ごうせい)</RubyText>
@@ -249,7 +250,7 @@ export const ForgeScreen = () => {
         </AnimatePresence>
 
         {/* 持っている漢字 ----------------------------------------------- */}
-        <p className="g-eyebrow mb-2">
+        <p className="g-eyebrow g-onbg mb-2">
           <RubyText showFurigana={showFurigana}>持(も)って いる 漢字(かんじ)</RubyText>
         </p>
         {owned.length === 0 ? (

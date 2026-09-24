@@ -12,6 +12,8 @@
   /* 文字 ------------------------------------------------------------------ */
   --font-display: 'M PLUS Rounded 1c', 'Hiragino Maru Gothic ProN', 'Noto Sans JP', system-ui, sans-serif;
   --font-body: 'M PLUS Rounded 1c', 'Hiragino Sans', 'Noto Sans JP', system-ui, sans-serif;
+  /* ロゴ・大見出しの 書体。太く 角の ある ゲームの 看板文字。 */
+  --font-logo: 'Dela Gothic One', 'M PLUS Rounded 1c', 'Hiragino Sans', system-ui, sans-serif;
 
   /* かたち ---------------------------------------------------------------- */
   --radius-tile: 14px;
@@ -30,6 +32,14 @@
   --color-danger: #ff6b7d;
   --color-nexmax: #a9d6f5;
   --color-nexmax-ink: #004f8d;
+}
+
+:root {
+  /* 額縁（.g-frame）の 四隅の 金の 飾り */
+  --corner-tl: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3E%3Cg transform='rotate(0 15 15)'%3E%3Cpath d='M4 26 V8 Q4 4 8 4 H26' fill='none' stroke='%237a4a12' stroke-width='5' stroke-linecap='round'/%3E%3Cpath d='M4 26 V8 Q4 4 8 4 H26' fill='none' stroke='%23ffd35a' stroke-width='2.6' stroke-linecap='round'/%3E%3Cpath d='M9 13 Q9 9 13 9' fill='none' stroke='%23ffd35a' stroke-width='2' stroke-linecap='round'/%3E%3Crect x='1.5' y='1.5' width='7' height='7' rx='1.5' transform='rotate(45 5 5)' fill='%233fb6ff' stroke='%237a4a12' stroke-width='1.5'/%3E%3C/g%3E%3C/svg%3E");
+  --corner-tr: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3E%3Cg transform='rotate(90 15 15)'%3E%3Cpath d='M4 26 V8 Q4 4 8 4 H26' fill='none' stroke='%237a4a12' stroke-width='5' stroke-linecap='round'/%3E%3Cpath d='M4 26 V8 Q4 4 8 4 H26' fill='none' stroke='%23ffd35a' stroke-width='2.6' stroke-linecap='round'/%3E%3Cpath d='M9 13 Q9 9 13 9' fill='none' stroke='%23ffd35a' stroke-width='2' stroke-linecap='round'/%3E%3Crect x='1.5' y='1.5' width='7' height='7' rx='1.5' transform='rotate(45 5 5)' fill='%233fb6ff' stroke='%237a4a12' stroke-width='1.5'/%3E%3C/g%3E%3C/svg%3E");
+  --corner-br: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3E%3Cg transform='rotate(180 15 15)'%3E%3Cpath d='M4 26 V8 Q4 4 8 4 H26' fill='none' stroke='%237a4a12' stroke-width='5' stroke-linecap='round'/%3E%3Cpath d='M4 26 V8 Q4 4 8 4 H26' fill='none' stroke='%23ffd35a' stroke-width='2.6' stroke-linecap='round'/%3E%3Cpath d='M9 13 Q9 9 13 9' fill='none' stroke='%23ffd35a' stroke-width='2' stroke-linecap='round'/%3E%3Crect x='1.5' y='1.5' width='7' height='7' rx='1.5' transform='rotate(45 5 5)' fill='%233fb6ff' stroke='%237a4a12' stroke-width='1.5'/%3E%3C/g%3E%3C/svg%3E");
+  --corner-bl: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3E%3Cg transform='rotate(270 15 15)'%3E%3Cpath d='M4 26 V8 Q4 4 8 4 H26' fill='none' stroke='%237a4a12' stroke-width='5' stroke-linecap='round'/%3E%3Cpath d='M4 26 V8 Q4 4 8 4 H26' fill='none' stroke='%23ffd35a' stroke-width='2.6' stroke-linecap='round'/%3E%3Cpath d='M9 13 Q9 9 13 9' fill='none' stroke='%23ffd35a' stroke-width='2' stroke-linecap='round'/%3E%3Crect x='1.5' y='1.5' width='7' height='7' rx='1.5' transform='rotate(45 5 5)' fill='%233fb6ff' stroke='%237a4a12' stroke-width='1.5'/%3E%3C/g%3E%3C/svg%3E");
 }
 
 /* -----------------------------------------------------------------------------
@@ -135,25 +145,68 @@
    部品
    --------------------------------------------------------------------------- */
 @layer components {
+  /* メニュー画面の 土台。後ろに <Backdrop fixed> の 動く 絵本が 敷かれる。
+     isolation で 重なりの 箱を つくり、絵本（z -1）を 本文の 下に 置く。 */
   .g-stage {
+    position: relative;
+    isolation: isolate;
     min-height: 100dvh;
     background: linear-gradient(180deg, var(--stage) 0%, var(--stage-2) 100%);
     color: var(--ink);
   }
 
-  .g-panel {
-    background: var(--panel);
-    border: 1px solid var(--line);
-    border-radius: var(--radius-card);
-    backdrop-filter: blur(10px);
-    box-shadow: var(--shadow-card);
+  /* 羊皮紙の 板。メニューの カードは すべて これ。 */
+  .g-panel,
+  .g-panel-solid {
+    background:
+      radial-gradient(ellipse at 30% 15%, rgba(255, 255, 255, 0.55), transparent 60%),
+      linear-gradient(180deg, #fffaec 0%, #f7eacb 100%);
+    border: 2px solid #d4a960;
+    border-radius: 16px;
+    box-shadow:
+      inset 0 0 0 2px rgba(255, 250, 235, 0.9),
+      inset 0 0 22px rgba(168, 118, 52, 0.16),
+      0 3px 0 rgba(122, 78, 22, 0.55),
+      0 10px 22px rgba(30, 20, 5, 0.22);
+    color: #4a3220;
   }
 
-  .g-panel-solid {
-    background: var(--panel-solid);
-    border: 1px solid var(--line);
-    border-radius: var(--radius-card);
-    box-shadow: var(--shadow-card);
+  /* メニュー画面の 上の 帯: 空に とける 暗い グラデーション。 */
+  .g-header {
+    background: linear-gradient(180deg, rgba(22, 52, 92, 0.6) 0%, rgba(22, 52, 92, 0.25) 70%, rgba(22, 52, 92, 0) 100%);
+  }
+
+  .g-header h1 {
+    background:
+      repeating-linear-gradient(178deg, rgba(255, 255, 255, 0.05) 0 3px, rgba(0, 0, 0, 0.04) 3px 7px),
+      linear-gradient(180deg, #a8703a 0%, #83501f 100%);
+    border: 2px solid #5b3412;
+    border-radius: 10px;
+    padding: 0 14px;
+    color: #fff6df;
+    text-shadow: 0 1px 0 rgba(40, 20, 0, 0.7);
+    box-shadow:
+      inset 0 2px 0 rgba(255, 220, 170, 0.35),
+      0 4px 10px rgba(40, 20, 0, 0.3);
+  }
+
+  .g-header h1 rt {
+    color: #ffe9c2;
+  }
+
+  /* 絵の 上に じかに 置く 字: 白に 濃い ふち。 */
+  .g-onbg {
+    color: #fff !important;
+    text-shadow:
+      0 1px 0 #1d3354,
+      1px 0 0 #1d3354,
+      -1px 0 0 #1d3354,
+      0 -1px 0 #1d3354,
+      0 2px 6px rgba(0, 0, 0, 0.45);
+  }
+
+  .g-onbg rt {
+    color: #fff;
   }
 
   .g-title {
@@ -167,7 +220,7 @@
     font-size: 12px;
     font-weight: 800;
     letter-spacing: 0.14em;
-    color: var(--ink-3);
+    color: #9a6a30;
     line-height: 1.4;
   }
 
@@ -197,14 +250,17 @@
   }
 
   .g-btn:disabled {
-    opacity: 0.45;
+    opacity: 0.75;
+    filter: grayscale(0.85) brightness(0.95);
     cursor: not-allowed;
   }
 
   /* 主ボタン: 参考画像の「はじめる」「スタート」。オレンジに クリーム色の ふち、
      白い 文字に 茶色の ふち取り。 */
   .g-btn-primary {
-    background: linear-gradient(180deg, #ffd24a 0%, #ffab1f 48%, #f28a00 100%);
+    background:
+      linear-gradient(180deg, rgba(255, 255, 255, 0.45) 0%, rgba(255, 255, 255, 0.08) 48%, transparent 50%),
+      linear-gradient(180deg, #ffd24a 0%, #ffab1f 48%, #f28a00 100%);
     color: #fff;
     border: 3px solid #fff1c2;
     text-shadow:
@@ -226,7 +282,9 @@
 
   /* 副ボタン: 参考画像の「つづきから」「オート」。 */
   .g-btn-accent {
-    background: linear-gradient(180deg, #5cc0ff 0%, #2f8fe0 55%, #1d6fc4 100%);
+    background:
+      linear-gradient(180deg, rgba(255, 255, 255, 0.35) 0%, rgba(255, 255, 255, 0.06) 48%, transparent 50%),
+      linear-gradient(180deg, #5cc0ff 0%, #2f8fe0 55%, #1d6fc4 100%);
     color: #fff;
     border: 2px solid rgba(255, 255, 255, 0.9);
     text-shadow: 0 1px 0 rgba(10, 50, 110, 0.7);
@@ -244,7 +302,9 @@
   }
 
   .g-btn-red {
-    background: linear-gradient(180deg, #ff8a6a 0%, #f2463a 55%, #c9241c 100%);
+    background:
+      linear-gradient(180deg, rgba(255, 255, 255, 0.35) 0%, rgba(255, 255, 255, 0.06) 48%, transparent 50%),
+      linear-gradient(180deg, #ff8a6a 0%, #f2463a 55%, #c9241c 100%);
     color: #fff;
     border: 3px solid #ffe6a8;
     text-shadow:
@@ -309,9 +369,12 @@
   }
 
   .g-btn-ghost {
-    background: var(--panel);
-    color: var(--ink);
-    border: 1px solid var(--line);
+    background: linear-gradient(180deg, #fffaec 0%, #f1dfb6 100%);
+    color: #5a3a1a;
+    border: 2px solid #c99a52;
+    box-shadow:
+      0 3px 0 #8a5a1c,
+      inset 0 2px 0 rgba(255, 255, 255, 0.8);
   }
 
   .g-chip {
@@ -320,8 +383,9 @@
     gap: 6px;
     padding: 4px 12px;
     border-radius: var(--radius-pill);
-    background: var(--panel);
-    border: 1px solid var(--line);
+    background: linear-gradient(180deg, #fffaec 0%, #f1dfb6 100%);
+    border: 2px solid #c99a52;
+    color: #5a3a1a;
     font-size: 13px;
     font-weight: 700;
     line-height: 1.6;
@@ -347,18 +411,176 @@
     color: #3e2a18;
   }
 
-  /* ロゴ文字: オレンジに 茶色の ふち。ふりがなは ふち無しで 読みやすく。 */
+  /* ロゴ文字（<LogoText>）: 同じ 文字を 2枚 重ねる。
+     後ろの 1枚は こげ茶の 太い ふちと 厚みの 影、前の 1枚は 金から 橙への
+     グラデーション。1枚で ふちと グラデーションを 両方 かけると、太い ふちが
+     字の 内側まで 塗りつぶして グラデーションが 見えなく なる。 */
   .g-logo {
-    color: #ffb21f;
-    -webkit-text-stroke: 1.6px #6b3500;
-    paint-order: stroke fill;
-    filter: drop-shadow(0 3px 0 #6b3500) drop-shadow(0 6px 8px rgba(0, 0, 0, 0.25));
+    position: relative;
+    display: inline-block;
+    font-family: var(--font-logo);
+    font-weight: 400;
+    letter-spacing: 0.02em;
+    --logo-ink: #5a2400;
+    --logo-ink-2: #3a1500;
+    --logo-fill: linear-gradient(180deg, #fffbd0 0%, #ffe24a 30%, #ffb21f 62%, #ff7a00 100%);
+  }
+
+  .g-logo-blue {
+    --logo-ink: #0b3a78;
+    --logo-ink-2: #062552;
+    --logo-fill: linear-gradient(180deg, #ffffff 0%, #c8f1ff 38%, #4cb8ff 100%);
+  }
+
+  .g-logo-back {
+    display: block;
+    color: var(--logo-ink);
+    -webkit-text-stroke: 0.2em var(--logo-ink);
+    filter: drop-shadow(0 3px 0 var(--logo-ink-2)) drop-shadow(0 6px 0 var(--logo-ink-2)) drop-shadow(0 12px 14px rgba(20, 10, 0, 0.35));
+  }
+
+  .g-logo-front {
+    position: absolute;
+    inset: 0;
+    display: block;
+    background: var(--logo-fill);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  .g-logo-back rt {
+    -webkit-text-stroke: 0.25em var(--logo-ink);
+  }
+
+  .g-logo-front rt {
+    -webkit-text-fill-color: #fff;
   }
 
   .g-logo rt {
-    -webkit-text-stroke: 0;
-    color: #6b3500;
+    font-family: var(--font-body);
     font-weight: 900;
+  }
+
+  /* ロゴの 字の 中だけを 光が 走る（背景に はみ出さない）。 */
+  .g-logo-shine .g-logo-front {
+    background:
+      linear-gradient(105deg, transparent 42%, rgba(255, 255, 255, 0.95) 50%, transparent 58%) 0 0 / 300% 100% no-repeat,
+      var(--logo-fill);
+    -webkit-background-clip: text;
+    background-clip: text;
+    animation: g-logo-shine 4.5s ease-in-out infinite;
+  }
+
+  @keyframes g-logo-shine {
+    0%,
+    60% {
+      background-position:
+        120% 0,
+        0 0;
+    }
+    100% {
+      background-position:
+        -20% 0,
+        0 0;
+    }
+  }
+
+  /* 光が 左から 右へ 走る（ボタン・ロゴ）。 */
+  .g-shine {
+    position: relative;
+    overflow: hidden;
+    isolation: isolate;
+  }
+
+  .g-shine::after {
+    content: '';
+    position: absolute;
+    inset: -20% auto -20% -60%;
+    width: 45%;
+    background: linear-gradient(100deg, transparent 0%, rgba(255, 255, 255, 0.65) 50%, transparent 100%);
+    transform: skewX(-18deg);
+    animation: g-shine 3.6s ease-in-out infinite;
+    pointer-events: none;
+    z-index: 1;
+  }
+
+  @keyframes g-shine {
+    0%,
+    55% {
+      left: -60%;
+    }
+    100% {
+      left: 130%;
+    }
+  }
+
+  /* 飾りの ある 額縁: 羊皮紙に 金の 二重線と 四隅の 飾り。 */
+  .g-frame {
+    position: relative;
+    background:
+      radial-gradient(ellipse at 30% 15%, rgba(255, 255, 255, 0.6), transparent 60%),
+      linear-gradient(180deg, #fff8e6 0%, #f7e8c6 100%);
+    border: 3px solid #c9953f;
+    border-radius: 18px;
+    box-shadow:
+      inset 0 0 0 2px #fff6dc,
+      inset 0 0 0 4px rgba(201, 149, 63, 0.45),
+      inset 0 0 28px rgba(168, 118, 52, 0.22),
+      0 3px 0 #8a5a1c,
+      0 12px 26px rgba(40, 22, 5, 0.3);
+    color: #4a3220;
+  }
+
+  .g-frame::before {
+    content: '';
+    position: absolute;
+    inset: -7px;
+    pointer-events: none;
+    background:
+      var(--corner-tl) top left / 30px 30px no-repeat,
+      var(--corner-tr) top right / 30px 30px no-repeat,
+      var(--corner-bl) bottom left / 30px 30px no-repeat,
+      var(--corner-br) bottom right / 30px 30px no-repeat;
+  }
+
+  /* 下の 帯（リボン）。見出しの 副題に 使う。 */
+  .g-ribbon {
+    position: relative;
+    display: inline-block;
+    padding: 2px 22px;
+    color: #fff;
+    font-weight: 900;
+    text-shadow: 0 1px 0 rgba(90, 20, 0, 0.7);
+    background: linear-gradient(180deg, #ff8a5c 0%, #e2472c 55%, #b9301c 100%);
+    border-top: 2px solid #ffd2a8;
+    border-bottom: 2px solid #7a1c0c;
+    box-shadow: 0 3px 6px rgba(60, 10, 0, 0.3);
+  }
+
+  .g-ribbon::before,
+  .g-ribbon::after {
+    content: '';
+    position: absolute;
+    top: 6px;
+    width: 18px;
+    height: 100%;
+    background: #a52a18;
+    z-index: -1;
+  }
+
+  .g-ribbon::before {
+    left: -12px;
+    clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%, 40% 50%);
+  }
+
+  .g-ribbon::after {
+    right: -12px;
+    clip-path: polygon(0 0, 100% 0, 60% 50%, 100% 100%, 0 100%);
+  }
+
+  .g-ribbon rt {
+    color: #fff3e0;
   }
 
   /* 大きな 文字の ふち取り（見出し用） */

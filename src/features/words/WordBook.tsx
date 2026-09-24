@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { Backdrop } from '../../components/ui/Backdrop';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useGameStore } from '../../store/gameStore';
@@ -70,10 +71,11 @@ export const WordBook = () => {
 
   return (
     <div className="g-stage min-h-dvh pb-8">
-      <header className="sticky top-0 z-20 px-4 py-3 backdrop-blur-md" style={{ background: 'var(--panel)' }}>
+      <Backdrop fixed />
+      <header className="g-header sticky top-0 z-20 px-4 py-3">
         <div className="flex items-center justify-between">
-          <button type="button" className="g-btn g-btn-ghost !min-h-[40px] !px-4 text-sm" onClick={() => navigate('/map/mukashi')}>
-            もどる
+          <button type="button" className="g-btn g-btn-accent !min-h-[38px] !gap-1 !px-3.5 text-sm" onClick={() => navigate('/map/mukashi')}>
+            <span aria-hidden>◀</span>もどる
           </button>
           <h1 className="g-title text-base">
             <RubyText showFurigana={showFurigana}>ことば図鑑(ずかん)</RubyText>
@@ -85,7 +87,7 @@ export const WordBook = () => {
         </div>
 
         <div className="mt-2 flex items-center justify-between gap-2 text-xs">
-          <span className="tabular-nums" style={{ color: 'var(--ink-2)' }}>
+          <span className="g-onbg font-bold tabular-nums">
             <RubyText showFurigana={showFurigana}>見(み)つけた</RubyText> {foundCount} / {all.length}
           </span>
           {title && (
@@ -95,7 +97,7 @@ export const WordBook = () => {
           )}
         </div>
         {upcoming && (
-          <p className="mt-1 text-[11px]" style={{ color: 'var(--ink-3)' }}>
+          <p className="g-onbg mt-1 text-[11px] font-bold">
             <RubyText showFurigana={showFurigana}>
               {`あと ${upcoming.at - earned} 語(ご)で 「${upcoming.ruby}」`}
             </RubyText>

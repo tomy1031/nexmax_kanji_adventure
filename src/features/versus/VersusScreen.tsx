@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { Backdrop } from '../../components/ui/Backdrop';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import KanjiWriterCanvas, { type KanjiWriterHandle } from '../../components/KanjiWriterCanvas';
@@ -220,6 +221,7 @@ export const VersusScreen = () => {
   if (!isVersusConfigured) {
     return (
       <div className="g-stage flex min-h-dvh flex-col items-center justify-center gap-4 px-6 text-center">
+      <Backdrop fixed />
         <h1 className="g-title text-lg">
           <RubyText showFurigana={showFurigana}>たいせん</RubyText>
         </h1>
@@ -243,8 +245,7 @@ export const VersusScreen = () => {
   return (
     <div className="g-stage flex min-h-dvh flex-col">
       <header
-        className="sticky top-0 z-20 flex items-center justify-between px-4 py-3 backdrop-blur-md"
-        style={{ background: 'var(--panel)' }}
+        className="g-header sticky top-0 z-20 flex items-center justify-between px-4 py-3"
       >
         <button
           type="button"
