@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { useMapPath } from '../../lib/nav';
 import { Backdrop } from '../../components/ui/Backdrop';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -24,10 +25,11 @@ import { REPS_TO_OBTAIN } from '../../types/kanji';
 
 export const ForgeScreen = () => {
   const navigate = useNavigate();
+  const mapPath = useMapPath();
   const [params] = useSearchParams();
   // When the forge is opened mid-stage, 'back' returns to that stage's
   // encounter instead of dumping the player on the map.
-  const backTo = params.get('back') ?? '/map/mukashi';
+  const backTo = params.get('back') ?? mapPath;
   const showFurigana = useGameStore((s) => s.settings.furigana);
   const progress = useGameStore((s) => s.progress);
   const weapons = useGameStore((s) => s.weapons);

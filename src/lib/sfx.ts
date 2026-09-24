@@ -125,10 +125,71 @@ export const hit = () => {
   tone(ac, { at: t, freq: 180, dur: 0.18, type: 'sine', gain: 0.3, glideTo: 70 });
 };
 
+/** A short buzz on phones that have one. Kept to the moments that hurt. */
+const buzz = (ms: number) => {
+  if (useGameStore.getState().settings.muted) return;
+  if (typeof navigator !== 'undefined' && 'vibrate' in navigator) navigator.vibrate(ms);
+};
+
 export const hurt = () => {
+  buzz(70);
   const ac = audio();
   if (!ac) return;
   const t = ac.currentTime;
   tone(ac, { at: t, freq: 300, dur: 0.25, type: 'sawtooth', gain: 0.08, glideTo: 120 });
   noiseBurst(ac, { at: t, dur: 0.2, type: 'lowpass', from: 900, to: 200, q: 1, gain: 0.35 });
+};
+
+/** A button: a soft wooden tick. Played for every .g-btn press (src/main.tsx). */
+export const tap = () => {
+  const ac = audio();
+  if (!ac) return;
+  const t = ac.currentTime;
+  tone(ac, { at: t, freq: 880, dur: 0.07, type: 'triangle', gain: 0.06, glideTo: 660 });
+  noiseBurst(ac, { at: t, dur: 0.04, type: 'bandpass', from: 2400, to: 1800, q: 2, gain: 0.05 });
+};
+
+/** One star on the result screen. `n` 0..2 rises in pitch. */
+export const star = (n = 0) => {
+  const ac = audio();
+  if (!ac) return;
+  const t = ac.currentTime;
+  const base = [1046.5, 1318.5, 1568][Math.min(2, Math.max(0, n))];
+  tone(ac, { at: t, freq: base, dur: 0.35, type: 'triangle', gain: 0.11 });
+  tone(ac, { at: t, freq: base * 2, dur: 0.25, type: 'sine', gain: 0.05 });
+};
+
+/** A cleared stage: a short rising fanfare. */
+export const fanfare = () => {
+  const ac = audio();
+  if (!ac) return;
+  const t = ac.currentTime;
+  const notes: [number, number, number][] = [
+    [523.3, 0, 0.14],
+    [659.3, 0.12, 0.14],
+    [784, 0.24, 0.14],
+    [1046.5, 0.38, 0.55],
+  ];
+  for (const [f, at, dur] of notes) {
+    tone(ac, { at: t + at, freq: f, dur, type: 'square', gain: 0.045 });
+    tone(ac, { at: t + at, freq: f / 2, dur, type: 'triangle', gain: 0.06 });
+  }
+};
+
+/** A lost fight: two falling notes, gentle — losing is part of learning. */
+export const lose = () => {
+  const ac = audio();
+  if (!ac) return;
+  const t = ac.currentTime;
+  tone(ac, { at: t, freq: 392, dur: 0.3, type: 'triangle', gain: 0.08 });
+  tone(ac, { at: t + 0.26, freq: 311.1, dur: 0.5, type: 'triangle', gain: 0.08 });
+};
+
+/** The fight begins: a low drum and a rising sweep. */
+export const battleStart = () => {
+  const ac = audio();
+  if (!ac) return;
+  const t = ac.currentTime;
+  tone(ac, { at: t, freq: 90, dur: 0.35, type: 'sine', gain: 0.4, glideTo: 50 });
+  noiseBurst(ac, { at: t + 0.05, dur: 0.45, type: 'bandpass', from: 400, to: 3600, q: 1.2, gain: 0.25 });
 };

@@ -1,4 +1,5 @@
 import { useNavigate } from 'react-router-dom';
+import { useMapPath } from '../../lib/nav';
 import { motion, useReducedMotion } from 'framer-motion';
 import { GiCog, GiCrown, GiWorld } from 'react-icons/gi';
 import { assetPath } from '../../lib/assetPath';
@@ -64,6 +65,7 @@ const MagicCircle = ({ still }: { still: boolean }) => (
 
 export const TitleScreen = () => {
   const navigate = useNavigate();
+  const mapPath = useMapPath();
   const showFurigana = useGameStore((s) => s.settings.furigana);
   const hasSave = useGameStore((s) => s.clearedStages.length > 0 || s.weapons.length > 0);
   // A new player starts in 0話, where the one idea the game rests on —
@@ -214,7 +216,7 @@ export const TitleScreen = () => {
           animate={still ? undefined : { boxShadow: ['0 5px 0 #b35f00, 0 0 0 rgba(255,210,80,0)', '0 5px 0 #b35f00, 0 0 26px rgba(255,210,80,0.95)', '0 5px 0 #b35f00, 0 0 0 rgba(255,210,80,0)'] }}
           transition={{ duration: 2.2, repeat: Infinity }}
           whileTap={{ scale: 0.96, y: 3 }}
-          onClick={() => navigate(seenIntro || hasSave ? '/map/mukashi' : '/tutorial')}
+          onClick={() => navigate(seenIntro || hasSave ? mapPath : '/tutorial')}
         >
           <span aria-hidden className="relative z-10">
             ▶

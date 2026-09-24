@@ -91,7 +91,7 @@ export const EquipScreen = () => {
     <div className="isolate relative min-h-dvh pb-28">
       <PictureBook scene="mukashi_meadow" className="!fixed -z-10" />
       <div className="relative z-10">
-        <TopBar onBack={() => navigate(-1)} />
+        <TopBar />
         <div className="mx-auto max-w-md px-3 pt-1">
           <LogoTitle size={30} sub="字(じ)の 力(ちから)で もっと つよく">そうび</LogoTitle>
 

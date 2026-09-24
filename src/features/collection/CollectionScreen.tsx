@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { useMapPath } from '../../lib/nav';
 import { Backdrop } from '../../components/ui/Backdrop';
 import { useNavigate } from 'react-router-dom';
 import { useGameStore } from '../../store/gameStore';
@@ -17,6 +18,7 @@ type Tab = 'weapons' | 'individuals';
 
 export const CollectionScreen = () => {
   const navigate = useNavigate();
+  const mapPath = useMapPath();
   const showFurigana = useGameStore((s) => s.settings.furigana);
   const weapons = useGameStore((s) => s.weapons);
   const equipped = useGameStore((s) => s.equippedWeapon);
@@ -51,7 +53,7 @@ export const CollectionScreen = () => {
         className="g-header sticky top-0 z-20 px-4 py-3"
       >
         <div className="flex items-center justify-between">
-          <button type="button" className="g-btn g-btn-accent !min-h-[38px] !gap-1 !px-3.5 text-sm" onClick={() => navigate('/map/mukashi')}>
+          <button type="button" className="g-btn g-btn-accent !min-h-[38px] !gap-1 !px-3.5 text-sm" onClick={() => navigate(mapPath)}>
             <span aria-hidden>◀</span>もどる
           </button>
           <h1 className="g-title text-base">

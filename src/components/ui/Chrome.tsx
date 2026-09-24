@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react';
+import { useMapPath, useSafeBack } from '../../lib/nav';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { RubyText } from './Ruby';
@@ -33,10 +34,11 @@ export const PillButton = ({
 /** もどる (left) and ホーム (right), with an optional title plate between. */
 export const TopBar = ({ onBack, title }: { onBack?: () => void; title?: string }) => {
   const navigate = useNavigate();
+  const safeBack = useSafeBack();
   const showFurigana = useGameStore((s) => s.settings.furigana);
   return (
     <header className="relative z-20 flex w-full items-center justify-between gap-2 px-3 pt-[max(10px,env(safe-area-inset-top))]">
-      <PillButton icon="◀" onClick={onBack ?? (() => navigate(-1))}>
+      <PillButton icon="◀" onClick={onBack ?? safeBack}>
         もどる
       </PillButton>
       {title && (
@@ -108,10 +110,11 @@ export type TabId = 'story' | 'kanji' | 'items' | 'settings';
 /** The four tabs of the reference screens: ストーリー / 漢字ずかん / もちもの / せってい. */
 export const BottomTabs = ({ current }: { current: TabId }) => {
   const navigate = useNavigate();
+  const mapPath = useMapPath();
   const showFurigana = useGameStore((s) => s.settings.furigana);
   const cleared = useGameStore((s) => s.clearedStages);
   const tabs: { id: TabId; label: string; icon: IconType; to: string; feature?: Feature }[] = [
-    { id: 'story', label: 'ストーリー', icon: GiTreasureMap, to: '/map/mukashi' },
+    { id: 'story', label: 'ストーリー', icon: GiTreasureMap, to: mapPath },
     { id: 'kanji', label: '漢字(かんじ)ずかん', icon: GiOpenBook, to: '/words', feature: Feature.WORDS },
     // そうび opens from the start: 0話 already hands over the first blade.
     { id: 'items', label: 'そうび', icon: GiBackpack, to: '/equip' },

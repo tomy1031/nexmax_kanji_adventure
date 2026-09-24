@@ -14,6 +14,8 @@ import { ELEMENT_LABEL } from '../../lib/forge/elements';
 import { rustLevel } from '../../lib/srs';
 import { exampleWord, kanjiRuby } from '../../lib/reading';
 import { FillIn, Readings } from '../../components/ui/Readings';
+import ResultModal from './ResultModal';
+import { LogoText } from '../../components/ui/LogoText';
 import { getGear } from '../../data/equipment';
 import * as sfx from '../../lib/sfx';
 import {
@@ -47,6 +49,14 @@ interface BattleSceneProps {
   kanjiPool: KanjiData[];
   onFinish: () => void;
   onFlee: () => void;
+  /** After a win: go on to the next stage. Absent on the last stage of an arc. */
+  onNext?: () => void;
+  /** Fight again from the start. */
+  onRetry?: () => void;
+  /** After a loss: practise this stage's characters. */
+  onPractice?: () => void;
+  /** Open the forge, coming back to this fight. */
+  onForge?: () => void;
   /**
    * `tutorial`: 0話's first fight. No rewards and no stage clear; the
    * character is shown (the first fight is the one where the learner is
@@ -67,11 +77,58 @@ interface BattleSceneProps {
 
 type Outcome = { kind: 'win'; stars: 1 | 2 | 3 } | { kind: 'lose' } | null;
 
+/**
+ * たたかい 開始！ — a beat before the first stroke, so the fight starts as a
+ * fight: a band sweeps across with the opponent's name, a drum and a sweep.
+ * It never blocks input for long (1.6 s) and taps go straight through.
+ */
+const BattleIntro = ({ bossName, showFurigana }: { bossName: string; showFurigana: boolean }) => {
+  const [on, setOn] = useState(true);
+  useEffect(() => {
+    sfx.battleStart();
+    const t = setTimeout(() => setOn(false), 1600);
+    return () => clearTimeout(t);
+  }, []);
+  return (
+    <AnimatePresence>
+      {on && (
+        <motion.div
+          className="pointer-events-none fixed inset-0 z-40 flex items-center justify-center"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          aria-hidden
+        >
+          <motion.div
+            className="w-full py-3 text-center"
+            style={{ background: 'linear-gradient(90deg, transparent, rgba(20,20,40,0.85) 15%, rgba(20,20,40,0.85) 85%, transparent)' }}
+            initial={{ x: '-100%' }}
+            animate={{ x: 0 }}
+            exit={{ x: '100%' }}
+            transition={{ type: 'spring', stiffness: 260, damping: 26 }}
+          >
+            <LogoText className="text-[40px] leading-[1.5]" showFurigana={showFurigana}>
+              たたかい 開始(かいし)！
+            </LogoText>
+            <p className="g-onbg text-sm font-black">
+              <RubyText showFurigana={showFurigana}>{`あいて：${bossName}`}</RubyText>
+            </p>
+          </motion.div>
+        </motion.div>
+      )}
+    </AnimatePresence>
+  );
+};
+
 export const BattleScene = ({
   stage,
   kanjiPool,
   onFinish,
   onFlee,
+  onNext,
+  onRetry,
+  onPractice,
+  onForge,
   mode = 'stage',
   weaponOverride,
   patience: basePatienceValue,
@@ -90,6 +147,7 @@ export const BattleScene = ({
   const grantIndividual = useGameStore((s) => s.grantIndividual);
   const recordReview = useGameStore((s) => s.recordReview);
   const alreadyCleared = useGameStore((s) => s.clearedStages.includes(stage.id));
+  const [clearedAtStart] = useState(alreadyCleared);
   const equippedGear = useGameStore((s) => s.equippedGear);
 
   // Worn gear: shield, armour, charm. The tutorial fight is gear-less.
@@ -292,7 +350,9 @@ export const BattleScene = ({
 
   // What this clear opens. One per stage at most, announced with a line of
   // why it exists — a new button appearing unexplained teaches nothing.
-  const opened = alreadyCleared || tutorial ? [] : featuresUnlockedBy(stage.id);
+  // Judged against the save as it was when the fight began: the win itself
+  // marks the stage cleared, and reading it live would hide the news.
+  const opened = clearedAtStart || tutorial ? [] : featuresUnlockedBy(stage.id);
 
   const elementLabel = ELEMENT_LABEL[stage.boss.element];
 
@@ -311,6 +371,7 @@ export const BattleScene = ({
 
   return (
     <div className="g-sky relative flex min-h-dvh flex-col">
+      <BattleIntro bossName={stage.boss.name} showFurigana={showFurigana} />
       {/* 戦場（絵本） ----------------------------------------------------- */}
       <motion.div className="relative h-[40dvh] min-h-[280px] overflow-hidden" animate={fieldCtl}>
         <PictureBook scene={stage.bg} />
@@ -537,95 +598,26 @@ export const BattleScene = ({
       {/* 結果 ------------------------------------------------------------ */}
       <AnimatePresence>
         {outcome && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-6"
-          >
-            <motion.div
-              initial={{ scale: 0.88, y: 16 }}
-              animate={{ scale: 1, y: 0 }}
-              transition={{ type: 'spring', stiffness: 300, damping: 24 }}
-              className="g-parchment w-full max-w-sm p-6 text-center"
-            >
-              {outcome.kind === 'win' ? (
-                <>
-                  <p className="g-eyebrow">クリア</p>
-                  <p className="my-2 text-3xl" style={{ color: 'var(--color-gold-2)' }}>
-                    {'★'.repeat(outcome.stars)}
-                    <span style={{ color: 'var(--line)' }}>{'★'.repeat(3 - outcome.stars)}</span>
-                  </p>
-                  <p className="g-title text-lg">
-                    <RubyText showFurigana={showFurigana}>
-                      {tutorial ? `${stage.boss.name}は にげて いった！` : `${stage.boss.name} に かった！`}
-                    </RubyText>
-                  </p>
-                  <p className="mt-1 text-sm" style={{ color: 'var(--ink-2)' }}>
-                    <RubyText showFurigana={showFurigana}>{`まちがえた ところ ${totalMistakes}`}</RubyText>
-                  </p>
-
-                  {rewards.gems > 0 && <p className="g-chip g-chip-gold mt-3">◆ {rewards.gems} もらった</p>}
-                  {rewards.individual && (
-                    <p className="mt-2 text-sm">
-                      <RubyText showFurigana={showFurigana}>新(あたら)しい なかまが 来(き)た！</RubyText>
-                    </p>
-                  )}
-
-                  {opened.map((f) => (
-                    <div key={f} className="mt-3 rounded-xl px-3 py-2.5 text-left" style={{ background: 'rgba(255,207,74,0.2)' }}>
-                      <p className="g-title text-sm" style={{ color: '#b0741a' }}>
-                        <RubyText showFurigana={showFurigana}>
-                          {`「${FEATURE_INTRO[f].label}」が つかえるように なりました`}
-                        </RubyText>
-                      </p>
-                      <p className="mt-0.5 text-xs" style={{ color: 'var(--ink-2)' }}>
-                        <RubyText showFurigana={showFurigana}>{FEATURE_INTRO[f].line}</RubyText>
-                      </p>
-                      <button
-                        type="button"
-                        className="g-btn g-btn-accent mt-2 w-full !min-h-[40px] text-xs"
-                        onClick={() => {
-                          onFinish();
-                          navigate(FEATURE_INTRO[f].to);
-                        }}
-                      >
-                        <RubyText showFurigana={showFurigana}>見(み)に 行(い)く</RubyText>
-                      </button>
-                    </div>
-                  ))}
-                </>
-              ) : (
-                <>
-                  <p className="g-eyebrow" style={{ color: 'var(--color-danger)' }}>
-                    まけ
-                  </p>
-                  <p className="g-title mt-2 text-lg">
-                    <RubyText showFurigana={showFurigana}>たおされて しまった。</RubyText>
-                  </p>
-                  <p className="mt-2 text-sm" style={{ color: 'var(--ink-2)' }}>
-                    <RubyText showFurigana={showFurigana}>
-                      合成(ごうせい)で 強(つよ)い 武器(ぶき)を 作(つく)ってから、もう一度(いちど)。
-                    </RubyText>
-                  </p>
-                </>
-              )}
-
-              {tutorial ? (
-                <button type="button" className="g-btn g-btn-primary mt-5 w-full text-lg" onClick={onFinish}>
-                  つぎへ
-                </button>
-              ) : (
-                <div className="mt-5 flex gap-2">
-                  <button type="button" className="g-btn g-btn-accent flex-1" onClick={() => navigate('/forge')}>
-                    <RubyText showFurigana={showFurigana}>合成(ごうせい)</RubyText>
-                  </button>
-                  <button type="button" className="g-btn g-btn-primary flex-1" onClick={onFinish}>
-                    <RubyText showFurigana={showFurigana}>ステージへ</RubyText>
-                  </button>
-                </div>
-              )}
-            </motion.div>
-          </motion.div>
+          <ResultModal
+            outcome={outcome}
+            bossName={stage.boss.name}
+            mistakes={totalMistakes}
+            gems={rewards.gems}
+            newFriend={!!rewards.individual}
+            opened={outcome.kind === 'win' ? opened : []}
+            tutorial={tutorial}
+            hasNext={!!onNext}
+            onNext={() => onNext?.()}
+            onStages={onFinish}
+            onRetry={() => onRetry?.()}
+            onPractice={() => (onPractice ? onPractice() : onFinish())}
+            onForge={() => (onForge ? onForge() : navigate('/forge'))}
+            onFeature={(f) => {
+              onFinish();
+              navigate(FEATURE_INTRO[f].to);
+            }}
+            onTutorialDone={onFinish}
+          />
         )}
       </AnimatePresence>
     </div>
