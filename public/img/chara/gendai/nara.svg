@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-40 0 440 480" width="440" height="480" role="img" aria-label="ナラ">
+<!-- 原作「夢を信じたネクマックス」#1 の ナラ を もとに した 仮の 立ち絵（ジャージ姿） -->
+
+  <g stroke="#2b2622" stroke-linejoin="round" stroke-linecap="round">
+    <path d="M10.8 486.0 C2.9 420.0 13.5 370.0 63.7 348.0 C95.4 334.0 132.4 328.0 180.0 328.0 C227.6 328.0 264.6 334.0 296.3 348.0 C346.5 370.0 357.1 420.0 349.2 486.0 Z" fill="#7cc37a" stroke-width="7"/>
+    <path d="M90.1 370.0 C74.3 402.0 74.3 446.0 84.9 486.0 M269.9 370.0 C285.7 402.0 285.7 446.0 275.1 486.0" fill="none" stroke-width="5"/>
+    <path d="M180.0 370.0 V486.0" fill="none" stroke-width="4"/>
+    <path d="M90.1 324.0 Q180.0 354.0 269.9 324.0 L272.5 350.0 Q180.0 390.0 87.5 350.0 Z" fill="#7cc37a" stroke-width="7"/>
+  </g>
+  <path d="M116.5 342.0 Q180.0 366.0 243.5 342.0" fill="none" stroke="#e6f7e1" stroke-width="4" stroke-linecap="round" opacity="0.8"/>
+  <rect x="175" y="366" width="10" height="16" rx="3" fill="#e6f7e1" stroke="#2b2622" stroke-width="3"/>
+  <path d="M189.8 93.8 C192.2 68.6 204.4 52.4 221.5 45.2" fill="none" stroke="#2b2622" stroke-width="7" stroke-linecap="round"/>
+  <ellipse cx="180" cy="209.0" rx="156.2" ry="115.2" fill="#fffdf6" stroke="#2b2622" stroke-width="8"/>
+  <path d="M124.0 185.6 Q141.9 176.6 157.6 183.8 M202.4 183.8 Q218.1 176.6 236.0 185.6" fill="none" stroke="#2b2622" stroke-width="6" stroke-linecap="round"/>
+  <ellipse cx="144.2" cy="216.2" rx="15" ry="22" fill="#fff" stroke="#2b2622" stroke-width="5"/>
+  <ellipse cx="215.8" cy="216.2" rx="15" ry="22" fill="#fff" stroke="#2b2622" stroke-width="5"/>
+  <ellipse cx="144.2" cy="219.8" rx="6" ry="9" fill="#2b2622"/><ellipse cx="215.8" cy="219.8" rx="6" ry="9" fill="#2b2622"/>
+  <path d="M144.2 263.0 Q180.0 284.6 215.8 263.0" fill="none" stroke="#2b2622" stroke-width="7" stroke-linecap="round"/>
+  <ellipse cx="103.8" cy="252.2" rx="14" ry="8" fill="#f7a8a0" opacity="0.6"/><ellipse cx="256.2" cy="252.2" rx="14" ry="8" fill="#f7a8a0" opacity="0.6"/>
+</svg>

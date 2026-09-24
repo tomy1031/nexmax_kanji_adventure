@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-40 0 440 480" width="440" height="480" role="img" aria-label="ソネ">
+<!-- 原作「夢を信じたネクマックス」#1 の ソネ を もとに した 仮の 立ち絵（ジャージ姿） -->
+
+  <g stroke="#2b2622" stroke-linejoin="round" stroke-linecap="round">
+    <path d="M10.8 486.0 C2.9 420.0 13.5 370.0 63.7 348.0 C95.4 334.0 132.4 328.0 180.0 328.0 C227.6 328.0 264.6 334.0 296.3 348.0 C346.5 370.0 357.1 420.0 349.2 486.0 Z" fill="#f3c64a" stroke-width="7"/>
+    <path d="M90.1 370.0 C74.3 402.0 74.3 446.0 84.9 486.0 M269.9 370.0 C285.7 402.0 285.7 446.0 275.1 486.0" fill="none" stroke-width="5"/>
+    <path d="M180.0 370.0 V486.0" fill="none" stroke-width="4"/>
+    <path d="M90.1 324.0 Q180.0 354.0 269.9 324.0 L272.5 350.0 Q180.0 390.0 87.5 350.0 Z" fill="#f3c64a" stroke-width="7"/>
+  </g>
+  <path d="M116.5 342.0 Q180.0 366.0 243.5 342.0" fill="none" stroke="#fff4c9" stroke-width="4" stroke-linecap="round" opacity="0.8"/>
+  <rect x="175" y="366" width="10" height="16" rx="3" fill="#fff4c9" stroke="#2b2622" stroke-width="3"/>
+  <path d="M180.0 42.9 C265.4 42.9 321.5 151.8 343.5 236.9 C358.1 292.3 326.4 326.0 253.2 328.0 H106.8 C33.6 326.0 1.9 292.3 16.5 236.9 C38.5 151.8 94.6 42.9 180.0 42.9 Z" fill="#fffdf6" stroke="#2b2622" stroke-width="8" stroke-linejoin="round"/>
+  <path d="M115.0 128.0 Q121.8 106.2 141.9 90.4 M218.1 90.4 Q238.2 106.2 245.0 128.0" fill="none" stroke="#2b2622" stroke-width="10" stroke-linecap="round"/>
+  <ellipse cx="130.7" cy="201.4" rx="32" ry="36" fill="#fff" stroke="#2b2622" stroke-width="6"/>
+  <ellipse cx="231.5" cy="197.8" rx="32" ry="36" fill="#fff" stroke="#2b2622" stroke-width="6"/>
+  <path d="M98.2 184.6 L163.2 176.5" fill="none" stroke="#2b2622" stroke-width="6" stroke-linecap="round"/>
+  <path d="M199.0 172.9 L264.0 181.0" fill="none" stroke="#2b2622" stroke-width="6" stroke-linecap="round"/>
+  <circle cx="130.7" cy="208.6" r="7" fill="#2b2622"/><circle cx="229.3" cy="205.0" r="7" fill="#2b2622"/>
+  <path d="M155.4 264.2 Q182.2 260.6 209.1 262.4 Q204.6 284.0 182.2 284.9 Q159.8 284.0 155.4 264.2 Z" fill="#fff" stroke="#2b2622" stroke-width="6" stroke-linejoin="round"/>
+</svg>
