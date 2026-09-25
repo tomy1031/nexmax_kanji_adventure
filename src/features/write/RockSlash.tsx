@@ -39,6 +39,8 @@ interface RockSlashProps {
   onWritten: (summary: { totalMistakes: number }) => boolean;
   /** The split animation has finished; the parent can move on. */
   onSplit?: () => void;
+  /** Stroke-matching strictness, passed to the writer (kana are looser). */
+  leniency?: number;
 }
 
 interface Cut {
@@ -73,7 +75,7 @@ const rockUrl = (seed: number) =>
   );
 
 export const RockSlash = forwardRef<RockSlashHandle, RockSlashProps>(
-  ({ char, material, size, showSample, seed, onMistake, onWritten, onSplit }, ref) => {
+  ({ char, material, size, showSample, seed, onMistake, onWritten, onSplit, leniency }, ref) => {
     const writerRef = useRef<KanjiWriterHandle>(null);
     const shake = useAnimationControls();
     const [cuts, setCuts] = useState<Cut[]>([]);
@@ -249,6 +251,7 @@ export const RockSlash = forwardRef<RockSlashHandle, RockSlashProps>(
               onCorrectStroke={handleStroke}
               onMistake={handleMistake}
               onComplete={handleComplete}
+              leniency={leniency}
             />
           </div>
         )}

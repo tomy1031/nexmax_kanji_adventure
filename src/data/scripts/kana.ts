@@ -11,9 +11,18 @@ import { MUKASHI_CAST } from './mukashi';
  * `en` は 英語の 助け。ボタンを 押した ときだけ 出る（全部 英語に しない）。
  * 各話は「お話 → その話の かなを 書く → お話」。
  * kana.test.ts が「漢字を 使わない」「英語が ある」を 確かめる。
+ *
+ * 物語の すじ（08 §3.4.1）: モジクイが ネクマックスの ことばと 名前を たべて、
+ * 漢字の たくさん ある 町へ 向かって いる。じは だれかが 書くと 戻るが、
+ * ネクマックスは じの 形を 忘れた — だから 書くのは あなた。
+ * 各話の 問題は、その 話で 書く かなで とける。ひらがなは 駅までの 道（自然）、
+ * カタカナは 駅と 電車（町の ことば）。名前は 9話で 戻るまで「ロボット」。
  */
 
 export const KANA_CAST: CastMember[] = MUKASHI_CAST.filter((c) => c.id === 'nexmax');
+
+/** Before his name comes back (kana-9), the name plate can only say what he is. */
+export const KANA_CAST_NAMELESS: CastMember[] = KANA_CAST.map((c) => ({ ...c, name: 'ロボット' }));
 
 type Line = NovelLine & { en: string };
 
@@ -35,140 +44,152 @@ export const KANA_SCRIPTS: Record<string, KanaScript> = Object.fromEntries([
   script(
     'kana-1',
     [
-      { bg: 'mukashi_meadow', text: '……ここは どこ？', en: '...Where am I?' },
-      { speaker: 'nexmax', sprite: 'nexmax:hello', text: 'こんにちは！ ぼくは ネクマックス。', en: "Hello! I'm Nexmax." },
-      { speaker: 'nexmax', sprite: 'nexmax:think', text: 'たいへん。モジクイが じを たべた。', en: 'Oh no. The Mojikui ate the letters.' },
-      { text: 'かんばんにも、はなにも、じが ない。', en: 'No letters on the signs. None on the flowers.' },
-      { speaker: 'nexmax', text: 'じを かくと、じは もどる。', en: 'If you write a letter, it comes back.' },
-      { speaker: 'nexmax', sprite: 'nexmax:guide', text: 'いっしょに かこう。さいしょは「あ」。', en: "Let's write together. First, 'a'." },
+      { bg: 'mukashi_meadow', text: 'ドーン！ そらから、なにかが おちて きた。', en: 'Boom! Something fell from the sky.' },
+      { speaker: 'nexmax', sprite: 'nexmax:think', text: '……あ…… ……う……', en: '...a... ...u...' },
+      { text: 'ロボットだ。でも、うまく しゃべれない ようだ。', en: "It's a robot. But it can't seem to talk properly." },
+      { text: 'ロボットは じめんを ゆびさした。「かいて」と いう ように。', en: 'The robot pointed at the ground, as if to say "write".' },
+      { text: 'じめんに、うすい じの あとが のこって いる。', en: 'Faint traces of letters are left on the ground.' },
     ],
     [
-      { glyph: 'あ', text: 'あ い う え お。じが もどって きた！', en: 'a i u e o. The letters came back!' },
-      { text: 'うえを みて。そらが あおい。', en: 'Look up. The sky is blue.' },
-      { speaker: 'nexmax', sprite: 'nexmax:smile', text: 'あお！ よめた？', en: 'Blue! Could you read it?' },
-      { speaker: 'nexmax', text: 'かいた じには、もう ローマじが つかない。', en: 'Letters you have written no longer get romaji.' },
-      { speaker: 'nexmax', text: 'さあ、もりへ いこう。', en: "Now, let's go into the forest." },
+      { speaker: 'nexmax', sprite: 'nexmax:smile', text: 'あ、い、う、え、お！ こえが でた！', en: 'a, i, u, e, o! My voice is back!' },
+      { speaker: 'nexmax', sprite: 'nexmax:think', text: 'ありがとう。ぼくは…… なまえが おもいだせない。', en: "Thank you. I'm... I can't remember my name." },
+      { speaker: 'nexmax', text: 'モジクイが、ぼくの ことばと なまえを たべた。', en: 'The Mojikui ate my words and my name.' },
+      { speaker: 'nexmax', text: 'いまは、まちへ むかって いる。まちには、じが たくさん ある。', en: 'Now it is heading for the town. The town is full of letters.' },
+      { speaker: 'nexmax', sprite: 'nexmax:determined', text: 'じは、だれかが かくと もどる。でも ぼくは、じの かたちを わすれた。', en: 'Letters come back when someone writes them. But I have forgotten their shapes.' },
+      { speaker: 'nexmax', sprite: 'nexmax:guide', text: 'だから、あなたが かいて。いっしょに まちへ いこう。みちは、あの おかの うえ！', en: "So you write them. Let's go to the town together. The way is over that hill!" },
     ],
   ),
   script(
     'kana-2',
     [
-      { bg: 'mukashi_forest', fx: ['morning'], text: 'もりの なかに、おおきな きが ありました。', en: 'In the forest there was a big tree.' },
-      { speaker: 'nexmax', sprite: 'nexmax:think', text: 'この きには かおが あった。でも、きえた。', en: 'This tree had a face. But it vanished.' },
-      { speaker: 'nexmax', text: 'か き く け こ、さ し す せ そ。', en: 'ka ki ku ke ko, sa shi su se so.' },
-      { speaker: 'nexmax', sprite: 'nexmax:guide', text: 'かいて みて。', en: 'Try writing them.' },
+      { bg: 'mukashi_forest', fx: ['morning'], text: 'おかを こえると、ふかい もり。みちが みっつに わかれて いる。', en: 'Over the hill lies a deep forest. The path splits three ways.' },
+      { speaker: 'nexmax', sprite: 'nexmax:think', text: 'モジクイは、どの みちを いった？', en: 'Which path did the Mojikui take?' },
+      { text: 'おおきな きが ある。でも、きの かおが たべられて いる。', en: "There's a big tree. But its face has been eaten." },
+      { speaker: 'nexmax', text: 'この きは、もりの ことを なんでも しって いる。かおが あれば、おしえて くれる。', en: 'This tree knows everything about the forest. With a face, it could tell us.' },
+      { speaker: 'nexmax', sprite: 'nexmax:guide', text: 'か き く け こ、さ し す せ そ。きに かおを かえそう。', en: "ka–ko, sa–so. Let's give the tree its face back." },
     ],
     [
-      { text: 'きに かおが もどりました。', en: 'The tree got its face back.' },
-      { text: '「ありがとう。あきに また おいで。」', en: '"Thank you. Come again in autumn."' },
-      { speaker: 'nexmax', sprite: 'nexmax:smile', text: 'きが しゃべった！', en: 'The tree talked!' },
-      { speaker: 'nexmax', text: 'すこし よめる ように なったね。', en: 'You can read a little now.' },
+      { text: 'きに、かおが もどった。', en: "The tree's face came back." },
+      { text: '「ありがとう。くろい かげが、えきの ほうへ いった。じを たべながら、ゆっくりと。」', en: '"Thank you. A black shadow went toward the station, slowly, eating letters as it went."' },
+      { speaker: 'nexmax', sprite: 'nexmax:think', text: 'えき……！ でんしゃで まちへ いく きだ。', en: 'The station...! It means to take the train to the town.' },
+      { speaker: 'nexmax', sprite: 'nexmax:determined', text: 'でんしゃは、あしたの あさ。まだ まにあう！', en: "The train leaves tomorrow morning. We can still make it!" },
     ],
   ),
   script(
     'kana-3',
     [
-      { bg: 'mukashi_village', fx: ['gloom'], text: 'むらに つきました。でも、だれも いません。', en: 'We reached a village. But nobody is here.' },
-      { speaker: 'nexmax', sprite: 'nexmax:think', text: 'いぬ？ ねこ？ なにか いる。', en: 'A dog? A cat? Something is here.' },
-      { text: 'いぬと ねこの なまえが、たべられて いました。', en: "The dog's and the cat's names had been eaten." },
-      { speaker: 'nexmax', sprite: 'nexmax:guide', text: 'た ち つ て と、な に ぬ ね の。かいて、なまえを かえそう。', en: "Write ta–to and na–no, and let's give their names back." },
+      { bg: 'mukashi_village', fx: ['gloom'], text: 'えきへの みちに、ちいさな むら。でも、しずかすぎる。', en: 'On the way to the station, a small village. But it is far too quiet.' },
+      { text: 'モジクイが とおった あとだ。みんなの なまえが たべられて、だれも よびあえない。', en: "The Mojikui has passed through. Everyone's names were eaten, so no one can call anyone." },
+      { text: 'こどもが ないて いる。「いぬが にげたの。なまえが よべないから、かえって こない。」', en: '"My dog ran away. I can\'t call its name, so it won\'t come back."' },
+      { speaker: 'nexmax', sprite: 'nexmax:think', text: 'いぬの はななら、モジクイの においも わかる。', en: "A dog's nose could smell the Mojikui too." },
+      { speaker: 'nexmax', sprite: 'nexmax:guide', text: 'た ち つ て と、な に ぬ ね の。なまえを かえそう。', en: "ta–to, na–no. Let's give the names back." },
     ],
     [
-      { fx: ['sparkle'], text: 'いぬが「わん」、ねこが「にゃあ」と なきました。', en: 'The dog went "woof", the cat went "meow".' },
-      { speaker: 'nexmax', sprite: 'nexmax:smile', text: 'なつの ひの、ちいさな むら。', en: 'A little village on a summer day.' },
-      { speaker: 'nexmax', text: 'あなたの じで、むらが おきた。', en: 'Your letters woke the village up.' },
+      { fx: ['sparkle'], text: '「なな！」 こどもが よぶと、いぬが はしって きた。', en: '"Nana!" the child called, and the dog came running.' },
+      { text: 'むらの ひとも、つぎつぎに なまえを よびあって いる。', en: "The villagers are calling each other's names again, one after another." },
+      { text: 'ななが、やまの ほうを むいて ほえた。「わん！」', en: 'Nana turned toward the mountain and barked. "Woof!"' },
+      { speaker: 'nexmax', sprite: 'nexmax:smile', text: 'モジクイは、やまを こえた。ななが おしえて くれた。', en: 'The Mojikui crossed the mountain. Nana told us.' },
     ],
   ),
   script(
     'kana-4',
     [
-      { bg: 'mukashi_mountain', fx: ['darkclouds'], text: 'やまの うえに、くろい くもが きました。', en: 'Black clouds came over the mountain.' },
-      { speaker: 'nexmax', sprite: 'nexmax:think', text: 'モジクイだ！ はなも、うみも、まちも よめない。', en: "It's the Mojikui! Flower, sea, town — I can't read any of them." },
-      { speaker: 'nexmax', sprite: 'nexmax:determined', text: 'は ひ ふ へ ほ、ま み む め も。まけないで！', en: "ha–ho and ma–mo. Don't give up!" },
+      { bg: 'mukashi_mountain', fx: ['darkclouds'], text: 'やまみちに、くろい くもが おりて きた。', en: 'Black clouds came down over the mountain path.' },
+      { speaker: 'nexmax', sprite: 'nexmax:think', text: 'モジクイの けむりだ。みちの しるしが、たべられて いく。', en: "It's the Mojikui's smoke. The trail markers are being eaten." },
+      { text: 'まえも うしろも みえない。このままでは、まよって しまう。', en: "We can't see ahead or behind. At this rate we'll get lost." },
+      { speaker: 'nexmax', sprite: 'nexmax:determined', text: 'は ひ ふ へ ほ、ま み む め も。しるしを かきなおそう！', en: "ha–ho, ma–mo. Let's rewrite the markers!" },
     ],
     [
-      { fx: [], text: 'くもが にげて いきました。', en: 'The clouds ran away.' },
-      { text: 'やまの むこうに、うみと まちが みえます。', en: 'Beyond the mountain you can see the sea and a town.' },
+      { fx: [], text: 'しるしが もどると、くもは にげて いった。', en: 'As the markers came back, the clouds fled.' },
+      { text: 'やまの うえから、うみと まちが みえる。ふもとには、えきの ひかり。', en: 'From the top you can see the sea and the town. At the foot of the mountain, the lights of the station.' },
       { speaker: 'nexmax', sprite: 'nexmax:smile', text: 'あの まちで、ひとが まって いる。', en: 'People are waiting in that town.' },
+      { speaker: 'nexmax', sprite: 'nexmax:think', text: 'でも、もう ひが くれる。', en: 'But the sun is already setting.' },
     ],
   ),
   script(
     'kana-5',
     [
-      { bg: 'mukashi_greattree', fx: ['dusk'], text: 'よるに なりました。おおきな きの したで やすみます。', en: 'Night fell. We rest under a big tree.' },
-      { speaker: 'nexmax', sprite: 'nexmax:think', text: 'ほしが ない。ゆめも みえない。', en: "There are no stars. I can't see my dreams either." },
-      { speaker: 'nexmax', sprite: 'nexmax:guide', text: 'や ゆ よ、ら り る れ ろ、わ を ん。ひらがなは これで さいご。', en: 'ya yu yo, ra–ro, wa wo n. These are the last hiragana.' },
+      { bg: 'mukashi_greattree', fx: ['dusk'], text: 'よるに なった。えきへ おりる みちは、まっくら。', en: 'Night fell. The path down to the station is pitch dark.' },
+      { speaker: 'nexmax', sprite: 'nexmax:think', text: 'ほしが ない。モジクイが、そらの じまで たべた。', en: 'There are no stars. The Mojikui ate even the letters of the sky.' },
+      { speaker: 'nexmax', text: 'ほしが ないと、みちが わからない。', en: "Without stars, we can't find the way." },
+      { speaker: 'nexmax', sprite: 'nexmax:guide', text: 'や ゆ よ、ら り る れ ろ、わ を ん。ひらがなは、これで さいご。', en: 'ya yu yo, ra–ro, wa wo n. These are the last hiragana.' },
     ],
     [
-      { fx: [], text: 'よぞらに、ほしが もどりました。', en: 'The stars came back to the night sky.' },
-      { speaker: 'nexmax', sprite: 'nexmax:smile', text: 'ひらがなが ぜんぶ よめる！ すごい！', en: 'You can read all the hiragana! Amazing!' },
+      { fx: [], text: 'よぞらに ほしが もどり、みちを てらした。', en: 'The stars returned to the night sky and lit the path.' },
+      { speaker: 'nexmax', sprite: 'nexmax:smile', text: 'ひらがなが、ぜんぶ よめる！ すごい！', en: 'You can read all the hiragana! Amazing!' },
       { speaker: 'nexmax', text: '「が」は「か」に てんてん。「きゃ」は「き」と ちいさい「や」。', en: '"ga" is "ka" with two dots. "kya" is "ki" and a small "ya".' },
-      { speaker: 'nexmax', text: 'あしたは、カタカナの もりへ いこう。', en: "Tomorrow, let's go to the katakana forest." },
+      { text: 'あさ はやく、えきに ついた。でも、えきの じは、ちがう かたちを して いる。', en: 'Early in the morning we reached the station. But the letters here have a different shape.' },
+      { speaker: 'nexmax', sprite: 'nexmax:think', text: 'カタカナだ。まちの ことばには、カタカナが たくさん ある。', en: "It's katakana. The town's words use a lot of katakana." },
     ],
   ),
   script(
     'kana-6',
     [
-      { bg: 'mukashi_forest', fx: ['morning'], text: 'あさです。もりの いりぐちに、ふしぎな かんばん。', en: 'Morning. A strange sign at the edge of the forest.' },
-      { speaker: 'nexmax', sprite: 'nexmax:think', text: 'これは カタカナ。そとの くにの ことばに つかう。', en: 'This is katakana. It is used for words from other countries.' },
-      { speaker: 'nexmax', sprite: 'nexmax:guide', text: 'ア イ ウ エ オ、カ キ ク ケ コ。かたちが すこし ちがうよ。', en: 'a i u e o, ka ki ku ke ko. The shapes are a little different.' },
+      { bg: 'gendai_city', text: 'えきは、カタカナの かんばんで いっぱい。でも、どれも あなだらけ。', en: 'The station is full of katakana signs — all of them full of holes.' },
+      { speaker: 'nexmax', text: 'モジクイは、まだ きて いない。でんしゃも、もう すこし あと。', en: "The Mojikui isn't here yet. The train comes a little later too." },
+      { speaker: 'nexmax', sprite: 'nexmax:think', text: '……あれ？ ぼくの むねの なまえも、カタカナだった きが する。', en: 'Huh? I think the name on my chest was in katakana too.' },
+      { speaker: 'nexmax', sprite: 'nexmax:guide', text: 'ア イ ウ エ オ、カ キ ク ケ コ。かたちが すこし ちがうよ。', en: 'a–o, ka–ko. The shapes are a little different.' },
     ],
     [
-      { text: 'かんばんに「ココア」と ありました。', en: 'The sign said "cocoa".' },
-      { speaker: 'nexmax', sprite: 'nexmax:smile', text: 'ココア！ あまくて おいしい。', en: 'Cocoa! Sweet and tasty.' },
-      { speaker: 'nexmax', text: 'ケーキも ある。「ー」は ながく よむ しるし。', en: 'There is cake too. "ー" means: read it long.' },
+      { text: 'ばいてんの かんばんに、「ココア」が もどった。', en: '"Cocoa" came back on the kiosk sign.' },
+      { speaker: 'nexmax', sprite: 'nexmax:smile', text: 'あたたかい ココア、ふたつ ください！', en: 'Two hot cocoas, please!' },
+      { text: 'ロボットの むねの なまえに、「ク」が ふたつ もどった。', en: 'Two "ク" came back in the name on the robot\'s chest.' },
+      { speaker: 'nexmax', text: 'あと すこしで、ぼくの なまえが わかる！', en: "Soon I'll know my name!" },
     ],
   ),
   script(
     'kana-7',
     [
-      { bg: 'mukashi_wildpath', text: 'みちに、まるい ものが ころがって います。', en: 'Something round is rolling along the path.' },
-      { speaker: 'nexmax', sprite: 'nexmax:think', text: 'でも、なまえが ない。これは なに？', en: 'But it has no name. What is it?' },
+      { bg: 'gendai_city', text: 'きっぷを かう きかいが ある。でも、がめんの じが きえて いる。', en: 'There is a ticket machine, but the letters on its screen have vanished.' },
+      { speaker: 'nexmax', sprite: 'nexmax:think', text: 'どこを おせば いいか、わからない。', en: "I don't know where to press." },
       { speaker: 'nexmax', sprite: 'nexmax:guide', text: 'サ シ ス セ ソ、タ チ ツ テ ト。', en: 'sa shi su se so, ta chi tsu te to.' },
     ],
     [
-      { text: 'スイカでした。なまえが もどりました。', en: 'It was a watermelon. Its name came back.' },
-      { speaker: 'nexmax', sprite: 'nexmax:smile', text: 'つぎは テスト！ ……うそ。ははは。', en: 'Next is a test! ...Just kidding. Haha.' },
-      { speaker: 'nexmax', text: 'ちいさい「ッ」も よめるね。「ネクマックス」の「ッ」。', en: 'You can read the small "ッ" too — the one in "Nekumakkusu".' },
+      { text: 'がめんに「スタート」と でた。', en: '"START" appeared on the screen.' },
+      { speaker: 'nexmax', sprite: 'nexmax:smile', text: 'おして！ ……うごいた！', en: 'Press it! ...It works!' },
+      { text: 'つぎの がめんには「キップ」。でも、さいごの じが まだ うすい。', en: 'The next screen says "KIPPU" (ticket). But the last letter is still faint.' },
+      { speaker: 'nexmax', text: 'ちいさい「ッ」は、つまる おと。ぼくの なまえにも「ッ」が あった きが する。', en: 'A small "ッ" is a short pause. I think my name had a "ッ" in it too.' },
     ],
   ),
   script(
     'kana-8',
     [
-      { bg: 'mukashi_treetop', fx: ['leaf'], text: 'きの うえに、ノートが おちて いました。', en: 'A notebook was lying at the top of the tree.' },
-      { speaker: 'nexmax', sprite: 'nexmax:think', text: 'ぼくの ノートだ。でも、じが ない……。', en: "It's my notebook. But the letters are gone..." },
-      { speaker: 'nexmax', sprite: 'nexmax:guide', text: 'ナ ニ ヌ ネ ノ、ハ ヒ フ ヘ ホ。', en: 'na ni nu ne no, ha hi fu he ho.' },
+      { bg: 'gendai_city', text: 'ホームに、でんしゃの おとが ちかづいて くる。', en: 'The sound of the train is coming closer to the platform.' },
+      { speaker: 'nexmax', sprite: 'nexmax:determined', text: 'いそいで！ キップが ないと、のれない。', en: "Hurry! We can't board without a ticket." },
+      { speaker: 'nexmax', sprite: 'nexmax:guide', text: 'ナ ニ ヌ ネ ノ、ハ ヒ フ ヘ ホ。「プ」は「フ」に まる。', en: 'na–no, ha–ho. "プ" is "フ" with a small circle.' },
     ],
     [
-      { text: 'ノートに、ハートの えが もどりました。', en: 'A heart drawing came back in the notebook.' },
-      { speaker: 'nexmax', sprite: 'nexmax:smile', text: 'ホッと した。', en: 'What a relief.' },
-      { speaker: 'nexmax', text: 'ノートの さいごに、ぼくの なまえが ある。まだ よめない？', en: "My name is at the end of the notebook. Still can't read it?" },
+      { text: '「キップ」の ボタンが ひかって、キップが でて きた。', en: 'The "ticket" button lit up and a ticket came out.' },
+      { text: 'その とき、くろい かげが でんしゃに すべりこんだ。', en: 'Just then, a black shadow slipped onto the train.' },
+      { speaker: 'nexmax', sprite: 'nexmax:determined', text: 'モジクイだ！ のろう！', en: "It's the Mojikui! Get on!" },
     ],
   ),
   script(
     'kana-9',
     [
-      { bg: 'mukashi_cloudsea', text: 'くもの うみの うえ。モジクイの すが みえます。', en: "Above a sea of clouds. The Mojikui's nest is in sight." },
-      { speaker: 'nexmax', sprite: 'nexmax:determined', text: 'マ ミ ム メ モ、ヤ ユ ヨ。', en: 'ma mi mu me mo, ya yu yo.' },
-      { speaker: 'nexmax', text: 'これで ぼくの なまえが よめる はず。', en: 'With these you should be able to read my name.' },
+      { bg: 'gendai_bus', text: 'でんしゃは、まちへ はしる。モジクイは、いちばん うしろの しゃりょうに いる。', en: 'The train runs toward the town. The Mojikui is in the last car.' },
+      { speaker: 'nexmax', sprite: 'nexmax:think', text: 'なまえが ないと、ちからが でない。モジクイに かてない。', en: "Without my name I have no strength. I can't beat the Mojikui." },
+      { speaker: 'nexmax', sprite: 'nexmax:guide', text: 'マ ミ ム メ モ、ヤ ユ ヨ。これで、ぼくの なまえが よめる はず。', en: 'ma–mo, ya yu yo. With these, you should be able to read my name.' },
     ],
     [
-      { glyph: 'ネクマックス', text: 'ノートに「ネクマックス」と ありました。', en: 'The notebook said "Nekumakkusu" — Nexmax.' },
-      { speaker: 'nexmax', sprite: 'nexmax:smile', text: 'ぼくの なまえ、よめた？', en: 'Could you read my name?' },
-      { speaker: 'nexmax', text: 'メモも ある。「モジクイは ラーメンが すき」。', en: 'There is a memo too: "The Mojikui likes ramen."' },
+      { glyph: 'ネクマックス', text: 'むねの なまえが、ぜんぶ もどった。', en: 'The whole name on his chest came back: "Nekumakkusu" — Nexmax.' },
+      { speaker: 'nexmax', sprite: 'nexmax:smile', text: 'ぼくは ネクマックス！ ぼくの なまえ、よめた？', en: "I'm Nexmax! Could you read my name?" },
+      { speaker: 'nexmax', sprite: 'nexmax:determined', text: 'ありがとう。なまえが あると、ちからが でる。', en: 'Thank you. With my name, my strength is back.' },
+      { text: 'いちばん うしろの ドアに、「モジクイ」の じ。', en: 'On the door of the last car: the letters "MOJIKUI".' },
     ],
   ),
   script(
     'kana-10',
     [
-      { bg: 'mukashi_portal', fx: ['portal'], text: 'モジクイの すに つきました。', en: "We reached the Mojikui's nest." },
-      { text: 'モジクイは、ラーメンの ように じを すすって います。', en: 'The Mojikui is slurping letters like ramen.' },
-      { speaker: 'nexmax', sprite: 'nexmax:determined', text: 'ラ リ ル レ ロ、ワ ヲ ン。さいごの カタカナ！', en: 'ra–ro, wa wo n. The last katakana!' },
+      { bg: 'mukashi_portal', fx: ['portal'], text: 'ドアを あけると、なかは くろい うず だった。', en: 'When we opened the door, inside was a black whirlpool.' },
+      { text: 'モジクイが、ラーメンの ように じを すすって いる。', en: 'The Mojikui is slurping letters like ramen.' },
+      { speaker: 'nexmax', sprite: 'nexmax:determined', text: 'ラ リ ル レ ロ、ワ ヲ ン。さいごの カタカナ！ ぜんぶ かえして もらう！', en: "ra–ro, wa wo n. The last katakana! We'll take them all back!" },
     ],
     [
-      { fx: ['heal'], text: 'モジクイは、かなを ぜんぶ はきだして にげました。', en: 'The Mojikui spat out all the kana and ran away.' },
-      { speaker: 'nexmax', sprite: 'nexmax:smile', text: 'やった！ ひらがなも カタカナも、ぜんぶ よめる！', en: 'We did it! You can read all the hiragana and katakana!' },
-      { speaker: 'nexmax', text: 'モジクイは まちへ にげた。まちでは、かんじが きえて いる。', en: 'The Mojikui fled to the town. In the town, the kanji are disappearing.' },
+      { fx: ['heal'], text: 'モジクイは、かなを ぜんぶ はきだした。', en: 'The Mojikui spat out all the kana.' },
+      { text: 'でも、まどから とびだして、まちへ にげた。', en: 'But it leapt out of the window and fled into the town.' },
+      { speaker: 'nexmax', sprite: 'nexmax:think', text: 'まちでは、かんじが きえはじめて いる……。', en: 'In the town, the kanji are starting to vanish...' },
+      { speaker: 'nexmax', sprite: 'nexmax:smile', text: 'でも だいじょうぶ。あなたは もう、ひらがなも カタカナも よめる。', en: 'But it will be all right. You can already read hiragana and katakana.' },
       { speaker: 'nexmax', text: 'ありがとう。つぎは、かんじを とりもどそう。', en: "Thank you. Next, let's get the kanji back." },
     ],
   ),

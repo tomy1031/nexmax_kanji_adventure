@@ -60,6 +60,13 @@ export const isKana = (c: string): boolean => c in BASE;
 
 /** Writes that make a kana yours. Kanji take ten (constraints 2026-09-16); kana take three (08 §3.4). */
 export const KANA_REPS = 3;
+/**
+ * How forgiving stroke matching is for kana (kanji use 1.15). Kana are
+ * nearly all curves, and a beginner's loop is never the font's loop; the
+ * value is set from simulated shaky writing (kanaStrokes.test.ts): at 1.8
+ * a wobbly hand passes 99% of kana writes, at 1.15 about 95% of gentle ones.
+ */
+export const KANA_LENIENCY = 1.8;
 /** Reps that show the model underneath. */
 export const KANA_SAMPLE_REPS = 2;
 
@@ -78,14 +85,14 @@ const slice = (list: string[], from: string, to: string) => list.slice(list.inde
 
 export const KANA_EPISODES: KanaEpisode[] = (
   [
-  { order: 1, script: 'hiragana', title: 'あおい そら', kana: slice(HIRAGANA, 'あ', 'お') },
-  { order: 2, script: 'hiragana', title: 'かおの ある き', kana: slice(HIRAGANA, 'か', 'そ') },
-  { order: 3, script: 'hiragana', title: 'いぬと ねこ', kana: slice(HIRAGANA, 'た', 'の') },
-  { order: 4, script: 'hiragana', title: 'はなと うみ', kana: slice(HIRAGANA, 'は', 'も') },
-  { order: 5, script: 'hiragana', title: 'よるの やま', kana: slice(HIRAGANA, 'や', 'ん') },
-  { order: 6, script: 'katakana', title: 'カタカナの もり', kana: slice(KATAKANA, 'ア', 'コ') },
-  { order: 7, script: 'katakana', title: 'スイカと テスト', kana: slice(KATAKANA, 'サ', 'ト') },
-  { order: 8, script: 'katakana', title: 'ノートと ハート', kana: slice(KATAKANA, 'ナ', 'ホ') },
+  { order: 1, script: 'hiragana', title: 'きえた こえ', kana: slice(HIRAGANA, 'あ', 'お') },
+  { order: 2, script: 'hiragana', title: 'かおの ない き', kana: slice(HIRAGANA, 'か', 'そ') },
+  { order: 3, script: 'hiragana', title: 'なまえの ない むら', kana: slice(HIRAGANA, 'た', 'の') },
+  { order: 4, script: 'hiragana', title: 'くろい くも', kana: slice(HIRAGANA, 'は', 'も') },
+  { order: 5, script: 'hiragana', title: 'ほしの ない よる', kana: slice(HIRAGANA, 'や', 'ん') },
+  { order: 6, script: 'katakana', title: 'カタカナの えき', kana: slice(KATAKANA, 'ア', 'コ') },
+  { order: 7, script: 'katakana', title: 'スタート', kana: slice(KATAKANA, 'サ', 'ト') },
+  { order: 8, script: 'katakana', title: 'キップ', kana: slice(KATAKANA, 'ナ', 'ホ') },
   { order: 9, script: 'katakana', title: 'ぼくの なまえ', kana: slice(KATAKANA, 'マ', 'ヨ') },
   { order: 10, script: 'katakana', title: 'ありがとう', kana: slice(KATAKANA, 'ラ', 'ン') },
   ] satisfies Omit<KanaEpisode, 'id'>[]

@@ -4,7 +4,7 @@ import PictureBook from '../picturebook/PictureBook';
 import { NexmaxSays, TopBar } from '../../components/ui/Chrome';
 import { useCanvasSize } from '../../hooks/useCanvasSize';
 import { useGameStore } from '../../store/gameStore';
-import { KANA_REPS, KANA_SAMPLE_REPS, ROMAJI } from '../../data/kana';
+import { KANA_LENIENCY, KANA_REPS, KANA_SAMPLE_REPS, ROMAJI } from '../../data/kana';
 import RockSlash, { type RockSlashHandle } from '../write/RockSlash';
 import KanaText from './KanaText';
 import { useKnownKana } from './useKnownKana';
@@ -136,6 +136,7 @@ export const KanaDrill = ({ kana, onDone, onExit }: KanaDrillProps) => {
               showSample={showSample}
               onWritten={handleWritten}
               onSplit={handleSplit}
+              leniency={KANA_LENIENCY}
             />
           </div>
           <div className="absolute top-3 -right-1 flex translate-x-1/2 flex-col gap-2">

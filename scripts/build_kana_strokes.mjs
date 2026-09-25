@@ -7,7 +7,10 @@
  * a kana stroke that crosses itself (the loop of あ, ぬ, の …) is stored as
  * several pieces, so あ has 4 "strokes" where a learner writes 3. The pieces
  * are named in the SVGs (z12354d3a, z12354d3b), so the pieces of one stroke
- * are joined back into one: outlines side by side, medians end to end.
+ * are joined back into one: the outlines side by side, and the median of the
+ * first piece only — every piece already carries the whole stroke's median
+ * (the later ones with a marked start), so joining them end to end would
+ * make the learner draw the loop twice.
  *
  * Fetch animCJK's files first (not committed):
  *
@@ -41,7 +44,6 @@ for (const line of readFileSync(`${dir}/graphicsJaKana.txt`, 'utf8').trim().spli
     if (n === out.strokes.length) {
       // Another piece of the stroke just started.
       out.strokes[n - 1] += ` ${strokes[i]}`;
-      out.medians[n - 1].push(...medians[i]);
       joined++;
     } else {
       out.strokes.push(strokes[i]);
