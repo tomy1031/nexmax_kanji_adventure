@@ -131,6 +131,15 @@
   ruby.kana-unread {
     color: var(--ink-3);
   }
+  /* 文字が 消えた 町: 漢字が 消えて 音だけ 残った ところ（点線）と、書いて 戻った 漢字（金色）。 */
+  .kanji-lost {
+    text-decoration: underline dotted var(--ink-3);
+    text-underline-offset: 0.25em;
+  }
+  ruby.kanji-back {
+    color: #9a5b00;
+    text-shadow: 0 0 8px rgba(255, 196, 92, 0.55);
+  }
   /* かな編の 物語: まだ 戻って いない かなは ムシクイの 穴。 */
   .kana-hole {
     display: inline-block;

@@ -10,6 +10,9 @@ import PictureBook from '../picturebook/PictureBook';
 import { KANA_EPISODES, isKanaEpisodeUnlocked } from '../../data/kana';
 import KanaText from '../kana/KanaText';
 import { useKnownKana } from '../kana/useKnownKana';
+import { episodesOf, isMojiEpisodeUnlocked } from '../../data/mojiEpisodes';
+import KanjiBackText from '../moji/KanjiBackText';
+import { useOwnedKanji } from '../moji/useOwnedKanji';
 import { getKanjiByChar } from '../../lib/kanjiDb';
 import { kanjiRuby } from '../../lib/reading';
 
@@ -19,6 +22,12 @@ import { kanjiRuby } from '../../lib/reading';
  * Every chapter is listed with its lessons and the kanji it teaches, so the
  * road is visible; none can start until its story is written.
  */
+
+/** A kanji's reading for its card: the one the learner meets first. */
+const readingOf = (ch: string): string => {
+  const k = getKanjiByChar(ch);
+  return k ? (kanjiRuby(k).match(/\((.+)\)/)?.[1] ?? ch) : ch;
+};
 
 /** How many of a chapter's kanji the card shows. */
 const PREVIEW = 8;
@@ -35,6 +44,7 @@ export const MojiRouteMap = () => {
   const setLastArc = useGameStore((s) => s.setLastArc);
   const cleared = useGameStore((s) => s.clearedStages);
   const known = useKnownKana();
+  const owned = useOwnedKanji();
   const [params] = useSearchParams();
   const fresh = params.get('new');
   // This map is now "home": つづきから, ストーリー and もどる come back here.
@@ -160,7 +170,40 @@ export const MojiRouteMap = () => {
                           })}
                           {c.kanji.length > PREVIEW && <span className="text-xs font-black">…</span>}
                         </div>
-                        {!ready && (
+                        {ready ? (
+                          <div className="mt-2 grid grid-cols-2 gap-2">
+                            {episodesOf(c.id).map((ep) => {
+                              const open = isMojiEpisodeUnlocked(ep, cleared);
+                              const done = cleared.includes(ep.id);
+                              return (
+                                <button
+                                  key={ep.id}
+                                  type="button"
+                                  disabled={!open}
+                                  onClick={() => navigate(`/moji/${ep.id}`)}
+                                  className="relative rounded-xl border-2 px-2 py-1.5 text-left disabled:opacity-50"
+                                  style={{
+                                    borderColor: fresh === ep.id ? '#e2453c' : done ? '#4f9a3c' : '#caa468',
+                                    background: done ? 'linear-gradient(160deg,#fffbe8,#ffe7a3)' : '#fff',
+                                  }}
+                                >
+                                  {fresh === ep.id && (
+                                    <span className="absolute -top-2 -right-1 rounded bg-[#e2453c] px-1 text-[10px] font-black text-white">NEW</span>
+                                  )}
+                                  <span className="block text-xs font-black" style={{ color: 'var(--ink-2)' }}>
+                                    <RubyText showFurigana={showFurigana}>{`${ep.order}話(わ) ${done ? '✓' : ''}`}</RubyText>
+                                  </span>
+                                  <span className="block text-sm leading-[2] font-black">
+                                    <KanjiBackText owned={owned}>{ep.title}</KanjiBackText>
+                                  </span>
+                                  <span className="block text-base font-black tracking-wider">
+                                    <KanjiBackText owned={owned}>{ep.kanji.map((k) => `${k}(${readingOf(k)})`).join(' ')}</KanjiBackText>
+                                  </span>
+                                </button>
+                              );
+                            })}
+                          </div>
+                        ) : (
                           <span className="text-xs font-black" style={{ color: 'var(--ink-3)' }}>
                             <RubyText showFurigana={showFurigana}>じゅんび中(ちゅう)</RubyText>
                           </span>

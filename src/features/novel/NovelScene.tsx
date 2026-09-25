@@ -38,6 +38,12 @@ interface NovelSceneProps {
   speechFor?: (text: string) => string | null;
 }
 
+/** One carved letter is huge; a row of them (日 月 火 水 木) has to fit the screen. */
+const glyphSize = (glyph: string): string => {
+  const n = [...stripRuby(glyph).replace(/\s/g, '')].length;
+  return n <= 2 ? '88px' : n <= 4 ? '64px' : 'min(48px, 11vw)';
+};
+
 /** The annotated words of a line, each with its English. Words without one are left out. */
 const lineWords = (text: string): { word: string; gloss: string }[] => {
   const seen = new Set<string>();
@@ -183,8 +189,10 @@ export const NovelScene = ({ script, cast, onFinish, chapter, renderText, speech
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0 }}
             transition={{ type: 'spring', stiffness: 220, damping: 18 }}
-            className="pointer-events-none absolute top-[16dvh] left-1/2 z-10 -translate-x-1/2 text-center text-[88px] leading-none font-black"
+            className="pointer-events-none absolute top-[16dvh] left-1/2 z-10 w-[92vw] max-w-md -translate-x-1/2 text-center leading-[1.15] font-black"
+            // One carved letter is huge; a row of them (日 月 火 水 木) has to fit the screen.
             style={{
+              fontSize: glyphSize(line.glyph),
               color: '#fff3c2',
               textShadow: '0 0 18px rgba(255,210,90,0.95), 0 0 42px rgba(255,190,60,0.7), 0 4px 0 #7a4a26',
             }}
