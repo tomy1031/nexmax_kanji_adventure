@@ -97,6 +97,8 @@ export interface GameState {
   hints: Record<string, number>;
   /** Wrong guesses per word — the answer tier needs a few. */
   misses: Record<string, number>;
+  /** かな編: passing writes per kana (08 §3.4). KANA_REPS makes it known. */
+  kana: Record<string, number>;
 }
 
 export interface GameActions {
@@ -134,6 +136,8 @@ export interface GameActions {
   /** Words found by guessing — the count titles are based on. */
   earnedFoundCount: () => number;
   hasKanji: (kanjiId: string) => boolean;
+  /** Record one passing write of a kana. Returns the new count. */
+  recordKanaRep: (kana: string) => number;
   resetSave: () => void;
 }
 
@@ -166,6 +170,7 @@ const initialState: GameState = {
   foundWords: {},
   hints: {},
   misses: {},
+  kana: {},
 };
 
 export const useGameStore = create<GameState & GameActions>()(
@@ -379,6 +384,12 @@ export const useGameStore = create<GameState & GameActions>()(
           },
         })),
 
+      recordKanaRep: (kana) => {
+        const n = (get().kana[kana] ?? 0) + 1;
+        set((s) => ({ kana: { ...s.kana, [kana]: n } }));
+        return n;
+      },
+
       hasKanji: (kanjiId) => (get().progress[kanjiId]?.reps ?? 0) >= REPS_TO_OBTAIN,
 
       resetSave: () => set({ ...initialState, daily: freshDaily() }),
@@ -401,6 +412,7 @@ export const useGameStore = create<GameState & GameActions>()(
           foundWords: { ...current.foundWords, ...(p.foundWords ?? {}) },
           hints: { ...current.hints, ...(p.hints ?? {}) },
           misses: { ...current.misses, ...(p.misses ?? {}) },
+          kana: { ...current.kana, ...(p.kana ?? {}) },
           daily: { ...current.daily, ...(p.daily ?? {}) },
           streak: { ...current.streak, ...(p.streak ?? {}) },
           equippedGear: { ...current.equippedGear, ...(p.equippedGear ?? {}) },

@@ -56,7 +56,8 @@ const tagName = (el: ts.JsxElement): string => el.openingElement.tagName.getText
 const insideRubyText = (node: ts.Node): boolean => {
   for (let p: ts.Node | undefined = node.parent; p; p = p.parent) {
     // LogoTitle, LogoText and RibbonTitle pass their children straight to <RubyText>.
-    if (ts.isJsxElement(p)) return ['RubyText', 'LogoTitle', 'LogoText', 'RibbonTitle'].includes(tagName(p));
+    // KanaText draws kana-only text with romaji (かな編); kana.test.ts keeps kanji out of it.
+    if (ts.isJsxElement(p)) return ['RubyText', 'LogoTitle', 'LogoText', 'RibbonTitle', 'KanaText'].includes(tagName(p));
   }
   return false;
 };
