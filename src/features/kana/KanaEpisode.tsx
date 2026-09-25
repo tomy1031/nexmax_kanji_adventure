@@ -8,6 +8,7 @@ import { KANA_CAST, KANA_CAST_NAMELESS, KANA_SCRIPTS } from '../../data/scripts/
 import KanaDrill from './KanaDrill';
 import KanaText from './KanaText';
 import { useKnownKana } from './useKnownKana';
+import { revealKana } from '../../lib/kanaReveal';
 
 /**
  * かな編 1話ぶん: お話 → その話の かなを 書く → お話 (08 §3.4).
@@ -29,8 +30,29 @@ const EpisodePlayer = ({ id }: { id: string }) => {
     void preloadCharData(ep.kana);
   }, [ep]);
 
-  const renderText = useCallback((text: string) => <KanaText known={known}>{text}</KanaText>, [known]);
-  const chapter = { label: `かな ${ep.order}`, title: ep.title };
+  // Nexmax can only say the letters that have come back; the rest are holes.
+  const renderText = useCallback(
+    (text: string) => (
+      <KanaText known={known} mode="mask">
+        {text}
+      </KanaText>
+    ),
+    [known],
+  );
+  // よみあげ: the Japanese lines, as far as they can be read. The English
+  // lines are the player's own thoughts and are not read out.
+  const speechFor = useCallback(
+    (text: string) => {
+      if (/[A-Za-z]/.test(text)) return null;
+      const heard = revealKana(text, known)
+        .filter((s) => s.romaji === undefined)
+        .map((s) => s.text)
+        .join('');
+      return /[ぁ-ヶ]/.test(heard) ? heard : null;
+    },
+    [known],
+  );
+  const chapter = { label: `かな ${ep.order}`, title: ep.en };
   // Nexmax gets his name back at the end of kana-9; until then he is ロボット.
   const namedFrom = (p: Phase) => ep.order > 9 || (ep.order === 9 && p === 'outro');
   const castFor = (p: Phase) => (namedFrom(p) ? KANA_CAST : KANA_CAST_NAMELESS);
@@ -51,6 +73,7 @@ const EpisodePlayer = ({ id }: { id: string }) => {
           cast={castFor('intro')}
           chapter={chapter}
           renderText={renderText}
+          speechFor={speechFor}
           onFinish={() => setPhase('write')}
         />
       );
@@ -58,7 +81,7 @@ const EpisodePlayer = ({ id }: { id: string }) => {
       return <KanaDrill kana={ep.kana} onDone={() => setPhase('outro')} onExit={leave} />;
     case 'outro':
       return (
-        <NovelScene key="outro" script={lines.outro} cast={castFor('outro')} chapter={chapter} renderText={renderText} onFinish={finish} />
+        <NovelScene key="outro" script={lines.outro} cast={castFor('outro')} chapter={chapter} renderText={renderText} speechFor={speechFor} onFinish={finish} />
       );
   }
 };

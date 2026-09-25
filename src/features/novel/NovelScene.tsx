@@ -31,6 +31,11 @@ interface NovelSceneProps {
    * to put romaji over the kana the learner has not written yet.
    */
   renderText?: (text: string) => ReactNode;
+  /**
+   * What よみあげ says for a line; null hides the button. かな編 speaks only
+   * the letters that have come back, and not the English lines.
+   */
+  speechFor?: (text: string) => string | null;
 }
 
 /** The annotated words of a line, each with its English. Words without one are left out. */
@@ -49,7 +54,7 @@ const lineWords = (text: string): { word: string; gloss: string }[] => {
 /** Reading time for auto mode: a base plus a little per character. */
 const autoDelay = (text: string) => 1600 + stripRuby(text).length * 85;
 
-export const NovelScene = ({ script, cast, onFinish, chapter, renderText }: NovelSceneProps) => {
+export const NovelScene = ({ script, cast, onFinish, chapter, renderText, speechFor }: NovelSceneProps) => {
   const showFurigana = useGameStore((s) => s.settings.furigana);
   const [index, setIndex] = useState(0);
   const [showLog, setShowLog] = useState(false);
@@ -323,14 +328,14 @@ export const NovelScene = ({ script, cast, onFinish, chapter, renderText }: Nove
             ) : (
               <div className="mt-1 flex items-center justify-end gap-1 text-xs font-bold" style={{ color: '#8a6a44' }}>
                 <div className="mr-auto flex gap-1.5">
-                  {canSpeak() && (
+                  {canSpeak() && (speechFor ? speechFor(line.text) : line.text) && (
                     <button
                       type="button"
                       aria-label="よみあげ"
                       className="rounded-full border-2 border-[#caa468] bg-white/80 px-2.5 py-0.5 text-[12px]"
                       onClick={(e) => {
                         e.stopPropagation();
-                        speak(line.text);
+                        speak((speechFor ? speechFor(line.text) : line.text) ?? '');
                       }}
                     >
                       🔊 よみあげ

@@ -131,6 +131,17 @@
   ruby.kana-unread {
     color: var(--ink-3);
   }
+  /* かな編の 物語: まだ 戻って いない かなは ムシクイの 穴。 */
+  .kana-hole {
+    display: inline-block;
+    width: 0.82em;
+    height: 0.82em;
+    margin: 0 0.06em;
+    vertical-align: -0.08em;
+    border: 1.5px dashed var(--ink-3);
+    border-radius: 3px;
+    background: rgba(122, 82, 38, 0.08);
+  }
   ruby.kana-unread rt {
     color: #1b63b0;
     font-weight: 700;

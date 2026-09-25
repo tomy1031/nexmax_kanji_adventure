@@ -64,7 +64,9 @@ const ROCK_COLORS = ['#8f8a86', '#9a8f84', '#86898f', '#958d7f'];
 const rockUrl = (seed: number) =>
   toDataUrl(
     svgDoc(
-      `${rockShape(150, 170, 118, seed, ROCK_COLORS[seed % ROCK_COLORS.length])}
+      // Bigger than the writing square (2026-09-26「岩が 文字より 小さいのは 見にくい」):
+      // the whole character sits on stone; only the corners show sky.
+      `${rockShape(150, 190, 200, seed, ROCK_COLORS[seed % ROCK_COLORS.length])}
        <g filter="url(#rough)" fill="#6f9a45" opacity="0.9">
          <ellipse cx="${70 + (seed % 5) * 8}" cy="92" rx="26" ry="9"/><ellipse cx="228" cy="${96 + (seed % 3) * 6}" rx="18" ry="7"/>
        </g>`,
