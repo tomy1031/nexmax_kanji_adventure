@@ -56,7 +56,7 @@ export const PART_OF_LEVEL: Record<JlptLevel, { book: string; lessons: { from: n
 
 export const MOJI_CHAPTERS: MojiChapter[] = (
   [
-    { order: 1, level: 'N5', lessons: { from: 1, to: 5 }, units: [1, 2, 3, 4, 5], title: '字(じ)の ない 町(まち)', summary: '空港(くうこう)に 着(つ)いた。看板(かんばん)も 駅(えき)の 時計(とけい)も、字(じ)が 消(き)えて 読(よ)めない。' },
+    { order: 1, level: 'N5', lessons: { from: 1, to: 5 }, units: [1, 2, 3, 4, 5], title: '字(じ)の ない 町(まち)', summary: '電車(でんしゃ)で 町(まち)に 着(つ)いた。駅(えき)の 看板(かんばん)も 時計(とけい)も、字(じ)が 消(き)えて 読(よ)めない。' },
     { order: 2, level: 'N5', lessons: { from: 6, to: 10 }, units: [6, 7, 8, 9, 10], title: '市場(いちば)の ともだち', summary: 'にぎやかな 市場(いちば)で、はじめての ともだちに 会(あ)う。' },
     { order: 3, level: 'N5', lessons: { from: 11, to: 15 }, units: [11, 12], title: '読(よ)めない メニュー', summary: 'レストランと 店(みせ)。メニューの 字(じ)が 消(き)えて いる。' },
     { order: 4, level: 'N5', lessons: { from: 16, to: 20 }, units: [13, 14, 15], title: '町(まち)を 回(まわ)る', summary: 'ともだちと 町(まち)を 回(まわ)って、字(じ)を 取(と)り戻(もど)す。' },

@@ -43,6 +43,8 @@ interface KanjiWriterCanvasProps {
    * rock drill turns this off: it splits the rock first, then remounts.
    */
   autoRestart?: boolean;
+  /** Stroke-matching strictness; defaults to TUNING.leniency. Kana pass a looser one. */
+  leniency?: number;
 }
 
 export interface KanjiWriterHandle {
@@ -63,6 +65,7 @@ const KanjiWriterCanvas = forwardRef<KanjiWriterHandle, KanjiWriterCanvasProps>(
       showSample = false,
       surface = 'paper',
       autoRestart = true,
+      leniency,
     },
     ref,
   ) => {
@@ -177,7 +180,7 @@ const KanjiWriterCanvas = forwardRef<KanjiWriterHandle, KanjiWriterCanvasProps>(
             strokeAnimationSpeed: TUNING.strokeAnimationSpeed,
             delayBetweenStrokes: TUNING.delayBetweenStrokes,
             drawingWidth: rock ? 16 : TUNING.drawingWidth,
-            leniency: TUNING.leniency,
+            leniency: leniency ?? TUNING.leniency,
             strokeHighlightSpeed: TUNING.strokeHighlightSpeed,
             // On the rock a finished stroke is a glowing cut, and the finger
             // draws a bright blade.
@@ -203,7 +206,7 @@ const KanjiWriterCanvas = forwardRef<KanjiWriterHandle, KanjiWriterCanvasProps>(
         isQuizActiveRef.current = false;
         target.innerHTML = '';
       };
-    }, [char, size, quizMode, rock, autoRestart]);
+    }, [char, size, quizMode, rock, autoRestart, leniency]);
 
     // Sample (手本) layer — independent of the quiz so toggling it mid-rep
     // does not reset the learner's progress on the current character.
