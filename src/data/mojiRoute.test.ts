@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { MOJI_CHAPTERS, LESSON_KANJI, PART_OF_LEVEL, kanjiIntroducedBy } from './mojiRoute';
 import { ALL_STAGES, MUKASHI_STAGES, stagesOfArc } from './stages';
 import { GENDAI_STAGES } from './gendaiStages';
+import { KANJI_UNITS } from './minnaKanji';
 import { getKanjiByChar } from '../lib/kanjiDb';
 import { unreadKanji } from '../lib/ruby';
 import { Arc } from '../types/kanji';
@@ -72,6 +73,27 @@ describe('文字が 消えた 町: kanji', () => {
       }
     }
     expect(dupes).toEqual([]);
+  });
+});
+
+describe('みんなの日本語の 漢字表', () => {
+  const all = KANJI_UNITS.flatMap((u) => [...u.kanji]);
+
+  it('has the 536 kanji of the two books, each once', () => {
+    expect(all).toHaveLength(536);
+    expect(new Set(all).size).toBe(536);
+  });
+
+  it('opens units in lesson order, all within lessons 1–50', () => {
+    const lessons = KANJI_UNITS.map((u) => u.lesson);
+    expect(lessons).toEqual([...lessons].sort((a, b) => a - b));
+    expect(lessons.every((n) => n >= 1 && n <= 50)).toBe(true);
+  });
+
+  it('teaches every unit in exactly one chapter, and every kanji once', () => {
+    const units = MOJI_CHAPTERS.flatMap((c) => c.units);
+    expect([...units].sort((a, b) => a - b)).toEqual(KANJI_UNITS.map((u) => u.unit));
+    expect(MOJI_CHAPTERS.flatMap((c) => c.kanji)).toHaveLength(536);
   });
 });
 

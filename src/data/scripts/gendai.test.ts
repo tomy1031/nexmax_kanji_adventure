@@ -20,11 +20,13 @@ describe('現代編', () => {
     expect(wrong).toEqual([]);
   });
 
-  it('runs 1..10 and teaches every N4 character exactly once', () => {
+  it('runs 1..10 and teaches every N4 character of the original list exactly once', () => {
     expect(GENDAI_STAGES.map((s) => s.order)).toEqual([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
     const taught = GENDAI_STAGES.flatMap((s) => s.kanji);
     expect(new Set(taught).size).toBe(taught.length);
+    // Kanji tagged `minna` were added for 文字が 消えた 町 (08 §4.2), not for this arc.
     const uncovered = kanjiOfLevel('N4')
+      .filter((k) => !k.tags.includes('minna'))
       .map((k) => k.char)
       .filter((c) => !taught.includes(c));
     expect(uncovered).toEqual([]);

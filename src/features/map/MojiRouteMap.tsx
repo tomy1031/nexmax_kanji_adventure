@@ -7,13 +7,18 @@ import { useGameStore } from '../../store/gameStore';
 import { MOJI_CHAPTERS, PART_OF_LEVEL, isChapterReady } from '../../data/mojiRoute';
 import type { JlptLevel } from '../../types/kanji';
 import PictureBook from '../picturebook/PictureBook';
+import { getKanjiByChar } from '../../lib/kanjiDb';
+import { kanjiRuby } from '../../lib/reading';
 
 /**
  * 新ルート「文字が 消えた 町」の 章表 (08 §10, 段1).
  *
- * The frame only: every chapter is listed with its lessons so the road is
- * visible, but none can start until its kanji are assigned (08 §11).
+ * Every chapter is listed with its lessons and the kanji it teaches, so the
+ * road is visible; none can start until its story is written.
  */
+
+/** How many of a chapter's kanji the card shows. */
+const PREVIEW = 8;
 
 const PARTS: { level: JlptLevel; title: string }[] = [
   { level: 'N5', title: 'N5 編(へん)' },
@@ -73,7 +78,7 @@ export const MojiRouteMap = () => {
                       >
                         <div className="flex items-baseline justify-between gap-2">
                           <span className="font-black">
-                            <RubyText showFurigana={showFurigana}>{`${c.order}話(わ) ${c.title}`}</RubyText>
+                            <RubyText showFurigana={showFurigana}>{`${c.order}章(しょう) ${c.title}`}</RubyText>
                           </span>
                           <span className="shrink-0 text-xs font-black tabular-nums" style={{ color: 'var(--ink-2)' }}>
                             <RubyText showFurigana={showFurigana}>{`${c.lessons.from}〜${c.lessons.to}課(か)`}</RubyText>
@@ -82,6 +87,20 @@ export const MojiRouteMap = () => {
                         <p className="text-[13px] leading-[1.95]">
                           <RubyText showFurigana={showFurigana}>{c.summary}</RubyText>
                         </p>
+                        <div className="mt-1 flex flex-wrap items-end gap-1">
+                          <span className="mr-1 text-xs font-black" style={{ color: 'var(--ink-2)' }}>
+                            <RubyText showFurigana={showFurigana}>{`漢字(かんじ) ${c.kanji.length}字(じ)`}</RubyText>
+                          </span>
+                          {c.kanji.slice(0, PREVIEW).map((ch) => {
+                            const k = getKanjiByChar(ch);
+                            return (
+                              <span key={ch} className="rounded border border-[#caa468] bg-[#fdf4dd] px-1 text-sm leading-[1.9] font-black">
+                                <RubyText showFurigana={showFurigana}>{k ? kanjiRuby(k) : ch}</RubyText>
+                              </span>
+                            );
+                          })}
+                          {c.kanji.length > PREVIEW && <span className="text-xs font-black">…</span>}
+                        </div>
                         {!ready && (
                           <span className="text-xs font-black" style={{ color: 'var(--ink-3)' }}>
                             <RubyText showFurigana={showFurigana}>じゅんび中(ちゅう)</RubyText>

@@ -1,4 +1,5 @@
 import type { JlptLevel } from '../types/kanji';
+import { KANJI_UNITS } from './minnaKanji';
 
 /**
  * 新ルート「文字が 消えた 町」— chapter table (docs/design/08_新ルート_文字が消えた町.md).
@@ -7,10 +8,11 @@ import type { JlptLevel } from '../types/kanji';
  * N5 part, 初級II (26–50) the N4 part. Only the order is borrowed from the
  * book — no example sentences, dialogue, characters or pictures.
  *
- * This is the empty frame (08 §10, 段1). Which kanji each lesson teaches waits
- * on the teaching materials (08 §11), so LESSON_KANJI and every chapter's
- * kanji are empty and no chapter is playable yet. mojiRoute.test.ts already
- * checks what the filled table must satisfy.
+ * Chapters are cut on the kanji books' boundaries (minnaKanji.ts): a unit is
+ * only studied after its lesson, so a chapter covers five lessons and the
+ * units that open inside them. The episodes (話) inside each chapter come
+ * with the story (08 §10, 段2〜); until a chapter has them it is shown as
+ * じゅんび中.
  */
 
 export interface MojiChapter {
@@ -25,12 +27,15 @@ export interface MojiChapter {
   title: string;
   /** Setup shown on the chapter card, furigana notation. */
   summary: string;
-  /** Kanji taught here. Empty until the per-lesson list exists. */
+  /** Kanji-book units taught here (minnaKanji.ts). */
+  units: number[];
+  /** Kanji taught here: the units' kanji, in the book's order. */
   kanji: string[];
 }
 
-/** Kanji introduced by each lesson, keyed by lesson number. Filled in 段2. */
+/** Kanji introduced by each lesson, keyed by lesson number (minnaKanji.ts). */
 export const LESSON_KANJI: Record<number, string[]> = {};
+for (const u of KANJI_UNITS) (LESSON_KANJI[u.lesson] ??= []).push(...u.kanji);
 
 /** Every kanji introduced up to and including `lesson`. */
 export const kanjiIntroducedBy = (lesson: number): Set<string> => {
@@ -49,98 +54,27 @@ export const PART_OF_LEVEL: Record<JlptLevel, { book: string; lessons: { from: n
   N3: { book: '中級(ちゅうきゅう)I', lessons: null },
 };
 
-export const MOJI_CHAPTERS: MojiChapter[] = [
-  {
-    id: 'moji-1',
-    order: 1,
-    level: 'N5',
-    lessons: { from: 1, to: 3 },
-    title: '字(じ)の ない 空港(くうこう)',
-    summary: '空港(くうこう)に 着(つ)いた。看板(かんばん)も 名前(なまえ)も 読(よ)めない。',
-    kanji: [],
-  },
-  {
-    id: 'moji-2',
-    order: 2,
-    level: 'N5',
-    lessons: { from: 4, to: 6 },
-    title: '止(と)まった 駅(えき)',
-    summary: '駅(えき)の 時計(とけい)と 行(い)き先(さき)の 字(じ)が 消(き)えて、電車(でんしゃ)に 乗(の)れない。',
-    kanji: [],
-  },
-  {
-    id: 'moji-3',
-    order: 3,
-    level: 'N5',
-    lessons: { from: 7, to: 10 },
-    title: '市場(いちば)の ともだち',
-    summary: 'にぎやかな 市場(いちば)で、はじめての ともだちに 会(あ)う。',
-    kanji: [],
-  },
-  {
-    id: 'moji-4',
-    order: 4,
-    level: 'N5',
-    lessons: { from: 11, to: 13 },
-    title: '読(よ)めない メニュー',
-    summary: 'レストランと 店(みせ)。メニューの 字(じ)が 消(き)えて いる。',
-    kanji: [],
-  },
-  {
-    id: 'moji-5',
-    order: 5,
-    level: 'N5',
-    lessons: { from: 14, to: 20 },
-    title: '町(まち)を 回(まわ)る',
-    summary: 'ともだちと 町(まち)を 回(まわ)って、字(じ)を 取(と)り戻(もど)す。',
-    kanji: [],
-  },
-  {
-    id: 'moji-6',
-    order: 6,
-    level: 'N5',
-    lessons: { from: 21, to: 25 },
-    title: 'モジクイの 王(おう)',
-    summary: '「もし 字(じ)が なかったら…」。ネクマックスが ★4へ。',
-    kanji: [],
-  },
-  {
-    id: 'moji-7',
-    order: 7,
-    level: 'N4',
-    lessons: { from: 26, to: 30 },
-    title: 'ネットに 逃(に)げた モジクイ',
-    summary: 'IT会社(かいしゃ)で インターン。モジクイが ネットに 逃(に)げる。',
-    kanji: [],
-  },
-  {
-    id: 'moji-8',
-    order: 8,
-    level: 'N4',
-    lessons: { from: 31, to: 37 },
-    title: '消(き)えた「止(と)まれ」',
-    summary: '道(みち)の「止(と)まれ」が 消(き)えて、町(まち)が あぶない。',
-    kanji: [],
-  },
-  {
-    id: 'moji-9',
-    order: 9,
-    level: 'N4',
-    lessons: { from: 38, to: 48 },
-    title: '会社(かいしゃ)を 守(まも)れ',
-    summary: 'なかまと いっしょに、会社(かいしゃ)の システムを 守(まも)る。',
-    kanji: [],
-  },
-  {
-    id: 'moji-10',
-    order: 10,
-    level: 'N4',
-    lessons: { from: 49, to: 50 },
-    title: 'ことばの 力(ちから)',
-    summary: 'お客様(きゃくさま)との 大切(たいせつ)な 場(ば)。敬語(けいご)の 力(ちから)で 町(まち)を 守(まも)る。ネクマックスが ★5へ。',
-    kanji: [],
-  },
-];
+export const MOJI_CHAPTERS: MojiChapter[] = (
+  [
+    { order: 1, level: 'N5', lessons: { from: 1, to: 5 }, units: [1, 2, 3, 4, 5], title: '字(じ)の ない 町(まち)', summary: '空港(くうこう)に 着(つ)いた。看板(かんばん)も 駅(えき)の 時計(とけい)も、字(じ)が 消(き)えて 読(よ)めない。' },
+    { order: 2, level: 'N5', lessons: { from: 6, to: 10 }, units: [6, 7, 8, 9, 10], title: '市場(いちば)の ともだち', summary: 'にぎやかな 市場(いちば)で、はじめての ともだちに 会(あ)う。' },
+    { order: 3, level: 'N5', lessons: { from: 11, to: 15 }, units: [11, 12], title: '読(よ)めない メニュー', summary: 'レストランと 店(みせ)。メニューの 字(じ)が 消(き)えて いる。' },
+    { order: 4, level: 'N5', lessons: { from: 16, to: 20 }, units: [13, 14, 15], title: '町(まち)を 回(まわ)る', summary: 'ともだちと 町(まち)を 回(まわ)って、字(じ)を 取(と)り戻(もど)す。' },
+    { order: 5, level: 'N5', lessons: { from: 21, to: 25 }, units: [16, 17, 18, 19, 20], title: 'モジクイの 王(おう)', summary: '「もし 字(じ)が なかったら…」。ネクマックスが ★4へ。' },
+    { order: 6, level: 'N4', lessons: { from: 26, to: 30 }, units: [24, 25, 26, 27, 28, 29, 30], title: 'ネットに 逃(に)げた モジクイ', summary: 'IT会社(かいしゃ)で インターン。モジクイが ネットに 逃(に)げる。' },
+    { order: 7, level: 'N4', lessons: { from: 31, to: 35 }, units: [31, 32, 33, 34, 35], title: '消(き)えた「止(と)まれ」', summary: '道(みち)の「止(と)まれ」が 消(き)えて、町(まち)が あぶない。' },
+    { order: 8, level: 'N4', lessons: { from: 36, to: 40 }, units: [36, 37, 38, 39, 40], title: '食(た)べられた 字(じ)', summary: 'モジクイに 字(じ)を 食(た)べられた。なかまと 取(と)り戻(もど)しに 行(い)く。' },
+    { order: 9, level: 'N4', lessons: { from: 41, to: 45 }, units: [41, 42, 43, 44, 45], title: '会社(かいしゃ)を 守(まも)れ', summary: 'なかまと いっしょに、会社(かいしゃ)の システムを 守(まも)る。' },
+    { order: 10, level: 'N4', lessons: { from: 46, to: 50 }, units: [46, 47, 48, 49, 50], title: 'ことばの 力(ちから)', summary: 'お客様(きゃくさま)との 大切(たいせつ)な 場(ば)。敬語(けいご)の 力(ちから)で 町(まち)を 守(まも)る。ネクマックスが ★5へ。' },
+  ] as const
+).map((c) => ({
+  ...c,
+  id: `moji-${c.order}`,
+  units: [...c.units],
+  kanji: c.units.flatMap((n) => [...(KANJI_UNITS.find((u) => u.unit === n)?.kanji ?? '')]),
+}));
 
-/** A chapter can be played once its kanji have been assigned. */
-export const isChapterReady = (chapter: MojiChapter): boolean => chapter.kanji.length > 0;
+/** Chapters whose story has been written. None yet. */
+const PLAYABLE = new Set<string>();
+
+export const isChapterReady = (chapter: MojiChapter): boolean => PLAYABLE.has(chapter.id);
