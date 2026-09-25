@@ -26,3 +26,6 @@ pnpm-debug.log*
 playtest/
 tut/
 .scratch/
+
+# 生成した 生の 画像（docs/画像素材リスト.md）。コミットするのは public/ の webp だけ
+art-src/
