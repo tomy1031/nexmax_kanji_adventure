@@ -83,7 +83,7 @@ export interface GameState {
   /** One-off explainers the player has already been shown. */
   tutorials: { forge: boolean; intro: boolean };
   /** The world last played in — where つづきから, ストーリー and もどる lead back to. */
-  lastArc: 'mukashi' | 'gendai';
+  lastArc: 'mukashi' | 'gendai' | 'moji';
   /** Versus record. */
   versus: VersusStats;
   /**

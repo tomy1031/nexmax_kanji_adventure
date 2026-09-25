@@ -46,7 +46,8 @@
    編ごとのテーマ。既定は むかし編。
    --------------------------------------------------------------------------- */
 :root,
-[data-arc='mukashi'] {
+[data-arc='mukashi'],
+[data-arc='moji'] {
   /* public/img/design/ の参考画像に寄せた 青空と 羊皮紙。 */
   --stage: #7ec8f4;
   --stage-2: #cdeefd;
