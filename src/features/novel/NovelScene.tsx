@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import type { CastMember, NovelScript } from '../../types/novel';
 import { RubyText } from '../../components/ui/Ruby';
@@ -26,6 +26,11 @@ interface NovelSceneProps {
   onFinish: () => void;
   /** Shown on the wooden sign, both in furigana notation. */
   chapter?: { label: string; title: string };
+  /**
+   * Draws the lines and names instead of furigana notation. かな編 uses it
+   * to put romaji over the kana the learner has not written yet.
+   */
+  renderText?: (text: string) => ReactNode;
 }
 
 /** The annotated words of a line, each with its English. Words without one are left out. */
@@ -44,7 +49,7 @@ const lineWords = (text: string): { word: string; gloss: string }[] => {
 /** Reading time for auto mode: a base plus a little per character. */
 const autoDelay = (text: string) => 1600 + stripRuby(text).length * 85;
 
-export const NovelScene = ({ script, cast, onFinish, chapter }: NovelSceneProps) => {
+export const NovelScene = ({ script, cast, onFinish, chapter, renderText }: NovelSceneProps) => {
   const showFurigana = useGameStore((s) => s.settings.furigana);
   const [index, setIndex] = useState(0);
   const [showLog, setShowLog] = useState(false);
@@ -56,6 +61,8 @@ export const NovelScene = ({ script, cast, onFinish, chapter }: NovelSceneProps)
    * could not read (docs/design/07 §3).
    */
   const [wordsFor, setWordsFor] = useState<number | null>(null);
+  /** The line whose English is open. */
+  const [enFor, setEnFor] = useState<number | null>(null);
   useEffect(() => stopSpeaking, []);
 
   const castById = useMemo(() => new Map(cast.map((c) => [c.id, c])), [cast]);
@@ -177,7 +184,7 @@ export const NovelScene = ({ script, cast, onFinish, chapter }: NovelSceneProps)
               textShadow: '0 0 18px rgba(255,210,90,0.95), 0 0 42px rgba(255,190,60,0.7), 0 4px 0 #7a4a26',
             }}
           >
-            <RubyText showFurigana>{line.glyph}</RubyText>
+            {renderText ? renderText(line.glyph) : <RubyText showFurigana>{line.glyph}</RubyText>}
           </motion.div>
         )}
       </AnimatePresence>
@@ -261,7 +268,7 @@ export const NovelScene = ({ script, cast, onFinish, chapter }: NovelSceneProps)
       <div className="absolute right-0 bottom-0 left-0 z-20 p-3 pb-[max(12px,env(safe-area-inset-bottom))]">
         {speaker && (
           <div className="g-wood relative z-10 mb-[-10px] ml-3 inline-flex items-center px-4 py-1 text-base font-black">
-            <RubyText showFurigana={showFurigana}>{speaker.name}</RubyText>
+            {renderText ? renderText(speaker.name) : <RubyText showFurigana={showFurigana}>{speaker.name}</RubyText>}
           </div>
         )}
 
@@ -275,8 +282,14 @@ export const NovelScene = ({ script, cast, onFinish, chapter }: NovelSceneProps)
             onClick={advance}
           >
             <p className="text-[16px] leading-[2.15] font-bold whitespace-pre-line">
-              <RubyText showFurigana={showFurigana}>{line.text}</RubyText>
+              {renderText ? renderText(line.text) : <RubyText showFurigana={showFurigana}>{line.text}</RubyText>}
             </p>
+
+            {enFor === index && line.en && (
+              <p className="mt-1 text-[13px] leading-snug font-bold" style={{ color: '#1b63b0' }} lang="en">
+                {line.en}
+              </p>
+            )}
 
             {wordsFor === index && (
               <div className="mt-1 flex flex-wrap gap-1.5" onClick={(e) => e.stopPropagation()}>
@@ -321,6 +334,19 @@ export const NovelScene = ({ script, cast, onFinish, chapter }: NovelSceneProps)
                       }}
                     >
                       🔊 よみあげ
+                    </button>
+                  )}
+                  {line.en && (
+                    <button
+                      type="button"
+                      aria-pressed={enFor === index}
+                      className="rounded-full border-2 border-[#caa468] bg-white/80 px-2.5 py-0.5 text-[12px]"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setEnFor(enFor === index ? null : index);
+                      }}
+                    >
+                      EN
                     </button>
                   )}
                   {lineWords(line.text).length > 0 && (
@@ -378,10 +404,10 @@ export const NovelScene = ({ script, cast, onFinish, chapter }: NovelSceneProps)
                     <div key={i} className="text-sm">
                       {who && (
                         <span className="mr-2 font-black" style={{ color: who.color }}>
-                          <RubyText showFurigana={showFurigana}>{who.name}</RubyText>
+                          {renderText ? renderText(who.name) : <RubyText showFurigana={showFurigana}>{who.name}</RubyText>}
                         </span>
                       )}
-                      <RubyText showFurigana={showFurigana}>{l.text}</RubyText>
+                      {renderText ? renderText(l.text) : <RubyText showFurigana={showFurigana}>{l.text}</RubyText>}
                     </div>
                   );
                 })}

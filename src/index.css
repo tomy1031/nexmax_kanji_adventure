@@ -127,6 +127,16 @@
     user-select: none;
   }
 
+  /* かな編: まだ 書いて いない かな。字は うすく（まだ 戻って いない）、上に ローマ字。 */
+  ruby.kana-unread {
+    color: var(--ink-3);
+  }
+  ruby.kana-unread rt {
+    color: #1b63b0;
+    font-weight: 700;
+    font-family: system-ui, sans-serif;
+  }
+
   button {
     font-family: inherit;
     font-weight: 700;
