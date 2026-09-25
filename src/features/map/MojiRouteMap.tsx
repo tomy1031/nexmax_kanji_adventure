@@ -61,8 +61,12 @@ export const MojiRouteMap = () => {
               <KanaText known={known}>ひらがな・カタカナ</KanaText>
             </span>
           </h2>
+          <span className="mt-1 inline-block rounded bg-[#4f9a3c] px-1.5 py-0.5 text-[11px] font-black text-white">
+            <KanaText known={known}>にんい</KanaText> · optional
+          </span>
           <p className="mt-1 text-xs font-bold" style={{ color: 'var(--ink-2)' }} lang="en">
-            Can't read kana yet? Start here. Romaji disappears from each kana once you have written it.
+            Can't read kana yet? Start here — it is optional, and Chapter 1 does not need it. Nexmax can only say the letters you
+            have written; everything else is eaten.
           </p>
           <ol className="mt-2 grid grid-cols-2 gap-2">
             {KANA_EPISODES.map((ep) => {
@@ -87,7 +91,12 @@ export const MojiRouteMap = () => {
                       {ep.order}. {ep.kana[0]}〜{ep.kana[ep.kana.length - 1]} {done ? '✓' : ''}
                     </span>
                     <span className="block text-sm leading-[2] font-black">
-                      <KanaText known={known}>{ep.title}</KanaText>
+                      <KanaText known={known} mode="mask">
+                        {ep.title}
+                      </KanaText>
+                    </span>
+                    <span className="block text-[11px] font-bold" style={{ color: 'var(--ink-2)' }} lang="en">
+                      {ep.en}
                     </span>
                   </button>
                 </li>

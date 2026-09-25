@@ -75,8 +75,10 @@ export interface KanaEpisode {
   id: string;
   order: number;
   script: 'hiragana' | 'katakana';
-  /** Title in furigana notation (kana only — nothing here needs a reading). */
+  /** Title, kana only. Shown with holes until its kana are written. */
   title: string;
+  /** The title in English, for a player who cannot read it yet. */
+  en: string;
   /** The kana written in this episode, in order. */
   kana: string[];
 }
@@ -85,16 +87,16 @@ const slice = (list: string[], from: string, to: string) => list.slice(list.inde
 
 export const KANA_EPISODES: KanaEpisode[] = (
   [
-  { order: 1, script: 'hiragana', title: 'きえた こえ', kana: slice(HIRAGANA, 'あ', 'お') },
-  { order: 2, script: 'hiragana', title: 'かおの ない き', kana: slice(HIRAGANA, 'か', 'そ') },
-  { order: 3, script: 'hiragana', title: 'なまえの ない むら', kana: slice(HIRAGANA, 'た', 'の') },
-  { order: 4, script: 'hiragana', title: 'くろい くも', kana: slice(HIRAGANA, 'は', 'も') },
-  { order: 5, script: 'hiragana', title: 'ほしの ない よる', kana: slice(HIRAGANA, 'や', 'ん') },
-  { order: 6, script: 'katakana', title: 'カタカナの えき', kana: slice(KATAKANA, 'ア', 'コ') },
-  { order: 7, script: 'katakana', title: 'スタート', kana: slice(KATAKANA, 'サ', 'ト') },
-  { order: 8, script: 'katakana', title: 'キップ', kana: slice(KATAKANA, 'ナ', 'ホ') },
-  { order: 9, script: 'katakana', title: 'ぼくの なまえ', kana: slice(KATAKANA, 'マ', 'ヨ') },
-  { order: 10, script: 'katakana', title: 'ありがとう', kana: slice(KATAKANA, 'ラ', 'ン') },
+  { order: 1, script: 'hiragana', title: 'きえた こえ', en: 'The Lost Voice', kana: slice(HIRAGANA, 'あ', 'お') },
+  { order: 2, script: 'hiragana', title: 'かおの ない き', en: 'The Faceless Tree', kana: slice(HIRAGANA, 'か', 'そ') },
+  { order: 3, script: 'hiragana', title: 'なまえの ない むら', en: 'The Nameless Village', kana: slice(HIRAGANA, 'た', 'の') },
+  { order: 4, script: 'hiragana', title: 'くろい くも', en: 'Black Clouds', kana: slice(HIRAGANA, 'は', 'も') },
+  { order: 5, script: 'hiragana', title: 'ほしの ない よる', en: 'The Starless Night', kana: slice(HIRAGANA, 'や', 'ん') },
+  { order: 6, script: 'katakana', title: 'カタカナの えき', en: 'Katakana Station', kana: slice(KATAKANA, 'ア', 'コ') },
+  { order: 7, script: 'katakana', title: 'スタート', en: 'Start', kana: slice(KATAKANA, 'サ', 'ト') },
+  { order: 8, script: 'katakana', title: 'キップ', en: 'The Ticket', kana: slice(KATAKANA, 'ナ', 'ホ') },
+  { order: 9, script: 'katakana', title: 'ぼくの なまえ', en: 'My Name', kana: slice(KATAKANA, 'マ', 'ヨ') },
+  { order: 10, script: 'katakana', title: 'ありがとう', en: 'Thank You', kana: slice(KATAKANA, 'ラ', 'ン') },
   ] satisfies Omit<KanaEpisode, 'id'>[]
 ).map((e) => ({ ...e, id: `kana-${e.order}` }));
 

@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { existsSync, readFileSync } from 'node:fs';
-import { HIRAGANA, KATAKANA, KANA_EPISODES, ROMAJI, isKana, isKanaEpisodeUnlocked } from './kana';
+import { HIRAGANA, KATAKANA, KANA_EPISODES, ROMAJI, isKanaEpisodeUnlocked } from './kana';
 import { KANA_CAST, KANA_SCRIPTS } from './scripts/kana';
 import { revealKana } from '../lib/kanaReveal';
 import { SCENES, fxNamesOf } from '../features/picturebook/scenes';
@@ -46,20 +46,28 @@ describe('かな編: the scripts', () => {
     for (const s of all) expect(s.lines.length, s.stageId).toBeGreaterThan(0);
   });
 
-  it('uses kana only — no kanji, nothing without romaji', () => {
-    const allowed = /[\s、。！？「」…―ー・]/;
+  it('lets Nexmax speak only kana and emoji, and tells the rest in English', () => {
+    // 2026-09-26: Nexmax can only say the letters that have come back (the
+    // rest show as holes), and the player's thoughts carry the meaning in English.
     const bad: string[] = [];
     for (const s of all) {
       for (const l of s.lines) {
-        for (const c of [...l.text, ...(l.glyph ?? '')]) if (!isKana(c) && !allowed.test(c)) bad.push(`${s.stageId}: ${c} in "${l.text}"`);
+        if (/[一-龯]/.test(l.text)) bad.push(`${s.stageId}: kanji in "${l.text}"`);
+        if (l.speaker === 'nexmax' && /[A-Za-z]/.test(l.text)) bad.push(`${s.stageId}: English from Nexmax "${l.text}"`);
+        if (!l.speaker && !/[A-Za-z]/.test(l.text) && !/^「.*」$/.test(l.text)) bad.push(`${s.stageId}: narration not in English "${l.text}"`);
       }
     }
     expect(bad).toEqual([]);
   });
 
-  it('gives every line its English', () => {
-    const bare = all.flatMap((s) => s.lines.filter((l) => !l.en?.trim()).map((l) => `${s.stageId}: ${l.text}`));
-    expect(bare).toEqual([]);
+  it('shows the first thank-you with holes, and the whole word once hiragana is done', () => {
+    const upTo = (n: number) => new Set(KANA_EPISODES.filter((e) => e.order <= n).flatMap((e) => e.kana));
+    const seen = (known: Set<string>) =>
+      revealKana('ありがとう', known)
+        .map((s) => (s.romaji === undefined ? s.text : '□'.repeat(s.text.length)))
+        .join('');
+    expect(seen(upTo(1))).toBe('あ□□□う');
+    expect(seen(upTo(5))).toBe('ありがとう');
   });
 
   it('opens every scene on a page, uses real scenes, effects and sprites', () => {
