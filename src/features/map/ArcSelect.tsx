@@ -5,6 +5,7 @@ import { RubyText } from '../../components/ui/Ruby';
 import { BottomTabs, LogoTitle, NexmaxSays } from '../../components/ui/Chrome';
 import { useGameStore } from '../../store/gameStore';
 import { stagesOfArc } from '../../data/stages';
+import { MOJI_CHAPTERS } from '../../data/mojiRoute';
 import PictureBook from '../picturebook/PictureBook';
 
 /**
@@ -12,8 +13,9 @@ import PictureBook from '../picturebook/PictureBook';
  * The reference is titled 「N5をえらぶ」, but the three arcs are N5 / N4 / N3,
  * so the title names the worlds and each card carries its own level.
  *
- * Only むかし編 is playable. The other two stay on the page, marked as not
- * ready, so the learner can see where the road goes.
+ * 文字が 消えた 町 (08) sits on top as the new route; the three picture-book
+ * worlds below it are kept as they were. 未来編 stays on the page, marked as
+ * not ready, so the learner can see where the road goes.
  */
 
 const WORLDS: {
@@ -22,10 +24,21 @@ const WORLDS: {
   blurb: string;
   words: string[];
   ready: boolean;
+  /** Shown as あたらしい. */
+  fresh?: boolean;
   /** Picture-book scene; the arcs not written yet have none. */
   scene?: string;
   tint: string;
 }[] = [
+  {
+    arc: Arc.MOJI,
+    title: '文字(もじ)が 消(き)えた 町(まち)',
+    blurb: '町(まち)から 字(じ)が 消(き)えた！\nネクマックスと いっしょに、書(か)いて 取(と)り戻(もど)そう。',
+    words: ['名前(なまえ)', '駅(えき)', '時間(じかん)', '店(みせ)'],
+    ready: true,
+    fresh: true,
+    tint: '#d9772b',
+  },
   {
     arc: Arc.MUKASHI,
     title: 'むかし編(へん)',
@@ -73,7 +86,7 @@ export const ArcSelect = () => {
         </div>
 
         {WORLDS.map((w, i) => {
-          const total = w.ready ? stagesOfArc(w.arc).length : 10;
+          const total = w.arc === Arc.MOJI ? MOJI_CHAPTERS.length : w.ready ? stagesOfArc(w.arc).length : 10;
           const done = cleared.filter((c) => c.startsWith(w.arc)).length;
           return (
             <motion.section
@@ -92,8 +105,13 @@ export const ArcSelect = () => {
                     className="absolute inset-0 flex items-center justify-center text-6xl font-black text-white/70"
                     style={{ background: `linear-gradient(160deg, ${w.tint}cc, ${w.tint}55)` }}
                   >
-                    ？
+                    {w.fresh ? <RubyText showFurigana={showFurigana}>字(じ)</RubyText> : '？'}
                   </div>
+                )}
+                {w.fresh && (
+                  <span className="absolute bottom-2 left-2 rounded-lg border-2 border-white bg-[#e2453c] px-2 py-0.5 text-xs font-black text-white shadow">
+                    あたらしい
+                  </span>
                 )}
                 <div className="absolute top-2 left-2 rounded-xl border-2 border-[#caa468] bg-[#fdf4dd] px-3 py-0.5 shadow">
                   <h2 className="text-2xl font-black" style={{ color: w.tint }}>
@@ -101,7 +119,7 @@ export const ArcSelect = () => {
                   </h2>
                 </div>
                 <span className="absolute top-2 right-2 rounded-lg border-2 border-white bg-[#23456e]/85 px-2 py-0.5 text-xs font-black text-white tabular-nums">
-                  ♛ {LEVEL_OF_ARC[w.arc]} {done}/{total}
+                  ♛ {w.arc === Arc.MOJI ? 'N5〜N3' : LEVEL_OF_ARC[w.arc]} {done}/{total}
                 </span>
               </div>
 

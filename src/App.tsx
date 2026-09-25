@@ -32,7 +32,9 @@ const ArcTheme = () => {
       ? Arc.GENDAI
       : pathname.includes('/mirai')
         ? Arc.MIRAI
-        : Arc.MUKASHI;
+        : pathname.includes('/moji')
+          ? Arc.MOJI
+          : Arc.MUKASHI;
     document.documentElement.dataset.arc = arc;
   }, [pathname]);
 
