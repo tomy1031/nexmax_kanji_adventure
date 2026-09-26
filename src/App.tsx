@@ -17,6 +17,7 @@ import VersusScreen from './features/versus/VersusScreen';
 import WordBook from './features/words/WordBook';
 import TutorialStage from './features/tutorial/TutorialStage';
 import KanaEpisode from './features/kana/KanaEpisode';
+import MojiEpisodeScreen from './features/moji/MojiEpisodeScreen';
 import EquipScreen from './features/equip/EquipScreen';
 
 /**
@@ -82,6 +83,7 @@ const App = () => {
         <Route path="/words" element={<WordBook />} />
         <Route path="/tutorial" element={<TutorialStage />} />
         <Route path="/kana/:id" element={<KanaEpisode />} />
+        <Route path="/moji/:id" element={<MojiEpisodeScreen />} />
         <Route path="/equip" element={<EquipScreen />} />
         <Route path="/settings" element={<SettingsScreen />} />
         <Route path="*" element={<TitleScreen />} />

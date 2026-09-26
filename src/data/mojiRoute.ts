@@ -1,5 +1,6 @@
 import type { JlptLevel } from '../types/kanji';
 import { KANJI_UNITS } from './minnaKanji';
+import { episodesOf } from './mojiEpisodes';
 
 /**
  * 新ルート「文字が 消えた 町」— chapter table (docs/design/08_新ルート_文字が消えた町.md).
@@ -74,7 +75,5 @@ export const MOJI_CHAPTERS: MojiChapter[] = (
   kanji: c.units.flatMap((n) => [...(KANJI_UNITS.find((u) => u.unit === n)?.kanji ?? '')]),
 }));
 
-/** Chapters whose story has been written. None yet. */
-const PLAYABLE = new Set<string>();
-
-export const isChapterReady = (chapter: MojiChapter): boolean => PLAYABLE.has(chapter.id);
+/** A chapter can be played once some of its episodes have been written (mojiEpisodes.ts). */
+export const isChapterReady = (chapter: MojiChapter): boolean => episodesOf(chapter.id).length > 0;
