@@ -32,19 +32,28 @@ const TILES: { ruby: string; x: string; y: string; color: string; delay: number;
   { ruby: '火(ひ)', x: '78%', y: '46%', color: '#ef5a24', delay: 1.2, tilt: -6 },
 ];
 
-/** The magic circle under Nexmax: two rings, points of a star, no letters. */
+/**
+ * The magic circle under Nexmax: two rings, points of a star, no letters.
+ *
+ * Its glow is drawn into the picture (a wide faint ring), not a CSS
+ * drop-shadow: a filter over a rotating circle is recomputed every frame, and
+ * on iPhone and iPad that alone made the title screen heavy (2026-09-26
+ * 「オープニングから重い」).
+ */
 const MagicCircle = ({ still }: { still: boolean }) => (
   <div
     className="absolute bottom-[-9%] left-1/2 aspect-square w-[135%] -translate-x-1/2"
-    style={{ transform: 'scaleY(0.32)', filter: 'drop-shadow(0 0 8px rgba(120,220,255,0.95))' }}
+    style={{ transform: 'scaleY(0.32)' }}
     aria-hidden
   >
     <motion.svg
       viewBox="0 0 200 200"
       className="h-full w-full"
+      style={{ willChange: 'transform' }}
       animate={still ? undefined : { rotate: 360 }}
       transition={{ duration: 24, repeat: Infinity, ease: 'linear' }}
     >
+      <circle cx="100" cy="100" r="93" fill="none" stroke="rgba(120,220,255,0.35)" strokeWidth="14" />
       <circle cx="100" cy="100" r="92" fill="rgba(140,230,255,0.35)" stroke="#e6fbff" strokeWidth="6" />
       <circle cx="100" cy="100" r="78" fill="none" stroke="#9eeaff" strokeWidth="4" strokeDasharray="8 6" />
       <circle cx="100" cy="100" r="54" fill="none" stroke="#ffffff" strokeWidth="4" />
@@ -95,6 +104,7 @@ export const TitleScreen = () => {
             'repeating-conic-gradient(from 0deg, rgba(255,247,200,0.55) 0deg 7deg, rgba(255,247,200,0) 7deg 18deg)',
           maskImage: 'radial-gradient(circle, #000 12%, transparent 58%)',
           WebkitMaskImage: 'radial-gradient(circle, #000 12%, transparent 58%)',
+          willChange: 'transform',
         }}
         initial={{ opacity: 0 }}
         animate={still ? { opacity: 1 } : { opacity: 1, rotate: 360 }}
@@ -181,6 +191,7 @@ export const TitleScreen = () => {
         <MagicCircle still={still} />
         <motion.div
           className="relative"
+          style={{ willChange: 'transform' }}
           animate={still ? undefined : { y: [0, -8, 0] }}
           transition={{ duration: 2.8, repeat: Infinity, ease: 'easeInOut' }}
         >
@@ -193,7 +204,7 @@ export const TitleScreen = () => {
           />
           <motion.span
             className="absolute -top-7 left-[2%] -rotate-12"
-            style={{ color: '#fff7d6', filter: 'drop-shadow(0 0 12px rgba(255,210,90,1)) drop-shadow(0 2px 0 #7a4a26)' }}
+            style={{ color: '#fff7d6', filter: 'drop-shadow(0 0 12px rgba(255,210,90,1)) drop-shadow(0 2px 0 #7a4a26)', willChange: 'transform' }}
             animate={still ? undefined : { rotate: [-14, -6, -14] }}
             transition={{ duration: 2.8, repeat: Infinity, ease: 'easeInOut' }}
           >
@@ -213,11 +224,19 @@ export const TitleScreen = () => {
           type="button"
           className="g-btn g-btn-primary g-shine w-full !min-h-[64px] text-[26px]"
           style={{ fontFamily: 'var(--font-logo)', fontWeight: 400 }}
-          animate={still ? undefined : { boxShadow: ['0 5px 0 #b35f00, 0 0 0 rgba(255,210,80,0)', '0 5px 0 #b35f00, 0 0 26px rgba(255,210,80,0.95)', '0 5px 0 #b35f00, 0 0 0 rgba(255,210,80,0)'] }}
-          transition={{ duration: 2.2, repeat: Infinity }}
           whileTap={{ scale: 0.96, y: 3 }}
           onClick={() => navigate(seenIntro || hasSave ? mapPath : '/tutorial')}
         >
+          {/* 光る ふち: 影を 動かすと 毎コマ 描き直しに なるので、光だけの 層の 濃さを 動かす */}
+          {!still && (
+            <motion.span
+              aria-hidden
+              className="pointer-events-none absolute inset-0 rounded-[inherit]"
+              style={{ boxShadow: '0 0 26px rgba(255,210,80,0.95)', willChange: 'opacity' }}
+              animate={{ opacity: [0, 1, 0] }}
+              transition={{ duration: 2.2, repeat: Infinity }}
+            />
+          )}
           <span aria-hidden className="relative z-10">
             ▶
           </span>

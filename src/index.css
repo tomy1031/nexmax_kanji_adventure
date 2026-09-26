@@ -527,10 +527,12 @@
   .g-shine::after {
     content: '';
     position: absolute;
-    inset: -20% auto -20% -60%;
+    inset: -20% auto -20% 0;
     width: 45%;
     background: linear-gradient(100deg, transparent 0%, rgba(255, 255, 255, 0.65) 50%, transparent 100%);
-    transform: skewX(-18deg);
+    transform: translateX(-135%) skewX(-18deg);
+    /* transform だけを 動かす（left を 動かすと 毎コマ 配置の 計算が やり直しに なる） */
+    will-change: transform;
     animation: g-shine 3.6s ease-in-out infinite;
     pointer-events: none;
     z-index: 1;
@@ -539,10 +541,10 @@
   @keyframes g-shine {
     0%,
     55% {
-      left: -60%;
+      transform: translateX(-135%) skewX(-18deg);
     }
     100% {
-      left: 130%;
+      transform: translateX(290%) skewX(-18deg);
     }
   }
 

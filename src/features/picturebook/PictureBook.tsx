@@ -3,6 +3,9 @@ import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
 import { useGameStore } from '../../store/gameStore';
 import { PAGE_H, PAGE_W, toDataUrl } from './paper';
 import { SCENES, type Layer } from './scenes';
+import { layerId } from './layerId';
+import { RENDERED } from './rendered.generated';
+import { assetPath } from '../../lib/assetPath';
 
 /**
  * 動く 絵本 — the animated picture book.
@@ -19,11 +22,18 @@ import { SCENES, type Layer } from './scenes';
  * itself, not the scaled page.
  */
 
+/**
+ * A layer's image: the bitmap scripts/render_scenes.ts made of it, or the SVG
+ * itself when there is none. The bitmap matters on iPhone and iPad, where the
+ * browser (WebKit) would otherwise run the torn-paper filter at full screen
+ * size for every layer, again and again (2026-09-26「すごく重いです。M3 iPad なのに」).
+ */
 const urlCache = new Map<string, string>();
 const urlOf = (svg: string) => {
   let u = urlCache.get(svg);
   if (!u) {
-    u = toDataUrl(svg);
+    const id = layerId(svg);
+    u = RENDERED.has(id) ? assetPath(`img/scenes/${id}.webp`) : toDataUrl(svg);
     urlCache.set(svg, u);
   }
   return u;
@@ -74,7 +84,8 @@ const PaperLayer = ({ layer, still, isFx }: { layer: Layer; still: boolean; isFx
         aria-hidden
         draggable={false}
         className="absolute inset-0 h-full w-full select-none"
-        style={{ transformOrigin: origin }}
+        // Its own compositor layer, so moving it never repaints the picture.
+        style={{ transformOrigin: origin, willChange: layer.animate && !still ? 'transform, opacity' : undefined }}
         animate={still ? undefined : layer.animate}
         transition={layer.transition}
       />

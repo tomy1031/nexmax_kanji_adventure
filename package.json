@@ -14,7 +14,8 @@
     "data:build": "node scripts/build_kanji_data.mjs",
     "data:strokes": "node scripts/fetch_stroke_data.mjs",
     "predeploy": "npm run build",
-    "deploy": "gh-pages -d dist"
+    "deploy": "gh-pages -d dist",
+    "render:scenes": "vite-node scripts/render_scenes.ts"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.116.0",
