@@ -97,7 +97,7 @@ export const NexmaxSays = ({
         src={assetPath(`img/chara/cut/${pose}.webp`)}
         alt=""
         aria-hidden
-        style={{ width: size, filter: 'drop-shadow(0 4px 6px rgba(0,40,90,0.3))' }}
+        style={{ width: size, filter: 'drop-shadow(0 4px 6px rgba(0,40,90,0.3))', willChange: 'transform' }}
         animate={{ y: [0, -4, 0] }}
         transition={{ duration: 2.4, repeat: Infinity, ease: 'easeInOut' }}
       />

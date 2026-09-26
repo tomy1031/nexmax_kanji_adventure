@@ -84,7 +84,8 @@ const PaperLayer = ({ layer, still, isFx }: { layer: Layer; still: boolean; isFx
         aria-hidden
         draggable={false}
         className="absolute inset-0 h-full w-full select-none"
-        style={{ transformOrigin: origin }}
+        // Its own compositor layer, so moving it never repaints the picture.
+        style={{ transformOrigin: origin, willChange: layer.animate && !still ? 'transform, opacity' : undefined }}
         animate={still ? undefined : layer.animate}
         transition={layer.transition}
       />

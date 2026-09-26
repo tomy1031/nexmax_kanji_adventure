@@ -53,7 +53,9 @@ export const Backdrop = ({
               'repeating-conic-gradient(from 0deg at 50% 0%, rgba(255,248,210,0.22) 0deg 6deg, rgba(255,248,210,0) 6deg 16deg)',
             maskImage: 'radial-gradient(ellipse 60% 70% at 50% 0%, #000 20%, transparent 75%)',
             WebkitMaskImage: 'radial-gradient(ellipse 60% 70% at 50% 0%, #000 20%, transparent 75%)',
-            mixBlendMode: 'screen',
+            // No mix-blend-mode: blending a moving layer with everything
+            // under it is redone every frame on iPhone/iPad (2026-09-26).
+            willChange: 'transform',
           }}
           animate={still ? undefined : { rotate: [-4, 4, -4] }}
           transition={{ duration: 14, repeat: Infinity, ease: 'easeInOut' }}
@@ -70,6 +72,7 @@ export const Backdrop = ({
               height: s.size,
               background: 'radial-gradient(circle, #fffbe0 0%, rgba(255,230,140,0.8) 45%, transparent 70%)',
               boxShadow: '0 0 8px rgba(255,236,160,0.9)',
+              willChange: 'transform, opacity',
             }}
             initial={{ y: 0, opacity: 0 }}
             animate={{ y: ['0dvh', '-95dvh'], opacity: [0, 1, 1, 0], x: [0, 12, -8, 6] }}
