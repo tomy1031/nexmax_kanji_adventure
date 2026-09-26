@@ -202,7 +202,7 @@ export const farmer = (x: number, y: number, s: number, shirt = '#5b7fb5'): stri
     <path d="M${x + 6 * s} ${y - 18 * s} L${x + 18 * s} ${y + 2 * s}" stroke="#6b4a30" stroke-width="${1.6 * s}"/>
   </g>`;
 
-export const rock = (cx: number, cy: number, s: number, seed = 1, color = '#8f8a86', crack = true): string => {
+export const rock = (cx: number, cy: number, s: number, seed = 1, color = '#8f8a86'): string => {
   const r = rand(seed);
   const pts = Array.from({ length: 9 }, (_, i) => {
     const a = (i / 9) * Math.PI * 2 + Math.PI;
@@ -211,10 +211,8 @@ export const rock = (cx: number, cy: number, s: number, seed = 1, color = '#8f8a
     const y = cy + Math.min(0.55, Math.sin(a)) * rr;
     return `${x.toFixed(1)},${y.toFixed(1)}`;
   }).join(' ');
-  const line = crack
-    ? `<path d="M${cx - s * 0.5} ${cy - s * 0.4} q${s * 0.3} ${-s * 0.2} ${s * 0.7} ${-s * 0.05}" stroke="#b9b4ae" stroke-width="${s * 0.08}" fill="none" stroke-linecap="round"/>`
-    : '';
-  return `<g filter="url(#torn)"><polygon points="${pts}" fill="${color}"/>${line}</g>`;
+  return `<g filter="url(#torn)"><polygon points="${pts}" fill="${color}"/>
+    <path d="M${cx - s * 0.5} ${cy - s * 0.4} q${s * 0.3} ${-s * 0.2} ${s * 0.7} ${-s * 0.05}" stroke="#b9b4ae" stroke-width="${s * 0.08}" fill="none" stroke-linecap="round"/></g>`;
 };
 
 /** Waves across the page, like the reference clip's torn-paper sea. */

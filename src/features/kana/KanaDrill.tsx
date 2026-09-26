@@ -95,7 +95,7 @@ export const KanaDrill = ({ kana, onDone, onExit }: KanaDrillProps) => {
 
   return (
     <div className="isolate relative flex min-h-dvh flex-col items-center pb-5">
-      <PictureBook scene="mukashi_meadow" className="!fixed -z-10" />
+      <PictureBook scene="mukashi_meadow" className="!fixed -z-10" still />
       <TopBar onBack={onExit} />
 
       <div className="flex w-full max-w-md flex-1 flex-col gap-3 px-3 pt-3">

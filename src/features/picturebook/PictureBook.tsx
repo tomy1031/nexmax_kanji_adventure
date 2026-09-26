@@ -87,12 +87,18 @@ interface PictureBookProps {
   fx?: readonly string[];
   className?: string;
   children?: ReactNode;
+  /**
+   * Hold the page still. The writing drill sets it: nothing should move
+   * behind the character being written, and on a phone the moving layers
+   * cost frames the drill needs (2026-09-26, iPhone SE).
+   */
+  still?: boolean;
 }
 
-export const PictureBook = ({ scene, fx = [], className, children }: PictureBookProps) => {
+export const PictureBook = ({ scene, fx = [], className, children, still: holdStill = false }: PictureBookProps) => {
   const prefersReduced = useReducedMotion();
   const settingReduced = useGameStore((s) => s.settings.reducedMotion);
-  const still = Boolean(prefersReduced || settingReduced);
+  const still = Boolean(prefersReduced || settingReduced || holdStill);
   const { ref, size } = useCoverSize();
 
   const def = SCENES[scene] ?? SCENES.mukashi_village;
