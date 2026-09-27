@@ -637,17 +637,19 @@ export const BattleScene = ({
         </div>
 
         <div className="g-btn-red mx-auto flex min-h-[48px] w-full max-w-xs items-center justify-center rounded-full text-lg font-black" aria-live="polite">
-          <AnimatePresence mode="wait">
-            <motion.span
-              key={flash ? flash + turn : 'idle'}
-              initial={{ opacity: 0, y: 6 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0 }}
-              className="px-3 text-center text-sm leading-snug"
-            >
-              <RubyText showFurigana={showFurigana}>{flash ?? '⚔ 書(か)くと こうげき！'}</RubyText>
-            </motion.span>
-          </AnimatePresence>
+          {/* No fade out and back in: the old line is replaced in place and
+              the new one pops once (transform only) — the fade left a blank
+              beat that blinked on every write. */}
+          <motion.span
+            key={flash ? flash + turn : 'idle'}
+            initial={{ scale: 1.12 }}
+            animate={{ scale: 1 }}
+            transition={{ type: 'spring', stiffness: 500, damping: 22 }}
+            className="px-3 text-center text-sm leading-snug"
+            style={{ willChange: 'transform' }}
+          >
+            <RubyText showFurigana={showFurigana}>{flash ?? '⚔ 書(か)くと こうげき！'}</RubyText>
+          </motion.span>
         </div>
 
         {weapon ? (

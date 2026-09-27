@@ -166,12 +166,14 @@ export const KanaDrill = ({ kana, onDone, onExit }: KanaDrillProps) => {
           </div>
         </div>
 
-        <div className="min-h-[64px] text-center" aria-live="polite">
+        {/* One box that stays put (see KanjiDrill): no swap between two boxes. */}
+        <div
+          className="g-parchment flex h-[64px] flex-col items-center justify-center px-4 text-center"
+          style={{ borderColor: verdict ? (verdict.pass ? 'var(--color-success)' : 'var(--color-danger)') : undefined }}
+          aria-live="polite"
+        >
           {verdict ? (
-            <div
-              className="g-parchment px-4 py-1.5"
-              style={{ borderColor: verdict.pass ? 'var(--color-success)' : 'var(--color-danger)' }}
-            >
+            <>
               <p className="g-title text-base">
                 <KanaText known={known}>{verdict.pass ? 'せいかい' : 'まだ せいかいでは ない'}</KanaText>
               </p>
@@ -180,9 +182,9 @@ export const KanaDrill = ({ kana, onDone, onExit }: KanaDrillProps) => {
                   ? 'Correct — the rock splits.'
                   : `${verdict.mistakes} mistakes. Watch the stroke order (✎) and try again.`}
               </p>
-            </div>
+            </>
           ) : (
-            <p className="g-parchment px-4 py-1.5 text-sm font-bold" style={{ color: 'var(--ink-2)' }}>
+            <p className="text-sm font-bold" style={{ color: 'var(--ink-2)' }}>
               <KanaText known={known}>{showSample ? 'てほんを なぞろう' : 'てほん なしで かこう'}</KanaText>
               <span className="block text-xs" lang="en">
                 {showSample ? 'Trace the model.' : 'Now write it without the model.'}
