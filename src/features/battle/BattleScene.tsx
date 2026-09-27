@@ -30,7 +30,7 @@ import { GameIcon } from '../../components/ui/GameIcon';
 import { featuresUnlockedBy, FEATURE_INTRO } from '../../data/unlocks';
 import PictureBook from '../picturebook/PictureBook';
 import EnemyArt from './EnemyArt';
-import { MASTERY_REPS, masteryMultiplier, pickWeakest, starsOf, type Stars } from '../../lib/mastery';
+import { MASTERY_REPS, comboMultiplier, masteryMultiplier, pickWeakest, starsOf, type Stars } from '../../lib/mastery';
 
 /**
  * The fight.
@@ -201,7 +201,9 @@ export const BattleScene = ({
   const [totalMistakes, setTotalMistakes] = useState(0);
   const [turn, setTurn] = useState(0);
   const [flash, setFlash] = useState<string | null>(null);
-  const [hit, setHit] = useState<{ n: number; damage: number } | null>(null);
+  const [hit, setHit] = useState<{ n: number; damage: number; critical?: boolean } | null>(null);
+  /** Clean writes in a row (新ルート). */
+  const [combo, setCombo] = useState(0);
   const [outcome, setOutcome] = useState<Outcome>(null);
   const [rewards, setRewards] = useState<{ gems: number; individual: string | null }>({ gems: 0, individual: null });
 
@@ -322,7 +324,10 @@ export const BattleScene = ({
         recordRep(target.id, 0);
         if (starsOf(before + 1) > starsOf(before)) starUp = starsOf(before + 1);
       }
-      const critical = mastery && targetStars === 3 && mistakes === 0 && !hinted;
+      const clean = mistakes === 0 && !hinted;
+      const critical = mastery && targetStars === 3 && clean;
+      const nextCombo = mastery && clean ? combo + 1 : 0;
+      setCombo(nextCombo);
 
       const result = computeDamage({
         weapon,
@@ -333,7 +338,7 @@ export const BattleScene = ({
         attackPct: stats.attackPct,
         owned: ownsTarget && !tutorial && !mastery,
         hinted,
-        mastery: mastery ? masteryMultiplier(targetStars, mistakes === 0 && !hinted) : 1,
+        mastery: mastery ? masteryMultiplier(targetStars, clean) * comboMultiplier(nextCombo) : 1,
       });
       sfx.slash(1);
       sfx.hit();
@@ -342,7 +347,9 @@ export const BattleScene = ({
       // The swing: Nexmax lunges, the blade crosses the opponent, it reels.
       void heroCtl.start({ x: [0, 70, 0], rotate: [0, 8, 0], transition: { duration: 0.45 } });
       void enemyCtl.start({ x: [0, 14, -8, 0], filter: ['brightness(1)', 'brightness(2.4)', 'brightness(1)'], transition: { duration: 0.45, delay: 0.15 } });
-      setHit({ n: turn, damage: result.damage });
+      setHit({ n: turn, damage: result.damage, critical });
+      if (critical) sfx.fanfare();
+      else if (starUp) sfx.star(starUp - 1);
 
       const nextBossHp = Math.max(0, bossHp - result.damage);
       setBossHp(nextBossHp);
@@ -378,7 +385,7 @@ export const BattleScene = ({
     [
       tutorial, totalMistakes, target, progress, recordReview, recordRep, weapon, individual, stage.boss,
       rust, bossHp, playerHp, settle, heroCtl, enemyCtl, turn, stats.attackPct, ownsTarget, hinted,
-      mastery, targetStars, kanjiPool,
+      mastery, targetStars, kanjiPool, combo,
     ],
   );
 
@@ -482,9 +489,27 @@ export const BattleScene = ({
                   initial={{ opacity: 0, y: 0, scale: 0.6 }}
                   animate={{ opacity: [0, 1, 1, 0], y: -50, scale: 1.2 }}
                   transition={{ duration: 1.1, delay: 0.2 }}
-                  className="g-outline-text pointer-events-none absolute top-6 left-1/2 -translate-x-1/2 text-3xl font-black"
+                  className={`g-outline-text pointer-events-none absolute top-6 left-1/2 -translate-x-1/2 font-black ${hit.critical ? 'text-5xl' : 'text-3xl'}`}
+                  style={hit.critical ? { color: '#ffe27a' } : undefined}
                 >
                   {hit.damage}
+                </motion.span>
+              )}
+            </AnimatePresence>
+            {/* COMBO — clean writes in a row. */}
+            <AnimatePresence>
+              {mastery && combo >= 2 && (
+                <motion.span
+                  key={`combo-${combo}`}
+                  initial={{ opacity: 0, scale: 2.2, rotate: -12 }}
+                  animate={{ opacity: 1, scale: 1, rotate: -8 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ type: 'spring', stiffness: 420, damping: 14 }}
+                  className="g-outline-text pointer-events-none absolute -top-8 -left-10 text-2xl font-black whitespace-nowrap"
+                  style={{ color: '#ffe27a', willChange: 'transform' }}
+                >
+                  {combo} COMBO!
+                  <span className="block text-xs">+{Math.round((comboMultiplier(combo) - 1) * 100)}%</span>
                 </motion.span>
               )}
             </AnimatePresence>
@@ -643,6 +668,36 @@ export const BattleScene = ({
           </p>
         )}
       </div>
+
+      {/* 字の わざ — the flash of a ★3 kanji written clean. */}
+      <AnimatePresence>
+        {hit?.critical && (
+          <motion.div
+            key={`crit-${hit.n}`}
+            className="pointer-events-none fixed inset-0 z-30 flex items-center justify-center"
+            initial={{ opacity: 1 }}
+            animate={{ opacity: 0 }}
+            transition={{ duration: 1.1, delay: 0.5 }}
+            aria-hidden
+          >
+            <motion.div
+              className="absolute inset-0 bg-white"
+              initial={{ opacity: 0.85 }}
+              animate={{ opacity: 0 }}
+              transition={{ duration: 0.35 }}
+            />
+            <motion.span
+              className="relative text-[64px] leading-[1.4]"
+              initial={{ scale: 3, rotate: -10 }}
+              animate={{ scale: 1, rotate: -6 }}
+              transition={{ type: 'spring', stiffness: 300, damping: 14 }}
+              style={{ willChange: 'transform' }}
+            >
+              <LogoText showFurigana={showFurigana}>字(じ)の わざ！</LogoText>
+            </motion.span>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* 結果 ------------------------------------------------------------ */}
       <AnimatePresence>

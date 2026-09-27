@@ -15,6 +15,7 @@ import KanjiBackText from '../moji/KanjiBackText';
 import { useOwnedKanji } from '../moji/useOwnedKanji';
 import { getKanjiByChar } from '../../lib/kanjiDb';
 import { kanjiRuby } from '../../lib/reading';
+import { starsOf } from '../../lib/mastery';
 
 /**
  * 新ルート「文字が 消えた 町」の 章表 (08 §10, 段1).
@@ -43,6 +44,10 @@ export const MojiRouteMap = () => {
   const showFurigana = useGameStore((s) => s.settings.furigana);
   const setLastArc = useGameStore((s) => s.setLastArc);
   const cleared = useGameStore((s) => s.clearedStages);
+  const progress = useGameStore((s) => s.progress);
+  /** An episode's stars: each kanji's ★ (lib/mastery.ts), added up. */
+  const starsOfEpisode = (chars: string[]) =>
+    chars.reduce((n, ch) => n + starsOf(progress[getKanjiByChar(ch)?.id ?? '']?.reps ?? 0), 0);
   const known = useKnownKana();
   const owned = useOwnedKanji();
   const [params] = useSearchParams();
@@ -175,6 +180,8 @@ export const MojiRouteMap = () => {
                             {episodesOf(c.id).map((ep) => {
                               const open = isMojiEpisodeUnlocked(ep, cleared);
                               const done = cleared.includes(ep.id);
+                              const stars = starsOfEpisode(ep.kanji);
+                              const max = ep.kanji.length * 3;
                               return (
                                 <button
                                   key={ep.id}
@@ -198,6 +205,13 @@ export const MojiRouteMap = () => {
                                   </span>
                                   <span className="block text-base font-black tracking-wider">
                                     <KanjiBackText owned={owned}>{ep.kanji.map((k) => `${k}(${readingOf(k)})`).join(' ')}</KanjiBackText>
+                                  </span>
+                                  <span className="mt-0.5 flex items-center gap-1 text-xs font-black tabular-nums" style={{ color: '#c98a0c' }}>
+                                    ★ {stars}/{max}
+                                    {stars === max && <span aria-label="all mastered">👑</span>}
+                                    <span className="ml-auto h-1.5 w-12 overflow-hidden rounded-full bg-black/10">
+                                      <span className="block h-full rounded-full bg-[#f2b53a]" style={{ width: `${(stars / max) * 100}%` }} />
+                                    </span>
                                   </span>
                                 </button>
                               );

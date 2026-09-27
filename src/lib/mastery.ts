@@ -71,3 +71,9 @@ export const pickWeakest = <K extends { id: string }>(
   }
   return best;
 };
+
+/**
+ * COMBO: clean writes in a row (no slip, no look at the stroke order). From
+ * the second one on, each adds 10%, up to +50%. A slip starts it over.
+ */
+export const comboMultiplier = (combo: number): number => 1 + Math.min(Math.max(combo - 1, 0), 5) * 0.1;
