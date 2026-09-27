@@ -6,7 +6,7 @@ import { RubyText } from '../../components/ui/Ruby';
 import { assetPath } from '../../lib/assetPath';
 import { useGameStore } from '../../store/gameStore';
 import * as sfx from '../../lib/sfx';
-import { PROLOGUE, PROLOGUE_EXITS, type PrologueVisual } from '../../data/scripts/prologue';
+import { PROLOGUE, PROLOGUE_ASK, PROLOGUE_EXITS, type PrologueVisual } from '../../data/scripts/prologue';
 
 /**
  * プロローグ (08 §10.2): the world, the shadow, the fallen robot, and you —
@@ -41,7 +41,7 @@ const SHADOW = { x: 50, y: 30 };
 const GLOW = '0 0 6px #fff3b0, 0 0 18px rgba(255,210,90,0.9)';
 
 const Letters = ({ eaten, still }: { eaten: boolean; still: boolean }) => (
-  <div className="pointer-events-none absolute inset-0" aria-hidden>
+  <div className="rt-light pointer-events-none absolute inset-0" aria-hidden>
     {LETTERS.map((l, i) => (
       <motion.span
         key={l.ch}
@@ -280,7 +280,10 @@ export const PrologueScreen = () => {
       )}
 
       {/* Narration --------------------------------------------------------- */}
-      <div className="absolute inset-x-0 bottom-0 z-10 px-5 pb-[max(28px,env(safe-area-inset-bottom))]">
+      <div
+        className="absolute inset-x-0 bottom-0 z-10 px-5 pt-16 pb-[max(28px,env(safe-area-inset-bottom))]"
+        style={{ background: 'linear-gradient(180deg, rgba(5,6,20,0) 0%, rgba(5,6,20,0.8) 35%, rgba(5,6,20,0.92) 100%)' }}
+      >
         <AnimatePresence mode="wait">
           {!done ? (
             <motion.div
@@ -290,15 +293,23 @@ export const PrologueScreen = () => {
               exit={{ opacity: 0 }}
               transition={{ duration: 0.5 }}
               className="mx-auto max-w-md"
-              lang="en"
             >
+              {/* 日本語 above, English under it (2026-09-27「日本語も 表示」). */}
               <p
-                className="text-center text-[21px] leading-snug font-bold text-white"
+                className="text-center text-[19px] leading-[2.1] font-black text-[#fff8d6] rt-light"
+                style={{ textShadow: '0 2px 8px rgba(0,0,0,0.95)' }}
+                lang="ja"
+              >
+                <RubyText showFurigana>{current.ja}</RubyText>
+              </p>
+              <p
+                className="mt-1 text-center text-[17px] leading-snug font-bold text-white/90"
                 style={{ fontFamily: 'Georgia, "Times New Roman", serif', textShadow: '0 2px 8px rgba(0,0,0,0.9)' }}
+                lang="en"
               >
                 {current.text}
               </p>
-              <p className="mt-3 text-center text-xs font-bold text-white/60">
+              <p className="mt-3 text-center text-xs font-bold text-white/60" lang="en">
                 tap to continue ▼ <span className="ml-2 tabular-nums">{beat + 1}/{PROLOGUE.length}</span>
               </p>
             </motion.div>
@@ -308,22 +319,26 @@ export const PrologueScreen = () => {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               className="mx-auto flex max-w-md flex-col gap-3"
-              lang="en"
             >
+              <p className="text-center text-xl leading-[2.1] font-black text-[#fff8d6] rt-light" style={{ textShadow: '0 2px 8px rgba(0,0,0,0.95)' }} lang="ja">
+                <RubyText showFurigana>{PROLOGUE_ASK.ja}</RubyText>
+              </p>
               <p
-                className="text-center text-2xl font-bold text-white"
+                className="-mt-2 text-center text-lg font-bold text-white/90"
                 style={{ fontFamily: 'Georgia, "Times New Roman", serif', textShadow: '0 2px 8px rgba(0,0,0,0.9)' }}
               >
-                Can you read hiragana and katakana?
+                {PROLOGUE_ASK.en}
               </p>
               <p className="text-center text-3xl font-black tracking-[0.3em] text-[#fff8d6]" style={{ textShadow: GLOW }} aria-hidden>
                 あいう アイウ
               </p>
-              <button type="button" className="g-btn g-btn-primary w-full text-lg" onClick={() => go(PROLOGUE_EXITS.kana)}>
-                Not yet — start in the Kana Forest
+              <button type="button" className="g-btn g-btn-primary w-full !flex-col !gap-0 text-lg leading-tight" onClick={() => go(PROLOGUE_EXITS.kana)}>
+                <RubyText showFurigana>{PROLOGUE_ASK.kana.ja}</RubyText>
+                <span className="text-xs font-bold opacity-90">{PROLOGUE_ASK.kana.en}</span>
               </button>
-              <button type="button" className="g-btn g-btn-accent w-full text-base" onClick={() => go(PROLOGUE_EXITS.town)}>
-                Yes — go to the town (Chapter 1)
+              <button type="button" className="g-btn g-btn-accent w-full !flex-col !gap-0 text-base leading-tight" onClick={() => go(PROLOGUE_EXITS.town)}>
+                <RubyText showFurigana>{PROLOGUE_ASK.town.ja}</RubyText>
+                <span className="text-xs font-bold opacity-90">{PROLOGUE_ASK.town.en}</span>
               </button>
               <button type="button" className="mx-auto text-sm font-bold text-white/70 underline" onClick={() => go('/map/moji')}>
                 See the chapter map

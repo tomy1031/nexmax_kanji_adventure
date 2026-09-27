@@ -225,6 +225,11 @@
     color: #ffe9c2;
   }
 
+  /* 暗い 背景（夜の プロローグ・物語を えらぶの 大きな カード）の 上の ふりがな。 */
+  .rt-light rt {
+    color: #ffe9a8;
+  }
+
   /* 絵の 上に じかに 置く 字: 白に 濃い ふち。 */
   .g-onbg {
     color: #fff !important;

@@ -97,6 +97,8 @@ export const KanjiDrill = ({ kanji, onObtained, onExit, onDone, nextLabel = 'つ
 
   const [strokeMistakes, setStrokeMistakes] = useState(0);
   const [verdict, setVerdict] = useState<Verdict>(null);
+  /** Counts verdicts, so each new one pops once — and only then. */
+  const [verdictNo, setVerdictNo] = useState(0);
   const [obtained, setObtained] = useState(false);
   /** The goal (★1) was reached on this write: the card offers つぎへ / もっと 書く. */
   const [goalCard, setGoalCard] = useState(false);
@@ -126,6 +128,7 @@ export const KanjiDrill = ({ kanji, onObtained, onExit, onDone, nextLabel = 'つ
       // and the rep does not advance the ten.
       const kind = mistakes === 0 ? 'perfect' : mistakes <= 2 ? 'clean' : 'close';
       setVerdict({ kind, mistakes });
+      setVerdictNo((n) => n + 1);
       setStrokeMistakes(0);
       if (kind === 'close') return false;
 
@@ -252,44 +255,52 @@ export const KanjiDrill = ({ kanji, onObtained, onExit, onDone, nextLabel = 'つ
           </div>
         </div>
 
-        {/* 判定 ------------------------------------------------------------ */}
-        <div className="min-h-[64px]" aria-live="polite">
-          <AnimatePresence mode="wait">
-            {verdict ? (
-              <motion.div
-                key={`${verdict.kind}-${reps}-${rockNo}`}
-                initial={{ opacity: 0, y: 8 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0 }}
-                className="g-parchment px-4 py-1.5 text-center"
-                style={{ borderColor: verdict.kind === 'close' ? 'var(--color-danger)' : 'var(--color-success)' }}
+        {/* 判定 ------------------------------------------------------------
+            One box that stays put. It used to be re-keyed on the rep count
+            and the rock number, so each verdict faded out and back in when
+            the next rock rolled up — a blink on every write (2026-09-27
+            「正解 完璧の エリアが チカチカ」). Now the box and its height
+            never change; only a new verdict gives the heading one small pop
+            (transform only). */}
+        <div
+          className="g-parchment flex h-[68px] flex-col items-center justify-center px-4 text-center"
+          style={{ borderColor: verdict ? (verdict.kind === 'close' ? 'var(--color-danger)' : 'var(--color-success)') : undefined }}
+          aria-live="polite"
+        >
+          {verdict ? (
+            <>
+              <motion.p
+                key={verdictNo}
+                className="g-title text-base"
+                initial={{ scale: 1.15 }}
+                animate={{ scale: 1 }}
+                transition={{ type: 'spring', stiffness: 500, damping: 22 }}
+                style={{ willChange: 'transform' }}
               >
-                <p className="g-title text-base">
-                  <RubyText showFurigana={showFurigana}>{VERDICT_TEXT[verdict.kind].head}</RubyText>
-                  {verdict.mistakes > 0 && (
-                    <span className="ml-2 text-sm font-normal" style={{ color: 'var(--ink-2)' }}>
-                      まちがえた ところ {verdict.mistakes}
-                    </span>
-                  )}
-                </p>
-                <p className="text-xs" style={{ color: 'var(--ink-2)' }}>
-                  <RubyText showFurigana={showFurigana}>{VERDICT_TEXT[verdict.kind].next}</RubyText>
-                </p>
-              </motion.div>
-            ) : (
-              <motion.p key="hint" className="text-center text-sm font-bold" style={{ color: 'var(--ink-2)' }}>
-                <RubyText showFurigana={showFurigana}>
-                  {reps === 0
-                    ? '手本(てほん)の 上(うえ)を なぞると、線(せん)が 刀(かたな)に なる。'
-                    : sampleOverride === null && reps === SAMPLE_REPS
-                      ? 'ここからは 手本(てほん)なしで 書(か)いてみよう。'
-                      : strokeMistakes > 0
-                        ? `いま ${strokeMistakes} かい まちがえています`
-                        : '書(か)ききると 岩(いわ)が 割(わ)れる。'}
-                </RubyText>
+                <RubyText showFurigana={showFurigana}>{VERDICT_TEXT[verdict.kind].head}</RubyText>
+                {verdict.mistakes > 0 && (
+                  <span className="ml-2 text-sm font-normal" style={{ color: 'var(--ink-2)' }}>
+                    まちがえた ところ {verdict.mistakes}
+                  </span>
+                )}
               </motion.p>
-            )}
-          </AnimatePresence>
+              <p className="text-xs" style={{ color: 'var(--ink-2)' }}>
+                <RubyText showFurigana={showFurigana}>{VERDICT_TEXT[verdict.kind].next}</RubyText>
+              </p>
+            </>
+          ) : (
+            <p className="text-sm font-bold" style={{ color: 'var(--ink-2)' }}>
+              <RubyText showFurigana={showFurigana}>
+                {reps === 0
+                  ? '手本(てほん)の 上(うえ)を なぞると、線(せん)が 刀(かたな)に なる。'
+                  : sampleOverride === null && reps === SAMPLE_REPS
+                    ? 'ここからは 手本(てほん)なしで 書(か)いてみよう。'
+                    : strokeMistakes > 0
+                      ? `いま ${strokeMistakes} かい まちがえています`
+                      : '書(か)ききると 岩(いわ)が 割(わ)れる。'}
+              </RubyText>
+            </p>
+          )}
         </div>
 
         {/* 集めた かけら ------------------------------------------------ */}

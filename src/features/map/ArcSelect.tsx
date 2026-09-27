@@ -82,7 +82,7 @@ const MojiHero = ({ showFurigana }: { showFurigana: boolean }) => {
     <motion.section
       initial={{ opacity: 0, y: 16 }}
       animate={{ opacity: 1, y: 0 }}
-      className="relative overflow-hidden rounded-[22px] border-[3px] border-[#ffd86a] text-white shadow-[0_10px_28px_rgba(20,10,60,0.45)]"
+      className="rt-light relative overflow-hidden rounded-[22px] border-[3px] border-[#ffd86a] text-white shadow-[0_10px_28px_rgba(20,10,60,0.45)]"
       style={{ background: 'radial-gradient(ellipse at 70% 10%, #3b4aa8 0%, #1c1f52 55%, #0c0d24 100%)' }}
     >
       {/* Letters of light, as in the prologue. */}
