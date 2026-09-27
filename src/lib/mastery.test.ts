@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { REPS_TO_OBTAIN } from '../types/kanji';
-import { MASTERY_REPS, MOJI_OWN_REPS, masteryMultiplier, pickWeakest, repsToNextStar, starsOf } from './mastery';
+import { MASTERY_REPS, MOJI_OWN_REPS, comboMultiplier, masteryMultiplier, pickWeakest, repsToNextStar, starsOf } from './mastery';
 
 describe('mastery stars', () => {
   it('3 writes obtain, 6 is ★2, 10 is ★3', () => {
@@ -39,5 +39,11 @@ describe('pickWeakest', () => {
   it('never repeats the last one when there is a choice', () => {
     expect(pickWeakest(pool, repsOf, {}, 'b')?.id).toBe('c');
     expect(pickWeakest([{ id: 'a' }], repsOf, {}, 'a')?.id).toBe('a');
+  });
+});
+
+describe('comboMultiplier', () => {
+  it('starts at the second clean write, +10% each, up to +50%', () => {
+    expect([0, 1, 2, 3, 6, 20].map(comboMultiplier).map((m) => Math.round(m * 100))).toEqual([100, 100, 110, 120, 150, 150]);
   });
 });

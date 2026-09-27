@@ -26,10 +26,10 @@ import { useGameStore } from '../../store/gameStore';
  */
 
 const TILES: { ruby: string; x: string; y: string; color: string; delay: number; tilt: number }[] = [
-  { ruby: '学(がく)', x: '6%', y: '31%', color: '#3aa8f0', delay: 0.9, tilt: -8 },
-  { ruby: '森(もり)', x: '76%', y: '29%', color: '#46a83a', delay: 1.0, tilt: 7 },
-  { ruby: '水(みず)', x: '9%', y: '48%', color: '#2f6fd6', delay: 1.1, tilt: 5 },
-  { ruby: '火(ひ)', x: '78%', y: '46%', color: '#ef5a24', delay: 1.2, tilt: -6 },
+  { ruby: '日(ひ)', x: '6%', y: '31%', color: '#ffb03a', delay: 0.9, tilt: -8 },
+  { ruby: '月(つき)', x: '76%', y: '29%', color: '#8fb8ff', delay: 1.0, tilt: 7 },
+  { ruby: '山(やま)', x: '9%', y: '48%', color: '#5fd07a', delay: 1.1, tilt: 5 },
+  { ruby: '水(みず)', x: '78%', y: '46%', color: '#4fc3ff', delay: 1.2, tilt: -6 },
 ];
 
 /**
@@ -88,13 +88,13 @@ export const TitleScreen = () => {
 
   return (
     <div className="relative flex h-dvh flex-col items-center overflow-hidden">
-      <Backdrop scene="mukashi_village" dim={0.12} motes={18} />
-
-      {/* 空を 整える: ロゴの 後ろに 絵本の 太陽や 木が 重ならないように */}
-      <div
-        aria-hidden
-        className="pointer-events-none absolute inset-x-0 top-0 h-[42%]"
-        style={{ background: 'linear-gradient(180deg, #57b6f2 0%, rgba(125,200,245,0.92) 45%, rgba(170,220,248,0) 100%)' }}
+      {/* 夜の「光る 字の 町」(08 §10.3): プロローグと 同じ 世界。暗い 空で 青い ネクマックスが 映える。 */}
+      <Backdrop
+        scene="gendai_city"
+        rays={false}
+        dim={0.3}
+        motes={22}
+        wash="linear-gradient(180deg, #0b1038 0%, rgba(18,24,78,0.94) 38%, rgba(20,26,80,0.55) 70%, rgba(8,10,30,0.7) 100%)"
       />
 
       {/* ロゴの 後ろの 光 ------------------------------------------------ */}

@@ -18,6 +18,7 @@ export const Backdrop = ({
   motes = 14,
   dim = 0.18,
   fixed = false,
+  wash,
 }: {
   scene?: string;
   fx?: readonly string[];
@@ -26,6 +27,8 @@ export const Backdrop = ({
   dim?: number;
   /** Behind a scrolling menu screen: pinned to the viewport, under the content (.g-stage). */
   fixed?: boolean;
+  /** A colour laid over the picture, under the specks (e.g. night on the title). */
+  wash?: string;
 }) => {
   const prefersReduced = useReducedMotion();
   const settingReduced = useGameStore((st) => st.settings.reducedMotion);
@@ -45,6 +48,7 @@ export const Backdrop = ({
   return (
     <div className={`pointer-events-none inset-0 overflow-hidden ${fixed ? 'fixed -z-10' : 'absolute'}`} aria-hidden>
       <PictureBook scene={scene} fx={fx} />
+      {wash && <div className="absolute inset-0" style={{ background: wash }} />}
       {rays && (
         <motion.div
           className="absolute -top-1/4 left-1/2 h-[90%] w-[160%] -translate-x-1/2"

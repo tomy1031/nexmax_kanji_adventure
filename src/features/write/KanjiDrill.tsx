@@ -10,6 +10,7 @@ import { kanjiRuby } from '../../lib/reading';
 import { REPS_TO_OBTAIN, type KanjiData } from '../../types/kanji';
 import { MASTERY_REPS, repsToNextStar, starsOf } from '../../lib/mastery';
 import RockSlash, { type RockSlashHandle } from './RockSlash';
+import * as sfx from '../../lib/sfx';
 
 /**
  * The writing drill: write the character, and it cuts a rock. Each rock
@@ -55,6 +56,27 @@ const VERDICT_TEXT: Record<'perfect' | 'clean' | 'close', { head: string; next: 
   // Not a pass. Say so, then say what to do about it.
   close: { head: 'まだ 正(せい)かいでは ない', next: '岩(いわ)は 割(わ)れない。「書(か)きじゅん」を 見(み)てから もう一度(いちど)。' },
 };
+
+/** Eight stars flying out from the centre: a star was gained. */
+const StarBurst = () => (
+  <div aria-hidden className="pointer-events-none absolute top-1/2 left-1/2">
+    {Array.from({ length: 8 }, (_, i) => {
+      const a = (i / 8) * Math.PI * 2;
+      return (
+        <motion.span
+          key={i}
+          className="absolute -mt-3 -ml-3 text-2xl"
+          style={{ color: '#ffd23a', willChange: 'transform, opacity' }}
+          initial={{ x: 0, y: 0, scale: 0.4, opacity: 1 }}
+          animate={{ x: Math.cos(a) * 110, y: Math.sin(a) * 110, scale: 1.2, opacity: 0, rotate: 180 }}
+          transition={{ duration: 0.9, ease: 'easeOut' }}
+        >
+          ★
+        </motion.span>
+      );
+    })}
+  </div>
+);
 
 export const KanjiDrill = ({ kanji, onObtained, onExit, onDone, nextLabel = 'つぎへ', extra, goal }: KanjiDrillProps) => {
   const size = useCanvasSize(300, 0.4, 72);
@@ -145,7 +167,12 @@ export const KanjiDrill = ({ kanji, onObtained, onExit, onDone, nextLabel = 'つ
   const stars = starsOf(reps);
 
   useEffect(() => {
+    if (goalCard) sfx.fanfare();
+  }, [goalCard]);
+
+  useEffect(() => {
     if (starUp == null) return;
+    sfx.star(starUp - 1);
     const t = setTimeout(() => setStarUp(null), 1800);
     return () => clearTimeout(t);
   }, [starUp]);
@@ -340,6 +367,7 @@ export const KanjiDrill = ({ kanji, onObtained, onExit, onDone, nextLabel = 'つ
             style={{ willChange: 'transform, opacity' }}
             aria-live="polite"
           >
+            <StarBurst />
             <div className="g-btn-red rounded-2xl px-5 py-2 text-center font-black">
               <span className="block text-2xl tracking-widest" style={{ color: '#ffe27a' }}>
                 {'★'.repeat(starUp)}
@@ -365,6 +393,9 @@ export const KanjiDrill = ({ kanji, onObtained, onExit, onDone, nextLabel = 'つ
               transition={{ type: 'spring', stiffness: 320, damping: 22 }}
               className="g-parchment w-full max-w-sm px-6 py-6 text-center"
             >
+              <div className="relative">
+                <StarBurst />
+              </div>
               <div className="g-btn-red mx-auto -mt-10 mb-3 inline-block rounded-xl px-4 py-1 text-sm font-black">
                 <span style={{ color: '#ffe27a' }}>★</span> <RubyText showFurigana={showFurigana}>手(て)に 入(い)れた！</RubyText>
               </div>
