@@ -43,7 +43,7 @@ export const KANA_SCRIPTS: Record<string, KanaScript> = Object.fromEntries([
   script(
     'kana-1',
     [
-      { bg: 'mukashi_meadow', text: 'Boom! Something falls out of the sky — a little robot.' },
+      { bg: 'mukashi_meadow', text: 'The falling star crashes into the grass in front of me. Boom! It is the little robot — the one whose name was eaten.' },
       { speaker: 'nexmax', sprite: 'nexmax:think', text: 'たすけて。ことばを たべられた。' },
       { text: "It's trying to talk, but its words come out full of holes." },
       { speaker: 'nexmax', text: '🙅 だめだ……' },

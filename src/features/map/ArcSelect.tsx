@@ -1,11 +1,15 @@
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
+import { AnimatePresence, motion } from 'framer-motion';
 import { Arc, LEVEL_OF_ARC } from '../../types/kanji';
 import { RubyText } from '../../components/ui/Ruby';
-import { BottomTabs, LogoTitle, NexmaxSays } from '../../components/ui/Chrome';
+import { BottomTabs, LogoTitle } from '../../components/ui/Chrome';
 import { useGameStore } from '../../store/gameStore';
 import { stagesOfArc } from '../../data/stages';
-import { MOJI_CHAPTERS } from '../../data/mojiRoute';
+import { KANA_EPISODES } from '../../data/kana';
+import { MOJI_EPISODES } from '../../data/mojiEpisodes';
+import { LogoText } from '../../components/ui/LogoText';
+import { assetPath } from '../../lib/assetPath';
 import PictureBook from '../picturebook/PictureBook';
 
 /**
@@ -13,9 +17,9 @@ import PictureBook from '../picturebook/PictureBook';
  * The reference is titled 「N5をえらぶ」, but the three arcs are N5 / N4 / N3,
  * so the title names the worlds and each card carries its own level.
  *
- * 文字が 消えた 町 (08) sits on top as the new route; the three picture-book
- * worlds below it are kept as they were. 未来編 stays on the page, marked as
- * not ready, so the learner can see where the road goes.
+ * 文字が 消えた 町 (08) is the one big card (08 §10.2,「前面に」); the three
+ * picture-book worlds are folded under ほかの 物語 as small rows — their
+ * content and progress unchanged. 未来編 stays listed, marked じゅんび中.
  */
 
 const WORLDS: {
@@ -67,99 +71,137 @@ const WORLDS: {
   },
 ];
 
+/** The new route, as the one big card (08 §10.2). */
+const MojiHero = ({ showFurigana }: { showFurigana: boolean }) => {
+  const navigate = useNavigate();
+  const cleared = useGameStore((s) => s.clearedStages);
+  const w = WORLDS[0];
+  const eps = [...KANA_EPISODES.map((e) => e.id), ...MOJI_EPISODES.map((e) => e.id)];
+  const done = eps.filter((id) => cleared.includes(id)).length;
+  return (
+    <motion.section
+      initial={{ opacity: 0, y: 16 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="relative overflow-hidden rounded-[22px] border-[3px] border-[#ffd86a] text-white shadow-[0_10px_28px_rgba(20,10,60,0.45)]"
+      style={{ background: 'radial-gradient(ellipse at 70% 10%, #3b4aa8 0%, #1c1f52 55%, #0c0d24 100%)' }}
+    >
+      {/* Letters of light, as in the prologue. */}
+      <div aria-hidden className="pointer-events-none absolute inset-0">
+        {HERO_LETTERS.map((l) => (
+          <span
+            key={l.ch}
+            className="absolute font-black"
+            style={{ left: `${l.x}%`, top: `${l.y}%`, fontSize: l.s, color: '#fff8d6', opacity: 0.55, textShadow: '0 0 12px rgba(255,210,90,0.9)' }}
+          >
+            {l.ch}
+          </span>
+        ))}
+      </div>
+      <img
+        src={assetPath('img/chara/cut/hello.webp')}
+        alt=""
+        aria-hidden
+        className="absolute right-1 bottom-24 h-32 w-auto"
+      />
+      <div className="relative px-4 pt-4 pb-4">
+        <span className="rounded-md bg-[#e2453c] px-2 py-0.5 text-[11px] font-black">
+          <RubyText showFurigana={showFurigana}>あたらしい ・ みんなの 日本語(にほんご) じゅん</RubyText>
+        </span>
+        <h2 className="mt-2 text-[30px] leading-[1.5]">
+          <LogoText showFurigana={showFurigana}>{w.title}</LogoText>
+        </h2>
+        <p className="mt-1 w-[68%] text-[13px] leading-[1.95] font-bold whitespace-pre-line text-white/90">
+          <RubyText showFurigana={showFurigana}>{w.blurb}</RubyText>
+        </p>
+        <div className="mt-3 flex items-center gap-2 text-xs font-black">
+          <span className="rounded-md bg-white/15 px-2 py-0.5 tabular-nums">♛ N5〜N3 ・ {done}/{eps.length}</span>
+          <button type="button" className="underline" onClick={() => navigate('/prologue')} lang="en">
+            ▶ Prologue
+          </button>
+        </div>
+        <button type="button" className="g-btn g-btn-primary g-shine mt-3 w-full text-xl" onClick={() => navigate('/map/moji')}>
+          <span aria-hidden>▶</span>
+          <RubyText showFurigana={showFurigana}>{done ? 'つづける' : 'はじめる'}</RubyText>
+        </button>
+      </div>
+    </motion.section>
+  );
+};
+
+const HERO_LETTERS = [
+  { ch: 'あ', x: 62, y: 8, s: 30 },
+  { ch: 'カ', x: 84, y: 20, s: 22 },
+  { ch: 'う', x: 74, y: 36, s: 20 },
+  { ch: 'ネ', x: 90, y: 4, s: 18 },
+  { ch: 'き', x: 52, y: 28, s: 16 },
+];
+
 export const ArcSelect = () => {
   const navigate = useNavigate();
   const showFurigana = useGameStore((s) => s.settings.furigana);
   const cleared = useGameStore((s) => s.clearedStages);
+  const [others, setOthers] = useState(false);
 
   return (
     <div className="isolate relative min-h-dvh pb-28">
-      <PictureBook scene="mukashi_meadow" className="!fixed -z-10" />
+      <PictureBook scene="mukashi_meadow" className="!fixed -z-10" still />
       <div className="mx-auto flex max-w-md flex-col gap-4 px-3 pt-[max(14px,env(safe-area-inset-top))]">
         <div className="relative">
           <LogoTitle size={30} sub="ことばを 学(まな)んで 冒険(ぼうけん)しよう！">
-            世界(せかい)を えらぶ
+            物語(ものがたり)を えらぶ
           </LogoTitle>
-          <div className="absolute -top-1 -right-1">
-            <NexmaxSays text="どれに する？" pose="hello" size={48} />
-          </div>
         </div>
 
-        {WORLDS.map((w, i) => {
-          const total = w.arc === Arc.MOJI ? MOJI_CHAPTERS.length : w.ready ? stagesOfArc(w.arc).length : 10;
-          const done = cleared.filter((c) => c.startsWith(w.arc)).length;
-          return (
-            <motion.section
-              key={w.arc}
-              initial={{ opacity: 0, y: 16 }}
+        <MojiHero showFurigana={showFurigana} />
+
+        {/* The picture-book worlds, kept as they were but tucked away. */}
+        <button
+          type="button"
+          aria-expanded={others}
+          className="g-parchment mx-auto flex items-center gap-2 !rounded-full px-4 py-1.5 text-sm font-black"
+          onClick={() => setOthers((o) => !o)}
+        >
+          <RubyText showFurigana={showFurigana}>ほかの 物語(ものがたり)（むかし編(へん)・現代編(げんだいへん)）</RubyText>
+          <span aria-hidden>{others ? '▲' : '▼'}</span>
+        </button>
+
+        <AnimatePresence initial={false}>
+          {others && (
+            <motion.ul
+              initial={{ opacity: 0, y: -8 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: i * 0.08 }}
-              className="g-parchment relative overflow-hidden p-0"
-              style={{ opacity: w.ready ? 1 : 0.8 }}
+              exit={{ opacity: 0, y: -8 }}
+              className="flex flex-col gap-2"
             >
-              <div className="relative h-36">
-                {w.scene ? (
-                  <PictureBook scene={w.scene} />
-                ) : (
-                  <div
-                    className="absolute inset-0 flex items-center justify-center text-6xl font-black text-white/70"
-                    style={{ background: `linear-gradient(160deg, ${w.tint}cc, ${w.tint}55)` }}
-                  >
-                    {w.fresh ? <RubyText showFurigana={showFurigana}>字(じ)</RubyText> : '？'}
-                  </div>
-                )}
-                {w.fresh && (
-                  <span className="absolute bottom-2 left-2 rounded-lg border-2 border-white bg-[#e2453c] px-2 py-0.5 text-xs font-black text-white shadow">
-                    あたらしい
-                  </span>
-                )}
-                <div className="absolute top-2 left-2 rounded-xl border-2 border-[#caa468] bg-[#fdf4dd] px-3 py-0.5 shadow">
-                  <h2 className="text-2xl font-black" style={{ color: w.tint }}>
-                    <RubyText showFurigana={showFurigana}>{w.title}</RubyText>
-                  </h2>
-                </div>
-                <span className="absolute top-2 right-2 rounded-lg border-2 border-white bg-[#23456e]/85 px-2 py-0.5 text-xs font-black text-white tabular-nums">
-                  ♛ {w.arc === Arc.MOJI ? 'N5〜N3' : LEVEL_OF_ARC[w.arc]} {done}/{total}
-                </span>
-              </div>
-
-              <div className="px-3 pt-2 pb-3">
-                <p className="text-[13px] leading-[1.95] whitespace-pre-line">
-                  <RubyText showFurigana={showFurigana}>{w.blurb}</RubyText>
-                </p>
-                <p className="mt-1 text-[11px] font-black" style={{ color: 'var(--ink-2)' }}>
-                  <RubyText showFurigana={showFurigana}>学(まな)べる ことばの 例(れい)</RubyText>
-                </p>
-                <div className="mt-0.5 flex flex-wrap gap-1.5">
-                  {w.words.map((word) => (
-                    <span key={word} className="rounded-md border border-[#caa468] bg-white/80 px-2 text-sm leading-[1.9] font-black">
-                      <RubyText showFurigana={showFurigana}>{word}</RubyText>
-                    </span>
-                  ))}
-                </div>
-                <button
-                  type="button"
-                  disabled={!w.ready}
-                  className="g-btn g-btn-primary mt-2.5 w-full text-base"
-                  onClick={() => navigate(`/map/${w.arc}`)}
-                >
-                  {w.ready ? (
-                    <>
-                      <span aria-hidden>▶</span>
-                      <RubyText showFurigana={showFurigana}>この 世界(せかい)で 冒険(ぼうけん)する</RubyText>
-                    </>
-                  ) : (
-                    <RubyText showFurigana={showFurigana}>じゅんび中(ちゅう)</RubyText>
-                  )}
-                </button>
-              </div>
-            </motion.section>
-          );
-        })}
-
-        <p className="g-wood mx-auto px-4 py-1 text-center text-xs font-black">
-          <RubyText showFurigana={showFurigana}>まなぶほど、つよく なる。ことばで 世界(せかい)は つながって いる。</RubyText>
-        </p>
+              {WORLDS.slice(1).map((w) => {
+                const total = w.ready ? stagesOfArc(w.arc).length : 10;
+                const done = cleared.filter((c) => c.startsWith(w.arc)).length;
+                return (
+                  <li key={w.arc}>
+                    <button
+                      type="button"
+                      disabled={!w.ready}
+                      onClick={() => navigate(`/map/${w.arc}`)}
+                      className="g-parchment flex w-full items-center gap-3 !rounded-2xl px-3 py-2 text-left disabled:opacity-60"
+                    >
+                      <span className="h-10 w-1.5 shrink-0 rounded-full" style={{ background: w.tint }} />
+                      <span className="min-w-0 flex-1">
+                        <span className="block text-base font-black" style={{ color: w.tint }}>
+                          <RubyText showFurigana={showFurigana}>{w.title}</RubyText>
+                        </span>
+                        <span className="block text-[11px] font-bold" style={{ color: 'var(--ink-2)' }}>
+                          {LEVEL_OF_ARC[w.arc]} ・{' '}
+                          {w.ready ? `${done}/${total}` : <RubyText showFurigana={showFurigana}>じゅんび中(ちゅう)</RubyText>}
+                        </span>
+                      </span>
+                      {w.ready && <span aria-hidden>▶</span>}
+                    </button>
+                  </li>
+                );
+              })}
+            </motion.ul>
+          )}
+        </AnimatePresence>
       </div>
       <BottomTabs current="story" />
     </div>

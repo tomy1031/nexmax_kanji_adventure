@@ -80,6 +80,8 @@ export const TitleScreen = () => {
   // A new player starts in 0話, where the one idea the game rests on —
   // writing a character does something — is shown in a few minutes.
   const seenIntro = useGameStore((s) => s.tutorials.intro);
+  // New players start with the prologue of 文字が 消えた 町 (08 §10.2).
+  const seenPrologue = useGameStore((s) => s.tutorials.prologue);
   const prefersReduced = useReducedMotion();
   const settingReduced = useGameStore((s) => s.settings.reducedMotion);
   const still = Boolean(prefersReduced || settingReduced);
@@ -225,7 +227,7 @@ export const TitleScreen = () => {
           className="g-btn g-btn-primary g-shine w-full !min-h-[64px] text-[26px]"
           style={{ fontFamily: 'var(--font-logo)', fontWeight: 400 }}
           whileTap={{ scale: 0.96, y: 3 }}
-          onClick={() => navigate(seenIntro || hasSave ? mapPath : '/tutorial')}
+          onClick={() => navigate(seenIntro || hasSave ? mapPath : seenPrologue ? '/map/moji' : '/prologue')}
         >
           {/* 光る ふち: 影を 動かすと 毎コマ 描き直しに なるので、光だけの 層の 濃さを 動かす */}
           {!still && (
@@ -246,11 +248,11 @@ export const TitleScreen = () => {
           <motion.button
             type="button"
             whileTap={{ scale: 0.96 }}
-            className="g-btn g-btn-accent flex-[1.4] !px-2 text-[15px]"
+            className="g-btn g-btn-slate flex-[1.4] !px-2 text-[15px]"
             onClick={() => navigate('/map')}
           >
             <GiWorld aria-hidden size={20} />
-            <RubyText showFurigana={showFurigana}>世界(せかい)を えらぶ</RubyText>
+            <RubyText showFurigana={showFurigana}>ほかの 物語(ものがたり)</RubyText>
           </motion.button>
           <motion.button
             type="button"
