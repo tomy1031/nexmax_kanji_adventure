@@ -217,9 +217,14 @@ export const MojiRouteMap = () => {
           );
         })}
 
-        <button type="button" className="g-btn g-btn-accent mx-auto px-6" onClick={() => navigate('/map')}>
-          <RubyText showFurigana={showFurigana}>世界(せかい)を えらぶ</RubyText>
-        </button>
+        <div className="flex items-center justify-center gap-4 text-sm font-black">
+          <button type="button" className="g-parchment !rounded-full px-4 py-1" onClick={() => navigate('/prologue')} lang="en">
+            ▶ Prologue
+          </button>
+          <button type="button" className="g-parchment !rounded-full px-4 py-1" onClick={() => navigate('/map')}>
+            <RubyText showFurigana={showFurigana}>ほかの 物語(ものがたり)</RubyText>
+          </button>
+        </div>
       </div>
       <BottomTabs current="story" />
     </div>
