@@ -30,6 +30,7 @@ import { GameIcon } from '../../components/ui/GameIcon';
 import { featuresUnlockedBy, FEATURE_INTRO } from '../../data/unlocks';
 import PictureBook from '../picturebook/PictureBook';
 import EnemyArt from './EnemyArt';
+import { MASTERY_REPS, masteryMultiplier, pickWeakest, starsOf, type Stars } from '../../lib/mastery';
 
 /**
  * The fight.
@@ -73,6 +74,12 @@ interface BattleSceneProps {
    * stroke mistake and every look at the stroke order counts one.
    */
   patience: number;
+  /**
+   * 文字が 消えた 町 (08 §4.2.2): damage follows the kanji's stars, the
+   * opponent asks for the least-known kanji, and a clean write (no slip, no
+   * look at the stroke order) counts toward its stars.
+   */
+  mastery?: boolean;
 }
 
 type Outcome = { kind: 'win'; stars: 1 | 2 | 3 } | { kind: 'lose' } | null;
@@ -132,6 +139,7 @@ export const BattleScene = ({
   mode = 'stage',
   weaponOverride,
   patience: basePatienceValue,
+  mastery = false,
 }: BattleSceneProps) => {
   const navigate = useNavigate();
   const size = useCanvasSize(210, 0.25, 96);
@@ -146,6 +154,7 @@ export const BattleScene = ({
   const addGems = useGameStore((s) => s.addGems);
   const grantIndividual = useGameStore((s) => s.grantIndividual);
   const recordReview = useGameStore((s) => s.recordReview);
+  const recordRep = useGameStore((s) => s.recordRep);
   const alreadyCleared = useGameStore((s) => s.clearedStages.includes(stage.id));
   const [clearedAtStart] = useState(alreadyCleared);
   const equippedGear = useGameStore((s) => s.equippedGear);
@@ -215,8 +224,16 @@ export const BattleScene = ({
   const enemyCtl = useAnimationControls();
   const fieldCtl = useAnimationControls();
 
-  const target = kanjiPool[turn % kanjiPool.length];
+  // Which kanji the opponent asks for. On the new route it is the least
+  // known one, chosen once per turn (the count moves as the learner writes).
+  const askedRef = useRef<Record<string, number>>({});
+  const repsNow = (id: string) => useGameStore.getState().progress[id]?.reps ?? 0;
+  const [weakestId, setWeakestId] = useState<string | null>(() =>
+    mastery ? (pickWeakest(kanjiPool, repsNow, {}, null)?.id ?? null) : null,
+  );
+  const target = mastery ? (kanjiPool.find((k) => k.id === weakestId) ?? kanjiPool[0]) : kanjiPool[turn % kanjiPool.length];
   const ownsTarget = target ? progress[target.id]?.obtainedAt != null : false;
+  const targetStars: Stars = target ? starsOf(progress[target.id]?.reps ?? 0) : 0;
 
   const settle = useCallback(
     (kind: 'win' | 'lose', mistakes: number, hpLeft: number) => {
@@ -296,9 +313,16 @@ export const BattleScene = ({
       // Writing an owned character in battle is a review of it — except in
       // 0話, where 一 was obtained minutes ago and three quick writes would
       // push its first review a week out.
+      let starUp: Stars | null = null;
       if (!tutorial && target && progress[target.id]?.obtainedAt != null) {
         recordReview(target.id, mistakes);
+      } else if (mastery && target && mistakes === 0 && !hinted) {
+        // Written from memory without a slip: that is a write, and it counts.
+        const before = progress[target.id]?.reps ?? 0;
+        recordRep(target.id, 0);
+        if (starsOf(before + 1) > starsOf(before)) starUp = starsOf(before + 1);
       }
+      const critical = mastery && targetStars === 3 && mistakes === 0 && !hinted;
 
       const result = computeDamage({
         weapon,
@@ -307,8 +331,9 @@ export const BattleScene = ({
         mistakes,
         rust,
         attackPct: stats.attackPct,
-        owned: ownsTarget && !tutorial,
+        owned: ownsTarget && !tutorial && !mastery,
         hinted,
+        mastery: mastery ? masteryMultiplier(targetStars, mistakes === 0 && !hinted) : 1,
       });
       sfx.slash(1);
       sfx.hit();
@@ -323,7 +348,11 @@ export const BattleScene = ({
       setBossHp(nextBossHp);
 
       setFlash(
-        result.perfect
+        critical
+          ? `字(じ)の わざ！ ${result.damage} ダメージ`
+          : starUp
+            ? `★${starUp}に なった！ ${result.damage} ダメージ`
+            : result.perfect
           ? `かんぺき！ ${result.damage} ダメージ`
           : hinted
             ? `かきじゅんを みたので はんぶん。${result.damage} ダメージ`
@@ -340,11 +369,16 @@ export const BattleScene = ({
         return;
       }
 
+      if (mastery && target) {
+        askedRef.current[target.id] = (askedRef.current[target.id] ?? 0) + 1;
+        setWeakestId(pickWeakest(kanjiPool, repsNow, askedRef.current, target.id)?.id ?? null);
+      }
       setTurn((t) => t + 1);
     },
     [
-      tutorial, totalMistakes, target, progress, recordReview, weapon, individual, stage.boss,
+      tutorial, totalMistakes, target, progress, recordReview, recordRep, weapon, individual, stage.boss,
       rust, bossHp, playerHp, settle, heroCtl, enemyCtl, turn, stats.attackPct, ownsTarget, hinted,
+      mastery, targetStars, kanjiPool,
     ],
   );
 
@@ -500,7 +534,22 @@ export const BattleScene = ({
               </p>
             </div>
           </div>
-          {!tutorial && (
+          {mastery && (
+            <p
+              className="mt-1 flex items-center gap-2 rounded-md px-2 py-0.5 text-[11px] font-bold"
+              style={{ background: targetStars >= 2 ? 'rgba(255,210,90,0.3)' : 'rgba(255,107,125,0.18)' }}
+            >
+              <span className="text-sm tracking-wider" style={{ color: '#e8a317' }} aria-label={`★${targetStars}`}>
+                {'★'.repeat(targetStars) + '☆'.repeat(3 - targetStars)}
+              </span>
+              <RubyText showFurigana={showFurigana}>
+                {targetStars === 3
+                  ? 'マスター。まちがえずに 書(か)くと「字(じ)の わざ」'
+                  : `こうげき ×${masteryMultiplier(targetStars, false)}。まちがえずに 書(か)くと ★が ふえる（${MASTERY_REPS[targetStars]}回(かい)で ★${targetStars + 1}）`}
+              </RubyText>
+            </p>
+          )}
+          {!tutorial && !mastery && (
             <p
               className="mt-1 rounded-md px-2 py-0.5 text-[11px] font-bold"
               style={{ background: ownsTarget ? 'rgba(126,211,107,0.25)' : 'rgba(255,107,125,0.18)' }}
