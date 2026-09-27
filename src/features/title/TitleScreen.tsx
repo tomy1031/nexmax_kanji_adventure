@@ -138,8 +138,9 @@ export const TitleScreen = () => {
             ネクマックスの
           </LogoText>
           <br />
+          {/* 2026-09-27「タイトルは 文字が 消えた 町の ままで いいかも」: the route is the game now. */}
           <LogoText shine showFurigana={showFurigana} className="text-[min(10.4vw,46px)] leading-[1.55]">
-            漢字(かんじ)アドベンチャー
+            文字(もじ)が 消(き)えた 町(まち)
           </LogoText>
         </h1>
         <motion.div
