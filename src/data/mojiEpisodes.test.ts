@@ -5,6 +5,8 @@ import { MOJI1_CAST, MOJI1_SCRIPTS } from './scripts/moji1';
 import { getKanjiByChar } from '../lib/kanjiDb';
 import { unreadKanji } from '../lib/ruby';
 import { SCENES, fxNamesOf } from '../features/picturebook/scenes';
+import { computeDamage } from '../lib/battle';
+import { masteryMultiplier } from '../lib/mastery';
 
 describe('文字が 消えた 町: episodes', () => {
   it('teach each chapter’s kanji in the book’s order, a handful at a time', () => {
@@ -16,6 +18,25 @@ describe('文字が 消えた 町: episodes', () => {
       expect(ep.kanji.length, ep.id).toBeGreaterThanOrEqual(3);
       expect(ep.kanji.length, ep.id).toBeLessThanOrEqual(9);
       for (const k of ep.kanji) expect(getKanjiByChar(k), `${ep.id} ${k}`).toBeDefined();
+    }
+  });
+
+  it('end in a fight a ★1 hand can win, but only by writing well (08 §4.2.2)', () => {
+    const hit = (stars: 0 | 1 | 2 | 3) =>
+      computeDamage({
+        weapon: null,
+        individual: null,
+        defenderElement: MOJI_EPISODES[0].boss.element,
+        mistakes: 0,
+        mastery: masteryMultiplier(stars, true),
+      }).damage;
+    for (const ep of MOJI_EPISODES) {
+      expect(SCENES[ep.bg], ep.id).toBeDefined();
+      const writes = (stars: 0 | 1 | 2 | 3) => Math.ceil(ep.boss.hp / hit(stars));
+      // About two clean writes per kanji at ★1; ★3 needs half as many.
+      expect(writes(1), ep.id).toBeGreaterThanOrEqual(ep.kanji.length * 1.5);
+      expect(writes(1), ep.id).toBeLessThanOrEqual(ep.kanji.length * 2.5);
+      expect(writes(3), ep.id).toBeLessThanOrEqual(writes(1) / 2);
     }
   });
 
