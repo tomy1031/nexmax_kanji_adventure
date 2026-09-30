@@ -1,316 +1,177 @@
 import { useNavigate } from 'react-router-dom';
-import { useMapPath } from '../../lib/nav';
 import { motion, useReducedMotion } from 'framer-motion';
-import { GiCog, GiCrown, GiWorld } from 'react-icons/gi';
 import { assetPath } from '../../lib/assetPath';
-import { RubyText } from '../../components/ui/Ruby';
-import { GameIcon } from '../../components/ui/GameIcon';
-import { Backdrop } from '../../components/ui/Backdrop';
-import { LogoText } from '../../components/ui/LogoText';
 import { useGameStore } from '../../store/gameStore';
 
 /**
- * Title (public/img/design/ネクマックス漢字アドベンチャー.png): the logo, Nexmax
- * with a sword, kanji tiles floating around him, three buttons, and the
- * promise of the game on a scroll — 漢字を まなぶと、ネクマックスは どんどん
- * つよくなる.
+ * Title (the layout example delivered with the parts, 「ChatGPT 画像 2026年9月29日
+ * 17_02_34.png」): the city at sunset, the logo across the sky, Nexmax on the
+ * ledge pointing out over the river, and three plates.
  *
- * 2026-09-24「商用 レベルに」: the screen comes in as a sequence — light
- * behind the logo, the logo drops in, Nexmax rises on his magic circle, the
- * tiles pop, the buttons slide up — and then keeps breathing: a light runs
- * through the lettering, the circle turns, specks of light drift up.
+ * Every part is a delivered picture (art-src/titlesozai/, kept out of git;
+ * made web-sized into public/img/title/ by scripts/prepare_ui_assets.mjs);
+ * nothing is drawn in CSS. Phones get the tall city, PCs the wide one.
  *
- * The old key art has its title and signs painted in, with no furigana, so
- * the screen is built from the picture book instead and every kanji on it
- * carries its reading.
+ * The plates follow the usual phone-game title: the one thing to do next is
+ * the big blue plate on top, everything else is a smaller brown plate of one
+ * size. Both lead into 文字が 消えた 町 (08), which is the game now; the
+ * picture-book worlds are closing (2026-09-30) and are reached only from the
+ * route map's small ほかの 物語 link.
+ *
+ *   new player    はじめから (blue) → the prologue, which runs on into the map
+ *                 つづきから (brown, greyed: nothing to continue yet)
+ *   returning     つづきから (blue) → the route map — the game's home, one tap
+ *                   from the next episode, with the forge and daily tasks
+ *                   around it
+ *                 はじめから (brown) → the prologue again; nothing is lost.
+ *                   Wiping the save lives in せってい, behind its own
+ *                   confirmation.
+ *   always        せってい (brown)
+ *
+ * The screen comes in as a sequence — the logo drops in, Nexmax rises, the
+ * plates slide up — and the blue plate keeps glowing softly. Nothing that
+ * moves carries a CSS filter: on iPhone and iPad a filter on a moving layer is
+ * redrawn every frame (2026-09-26「オープニングから重い」).
  */
 
-const TILES: { ruby: string; x: string; y: string; color: string; delay: number; tilt: number }[] = [
-  { ruby: '日(ひ)', x: '6%', y: '31%', color: '#ffb03a', delay: 0.9, tilt: -8 },
-  { ruby: '月(つき)', x: '76%', y: '29%', color: '#8fb8ff', delay: 1.0, tilt: 7 },
-  { ruby: '山(やま)', x: '9%', y: '48%', color: '#5fd07a', delay: 1.1, tilt: 5 },
-  { ruby: '水(みず)', x: '78%', y: '46%', color: '#4fc3ff', delay: 1.2, tilt: -6 },
-];
+const art = (name: string) => assetPath(`img/title/${name}.webp`);
 
 /**
- * The magic circle under Nexmax: two rings, points of a star, no letters.
- *
- * Its glow is drawn into the picture (a wide faint ring), not a CSS
- * drop-shadow: a filter over a rotating circle is recomputed every frame, and
- * on iPhone and iPad that alone made the title screen heavy (2026-09-26
- * 「オープニングから重い」).
+ * The button pictures, all cut with one box (width : height = 3.8). Where the
+ * plate itself starts and ends inside each, as a fraction of its height,
+ * measured from the WebP: gears and glow stick out differently on each, so
+ * equal margins would leave unequal gaps.
  */
-const MagicCircle = ({ still }: { still: boolean }) => (
-  <div
-    className="absolute bottom-[-9%] left-1/2 aspect-square w-[135%] -translate-x-1/2"
-    style={{ transform: 'scaleY(0.32)' }}
-    aria-hidden
+const PLATE_ASPECT = 3.8;
+const PLATES = {
+  newBlue: { src: 'btn_new_blue', label: 'はじめから', top: 0.11, bottom: 0.955 },
+  newBrown: { src: 'btn_new_brown', label: 'はじめから', top: 0.143, bottom: 0.952 },
+  continueBlue: { src: 'btn_continue_blue', label: 'つづきから', top: 0.12, bottom: 0.92 },
+  continueBrown: { src: 'btn_continue_brown', label: 'つづきから', top: 0.082, bottom: 0.925 },
+  settings: { src: 'btn_settings', label: 'せってい', top: 0.102, bottom: 0.925 },
+} as const;
+type PlateArt = (typeof PLATES)[keyof typeof PLATES];
+
+/** Widths in % of the column: the big plate, and every other one. */
+const BIG = 60;
+const SMALL = 43;
+/** Visible gap between two plates, in % of the column width. */
+const GAP = 3.2;
+
+type PlateSpec = { art: PlateArt; width: number; onClick: () => void; disabled?: boolean; glow?: boolean };
+
+/** margin-top (in %, which CSS takes of the width) that leaves GAP between the drawn plates. */
+const marginAbove = (above: PlateSpec, below: PlateSpec) =>
+  GAP - (1 - above.art.bottom) * (above.width / PLATE_ASPECT) - below.art.top * (below.width / PLATE_ASPECT);
+
+const Plate = ({ spec, marginTop, still }: { spec: PlateSpec; marginTop: number; still: boolean }) => (
+  <motion.button
+    type="button"
+    data-tap
+    disabled={spec.disabled}
+    whileTap={spec.disabled ? undefined : { scale: 0.95 }}
+    className="relative block disabled:opacity-60 disabled:grayscale"
+    style={{ width: `${spec.width}%`, marginTop: `${marginTop}%` }}
+    onClick={spec.onClick}
   >
-    <motion.svg
-      viewBox="0 0 200 200"
-      className="h-full w-full"
-      style={{ willChange: 'transform' }}
-      animate={still ? undefined : { rotate: 360 }}
-      transition={{ duration: 24, repeat: Infinity, ease: 'linear' }}
-    >
-      <circle cx="100" cy="100" r="93" fill="none" stroke="rgba(120,220,255,0.35)" strokeWidth="14" />
-      <circle cx="100" cy="100" r="92" fill="rgba(140,230,255,0.35)" stroke="#e6fbff" strokeWidth="6" />
-      <circle cx="100" cy="100" r="78" fill="none" stroke="#9eeaff" strokeWidth="4" strokeDasharray="8 6" />
-      <circle cx="100" cy="100" r="54" fill="none" stroke="#ffffff" strokeWidth="4" />
-      <path
-        d="M100 22 L118 82 L178 100 L118 118 L100 178 L82 118 L22 100 L82 82 Z"
-        fill="none"
-        stroke="#ffffff"
-        strokeWidth="4"
-        strokeLinejoin="round"
+    {spec.glow && !still && (
+      <motion.span
+        aria-hidden
+        className="absolute -inset-x-[4%] -inset-y-[18%] rounded-full"
+        style={{ background: 'radial-gradient(ellipse closest-side, rgba(255,214,110,0.85) 0%, rgba(255,190,60,0.3) 55%, transparent 100%)', willChange: 'opacity' }}
+        animate={{ opacity: [0.15, 0.85, 0.15] }}
+        transition={{ duration: 2.2, repeat: Infinity, ease: 'easeInOut' }}
       />
-      {Array.from({ length: 12 }, (_, i) => {
-        const a = (i / 12) * Math.PI * 2;
-        return <circle key={i} cx={100 + Math.cos(a) * 85} cy={100 + Math.sin(a) * 85} r="3.2" fill="#fff" />;
-      })}
-    </motion.svg>
-  </div>
+    )}
+    <img src={art(spec.art.src)} alt={spec.art.label} draggable={false} className="relative block h-auto w-full select-none" />
+  </motion.button>
 );
 
 export const TitleScreen = () => {
   const navigate = useNavigate();
-  const mapPath = useMapPath();
-  const showFurigana = useGameStore((s) => s.settings.furigana);
   const hasSave = useGameStore((s) => s.clearedStages.length > 0 || s.weapons.length > 0);
-  // A new player starts in 0話, where the one idea the game rests on —
-  // writing a character does something — is shown in a few minutes.
   const seenIntro = useGameStore((s) => s.tutorials.intro);
-  // New players start with the prologue of 文字が 消えた 町 (08 §10.2).
   const seenPrologue = useGameStore((s) => s.tutorials.prologue);
+  const canContinue = seenPrologue || seenIntro || hasSave;
   const prefersReduced = useReducedMotion();
   const settingReduced = useGameStore((s) => s.settings.reducedMotion);
   const still = Boolean(prefersReduced || settingReduced);
 
+  // A new player starts with the prologue of 文字が 消えた 町 (08 §10.2).
+  const startOver = () => navigate('/prologue');
+  const carryOn = () => navigate('/map/moji');
+  const settings: PlateSpec = { art: PLATES.settings, width: SMALL, onClick: () => navigate('/settings') };
+  const plates: PlateSpec[] = canContinue
+    ? [
+        { art: PLATES.continueBlue, width: BIG, onClick: carryOn, glow: true },
+        { art: PLATES.newBrown, width: SMALL, onClick: startOver },
+        settings,
+      ]
+    : [
+        { art: PLATES.newBlue, width: BIG, onClick: startOver, glow: true },
+        { art: PLATES.continueBrown, width: SMALL, onClick: carryOn, disabled: true },
+        settings,
+      ];
+
   return (
-    <div className="relative flex h-dvh flex-col items-center overflow-hidden">
-      {/* 夜の「光る 字の 町」(08 §10.3): プロローグと 同じ 世界。暗い 空で 青い ネクマックスが 映える。 */}
-      <Backdrop
-        scene="gendai_city"
-        rays={false}
-        dim={0.3}
-        motes={22}
-        wash="linear-gradient(180deg, #0b1038 0%, rgba(18,24,78,0.94) 38%, rgba(20,26,80,0.55) 70%, rgba(8,10,30,0.7) 100%)"
-      />
+    <div className="relative h-dvh overflow-hidden bg-[#2a2350]">
+      <picture>
+        <source media="(orientation: landscape)" srcSet={art('bg_wide')} />
+        <img src={art('bg')} alt="" aria-hidden fetchPriority="high" className="absolute inset-0 h-full w-full object-cover" />
+      </picture>
 
-      {/* ロゴの 後ろの 光 ------------------------------------------------ */}
-      <motion.div
-        aria-hidden
-        className="pointer-events-none absolute top-[-14%] left-1/2 aspect-square w-[150%] -translate-x-1/2"
-        style={{
-          background:
-            'repeating-conic-gradient(from 0deg, rgba(255,247,200,0.55) 0deg 7deg, rgba(255,247,200,0) 7deg 18deg)',
-          maskImage: 'radial-gradient(circle, #000 12%, transparent 58%)',
-          WebkitMaskImage: 'radial-gradient(circle, #000 12%, transparent 58%)',
-          willChange: 'transform',
-        }}
-        initial={{ opacity: 0 }}
-        animate={still ? { opacity: 1 } : { opacity: 1, rotate: 360 }}
-        transition={{ opacity: { duration: 1 }, rotate: { duration: 60, repeat: Infinity, ease: 'linear' } }}
-      />
-      <div
-        aria-hidden
-        className="pointer-events-none absolute top-[4%] left-1/2 h-[26%] w-[90%] -translate-x-1/2 rounded-full"
-        style={{ background: 'radial-gradient(ellipse, rgba(255,250,215,0.85) 0%, rgba(255,240,180,0.35) 40%, transparent 70%)' }}
-      />
-
-      {/* ロゴ ---------------------------------------------------------- */}
-      <motion.div
-        initial={{ opacity: 0, y: -80, scale: 0.7 }}
-        animate={{ opacity: 1, y: 0, scale: 1 }}
-        transition={{ type: 'spring', stiffness: 180, damping: 13, delay: 0.25 }}
-        className="relative z-10 mt-[max(14px,env(safe-area-inset-top))] flex flex-col items-center text-center"
-      >
-        <motion.span
-          aria-hidden
-          style={{ color: '#ffd23a', filter: 'drop-shadow(0 2px 0 #7a4a12) drop-shadow(0 0 10px rgba(255,220,100,0.9))' }}
-          animate={still ? undefined : { y: [0, -3, 0] }}
-          transition={{ duration: 2.4, repeat: Infinity, ease: 'easeInOut' }}
-        >
-          <GiCrown size={40} />
-        </motion.span>
-        <h1 className="-mt-1 leading-none">
-          <LogoText tone="blue" className="text-[min(8.2vw,34px)] leading-[1.35]">
-            ネクマックスの
-          </LogoText>
-          <br />
-          {/* 2026-09-27「タイトルは 文字が 消えた 町の ままで いいかも」: the route is the game now. */}
-          <LogoText shine showFurigana={showFurigana} className="text-[min(10.4vw,46px)] leading-[1.55]">
-            文字(もじ)が 消(き)えた 町(まち)
-          </LogoText>
-        </h1>
-        <motion.div
-          initial={{ scaleX: 0 }}
-          animate={{ scaleX: 1 }}
-          transition={{ delay: 0.75, duration: 0.35 }}
-          className="g-ribbon -mt-1 text-[14px] leading-[1.9]"
-        >
-          <RubyText showFurigana={showFurigana}>まなぶほど、つよく なる！</RubyText>
-        </motion.div>
-      </motion.div>
-
-      {/* 字の タイル ----------------------------------------------------- */}
-      {TILES.map((t) => (
-        <motion.div
-          key={t.ruby}
-          className="absolute z-10"
-          style={{ left: t.x, top: t.y }}
-          initial={{ opacity: 0, scale: 0 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ type: 'spring', stiffness: 300, damping: 14, delay: t.delay }}
-        >
-          <motion.div
-            className="flex h-[68px] w-[58px] items-center justify-center rounded-2xl text-[30px] leading-[1.6] font-black"
-            style={{
-              background: 'linear-gradient(160deg, #ffffff 0%, #f3f7ff 60%, #dfe9fb 100%)',
-              border: `3px solid ${t.color}`,
-              color: '#24263a',
-              boxShadow: `0 0 0 3px #fff, 0 0 18px ${t.color}, 0 6px 10px rgba(0,0,0,0.25)`,
-            }}
-            animate={still ? { rotate: t.tilt } : { y: [0, -10, 0], rotate: [t.tilt, -t.tilt / 2, t.tilt] }}
-            transition={{ duration: 3.4, repeat: Infinity, ease: 'easeInOut', delay: t.delay }}
-          >
-            <RubyText showFurigana={showFurigana}>{t.ruby}</RubyText>
-          </motion.div>
-        </motion.div>
-      ))}
-
-      {/* ネクマックスと 剣、魔法陣 ------------------------------------------ */}
-      <motion.div
-        className="relative z-10 mt-1 flex h-[27dvh] items-end justify-center"
-        initial={{ opacity: 0, y: 40 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ type: 'spring', stiffness: 160, damping: 16, delay: 0.55 }}
-      >
-        <div
-          aria-hidden
-          className="absolute bottom-[-4%] left-1/2 h-[30%] w-[110%] -translate-x-1/2 rounded-[50%]"
-          style={{ background: 'radial-gradient(ellipse, rgba(170,240,255,0.95) 0%, rgba(90,200,255,0.45) 45%, transparent 72%)' }}
-        />
-        <MagicCircle still={still} />
-        <motion.div
-          className="relative"
-          style={{ willChange: 'transform' }}
-          animate={still ? undefined : { y: [0, -8, 0] }}
-          transition={{ duration: 2.8, repeat: Infinity, ease: 'easeInOut' }}
+      {/* The composition keeps the reference's 9:16 proportions; on a wide
+          screen the city still fills the window behind it. */}
+      <div className="relative mx-auto flex h-full w-[min(100%,56dvh)] flex-col items-center pt-[max(3dvh,env(safe-area-inset-top))] pb-[max(8dvh,env(safe-area-inset-bottom))]">
+        {/* ロゴ ---------------------------------------------------------- */}
+        <motion.h1
+          className="w-[86%]"
+          initial={{ opacity: 0, y: -60, scale: 0.8 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          transition={{ type: 'spring', stiffness: 180, damping: 14, delay: 0.2 }}
         >
           <img
-            src={assetPath('img/chara/cut/guide.webp')}
-            alt=""
-            aria-hidden
-            className="h-[23dvh] w-auto"
-            style={{ filter: 'drop-shadow(3px 0 0 #fff) drop-shadow(-3px 0 0 #fff) drop-shadow(0 -3px 0 #fff) drop-shadow(0 10px 12px rgba(0,30,80,0.35))' }}
+            src={art('logo')}
+            alt="ネクマックスの漢字アドベンチャー　なくなった ことばを 取りもどそう！"
+            fetchPriority="high"
+            className="block h-auto w-full"
           />
-          <motion.span
-            className="absolute -top-7 left-[2%] -rotate-12"
-            style={{ color: '#fff7d6', filter: 'drop-shadow(0 0 12px rgba(255,210,90,1)) drop-shadow(0 2px 0 #7a4a26)', willChange: 'transform' }}
-            animate={still ? undefined : { rotate: [-14, -6, -14] }}
-            transition={{ duration: 2.8, repeat: Infinity, ease: 'easeInOut' }}
-          >
-            <GameIcon name="GiBroadsword" size={72} />
-          </motion.span>
-        </motion.div>
-      </motion.div>
+        </motion.h1>
 
-      {/* ボタン ---------------------------------------------------------- */}
-      <motion.div
-        initial={{ opacity: 0, y: 30 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5, delay: 1.0 }}
-        className="relative z-10 mt-auto flex w-full max-w-sm flex-col items-center gap-2.5 px-7"
-      >
-        <motion.button
-          type="button"
-          className="g-btn g-btn-primary g-shine w-full !min-h-[64px] text-[26px]"
-          style={{ fontFamily: 'var(--font-logo)', fontWeight: 400 }}
-          whileTap={{ scale: 0.96, y: 3 }}
-          onClick={() => navigate(seenIntro || hasSave ? mapPath : seenPrologue ? '/map/moji' : '/prologue')}
-        >
-          {/* 光る ふち: 影を 動かすと 毎コマ 描き直しに なるので、光だけの 層の 濃さを 動かす */}
-          {!still && (
-            <motion.span
-              aria-hidden
-              className="pointer-events-none absolute inset-0 rounded-[inherit]"
-              style={{ boxShadow: '0 0 26px rgba(255,210,80,0.95)', willChange: 'opacity' }}
-              animate={{ opacity: [0, 1, 0] }}
-              transition={{ duration: 2.2, repeat: Infinity }}
+        <div className="flex-1" />
+
+        {/* ネクマックスと ボタン ------------------------------------------- */}
+        <div className="relative w-full">
+          <motion.div
+            aria-hidden
+            className="absolute bottom-full left-[12%] mb-[0.6dvh] w-[min(40%,19.5dvh)]"
+            initial={{ opacity: 0, y: 40 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ type: 'spring', stiffness: 160, damping: 16, delay: 0.5 }}
+          >
+            <motion.img
+              src={art('nexmax')}
+              alt=""
+              draggable={false}
+              className="block h-auto w-full select-none"
+              style={{ willChange: 'transform' }}
+              animate={still ? undefined : { y: [0, -6, 0] }}
+              transition={{ duration: 2.8, repeat: Infinity, ease: 'easeInOut' }}
             />
-          )}
-          <span aria-hidden className="relative z-10">
-            ▶
-          </span>
-          <span className="relative z-10">{hasSave ? 'つづきから' : 'はじめる'}</span>
-        </motion.button>
-        <div className="flex w-full gap-2.5">
-          <motion.button
-            type="button"
-            whileTap={{ scale: 0.96 }}
-            className="g-btn g-btn-slate flex-[1.4] !px-2 text-[15px]"
-            onClick={() => navigate('/map')}
-          >
-            <GiWorld aria-hidden size={20} />
-            <RubyText showFurigana={showFurigana}>ほかの 物語(ものがたり)</RubyText>
-          </motion.button>
-          <motion.button
-            type="button"
-            whileTap={{ scale: 0.96 }}
-            className="g-btn g-btn-slate flex-1 !px-2 text-[15px]"
-            onClick={() => navigate('/settings')}
-          >
-            <GiCog aria-hidden size={20} />
-            せってい
-          </motion.button>
-        </div>
-      </motion.div>
+          </motion.div>
 
-      {/* 巻物: 学ぶと 強くなる ---------------------------------------------- */}
-      <motion.div
-        initial={{ opacity: 0, y: 30 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5, delay: 1.15 }}
-        className="g-frame relative z-10 mx-3 mt-3.5 mb-[max(12px,env(safe-area-inset-bottom))] w-[calc(100%-28px)] max-w-md px-3 pt-1.5 pb-1"
-      >
-        <p className="text-center text-[13px] font-black">
-          <RubyText showFurigana={showFurigana}>漢字(かんじ)を まなぶと、ネクマックスは どんどん つよく なる！</RubyText>
-        </p>
-        <div className="mt-0.5 flex items-end justify-around">
-          {(
-            [
-              ['nexmax', 'GiWoodStick', 'はじめたころ'],
-              ['guide', 'GiBroadsword', 'たくさん まなぶと'],
-              ['cheer', 'GiZeusSword', 'もっと まなぶと…！'],
-            ] as const
-          ).map(([pose, icon, label], i) => (
-            <div key={pose} className="flex items-end gap-1">
-              {i > 0 && (
-                <span aria-hidden className="mb-5 text-[#c9953f]">
-                  ▶
-                </span>
-              )}
-              <div className="flex flex-col items-center">
-                <div className="relative">
-                  {i === 2 && (
-                    <span
-                      aria-hidden
-                      className="absolute inset-0 -z-0 rounded-full"
-                      style={{ background: 'radial-gradient(circle, rgba(255,220,90,0.8) 0%, transparent 70%)', transform: 'scale(1.5)' }}
-                    />
-                  )}
-                  <img className="relative" src={assetPath(`img/chara/cut/${pose}.webp`)} alt="" aria-hidden style={{ height: 42 + i * 6 }} />
-                  <span className="absolute -top-1 -left-2 -rotate-45" style={{ color: i === 2 ? '#f2a91a' : '#7a5a3a' }}>
-                    <GameIcon name={icon} size={18 + i * 4} />
-                  </span>
-                </div>
-                <span className="text-[10px] font-bold">{label}</span>
-              </div>
-            </div>
-          ))}
+          <motion.div
+            className="flex w-full flex-col items-center"
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.9 }}
+          >
+            {plates.map((p, i) => (
+              <Plate key={p.art.src} spec={p} marginTop={i === 0 ? 0 : marginAbove(plates[i - 1], p)} still={still} />
+            ))}
+          </motion.div>
         </div>
-      </motion.div>
+      </div>
     </div>
   );
 };
