@@ -9,7 +9,7 @@ import { useGameStore } from '../../store/gameStore';
  * ledge pointing out over the river, and three plates.
  *
  * Every part is a delivered picture (art-src/titlesozai/, kept out of git;
- * made web-sized into public/img/title/ by scripts/prepare_title_assets.mjs);
+ * made web-sized into public/img/title/ by scripts/prepare_ui_assets.mjs);
  * nothing is drawn in CSS. Phones get the tall city, PCs the wide one.
  *
  * The plates follow the usual phone-game title: the one thing to do next is

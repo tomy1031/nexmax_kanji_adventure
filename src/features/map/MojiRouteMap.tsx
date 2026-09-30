@@ -235,7 +235,8 @@ export const MojiRouteMap = () => {
           <button type="button" className="g-parchment !rounded-full px-4 py-1" onClick={() => navigate('/prologue')} lang="en">
             ▶ Prologue
           </button>
-          <button type="button" className="g-parchment !rounded-full px-4 py-1" onClick={() => navigate('/map')}>
+          {/* The picture-book worlds are closing (2026-09-30): kept reachable, but only as a quiet link. */}
+          <button type="button" className="px-2 py-1 text-[11px] font-bold text-[#33401f]/60 underline underline-offset-2" onClick={() => navigate('/map')}>
             <RubyText showFurigana={showFurigana}>ほかの 物語(ものがたり)</RubyText>
           </button>
         </div>
