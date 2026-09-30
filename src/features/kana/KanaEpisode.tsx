@@ -33,7 +33,7 @@ const EpisodePlayer = ({ id }: { id: string }) => {
   // Nexmax can only say the letters that have come back; the rest are holes.
   const renderText = useCallback(
     (text: string) =>
-      // A line of pictures only (🗣️ → 🪨) is how he talks before any letter
+      // A line of pictures only (🗣️ → 🐛 → ⬛) is how he talks before any letter
       // has come back, so it is drawn large enough to read as the message.
       /[A-Za-z\u3040-\u30ff]/.test(text) ? (
         <KanaText known={known} mode="mask">

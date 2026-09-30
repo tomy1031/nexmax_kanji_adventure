@@ -35,9 +35,11 @@ interface KanjiWriterCanvasProps {
   /**
    * `paper` is the white writing square. `rock` is transparent and draws the
    * strokes as glowing cuts, for the rock-slashing drill — the rock itself
-   * is drawn by the parent underneath.
+   * is drawn by the parent underneath. `neon` is transparent too, for the
+   * signboard drill (文字が 消えた 町): warm-white strokes, and no filter —
+   * the parent lays the tube's glow underneath each stroke.
    */
-  surface?: 'paper' | 'rock';
+  surface?: 'paper' | 'rock' | 'neon';
   /**
    * Restart the quiz by itself after each completed character. The
    * rock drill turns this off: it splits the rock first, then remounts.
@@ -70,6 +72,7 @@ const KanjiWriterCanvas = forwardRef<KanjiWriterHandle, KanjiWriterCanvasProps>(
     ref,
   ) => {
     const rock = surface === 'rock';
+    const neon = surface === 'neon';
     const writerRef = useRef<HanziWriter | null>(null);
     const sampleWriterRef = useRef<HanziWriter | null>(null);
     const targetRef = useRef<HTMLDivElement>(null);
@@ -179,16 +182,17 @@ const KanjiWriterCanvas = forwardRef<KanjiWriterHandle, KanjiWriterCanvasProps>(
             showCharacter: false,
             strokeAnimationSpeed: TUNING.strokeAnimationSpeed,
             delayBetweenStrokes: TUNING.delayBetweenStrokes,
-            drawingWidth: rock ? 16 : TUNING.drawingWidth,
+            drawingWidth: rock || neon ? 16 : TUNING.drawingWidth,
             leniency: leniency ?? TUNING.leniency,
             strokeHighlightSpeed: TUNING.strokeHighlightSpeed,
             // On the rock a finished stroke is a glowing cut, and the finger
-            // draws a bright blade.
-            radicalColor: rock ? '#ffe9a8' : '#168F16',
-            strokeColor: rock ? '#fff1c4' : '#2b3a55',
-            drawingColor: rock ? '#ffffff' : '#333333',
+            // draws a bright blade. On the sign it is the white-hot core of a
+            // neon tube, and the finger draws in warm light.
+            radicalColor: rock ? '#ffe9a8' : neon ? '#fff1cf' : '#168F16',
+            strokeColor: rock ? '#fff1c4' : neon ? '#fff1cf' : '#2b3a55',
+            drawingColor: rock ? '#ffffff' : neon ? '#ffe2a0' : '#333333',
             outlineColor: '#DDD',
-            highlightColor: rock ? '#8fe3ff' : '#4A9EFF',
+            highlightColor: rock ? '#8fe3ff' : neon ? '#ffc861' : '#4A9EFF',
             charDataLoader: () => Promise.resolve(data),
           });
 
@@ -206,7 +210,7 @@ const KanjiWriterCanvas = forwardRef<KanjiWriterHandle, KanjiWriterCanvasProps>(
         isQuizActiveRef.current = false;
         target.innerHTML = '';
       };
-    }, [char, size, quizMode, rock, autoRestart, leniency]);
+    }, [char, size, quizMode, rock, neon, autoRestart, leniency]);
 
     // Sample (手本) layer — independent of the quiz so toggling it mid-rep
     // does not reset the learner's progress on the current character.
@@ -229,7 +233,7 @@ const KanjiWriterCanvas = forwardRef<KanjiWriterHandle, KanjiWriterCanvasProps>(
           padding: 20,
           showOutline: false,
           showCharacter: true,
-          strokeColor: rock ? 'rgba(255,255,255,0.28)' : 'rgba(120,130,150,0.22)',
+          strokeColor: rock ? 'rgba(255,255,255,0.28)' : neon ? 'rgba(255,232,180,0.24)' : 'rgba(120,130,150,0.22)',
           // Must be rgba — hanzi-writer does not accept the keyword
           // 'transparent' here.
           outlineColor: 'rgba(255,255,255,0)',
@@ -240,12 +244,12 @@ const KanjiWriterCanvas = forwardRef<KanjiWriterHandle, KanjiWriterCanvasProps>(
       return () => {
         sampleTarget.innerHTML = '';
       };
-    }, [char, size, showSample, rock]);
+    }, [char, size, showSample, rock, neon]);
 
     return (
       <div
         className={
-          rock
+          rock || neon
             ? 'relative flex items-center justify-center'
             : 'relative flex items-center justify-center rounded-3xl bg-white shadow-[0_10px_30px_rgba(11,26,51,0.18)] ring-4 ring-white/70'
         }

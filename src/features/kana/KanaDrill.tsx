@@ -1,19 +1,21 @@
 import { useCallback, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import PictureBook from '../picturebook/PictureBook';
 import { NexmaxSays, TopBar } from '../../components/ui/Chrome';
 import { useCanvasSize } from '../../hooks/useCanvasSize';
 import { useGameStore } from '../../store/gameStore';
 import { KANA_LENIENCY, KANA_REPS, KANA_SAMPLE_REPS, ROMAJI } from '../../data/kana';
-import RockSlash, { type RockSlashHandle } from '../write/RockSlash';
+import SignLight, { type SignLightHandle } from '../write/SignLight';
+import { NightStreetBackdrop, SignStreet } from '../write/NightStreet';
+import { streetOf } from '../../lib/signStreet';
 import KanaText from './KanaText';
 import { useKnownKana } from './useKnownKana';
 
 /**
- * かな編の 書き取り (08 §3.4). The kanji drill's rock and blade, for kana:
- * each kana is written KANA_REPS times, the first KANA_SAMPLE_REPS over the
- * model. The same pass rule as kanji — three or more slips and the rock
- * holds.
+ * かな編の 書き取り (08 §3.4). Written on the empty signboards of ナニワタウン
+ * (08 §3.6), like the new route's kanji: each kana is written KANA_REPS times,
+ * the first KANA_SAMPLE_REPS over the model, and every passing write lights
+ * one of the three signs on its street. The same pass rule as kanji — three
+ * or more slips and the sign does not light.
  *
  * Everything the learner reads here is kana with romaji on top, plus one
  * line of English: they cannot read the instructions yet.
@@ -30,7 +32,7 @@ type Verdict = { pass: boolean; mistakes: number } | null;
 
 export const KanaDrill = ({ kana, onDone, onExit }: KanaDrillProps) => {
   const size = useCanvasSize(300, 0.4, 72);
-  const slashRef = useRef<RockSlashHandle>(null);
+  const slashRef = useRef<SignLightHandle>(null);
   const known = useKnownKana();
   const recordKanaRep = useGameStore((s) => s.recordKanaRep);
   const counts = useGameStore((s) => s.kana);
@@ -38,7 +40,8 @@ export const KanaDrill = ({ kana, onDone, onExit }: KanaDrillProps) => {
   // Fixed on arrival, so a kana that becomes known mid-drill is not dropped.
   const [queue] = useState(() => kana.filter((k) => (counts[k] ?? 0) < KANA_REPS));
   const [idx, setIdx] = useState(0);
-  const [rockNo, setRockNo] = useState(0);
+  /** Which sign this is — a new one after each write that passes. */
+  const [signNo, setSignNo] = useState(0);
   const [verdict, setVerdict] = useState<Verdict>(null);
   const [sampleOverride, setSampleOverride] = useState<boolean | null>(null);
   /** The kana that just came back, shown for a moment before the next. */
@@ -59,14 +62,14 @@ export const KanaDrill = ({ kana, onDone, onExit }: KanaDrillProps) => {
     [current, recordKanaRep],
   );
 
-  const handleSplit = useCallback(() => {
+  const handleLit = useCallback(() => {
     setSampleOverride(null);
     setVerdict(null);
     if ((useGameStore.getState().kana[current] ?? 0) >= KANA_REPS) {
       setReturned(current);
       return;
     }
-    setRockNo((n) => n + 1);
+    setSignNo((n) => n + 1);
   }, [current]);
 
   const next = () => {
@@ -79,7 +82,7 @@ export const KanaDrill = ({ kana, onDone, onExit }: KanaDrillProps) => {
       return;
     }
     setIdx((i) => i + 1);
-    setRockNo(0);
+    setSignNo(0);
   };
 
   if (!current) {
@@ -95,7 +98,7 @@ export const KanaDrill = ({ kana, onDone, onExit }: KanaDrillProps) => {
 
   return (
     <div className="isolate relative flex min-h-dvh flex-col items-center pb-5">
-      <PictureBook scene="mukashi_meadow" className="!fixed -z-10" still />
+      <NightStreetBackdrop />
       <TopBar onBack={onExit} />
 
       <div className="flex w-full max-w-md flex-1 flex-col gap-3 px-3 pt-3">
@@ -111,31 +114,31 @@ export const KanaDrill = ({ kana, onDone, onExit }: KanaDrillProps) => {
               </p>
             </div>
           </div>
-          <NexmaxSays text="かいて いわを きろう！" size={70} />
+          <NexmaxSays text="かくと ひかる！" size={70} />
         </div>
 
         <div
           className="relative mx-auto flex items-center justify-center rounded-[22px] p-3"
           style={{
-            background: 'linear-gradient(180deg, #a8703a 0%, #7d4b1c 100%)',
-            border: '3px solid #5b3412',
-            boxShadow: 'inset 0 2px 0 rgba(255,220,170,0.35), 0 10px 22px rgba(40,20,0,0.35)',
+            background: 'linear-gradient(180deg, #c7964a 0%, #7a5220 100%)',
+            border: '3px solid #4a3210',
+            boxShadow: 'inset 0 2px 0 rgba(255,230,170,0.45), 0 10px 22px rgba(0,0,0,0.45)',
           }}
         >
           <div
-            className="relative overflow-hidden rounded-2xl"
-            style={{ background: 'radial-gradient(ellipse at 50% 90%, #9ccf6a 0%, #cfeaf5 60%, #e8f6fb 100%)' }}
+            className="relative rounded-2xl"
+            style={{ background: 'radial-gradient(ellipse at 50% 35%, #2f2860 0%, #17132f 70%, #0e0b22 100%)' }}
           >
-            <RockSlash
-              key={`${current}-${rockNo}`}
+            <SignLight
+              key={`${current}-${signNo}`}
               ref={slashRef}
               char={current}
               material={current}
               size={size}
-              seed={rockNo + idx * 7}
+              seed={signNo + idx}
               showSample={showSample}
               onWritten={handleWritten}
-              onSplit={handleSplit}
+              onLit={handleLit}
               leniency={KANA_LENIENCY}
             />
           </div>
@@ -179,7 +182,7 @@ export const KanaDrill = ({ kana, onDone, onExit }: KanaDrillProps) => {
               </p>
               <p className="text-xs font-bold" style={{ color: 'var(--ink-2)' }} lang="en">
                 {verdict.pass
-                  ? 'Correct — the rock splits.'
+                  ? 'Correct — the sign lights up.'
                   : `${verdict.mistakes} mistakes. Watch the stroke order (✎) and try again.`}
               </p>
             </>
@@ -193,22 +196,12 @@ export const KanaDrill = ({ kana, onDone, onExit }: KanaDrillProps) => {
           )}
         </div>
 
-        <div className="g-parchment mt-auto flex items-center justify-center gap-2 px-3 py-2.5">
-          {Array.from({ length: KANA_REPS }, (_, i) => (
-            <motion.span
-              key={i}
-              initial={false}
-              animate={i < reps ? { scale: [1.3, 1] } : { scale: 1 }}
-              className="flex h-12 w-10 items-center justify-center rounded-md border text-2xl font-black"
-              style={{
-                background: i < reps ? 'linear-gradient(160deg,#fffbe8,#ffe7a3)' : 'rgba(255,255,255,0.55)',
-                borderColor: i < reps ? '#f2b53a' : 'rgba(122,82,38,0.25)',
-                color: i < reps ? '#4a3220' : 'rgba(122,82,38,0.3)',
-              }}
-            >
-              {i < reps ? current : '・'}
-            </motion.span>
-          ))}
+        <div className="g-parchment mt-auto px-3 py-2.5">
+          <SignStreet
+            street={streetOf(reps, [KANA_REPS])}
+            glyph={current}
+            label={`${KANA_REPS} signs, ${Math.min(reps, KANA_REPS)} lit`}
+          />
         </div>
       </div>
 

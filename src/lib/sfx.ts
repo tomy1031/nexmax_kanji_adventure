@@ -16,6 +16,13 @@ import { useGameStore } from '../store/gameStore';
  *   hit    — the blade landing on an opponent.
  *   hurt   — the opponent landing on Nexmax.
  *
+ * 文字が 消えた 町 (08 §3.6) writes on empty signboards instead of rocks:
+ *
+ *   neon   — a stroke lighting up as a neon tube: a short buzz, a glassy ping.
+ *   fizz   — a tube that will not light: a sputter. A mistake.
+ *   signOn — the whole sign coming on: a relay's clunk, the hum swelling.
+ *   beam   — Nexmax firing the written character's light: charge, release.
+ *
  * Respects せってい → 音を 消す. Browsers only allow audio after a tap, which
  * every one of these follows.
  */
@@ -192,4 +199,48 @@ export const battleStart = () => {
   const t = ac.currentTime;
   tone(ac, { at: t, freq: 90, dur: 0.35, type: 'sine', gain: 0.4, glideTo: 50 });
   noiseBurst(ac, { at: t + 0.05, dur: 0.45, type: 'bandpass', from: 400, to: 3600, q: 1.2, gain: 0.25 });
+};
+
+/** A stroke lighting up as a neon tube. `power` 0..1: a longer stroke rings longer. */
+export const neon = (power = 0.6) => {
+  const ac = audio();
+  if (!ac) return;
+  const t = ac.currentTime;
+  // The buzz of the tube catching: a low hum and its harmonic, cut short.
+  tone(ac, { at: t, freq: 120, dur: 0.12 + power * 0.08, type: 'sawtooth', gain: 0.035 });
+  tone(ac, { at: t, freq: 240, dur: 0.1 + power * 0.06, type: 'square', gain: 0.018 });
+  noiseBurst(ac, { at: t, dur: 0.07, type: 'bandpass', from: 2600, to: 1800, q: 3, gain: 0.07 });
+  // The glass lighting up.
+  tone(ac, { at: t + 0.05, freq: 1568 + power * 400, dur: 0.22, type: 'sine', gain: 0.05 + power * 0.03 });
+};
+
+/** A tube that will not light: three quick sputters and a sagging hum. */
+export const fizz = () => {
+  const ac = audio();
+  if (!ac) return;
+  const t = ac.currentTime;
+  for (let i = 0; i < 3; i++) {
+    noiseBurst(ac, { at: t + i * 0.045, dur: 0.035, type: 'highpass', from: 3200, to: 2400, q: 0.7, gain: 0.09 });
+  }
+  tone(ac, { at: t, freq: 180, dur: 0.16, type: 'square', gain: 0.03, glideTo: 110 });
+};
+
+/** The whole sign coming on: a relay's clunk, then the hum swelling up. */
+export const signOn = () => {
+  const ac = audio();
+  if (!ac) return;
+  const t = ac.currentTime;
+  noiseBurst(ac, { at: t, dur: 0.05, type: 'lowpass', from: 1800, to: 600, q: 1, gain: 0.3 });
+  tone(ac, { at: t, freq: 90, dur: 0.12, type: 'sine', gain: 0.22, glideTo: 60 });
+  tone(ac, { at: t + 0.04, freq: 220, dur: 0.6, type: 'triangle', gain: 0.05, glideTo: 330 });
+};
+
+/** Nexmax firing the written character's light: a rising charge, then the release. */
+export const beam = () => {
+  const ac = audio();
+  if (!ac) return;
+  const t = ac.currentTime;
+  tone(ac, { at: t, freq: 300, dur: 0.3, type: 'sine', gain: 0.07, glideTo: 1400 });
+  noiseBurst(ac, { at: t + 0.28, dur: 0.24, type: 'bandpass', from: 4000, to: 900, q: 1.2, gain: 0.32 });
+  tone(ac, { at: t + 0.28, freq: 880, dur: 0.24, type: 'square', gain: 0.03, glideTo: 440 });
 };
