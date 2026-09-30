@@ -16,6 +16,11 @@
       href="https://fonts.googleapis.com/css2?family=Dela+Gothic+One&family=M+PLUS+Rounded+1c:wght@400;500;700;800;900&display=swap"
       rel="stylesheet"
     />
+    <!-- The title screen's city and logo: fetched alongside the script
+         instead of after it (the app is launched on the title). -->
+    <link rel="preload" as="image" type="image/webp" href="%BASE_URL%img/title/bg.webp" media="(orientation: portrait)" fetchpriority="high" />
+    <link rel="preload" as="image" type="image/webp" href="%BASE_URL%img/title/bg_wide.webp" media="(orientation: landscape)" fetchpriority="high" />
+    <link rel="preload" as="image" type="image/webp" href="%BASE_URL%img/title/logo.webp" fetchpriority="high" />
     <title>ネクマックスの漢字アドベンチャー</title>
   </head>
   <body>
