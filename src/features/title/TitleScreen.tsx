@@ -1,5 +1,4 @@
 import { useNavigate } from 'react-router-dom';
-import { useMapPath } from '../../lib/nav';
 import { motion, useReducedMotion } from 'framer-motion';
 import { assetPath } from '../../lib/assetPath';
 import { useGameStore } from '../../store/gameStore';
@@ -15,19 +14,24 @@ import { useGameStore } from '../../store/gameStore';
  *
  * The plates follow the usual phone-game title: the one thing to do next is
  * the big blue plate on top, everything else is a smaller brown plate of one
- * size.
+ * size. Both lead into 文字が 消えた 町 (08), which is the game now; the
+ * picture-book worlds are closing (2026-09-30) and are reached only from the
+ * route map's small ほかの 物語 link.
  *
- *   new player    はじめから (blue) → 0話, which runs on into 1話
+ *   new player    はじめから (blue) → the prologue, which runs on into the map
  *                 つづきから (brown, greyed: nothing to continue yet)
- *   returning     つづきから (blue) → the map of the world last played, the
- *                   next stage already picked — the game's home, one tap from
- *                   the story, with the forge and daily tasks around it
- *                 はじめから (brown) → 0話 again; nothing is lost. Wiping the
- *                   save lives in せってい, behind its own confirmation.
+ *   returning     つづきから (blue) → the route map — the game's home, one tap
+ *                   from the next episode, with the forge and daily tasks
+ *                   around it
+ *                 はじめから (brown) → the prologue again; nothing is lost.
+ *                   Wiping the save lives in せってい, behind its own
+ *                   confirmation.
  *   always        せってい (brown)
  *
  * The screen comes in as a sequence — the logo drops in, Nexmax rises, the
- * plates slide up — and the blue plate keeps glowing softly.
+ * plates slide up — and the blue plate keeps glowing softly. Nothing that
+ * moves carries a CSS filter: on iPhone and iPad a filter on a moving layer is
+ * redrawn every frame (2026-09-26「オープニングから重い」).
  */
 
 const art = (name: string) => assetPath(`img/title/${name}.webp`);
@@ -73,8 +77,8 @@ const Plate = ({ spec, marginTop, still }: { spec: PlateSpec; marginTop: number;
     {spec.glow && !still && (
       <motion.span
         aria-hidden
-        className="absolute -inset-x-[2%] -inset-y-[12%] rounded-full"
-        style={{ background: 'radial-gradient(ellipse, rgba(255,214,110,0.9) 0%, rgba(255,190,60,0.35) 45%, transparent 72%)', filter: 'blur(10px)' }}
+        className="absolute -inset-x-[4%] -inset-y-[18%] rounded-full"
+        style={{ background: 'radial-gradient(ellipse closest-side, rgba(255,214,110,0.85) 0%, rgba(255,190,60,0.3) 55%, transparent 100%)', willChange: 'opacity' }}
         animate={{ opacity: [0.15, 0.85, 0.15] }}
         transition={{ duration: 2.2, repeat: Infinity, ease: 'easeInOut' }}
       />
@@ -85,18 +89,17 @@ const Plate = ({ spec, marginTop, still }: { spec: PlateSpec; marginTop: number;
 
 export const TitleScreen = () => {
   const navigate = useNavigate();
-  const mapPath = useMapPath();
   const hasSave = useGameStore((s) => s.clearedStages.length > 0 || s.weapons.length > 0);
   const seenIntro = useGameStore((s) => s.tutorials.intro);
-  const canContinue = seenIntro || hasSave;
+  const seenPrologue = useGameStore((s) => s.tutorials.prologue);
+  const canContinue = seenPrologue || seenIntro || hasSave;
   const prefersReduced = useReducedMotion();
   const settingReduced = useGameStore((s) => s.settings.reducedMotion);
   const still = Boolean(prefersReduced || settingReduced);
 
-  // A new player starts in 0話, where the one idea the game rests on —
-  // writing a character does something — is shown in a few minutes.
-  const startOver = () => navigate('/tutorial');
-  const carryOn = () => navigate(mapPath);
+  // A new player starts with the prologue of 文字が 消えた 町 (08 §10.2).
+  const startOver = () => navigate('/prologue');
+  const carryOn = () => navigate('/map/moji');
   const settings: PlateSpec = { art: PLATES.settings, width: SMALL, onClick: () => navigate('/settings') };
   const plates: PlateSpec[] = canContinue
     ? [
@@ -151,6 +154,7 @@ export const TitleScreen = () => {
               alt=""
               draggable={false}
               className="block h-auto w-full select-none"
+              style={{ willChange: 'transform' }}
               animate={still ? undefined : { y: [0, -6, 0] }}
               transition={{ duration: 2.8, repeat: Infinity, ease: 'easeInOut' }}
             />

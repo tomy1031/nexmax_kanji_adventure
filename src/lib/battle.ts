@@ -33,6 +33,11 @@ export interface DamageInput {
   owned?: boolean;
   /** The stroke order was shown during this write. */
   hinted?: boolean;
+  /**
+   * 文字が 消えた 町: how well the kanji is known (lib/mastery.ts), in place
+   * of the flat owned bonus.
+   */
+  mastery?: number;
 }
 
 export interface DamageResult {
@@ -63,6 +68,7 @@ export const computeDamage = ({
   attackPct = 0,
   owned = false,
   hinted = false,
+  mastery = 1,
 }: DamageInput): DamageResult => {
   const base = weapon?.attack ?? UNARMED_ATTACK;
   const attackElement = weapon?.element ?? Element.MU;
@@ -87,7 +93,7 @@ export const computeDamage = ({
   const damage = Math.max(
     1,
     Math.round(
-      base * elementMultiplier * accuracy * individualMultiplier * rustMultiplier * ownedMultiplier * hintMultiplier * gearMultiplier,
+      base * elementMultiplier * accuracy * individualMultiplier * rustMultiplier * ownedMultiplier * hintMultiplier * gearMultiplier * mastery,
     ),
   );
 

@@ -30,6 +30,7 @@ import { GameIcon } from '../../components/ui/GameIcon';
 import { featuresUnlockedBy, FEATURE_INTRO } from '../../data/unlocks';
 import PictureBook from '../picturebook/PictureBook';
 import EnemyArt from './EnemyArt';
+import { MASTERY_REPS, comboMultiplier, masteryMultiplier, pickWeakest, starsOf, type Stars } from '../../lib/mastery';
 
 /**
  * The fight.
@@ -73,6 +74,12 @@ interface BattleSceneProps {
    * stroke mistake and every look at the stroke order counts one.
    */
   patience: number;
+  /**
+   * 文字が 消えた 町 (08 §4.2.2): damage follows the kanji's stars, the
+   * opponent asks for the least-known kanji, and a clean write (no slip, no
+   * look at the stroke order) counts toward its stars.
+   */
+  mastery?: boolean;
 }
 
 type Outcome = { kind: 'win'; stars: 1 | 2 | 3 } | { kind: 'lose' } | null;
@@ -132,6 +139,7 @@ export const BattleScene = ({
   mode = 'stage',
   weaponOverride,
   patience: basePatienceValue,
+  mastery = false,
 }: BattleSceneProps) => {
   const navigate = useNavigate();
   const size = useCanvasSize(210, 0.25, 96);
@@ -146,6 +154,7 @@ export const BattleScene = ({
   const addGems = useGameStore((s) => s.addGems);
   const grantIndividual = useGameStore((s) => s.grantIndividual);
   const recordReview = useGameStore((s) => s.recordReview);
+  const recordRep = useGameStore((s) => s.recordRep);
   const alreadyCleared = useGameStore((s) => s.clearedStages.includes(stage.id));
   const [clearedAtStart] = useState(alreadyCleared);
   const equippedGear = useGameStore((s) => s.equippedGear);
@@ -192,7 +201,9 @@ export const BattleScene = ({
   const [totalMistakes, setTotalMistakes] = useState(0);
   const [turn, setTurn] = useState(0);
   const [flash, setFlash] = useState<string | null>(null);
-  const [hit, setHit] = useState<{ n: number; damage: number } | null>(null);
+  const [hit, setHit] = useState<{ n: number; damage: number; critical?: boolean } | null>(null);
+  /** Clean writes in a row (新ルート). */
+  const [combo, setCombo] = useState(0);
   const [outcome, setOutcome] = useState<Outcome>(null);
   const [rewards, setRewards] = useState<{ gems: number; individual: string | null }>({ gems: 0, individual: null });
 
@@ -215,8 +226,16 @@ export const BattleScene = ({
   const enemyCtl = useAnimationControls();
   const fieldCtl = useAnimationControls();
 
-  const target = kanjiPool[turn % kanjiPool.length];
+  // Which kanji the opponent asks for. On the new route it is the least
+  // known one, chosen once per turn (the count moves as the learner writes).
+  const askedRef = useRef<Record<string, number>>({});
+  const repsNow = (id: string) => useGameStore.getState().progress[id]?.reps ?? 0;
+  const [weakestId, setWeakestId] = useState<string | null>(() =>
+    mastery ? (pickWeakest(kanjiPool, repsNow, {}, null)?.id ?? null) : null,
+  );
+  const target = mastery ? (kanjiPool.find((k) => k.id === weakestId) ?? kanjiPool[0]) : kanjiPool[turn % kanjiPool.length];
   const ownsTarget = target ? progress[target.id]?.obtainedAt != null : false;
+  const targetStars: Stars = target ? starsOf(progress[target.id]?.reps ?? 0) : 0;
 
   const settle = useCallback(
     (kind: 'win' | 'lose', mistakes: number, hpLeft: number) => {
@@ -296,9 +315,19 @@ export const BattleScene = ({
       // Writing an owned character in battle is a review of it — except in
       // 0話, where 一 was obtained minutes ago and three quick writes would
       // push its first review a week out.
+      let starUp: Stars | null = null;
       if (!tutorial && target && progress[target.id]?.obtainedAt != null) {
         recordReview(target.id, mistakes);
+      } else if (mastery && target && mistakes === 0 && !hinted) {
+        // Written from memory without a slip: that is a write, and it counts.
+        const before = progress[target.id]?.reps ?? 0;
+        recordRep(target.id, 0);
+        if (starsOf(before + 1) > starsOf(before)) starUp = starsOf(before + 1);
       }
+      const clean = mistakes === 0 && !hinted;
+      const critical = mastery && targetStars === 3 && clean;
+      const nextCombo = mastery && clean ? combo + 1 : 0;
+      setCombo(nextCombo);
 
       const result = computeDamage({
         weapon,
@@ -307,8 +336,9 @@ export const BattleScene = ({
         mistakes,
         rust,
         attackPct: stats.attackPct,
-        owned: ownsTarget && !tutorial,
+        owned: ownsTarget && !tutorial && !mastery,
         hinted,
+        mastery: mastery ? masteryMultiplier(targetStars, clean) * comboMultiplier(nextCombo) : 1,
       });
       sfx.slash(1);
       sfx.hit();
@@ -317,13 +347,19 @@ export const BattleScene = ({
       // The swing: Nexmax lunges, the blade crosses the opponent, it reels.
       void heroCtl.start({ x: [0, 70, 0], rotate: [0, 8, 0], transition: { duration: 0.45 } });
       void enemyCtl.start({ x: [0, 14, -8, 0], filter: ['brightness(1)', 'brightness(2.4)', 'brightness(1)'], transition: { duration: 0.45, delay: 0.15 } });
-      setHit({ n: turn, damage: result.damage });
+      setHit({ n: turn, damage: result.damage, critical });
+      if (critical) sfx.fanfare();
+      else if (starUp) sfx.star(starUp - 1);
 
       const nextBossHp = Math.max(0, bossHp - result.damage);
       setBossHp(nextBossHp);
 
       setFlash(
-        result.perfect
+        critical
+          ? `字(じ)の わざ！ ${result.damage} ダメージ`
+          : starUp
+            ? `★${starUp}に なった！ ${result.damage} ダメージ`
+            : result.perfect
           ? `かんぺき！ ${result.damage} ダメージ`
           : hinted
             ? `かきじゅんを みたので はんぶん。${result.damage} ダメージ`
@@ -340,11 +376,16 @@ export const BattleScene = ({
         return;
       }
 
+      if (mastery && target) {
+        askedRef.current[target.id] = (askedRef.current[target.id] ?? 0) + 1;
+        setWeakestId(pickWeakest(kanjiPool, repsNow, askedRef.current, target.id)?.id ?? null);
+      }
       setTurn((t) => t + 1);
     },
     [
-      tutorial, totalMistakes, target, progress, recordReview, weapon, individual, stage.boss,
+      tutorial, totalMistakes, target, progress, recordReview, recordRep, weapon, individual, stage.boss,
       rust, bossHp, playerHp, settle, heroCtl, enemyCtl, turn, stats.attackPct, ownsTarget, hinted,
+      mastery, targetStars, kanjiPool, combo,
     ],
   );
 
@@ -448,9 +489,27 @@ export const BattleScene = ({
                   initial={{ opacity: 0, y: 0, scale: 0.6 }}
                   animate={{ opacity: [0, 1, 1, 0], y: -50, scale: 1.2 }}
                   transition={{ duration: 1.1, delay: 0.2 }}
-                  className="g-outline-text pointer-events-none absolute top-6 left-1/2 -translate-x-1/2 text-3xl font-black"
+                  className={`g-outline-text pointer-events-none absolute top-6 left-1/2 -translate-x-1/2 font-black ${hit.critical ? 'text-5xl' : 'text-3xl'}`}
+                  style={hit.critical ? { color: '#ffe27a' } : undefined}
                 >
                   {hit.damage}
+                </motion.span>
+              )}
+            </AnimatePresence>
+            {/* COMBO — clean writes in a row. */}
+            <AnimatePresence>
+              {mastery && combo >= 2 && (
+                <motion.span
+                  key={`combo-${combo}`}
+                  initial={{ opacity: 0, scale: 2.2, rotate: -12 }}
+                  animate={{ opacity: 1, scale: 1, rotate: -8 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ type: 'spring', stiffness: 420, damping: 14 }}
+                  className="g-outline-text pointer-events-none absolute -top-8 -left-10 text-2xl font-black whitespace-nowrap"
+                  style={{ color: '#ffe27a', willChange: 'transform' }}
+                >
+                  {combo} COMBO!
+                  <span className="block text-xs">+{Math.round((comboMultiplier(combo) - 1) * 100)}%</span>
                 </motion.span>
               )}
             </AnimatePresence>
@@ -500,7 +559,22 @@ export const BattleScene = ({
               </p>
             </div>
           </div>
-          {!tutorial && (
+          {mastery && (
+            <p
+              className="mt-1 flex items-center gap-2 rounded-md px-2 py-0.5 text-[11px] font-bold"
+              style={{ background: targetStars >= 2 ? 'rgba(255,210,90,0.3)' : 'rgba(255,107,125,0.18)' }}
+            >
+              <span className="text-sm tracking-wider" style={{ color: '#e8a317' }} aria-label={`★${targetStars}`}>
+                {'★'.repeat(targetStars) + '☆'.repeat(3 - targetStars)}
+              </span>
+              <RubyText showFurigana={showFurigana}>
+                {targetStars === 3
+                  ? 'マスター。まちがえずに 書(か)くと「字(じ)の わざ」'
+                  : `こうげき ×${masteryMultiplier(targetStars, false)}。まちがえずに 書(か)くと ★が ふえる（${MASTERY_REPS[targetStars]}回(かい)で ★${targetStars + 1}）`}
+              </RubyText>
+            </p>
+          )}
+          {!tutorial && !mastery && (
             <p
               className="mt-1 rounded-md px-2 py-0.5 text-[11px] font-bold"
               style={{ background: ownsTarget ? 'rgba(126,211,107,0.25)' : 'rgba(255,107,125,0.18)' }}
@@ -563,17 +637,19 @@ export const BattleScene = ({
         </div>
 
         <div className="g-btn-red mx-auto flex min-h-[48px] w-full max-w-xs items-center justify-center rounded-full text-lg font-black" aria-live="polite">
-          <AnimatePresence mode="wait">
-            <motion.span
-              key={flash ? flash + turn : 'idle'}
-              initial={{ opacity: 0, y: 6 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0 }}
-              className="px-3 text-center text-sm leading-snug"
-            >
-              <RubyText showFurigana={showFurigana}>{flash ?? '⚔ 書(か)くと こうげき！'}</RubyText>
-            </motion.span>
-          </AnimatePresence>
+          {/* No fade out and back in: the old line is replaced in place and
+              the new one pops once (transform only) — the fade left a blank
+              beat that blinked on every write. */}
+          <motion.span
+            key={flash ? flash + turn : 'idle'}
+            initial={{ scale: 1.12 }}
+            animate={{ scale: 1 }}
+            transition={{ type: 'spring', stiffness: 500, damping: 22 }}
+            className="px-3 text-center text-sm leading-snug"
+            style={{ willChange: 'transform' }}
+          >
+            <RubyText showFurigana={showFurigana}>{flash ?? '⚔ 書(か)くと こうげき！'}</RubyText>
+          </motion.span>
         </div>
 
         {weapon ? (
@@ -594,6 +670,36 @@ export const BattleScene = ({
           </p>
         )}
       </div>
+
+      {/* 字の わざ — the flash of a ★3 kanji written clean. */}
+      <AnimatePresence>
+        {hit?.critical && (
+          <motion.div
+            key={`crit-${hit.n}`}
+            className="pointer-events-none fixed inset-0 z-30 flex items-center justify-center"
+            initial={{ opacity: 1 }}
+            animate={{ opacity: 0 }}
+            transition={{ duration: 1.1, delay: 0.5 }}
+            aria-hidden
+          >
+            <motion.div
+              className="absolute inset-0 bg-white"
+              initial={{ opacity: 0.85 }}
+              animate={{ opacity: 0 }}
+              transition={{ duration: 0.35 }}
+            />
+            <motion.span
+              className="relative text-[64px] leading-[1.4]"
+              initial={{ scale: 3, rotate: -10 }}
+              animate={{ scale: 1, rotate: -6 }}
+              transition={{ type: 'spring', stiffness: 300, damping: 14 }}
+              style={{ willChange: 'transform' }}
+            >
+              <LogoText showFurigana={showFurigana}>字(じ)の わざ！</LogoText>
+            </motion.span>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* 結果 ------------------------------------------------------------ */}
       <AnimatePresence>

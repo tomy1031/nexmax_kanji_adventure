@@ -16,6 +16,7 @@ import * as sfx from '../../lib/sfx';
 import { isVersusConfigured } from '../../lib/supabaseClient';
 import { Feature, FEATURE_INTRO, isFeatureUnlocked } from '../../data/unlocks';
 import { MAP_H, MAP_W, NODE_POS, gendaiMapSvg, mapSvg } from './mapArt';
+import MojiRouteMap from './MojiRouteMap';
 
 /**
  * むかし編 ステージ選択 (public/img/design/むかし編_村のたのみステージ選択.png).
@@ -395,6 +396,7 @@ const StageSelectFor = ({ arc }: { arc: 'mukashi' | 'gendai' }) => {
 /** Keyed by the arc, so switching arcs starts the screen fresh. */
 export const StageSelect = () => {
   const { arc } = useParams<{ arc: string }>();
+  if (arc === 'moji') return <MojiRouteMap />;
   const which = arc === 'gendai' ? 'gendai' : 'mukashi';
   return <StageSelectFor key={which} arc={which} />;
 };

@@ -48,6 +48,11 @@ export interface NovelLine {
   choices?: NovelChoice[];
   /** Jump unconditionally after this line (used to skip past other branches). */
   goto?: string;
+  /**
+   * English for a reader who cannot read the line yet (かな編). Shown only
+   * when the EN button is pressed — the line itself stays Japanese.
+   */
+  en?: string;
 }
 
 export interface NovelScript {

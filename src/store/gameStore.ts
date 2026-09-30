@@ -81,9 +81,10 @@ export interface GameState {
   streak: { count: number; lastDate: string };
   settings: { furigana: boolean; muted: boolean; reducedMotion: boolean };
   /** One-off explainers the player has already been shown. */
-  tutorials: { forge: boolean; intro: boolean };
+  /** intro: むかし編の 0話. prologue: 文字が 消えた 町の プロローグ (08 §10.2). */
+  tutorials: { forge: boolean; intro: boolean; prologue: boolean };
   /** The world last played in — where つづきから, ストーリー and もどる lead back to. */
-  lastArc: 'mukashi' | 'gendai';
+  lastArc: 'mukashi' | 'gendai' | 'moji';
   /** Versus record. */
   versus: VersusStats;
   /**
@@ -97,6 +98,8 @@ export interface GameState {
   hints: Record<string, number>;
   /** Wrong guesses per word — the answer tier needs a few. */
   misses: Record<string, number>;
+  /** かな編: passing writes per kana (08 §3.4). KANA_REPS makes it known. */
+  kana: Record<string, number>;
 }
 
 export interface GameActions {
@@ -134,6 +137,8 @@ export interface GameActions {
   /** Words found by guessing — the count titles are based on. */
   earnedFoundCount: () => number;
   hasKanji: (kanjiId: string) => boolean;
+  /** Record one passing write of a kana. Returns the new count. */
+  recordKanaRep: (kana: string) => number;
   resetSave: () => void;
 }
 
@@ -159,13 +164,15 @@ const initialState: GameState = {
   daily: freshDaily(),
   streak: { count: 0, lastDate: '' },
   settings: { furigana: true, muted: false, reducedMotion: false },
-  tutorials: { forge: false, intro: false },
-  lastArc: 'mukashi',
+  tutorials: { forge: false, intro: false, prologue: false },
+  // A new player starts on the new route (08 §10.2).
+  lastArc: 'moji',
   versus: DEFAULT_VERSUS_STATS,
   sumi: 0,
   foundWords: {},
   hints: {},
   misses: {},
+  kana: {},
 };
 
 export const useGameStore = create<GameState & GameActions>()(
@@ -379,6 +386,12 @@ export const useGameStore = create<GameState & GameActions>()(
           },
         })),
 
+      recordKanaRep: (kana) => {
+        const n = (get().kana[kana] ?? 0) + 1;
+        set((s) => ({ kana: { ...s.kana, [kana]: n } }));
+        return n;
+      },
+
       hasKanji: (kanjiId) => (get().progress[kanjiId]?.reps ?? 0) >= REPS_TO_OBTAIN,
 
       resetSave: () => set({ ...initialState, daily: freshDaily() }),
@@ -401,6 +414,7 @@ export const useGameStore = create<GameState & GameActions>()(
           foundWords: { ...current.foundWords, ...(p.foundWords ?? {}) },
           hints: { ...current.hints, ...(p.hints ?? {}) },
           misses: { ...current.misses, ...(p.misses ?? {}) },
+          kana: { ...current.kana, ...(p.kana ?? {}) },
           daily: { ...current.daily, ...(p.daily ?? {}) },
           streak: { ...current.streak, ...(p.streak ?? {}) },
           equippedGear: { ...current.equippedGear, ...(p.equippedGear ?? {}) },

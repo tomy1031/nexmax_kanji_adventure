@@ -16,6 +16,9 @@ import SettingsScreen from './features/settings/SettingsScreen';
 import VersusScreen from './features/versus/VersusScreen';
 import WordBook from './features/words/WordBook';
 import TutorialStage from './features/tutorial/TutorialStage';
+import PrologueScreen from './features/prologue/PrologueScreen';
+import KanaEpisode from './features/kana/KanaEpisode';
+import MojiEpisodeScreen from './features/moji/MojiEpisodeScreen';
 import EquipScreen from './features/equip/EquipScreen';
 
 /**
@@ -32,7 +35,9 @@ const ArcTheme = () => {
       ? Arc.GENDAI
       : pathname.includes('/mirai')
         ? Arc.MIRAI
-        : Arc.MUKASHI;
+        : pathname.includes('/moji') || pathname.includes('/kana/')
+          ? Arc.MOJI
+          : Arc.MUKASHI;
     document.documentElement.dataset.arc = arc;
   }, [pathname]);
 
@@ -78,6 +83,9 @@ const App = () => {
         <Route path="/versus" element={<VersusScreen />} />
         <Route path="/words" element={<WordBook />} />
         <Route path="/tutorial" element={<TutorialStage />} />
+        <Route path="/prologue" element={<PrologueScreen />} />
+        <Route path="/kana/:id" element={<KanaEpisode />} />
+        <Route path="/moji/:id" element={<MojiEpisodeScreen />} />
         <Route path="/equip" element={<EquipScreen />} />
         <Route path="/settings" element={<SettingsScreen />} />
         <Route path="*" element={<TitleScreen />} />

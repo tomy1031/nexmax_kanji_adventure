@@ -2,7 +2,7 @@ import { forwardRef, useCallback, useEffect, useImperativeHandle, useMemo, useRe
 import { AnimatePresence, motion, useAnimationControls } from 'framer-motion';
 import KanjiWriterCanvas, { type KanjiWriterHandle } from '../../components/KanjiWriterCanvas';
 import { RubyText } from '../../components/ui/Ruby';
-import { rock as rockShape, svgDoc, toDataUrl } from '../picturebook/paper';
+import { toDataUrl } from '../picturebook/paper';
 import * as sfx from '../../lib/sfx';
 
 /**
@@ -39,6 +39,8 @@ interface RockSlashProps {
   onWritten: (summary: { totalMistakes: number }) => boolean;
   /** The split animation has finished; the parent can move on. */
   onSplit?: () => void;
+  /** Stroke-matching strictness, passed to the writer (kana are looser). */
+  leniency?: number;
 }
 
 interface Cut {
@@ -59,21 +61,38 @@ const toD = (pts: [number, number][]) =>
 
 const ROCK_COLORS = ['#8f8a86', '#9a8f84', '#86898f', '#958d7f'];
 
-const rockUrl = (seed: number) =>
-  toDataUrl(
-    svgDoc(
-      `${rockShape(150, 170, 118, seed, ROCK_COLORS[seed % ROCK_COLORS.length])}
-       <g filter="url(#rough)" fill="#6f9a45" opacity="0.9">
-         <ellipse cx="${70 + (seed % 5) * 8}" cy="92" rx="26" ry="9"/><ellipse cx="228" cy="${96 + (seed % 3) * 6}" rx="18" ry="7"/>
-       </g>`,
-      seed,
-      300,
-      300,
-    ),
+/**
+ * The rock, drawn without SVG filters (2026-09-26「漢字を 書いている時…
+ * 要素の 表示が 切り替わる 瞬間に かなり ラグが あり チカチカ します」,
+ * iPhone SE / Chrome). The torn-paper filter the picture book uses stacks four
+ * noise passes; WebKit — every iPhone browser — redid it whenever the rock
+ * shook, split or was replaced. A jagged polygon with a paper-white rim and a
+ * soft shadow reads the same at this size and costs nothing to move.
+ *
+ * Bigger than the writing square (「岩が 文字より 小さいのは 見にくい」), and
+ * plain stone with no markings (「岩の 変な 模様が 手本と かぶって 見にくい」).
+ */
+const rockUrl = (seed: number) => {
+  let r = seed * 9301 + 49297;
+  const rnd = () => ((r = (r * 9301 + 49297) % 233280) / 233280);
+  const pts = Array.from({ length: 30 }, (_, i) => {
+    const a = (i / 30) * Math.PI * 2;
+    const rr = 168 * (0.9 + rnd() * 0.16);
+    return `${(150 + Math.cos(a) * rr * 1.1).toFixed(1)},${(162 + Math.sin(a) * rr).toFixed(1)}`;
+  }).join(' ');
+  const color = ROCK_COLORS[seed % ROCK_COLORS.length];
+  return toDataUrl(
+    `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 300" width="300" height="300">
+       <defs><radialGradient id="g" cx="40%" cy="35%" r="75%"><stop offset="0" stop-color="#ffffff" stop-opacity="0.16"/><stop offset="1" stop-color="#000000" stop-opacity="0.14"/></radialGradient></defs>
+       <polygon points="${pts}" transform="translate(3 6)" fill="#2d1d08" opacity="0.25"/>
+       <polygon points="${pts}" fill="${color}" stroke="#fffaf0" stroke-width="5" stroke-linejoin="round"/>
+       <polygon points="${pts}" fill="url(#g)"/>
+     </svg>`,
   );
+};
 
 export const RockSlash = forwardRef<RockSlashHandle, RockSlashProps>(
-  ({ char, material, size, showSample, seed, onMistake, onWritten, onSplit }, ref) => {
+  ({ char, material, size, showSample, seed, onMistake, onWritten, onSplit, leniency }, ref) => {
     const writerRef = useRef<KanjiWriterHandle>(null);
     const shake = useAnimationControls();
     const [cuts, setCuts] = useState<Cut[]>([]);
@@ -211,10 +230,10 @@ export const RockSlash = forwardRef<RockSlashHandle, RockSlashProps>(
                 <motion.path
                   d={flash.d}
                   stroke="#ffe27a"
-                  strokeWidth={14}
+                  strokeOpacity={0.55}
+                  strokeWidth={16}
                   strokeLinecap="round"
                   fill="none"
-                  style={{ filter: 'blur(4px)' }}
                   initial={{ pathLength: 0 }}
                   animate={{ pathLength: 1 }}
                   transition={{ duration: 0.14 }}
@@ -249,6 +268,7 @@ export const RockSlash = forwardRef<RockSlashHandle, RockSlashProps>(
               onCorrectStroke={handleStroke}
               onMistake={handleMistake}
               onComplete={handleComplete}
+              leniency={leniency}
             />
           </div>
         )}

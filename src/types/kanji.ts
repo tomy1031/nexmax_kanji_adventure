@@ -14,6 +14,12 @@ export const Arc = {
   GENDAI: 'gendai',
   /** N3 — 未来編. Nexmax mass-produced as a household robot. */
   MIRAI: 'mirai',
+  /**
+   * 新ルート「文字が 消えた 町」. Follows 『みんなの日本語』's lesson order
+   * from N5 through N3, so its chapters carry their own level; the level
+   * below is where it starts.
+   */
+  MOJI: 'moji',
 } as const;
 export type Arc = (typeof Arc)[keyof typeof Arc];
 
@@ -27,6 +33,7 @@ export const LEVEL_OF_ARC: Record<Arc, JlptLevel> = {
   [Arc.MUKASHI]: 'N5',
   [Arc.GENDAI]: 'N4',
   [Arc.MIRAI]: 'N3',
+  [Arc.MOJI]: 'N5',
 };
 
 /** One kanji as the game knows it. Built from src/data/kanji_master.csv. */

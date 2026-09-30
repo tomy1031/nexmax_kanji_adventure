@@ -592,7 +592,26 @@ const meadow: SceneDef = {
     sway('meadow-trees', tree(40, 440, 1.3, '#4f9a3c') + tree(362, 448, 1.4, '#57a043') + tree(300, 420, 0.8, '#3f8b3b'), 445, 1.6, 4.8),
     sway('meadow-grass', `<g filter="url(#rough)">${grassTufts().replace(/fill="#6f9e3a"/g, 'fill="#4f8f3a"')}</g>${flowers()}`, 600, 3, 3.2),
   ],
-  fx: {},
+  fx: {
+    // かな編 1話: the fork — a red gate going down, blue stone steps going up.
+    fork: [
+      {
+        key: 'meadow-fork',
+        svg: page(
+          `<g filter="url(#torn)">
+             <rect x="30" y="412" width="9" height="62" fill="#c4372c"/><rect x="92" y="412" width="9" height="62" fill="#c4372c"/>
+             <rect x="18" y="400" width="96" height="11" rx="3" fill="#d8453a"/><rect x="26" y="420" width="80" height="7" fill="#c4372c"/>
+           </g>
+           <g filter="url(#torn)" fill="#3f86d6" stroke="#2a5f9e" stroke-width="2">
+             ${Array.from({ length: 6 }, (_, i) => `<rect x="${296 + i * 11}" y="${470 - i * 24}" width="${62 - i * 6}" height="13" rx="2"/>`).join('')}
+           </g>`,
+          77,
+        ),
+        enter: { opacity: 1 },
+        exit: { opacity: 0 },
+      },
+    ],
+  },
 };
 
 export const SCENES: Record<string, SceneDef> = {

@@ -46,7 +46,8 @@
    編ごとのテーマ。既定は むかし編。
    --------------------------------------------------------------------------- */
 :root,
-[data-arc='mukashi'] {
+[data-arc='mukashi'],
+[data-arc='moji'] {
   /* public/img/design/ の参考画像に寄せた 青空と 羊皮紙。 */
   --stage: #7ec8f4;
   --stage-2: #cdeefd;
@@ -126,6 +127,36 @@
     user-select: none;
   }
 
+  /* かな編: まだ 書いて いない かな。字は うすく（まだ 戻って いない）、上に ローマ字。 */
+  ruby.kana-unread {
+    color: var(--ink-3);
+  }
+  /* 文字が 消えた 町: 漢字が 消えて 音だけ 残った ところ（点線）と、書いて 戻った 漢字（金色）。 */
+  .kanji-lost {
+    text-decoration: underline dotted var(--ink-3);
+    text-underline-offset: 0.25em;
+  }
+  ruby.kanji-back {
+    color: #9a5b00;
+    text-shadow: 0 0 8px rgba(255, 196, 92, 0.55);
+  }
+  /* かな編の 物語: まだ 戻って いない かなは ムシクイの 穴。 */
+  .kana-hole {
+    display: inline-block;
+    width: 0.82em;
+    height: 0.82em;
+    margin: 0 0.06em;
+    vertical-align: -0.08em;
+    border: 1.5px dashed var(--ink-3);
+    border-radius: 3px;
+    background: rgba(122, 82, 38, 0.08);
+  }
+  ruby.kana-unread rt {
+    color: #1b63b0;
+    font-weight: 700;
+    font-family: system-ui, sans-serif;
+  }
+
   button {
     font-family: inherit;
     font-weight: 700;
@@ -192,6 +223,11 @@
 
   .g-header h1 rt {
     color: #ffe9c2;
+  }
+
+  /* 暗い 背景（夜の プロローグ・物語を えらぶの 大きな カード）の 上の ふりがな。 */
+  .rt-light rt {
+    color: #ffe9a8;
   }
 
   /* 絵の 上に じかに 置く 字: 白に 濃い ふち。 */
@@ -496,10 +532,12 @@
   .g-shine::after {
     content: '';
     position: absolute;
-    inset: -20% auto -20% -60%;
+    inset: -20% auto -20% 0;
     width: 45%;
     background: linear-gradient(100deg, transparent 0%, rgba(255, 255, 255, 0.65) 50%, transparent 100%);
-    transform: skewX(-18deg);
+    transform: translateX(-135%) skewX(-18deg);
+    /* transform だけを 動かす（left を 動かすと 毎コマ 配置の 計算が やり直しに なる） */
+    will-change: transform;
     animation: g-shine 3.6s ease-in-out infinite;
     pointer-events: none;
     z-index: 1;
@@ -508,10 +546,10 @@
   @keyframes g-shine {
     0%,
     55% {
-      left: -60%;
+      transform: translateX(-135%) skewX(-18deg);
     }
     100% {
-      left: 130%;
+      transform: translateX(290%) skewX(-18deg);
     }
   }
 

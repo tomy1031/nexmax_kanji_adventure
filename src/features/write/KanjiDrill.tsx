@@ -1,4 +1,4 @@
-import { useCallback, useRef, useState, type ReactNode } from 'react';
+import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { RubyText } from '../../components/ui/Ruby';
 import PictureBook from '../picturebook/PictureBook';
@@ -8,7 +8,9 @@ import { useCanvasSize } from '../../hooks/useCanvasSize';
 import { useGameStore } from '../../store/gameStore';
 import { kanjiRuby } from '../../lib/reading';
 import { REPS_TO_OBTAIN, type KanjiData } from '../../types/kanji';
+import { MASTERY_REPS, repsToNextStar, starsOf } from '../../lib/mastery';
 import RockSlash, { type RockSlashHandle } from './RockSlash';
+import * as sfx from '../../lib/sfx';
 
 /**
  * The writing drill: write the character, and it cuts a rock. Each rock
@@ -35,6 +37,12 @@ interface KanjiDrillProps {
   nextLabel?: string;
   /** Rendered under the material slots (e.g. a way on for a replay). */
   extra?: ReactNode;
+  /**
+   * 文字が 消えた 町: the writes that make the kanji the learner's (3, ★1).
+   * Reaching it offers つぎへ or もっと 書く; the slots show the stars
+   * (lib/mastery.ts). Without it the drill is the old ten-to-obtain one.
+   */
+  goal?: number;
 }
 
 type Verdict = { kind: 'perfect' | 'clean' | 'close'; mistakes: number } | null;
@@ -49,7 +57,28 @@ const VERDICT_TEXT: Record<'perfect' | 'clean' | 'close', { head: string; next: 
   close: { head: 'まだ 正(せい)かいでは ない', next: '岩(いわ)は 割(わ)れない。「書(か)きじゅん」を 見(み)てから もう一度(いちど)。' },
 };
 
-export const KanjiDrill = ({ kanji, onObtained, onExit, onDone, nextLabel = 'つぎへ', extra }: KanjiDrillProps) => {
+/** Eight stars flying out from the centre: a star was gained. */
+const StarBurst = () => (
+  <div aria-hidden className="pointer-events-none absolute top-1/2 left-1/2">
+    {Array.from({ length: 8 }, (_, i) => {
+      const a = (i / 8) * Math.PI * 2;
+      return (
+        <motion.span
+          key={i}
+          className="absolute -mt-3 -ml-3 text-2xl"
+          style={{ color: '#ffd23a', willChange: 'transform, opacity' }}
+          initial={{ x: 0, y: 0, scale: 0.4, opacity: 1 }}
+          animate={{ x: Math.cos(a) * 110, y: Math.sin(a) * 110, scale: 1.2, opacity: 0, rotate: 180 }}
+          transition={{ duration: 0.9, ease: 'easeOut' }}
+        >
+          ★
+        </motion.span>
+      );
+    })}
+  </div>
+);
+
+export const KanjiDrill = ({ kanji, onObtained, onExit, onDone, nextLabel = 'つぎへ', extra, goal }: KanjiDrillProps) => {
   const size = useCanvasSize(300, 0.4, 72);
   const slashRef = useRef<RockSlashHandle>(null);
 
@@ -68,7 +97,14 @@ export const KanjiDrill = ({ kanji, onObtained, onExit, onDone, nextLabel = 'つ
 
   const [strokeMistakes, setStrokeMistakes] = useState(0);
   const [verdict, setVerdict] = useState<Verdict>(null);
+  /** Counts verdicts, so each new one pops once — and only then. */
+  const [verdictNo, setVerdictNo] = useState(0);
   const [obtained, setObtained] = useState(false);
+  /** The goal (★1) was reached on this write: the card offers つぎへ / もっと 書く. */
+  const [goalCard, setGoalCard] = useState(false);
+  /** A star gained without a card (★2), shown for a moment. */
+  const [starUp, setStarUp] = useState<number | null>(null);
+  const pendingGoal = useRef(false);
   /**
    * A kanji already owned is not collected again. Writing it is a review:
    * the first pass is recorded as one (and says so), and the rocks after
@@ -92,6 +128,7 @@ export const KanjiDrill = ({ kanji, onObtained, onExit, onDone, nextLabel = 'つ
       // and the rep does not advance the ten.
       const kind = mistakes === 0 ? 'perfect' : mistakes <= 2 ? 'clean' : 'close';
       setVerdict({ kind, mistakes });
+      setVerdictNo((n) => n + 1);
       setStrokeMistakes(0);
       if (kind === 'close') return false;
 
@@ -102,10 +139,16 @@ export const KanjiDrill = ({ kanji, onObtained, onExit, onDone, nextLabel = 'つ
         }
         return true;
       }
+      const before = useGameStore.getState().progress[kanji.id]?.reps ?? 0;
       pendingObtained.current = recordRep(kanji.id, mistakes);
+      if (goal != null) {
+        const gained = starsOf(before + 1) > starsOf(before) ? starsOf(before + 1) : null;
+        if (before < goal && before + 1 >= goal) pendingGoal.current = true;
+        else if (gained != null && !pendingObtained.current) setStarUp(gained);
+      }
       return true;
     },
-    [kanji, recordRep, recordReview, ownedAtStart, reviewed],
+    [kanji, recordRep, recordReview, ownedAtStart, reviewed, goal],
   );
 
   const handleSplit = useCallback(() => {
@@ -115,14 +158,31 @@ export const KanjiDrill = ({ kanji, onObtained, onExit, onDone, nextLabel = 'つ
       onObtained?.(kanji);
       return;
     }
+    if (pendingGoal.current) {
+      pendingGoal.current = false;
+      setGoalCard(true);
+      return;
+    }
     setRockNo((n) => n + 1);
   }, [kanji, onObtained]);
 
   const done = Math.min(reps, REPS_TO_OBTAIN);
+  const stars = starsOf(reps);
+
+  useEffect(() => {
+    if (goalCard) sfx.fanfare();
+  }, [goalCard]);
+
+  useEffect(() => {
+    if (starUp == null) return;
+    sfx.star(starUp - 1);
+    const t = setTimeout(() => setStarUp(null), 1800);
+    return () => clearTimeout(t);
+  }, [starUp]);
 
   return (
     <div className="isolate relative flex min-h-dvh flex-col items-center pb-5">
-      <PictureBook scene="mukashi_meadow" className="!fixed -z-10" />
+      <PictureBook scene="mukashi_meadow" className="!fixed -z-10" still />
       <TopBar onBack={onExit} />
 
       <div className="flex w-full max-w-md flex-1 flex-col gap-3 px-3 pt-3">
@@ -195,53 +255,70 @@ export const KanjiDrill = ({ kanji, onObtained, onExit, onDone, nextLabel = 'つ
           </div>
         </div>
 
-        {/* 判定 ------------------------------------------------------------ */}
-        <div className="min-h-[64px]" aria-live="polite">
-          <AnimatePresence mode="wait">
-            {verdict ? (
-              <motion.div
-                key={`${verdict.kind}-${reps}-${rockNo}`}
-                initial={{ opacity: 0, y: 8 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0 }}
-                className="g-parchment px-4 py-1.5 text-center"
-                style={{ borderColor: verdict.kind === 'close' ? 'var(--color-danger)' : 'var(--color-success)' }}
+        {/* 判定 ------------------------------------------------------------
+            One box that stays put. It used to be re-keyed on the rep count
+            and the rock number, so each verdict faded out and back in when
+            the next rock rolled up — a blink on every write (2026-09-27
+            「正解 完璧の エリアが チカチカ」). Now the box and its height
+            never change; only a new verdict gives the heading one small pop
+            (transform only). */}
+        <div
+          className="g-parchment flex h-[68px] flex-col items-center justify-center px-4 text-center"
+          style={{ borderColor: verdict ? (verdict.kind === 'close' ? 'var(--color-danger)' : 'var(--color-success)') : undefined }}
+          aria-live="polite"
+        >
+          {verdict ? (
+            <>
+              <motion.p
+                key={verdictNo}
+                className="g-title text-base"
+                initial={{ scale: 1.15 }}
+                animate={{ scale: 1 }}
+                transition={{ type: 'spring', stiffness: 500, damping: 22 }}
+                style={{ willChange: 'transform' }}
               >
-                <p className="g-title text-base">
-                  <RubyText showFurigana={showFurigana}>{VERDICT_TEXT[verdict.kind].head}</RubyText>
-                  {verdict.mistakes > 0 && (
-                    <span className="ml-2 text-sm font-normal" style={{ color: 'var(--ink-2)' }}>
-                      まちがえた ところ {verdict.mistakes}
-                    </span>
-                  )}
-                </p>
-                <p className="text-xs" style={{ color: 'var(--ink-2)' }}>
-                  <RubyText showFurigana={showFurigana}>{VERDICT_TEXT[verdict.kind].next}</RubyText>
-                </p>
-              </motion.div>
-            ) : (
-              <motion.p key="hint" className="text-center text-sm font-bold" style={{ color: 'var(--ink-2)' }}>
-                <RubyText showFurigana={showFurigana}>
-                  {reps === 0
-                    ? '手本(てほん)の 上(うえ)を なぞると、線(せん)が 刀(かたな)に なる。'
-                    : sampleOverride === null && reps === SAMPLE_REPS
-                      ? 'ここからは 手本(てほん)なしで 書(か)いてみよう。'
-                      : strokeMistakes > 0
-                        ? `いま ${strokeMistakes} かい まちがえています`
-                        : '書(か)ききると 岩(いわ)が 割(わ)れる。'}
-                </RubyText>
+                <RubyText showFurigana={showFurigana}>{VERDICT_TEXT[verdict.kind].head}</RubyText>
+                {verdict.mistakes > 0 && (
+                  <span className="ml-2 text-sm font-normal" style={{ color: 'var(--ink-2)' }}>
+                    まちがえた ところ {verdict.mistakes}
+                  </span>
+                )}
               </motion.p>
-            )}
-          </AnimatePresence>
+              <p className="text-xs" style={{ color: 'var(--ink-2)' }}>
+                <RubyText showFurigana={showFurigana}>{VERDICT_TEXT[verdict.kind].next}</RubyText>
+              </p>
+            </>
+          ) : (
+            <p className="text-sm font-bold" style={{ color: 'var(--ink-2)' }}>
+              <RubyText showFurigana={showFurigana}>
+                {reps === 0
+                  ? '手本(てほん)の 上(うえ)を なぞると、線(せん)が 刀(かたな)に なる。'
+                  : sampleOverride === null && reps === SAMPLE_REPS
+                    ? 'ここからは 手本(てほん)なしで 書(か)いてみよう。'
+                    : strokeMistakes > 0
+                      ? `いま ${strokeMistakes} かい まちがえています`
+                      : '書(か)ききると 岩(いわ)が 割(わ)れる。'}
+              </RubyText>
+            </p>
+          )}
         </div>
 
         {/* 集めた かけら ------------------------------------------------ */}
         <div className="g-parchment mt-auto px-3 py-2.5">
           <div className="mb-2 flex items-center gap-2">
-            <span className="text-sm font-black">
-              <span aria-hidden>🍃 </span>
-              <RubyText showFurigana={showFurigana}>集(あつ)めた かけら</RubyText>
-            </span>
+            {goal != null ? (
+              <span className="text-sm font-black">
+                <span aria-hidden style={{ color: stars ? '#e8a317' : 'rgba(122,82,38,0.35)' }}>
+                  {'★'.repeat(stars) + '☆'.repeat(3 - stars)}{' '}
+                </span>
+                <RubyText showFurigana={showFurigana}>{stars === 3 ? 'マスター' : `★${stars + 1}まで あと ${repsToNextStar(reps)}`}</RubyText>
+              </span>
+            ) : (
+              <span className="text-sm font-black">
+                <span aria-hidden>🍃 </span>
+                <RubyText showFurigana={showFurigana}>集(あつ)めた かけら</RubyText>
+              </span>
+            )}
             <div className="h-3 flex-1 overflow-hidden rounded-full border border-[#8fb7d8] bg-[#e3f1fb]">
               <motion.div
                 className="h-full rounded-full"
@@ -257,6 +334,7 @@ export const KanjiDrill = ({ kanji, onObtained, onExit, onDone, nextLabel = 'つ
           <div className="grid grid-cols-10 gap-1" role="img" aria-label={`${REPS_TO_OBTAIN}こ のうち ${done}こ`}>
             {Array.from({ length: REPS_TO_OBTAIN }, (_, i) => {
               const got = i < done;
+              const tier = goal != null ? MASTERY_REPS.indexOf((i + 1) as (typeof MASTERY_REPS)[number]) : -1;
               return (
                 <motion.div
                   key={i}
@@ -269,6 +347,15 @@ export const KanjiDrill = ({ kanji, onObtained, onExit, onDone, nextLabel = 'つ
                     color: got ? '#4a3220' : 'rgba(122,82,38,0.3)',
                   }}
                 >
+                  {tier >= 0 && (
+                    <span
+                      aria-hidden
+                      className="absolute -top-2 left-1/2 -translate-x-1/2 text-[11px] leading-none font-black"
+                      style={{ color: got ? '#e8a317' : 'rgba(122,82,38,0.45)' }}
+                    >
+                      ★{tier + 1}
+                    </span>
+                  )}
                   {got ? <KanjiWord kanji={kanji} showFurigana={showFurigana} /> : <span className="mb-1 text-xs">♛</span>}
                 </motion.div>
               );
@@ -277,6 +364,97 @@ export const KanjiDrill = ({ kanji, onObtained, onExit, onDone, nextLabel = 'つ
         </div>
         {extra}
       </div>
+
+      {/* ★2 — a star on the way, without stopping the hand ------------- */}
+      <AnimatePresence>
+        {starUp != null && (
+          <motion.div
+            key={starUp}
+            initial={{ opacity: 0, y: -20, scale: 0.7 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -10 }}
+            transition={{ type: 'spring', stiffness: 380, damping: 18 }}
+            className="pointer-events-none fixed top-[max(64px,env(safe-area-inset-top))] left-1/2 z-50 -translate-x-1/2"
+            style={{ willChange: 'transform, opacity' }}
+            aria-live="polite"
+          >
+            <StarBurst />
+            <div className="g-btn-red rounded-2xl px-5 py-2 text-center font-black">
+              <span className="block text-2xl tracking-widest" style={{ color: '#ffe27a' }}>
+                {'★'.repeat(starUp)}
+              </span>
+              <RubyText showFurigana={showFurigana}>{`★${starUp}に なった！ こうげき アップ`}</RubyText>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* ★1 — the kanji is the learner's (新ルート) ---------------------- */}
+      <AnimatePresence>
+        {goalCard && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/55 px-6"
+          >
+            <motion.div
+              initial={{ scale: 0.86, y: 14 }}
+              animate={{ scale: 1, y: 0 }}
+              transition={{ type: 'spring', stiffness: 320, damping: 22 }}
+              className="g-parchment w-full max-w-sm px-6 py-6 text-center"
+            >
+              <div className="relative">
+                <StarBurst />
+              </div>
+              <div className="g-btn-red mx-auto -mt-10 mb-3 inline-block rounded-xl px-4 py-1 text-sm font-black">
+                <span style={{ color: '#ffe27a' }}>★</span> <RubyText showFurigana={showFurigana}>手(て)に 入(い)れた！</RubyText>
+              </div>
+              <motion.div
+                initial={{ rotate: -8, scale: 0.6 }}
+                animate={{ rotate: 0, scale: 1 }}
+                transition={{ type: 'spring', stiffness: 200, damping: 12 }}
+                className="mx-auto flex h-40 w-32 flex-col items-center justify-center rounded-2xl text-[64px] leading-[1.4] font-black"
+                style={{
+                  background: 'linear-gradient(160deg,#fffbe8,#ffe7a3)',
+                  border: '4px solid #4f9a3c',
+                  boxShadow: '0 0 30px rgba(255,210,90,0.9)',
+                }}
+              >
+                <KanjiWord kanji={kanji} />
+              </motion.div>
+              <p className="g-title mt-4 text-lg">
+                <RubyText showFurigana={showFurigana}>{`「${ruby}」が 町(まち)に 戻(もど)った！`}</RubyText>
+              </p>
+              {/* Why write more: said as what it buys, in the fight to come. */}
+              <ul className="mt-2 space-y-0.5 text-left text-[13px] font-bold" style={{ color: 'var(--ink-2)' }}>
+                <li>
+                  <span style={{ color: '#e8a317' }}>★★</span>{' '}
+                  <RubyText showFurigana={showFurigana}>{`${MASTERY_REPS[1]}回(かい)：こうげき アップ`}</RubyText>
+                </li>
+                <li>
+                  <span style={{ color: '#e8a317' }}>★★★</span>{' '}
+                  <RubyText showFurigana={showFurigana}>{`${MASTERY_REPS[2]}回(かい)：漢字(かんじ)マスター（字(じ)の わざ・武器(ぶき)）`}</RubyText>
+                </li>
+              </ul>
+              <button type="button" className="g-btn g-btn-primary mt-5 w-full text-lg" onClick={onDone ?? onExit}>
+                <RubyText showFurigana={showFurigana}>{nextLabel}</RubyText>
+              </button>
+              <button
+                type="button"
+                className="g-btn g-btn-accent mt-2 w-full"
+                onClick={() => {
+                  setGoalCard(false);
+                  setVerdict(null);
+                  setRockNo((n) => n + 1);
+                }}
+              >
+                <RubyText showFurigana={showFurigana}>{`もっと 書(か)く（★2まで あと ${repsToNextStar(reps)}回(かい)）`}</RubyText>
+              </button>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* 入手 ------------------------------------------------------------ */}
       <AnimatePresence>
@@ -294,7 +472,7 @@ export const KanjiDrill = ({ kanji, onObtained, onExit, onDone, nextLabel = 'つ
               className="g-parchment w-full max-w-sm px-6 py-6 text-center"
             >
               <div className="g-btn-red mx-auto -mt-10 mb-3 inline-block rounded-xl px-4 py-1 text-sm font-black">
-                <RubyText showFurigana={showFurigana}>{obtained ? '10こ 集(あつ)まった！' : 'ふくしゅう できた'}</RubyText>
+                <RubyText showFurigana={showFurigana}>{obtained ? (goal != null ? '★3 漢字(かんじ)マスター！' : '10こ 集(あつ)まった！') : 'ふくしゅう できた'}</RubyText>
               </div>
               <motion.div
                 initial={{ rotate: -8, scale: 0.6 }}
@@ -317,7 +495,9 @@ export const KanjiDrill = ({ kanji, onObtained, onExit, onDone, nextLabel = 'つ
               <p className="mt-1 text-sm" style={{ color: 'var(--ink-2)' }}>
                 <RubyText showFurigana={showFurigana}>
                   {obtained
-                    ? 'この 字(じ)で 武器(ぶき)が 作(つく)れる。'
+                    ? goal != null
+                      ? 'きれいに 書(か)くと「字(じ)の わざ」が 出(で)る。この 字(じ)で 武器(ぶき)も 作(つく)れる。'
+                      : 'この 字(じ)で 武器(ぶき)が 作(つく)れる。'
                     : 'ふくしゅうとして 1回(かい) 記録(きろく)した。さびた 武器(ぶき)も 直(なお)る。'}
                 </RubyText>
               </p>
