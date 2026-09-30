@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { motion, AnimatePresence, useAnimationControls } from 'framer-motion';
+import { motion, AnimatePresence, useAnimationControls, useReducedMotion } from 'framer-motion';
 import type { StageDef } from '../../data/stages';
 import type { KanjiData } from '../../types/kanji';
 import KanjiWriterCanvas, { type KanjiWriterHandle } from '../../components/KanjiWriterCanvas';
@@ -31,6 +31,8 @@ import { featuresUnlockedBy, FEATURE_INTRO } from '../../data/unlocks';
 import PictureBook from '../picturebook/PictureBook';
 import EnemyArt from './EnemyArt';
 import { MASTERY_REPS, comboMultiplier, masteryMultiplier, pickWeakest, starsOf, type Stars } from '../../lib/mastery';
+import { FLOW_MS, IMPACT_MS, WIN_DELAY_MASTERY_MS, lightOf } from '../../lib/lightFlow';
+import LightFlow, { type Flow } from './LightFlow';
 
 /**
  * The fight.
@@ -43,6 +45,11 @@ import { MASTERY_REPS, comboMultiplier, masteryMultiplier, pickWeakest, starsOf,
  *
  * Layout: public/img/design/森の漢字バトル画面.png — HP plates on top, the
  * picture-book field with Nexmax and the opponent, 今回の漢字, the board.
+ *
+ * 文字が 消えた 町 (`mastery`, 08 §3.6): writing gives Nexmax his power. The
+ * written character's light rises from the board into him and he fires it
+ * (LightFlow); the hit, its number and the win wait for the beam to land.
+ * The picture-book arcs keep the blade.
  */
 
 interface BattleSceneProps {
@@ -146,6 +153,9 @@ export const BattleScene = ({
   const tutorial = mode === 'tutorial';
 
   const showFurigana = useGameStore((s) => s.settings.furigana);
+  const prefersReduced = useReducedMotion();
+  const settingReduced = useGameStore((s) => s.settings.reducedMotion);
+  const still = Boolean(prefersReduced || settingReduced);
   const equippedId = useGameStore((s) => s.equippedWeapon);
   const activeIndividualId = useGameStore((s) => s.activeIndividual);
   const weapons = useGameStore((s) => s.weapons);
@@ -222,6 +232,15 @@ export const BattleScene = ({
     if (settleTimer.current) clearTimeout(settleTimer.current);
   }, []);
   const writerRef = useRef<KanjiWriterHandle>(null);
+  // Where the light starts, passes and lands (新ルート). Read once per write.
+  const boardRef = useRef<HTMLDivElement>(null);
+  const heroRef = useRef<HTMLDivElement>(null);
+  const enemyRef = useRef<HTMLDivElement>(null);
+  const [flow, setFlow] = useState<Flow | null>(null);
+  // The hit lands when the beam does; cleared if the screen closes first.
+  const flowTimers = useRef<ReturnType<typeof setTimeout>[]>([]);
+  useEffect(() => () => flowTimers.current.forEach(clearTimeout), []);
+  const atImpact = (fn: () => void, ms = IMPACT_MS) => flowTimers.current.push(setTimeout(fn, ms));
   const heroCtl = useAnimationControls();
   const enemyCtl = useAnimationControls();
   const fieldCtl = useAnimationControls();
@@ -340,16 +359,40 @@ export const BattleScene = ({
         hinted,
         mastery: mastery ? masteryMultiplier(targetStars, clean) * comboMultiplier(nextCombo) : 1,
       });
-      sfx.slash(1);
-      sfx.hit();
       setHinted(false);
+      const struck = { n: turn, damage: result.damage, critical };
 
-      // The swing: Nexmax lunges, the blade crosses the opponent, it reels.
-      void heroCtl.start({ x: [0, 70, 0], rotate: [0, 8, 0], transition: { duration: 0.45 } });
-      void enemyCtl.start({ x: [0, 14, -8, 0], filter: ['brightness(1)', 'brightness(2.4)', 'brightness(1)'], transition: { duration: 0.45, delay: 0.15 } });
-      setHit({ n: turn, damage: result.damage, critical });
-      if (critical) sfx.fanfare();
-      else if (starUp) sfx.star(starUp - 1);
+      if (mastery) {
+        // The light: from the board into Nexmax, then out at the opponent.
+        const centre = (el: HTMLElement | null, fy = 0.5) => {
+          const r = el?.getBoundingClientRect();
+          return r ? { x: r.left + r.width / 2, y: r.top + r.height * fy } : { x: 0, y: 0 };
+        };
+        setFlow({ n: turn, from: centre(boardRef.current), hero: centre(heroRef.current, 0.42), to: centre(enemyRef.current), light: lightOf(mistakes, hinted) });
+        sfx.beam();
+        const total = (IMPACT_MS + FLOW_MS.fade) / 1000;
+        void heroCtl.start({
+          scale: [1, 1, 1.08, 1],
+          x: [0, 0, -10, 0],
+          transition: { duration: total, times: [0, FLOW_MS.rise / 1000 / total, (FLOW_MS.rise + FLOW_MS.charge) / 1000 / total, 1] },
+        });
+        void enemyCtl.start({ x: [0, 14, -8, 0], transition: { duration: 0.45, delay: IMPACT_MS / 1000 } });
+        atImpact(() => sfx.hit(), IMPACT_MS - 120); // hit() sounds 120 ms after it is called
+        atImpact(() => {
+          setHit(struck);
+          if (critical) sfx.fanfare();
+          else if (starUp) sfx.star(starUp - 1);
+        });
+      } else {
+        sfx.slash(1);
+        sfx.hit();
+        // The swing: Nexmax lunges, the blade crosses the opponent, it reels.
+        void heroCtl.start({ x: [0, 70, 0], rotate: [0, 8, 0], transition: { duration: 0.45 } });
+        void enemyCtl.start({ x: [0, 14, -8, 0], filter: ['brightness(1)', 'brightness(2.4)', 'brightness(1)'], transition: { duration: 0.45, delay: 0.15 } });
+        setHit(struck);
+        if (critical) sfx.fanfare();
+        else if (starUp) sfx.star(starUp - 1);
+      }
 
       const nextBossHp = Math.max(0, bossHp - result.damage);
       setBossHp(nextBossHp);
@@ -372,7 +415,7 @@ export const BattleScene = ({
 
       if (nextBossHp <= 0) {
         bossDownRef.current = true;
-        settleTimer.current = setTimeout(() => settle('win', nextMistakes, playerHp), 650);
+        settleTimer.current = setTimeout(() => settle('win', nextMistakes, playerHp), mastery ? WIN_DELAY_MASTERY_MS : 650);
         return;
       }
 
@@ -399,13 +442,13 @@ export const BattleScene = ({
 
   if (!target) return null;
 
-  const hpBar = (value: number, max: number, color: string) => (
+  const hpBar = (value: number, max: number, color: string, delay = 0) => (
     <div className="h-3 overflow-hidden rounded-full border border-black/30 bg-black/35">
       <motion.div
         className="h-full rounded-full"
         style={{ background: color }}
         animate={{ width: `${(value / max) * 100}%` }}
-        transition={{ type: 'spring', stiffness: 220, damping: 26 }}
+        transition={{ type: 'spring', stiffness: 220, damping: 26, delay }}
       />
     </div>
   );
@@ -442,7 +485,8 @@ export const BattleScene = ({
               <p className="truncate text-xs font-black">
                 <RubyText showFurigana={showFurigana}>{stage.boss.name}</RubyText>
               </p>
-              {hpBar(bossHp, stage.boss.hp, 'linear-gradient(90deg,#ff8a6a,#e0362b)')}
+              {/* 新ルート: the bar drops when the beam lands. */}
+              {hpBar(bossHp, stage.boss.hp, 'linear-gradient(90deg,#ff8a6a,#e0362b)', mastery ? IMPACT_MS / 1000 : 0)}
               <p className="text-[10px] font-bold tabular-nums">
                 HP {bossHp} / {stage.boss.hp}{' '}
                 <RubyText showFurigana={showFurigana}>{`${elementLabel.ja}(${elementLabel.reading})`}</RubyText>
@@ -463,7 +507,7 @@ export const BattleScene = ({
         </div>
 
         <div className="absolute inset-x-0 bottom-3 flex items-end justify-between px-4">
-          <motion.div className="relative" animate={heroCtl}>
+          <motion.div ref={heroRef} className="relative" animate={heroCtl}>
             <img
               src={assetPath('img/chara/cut/guide.webp')}
               alt=""
@@ -480,7 +524,7 @@ export const BattleScene = ({
               </span>
             )}
           </motion.div>
-          <div className="relative">
+          <div ref={enemyRef} className="relative">
             <EnemyArt art={stage.boss.art} icon={stage.boss.icon} color={elementLabel.color} size={150} controls={enemyCtl} />
             <AnimatePresence>
               {hit && (
@@ -488,7 +532,7 @@ export const BattleScene = ({
                   key={hit.n}
                   initial={{ opacity: 0, y: 0, scale: 0.6 }}
                   animate={{ opacity: [0, 1, 1, 0], y: -50, scale: 1.2 }}
-                  transition={{ duration: 1.1, delay: 0.2 }}
+                  transition={{ duration: 1.1, delay: mastery ? 0 : 0.2 }}
                   className={`g-outline-text pointer-events-none absolute top-6 left-1/2 -translate-x-1/2 font-black ${hit.critical ? 'text-5xl' : 'text-3xl'}`}
                   style={hit.critical ? { color: '#ffe27a' } : undefined}
                 >
@@ -513,9 +557,9 @@ export const BattleScene = ({
                 </motion.span>
               )}
             </AnimatePresence>
-            {/* 刃のあと */}
+            {/* 刃のあと（新ルートは 光線 — LightFlow） */}
             <AnimatePresence>
-              {hit && (
+              {hit && !mastery && (
                 <motion.div
                   key={`slash-${hit.n}`}
                   className="pointer-events-none absolute top-1/2 left-1/2 h-2 w-44 -translate-x-1/2 -translate-y-1/2 -rotate-[35deg] rounded-full"
@@ -594,7 +638,7 @@ export const BattleScene = ({
             shape — that is what makes the ten reps in the drill worth
             something. 書きじゅん reveals it for anyone who is stuck. */}
         <div className="flex items-stretch justify-center gap-2">
-          <div className="rounded-2xl border-4 border-[#4fb0f5] bg-white p-1 shadow-[0_0_0_3px_#fff]">
+          <div ref={boardRef} className="rounded-2xl border-4 border-[#4fb0f5] bg-white p-1 shadow-[0_0_0_3px_#fff]">
             <KanjiWriterCanvas
               ref={writerRef}
               key={`${target.id}-${turn}`}
@@ -602,7 +646,7 @@ export const BattleScene = ({
               size={size}
               quizMode
               showSample={tutorial}
-              onCorrectStroke={() => sfx.slash(0.35)}
+              onCorrectStroke={() => (mastery ? sfx.neon(0.35) : sfx.slash(0.35))}
               onMistake={handleMistake}
               onComplete={handleComplete}
             />
@@ -648,7 +692,9 @@ export const BattleScene = ({
             className="px-3 text-center text-sm leading-snug"
             style={{ willChange: 'transform' }}
           >
-            <RubyText showFurigana={showFurigana}>{flash ?? '⚔ 書(か)くと こうげき！'}</RubyText>
+            <RubyText showFurigana={showFurigana}>
+              {flash ?? (mastery ? '💡 書(か)いた 字(じ)の 光(ひかり)で こうげき！' : '⚔ 書(か)くと こうげき！')}
+            </RubyText>
           </motion.span>
         </div>
 
@@ -670,6 +716,8 @@ export const BattleScene = ({
           </p>
         )}
       </div>
+
+      <LightFlow flow={flow} still={still} />
 
       {/* 字の わざ — the flash of a ★3 kanji written clean. */}
       <AnimatePresence>
