@@ -1,6 +1,6 @@
 import { lazy, Suspense, useEffect } from 'react';
 import type { ReactNode } from 'react';
-import { HashRouter, Routes, Route, UNSAFE_LocationContext, useLocation, useNavigationType } from 'react-router-dom';
+import { HashRouter, Routes, Route, UNSAFE_LocationContext, useLocation, useNavigationType, useParams } from 'react-router-dom';
 import type { Location } from 'react-router-dom';
 import { AnimatePresence } from 'framer-motion';
 import { DoorPanel } from './components/ui/Doors';
@@ -9,23 +9,56 @@ import { preloadScreens } from './lib/preload';
 import { Arc } from './types/kanji';
 import { useGameStore } from './store/gameStore';
 import TitleScreen from './features/title/TitleScreen';
-import ArcSelect from './features/map/ArcSelect';
-import StageSelect from './features/map/StageSelect';
-import StagePlayer from './features/stage/StagePlayer';
+import MojiRouteMap from './features/map/MojiRouteMap';
 import ForgeScreen from './features/forge/ForgeScreen';
-import GachaScreen from './features/gacha/GachaScreen';
-import CollectionScreen from './features/collection/CollectionScreen';
-import DailyScreen from './features/daily/DailyScreen';
 import SettingsScreen from './features/settings/SettingsScreen';
-// Versus brings the network library; it is fetched only when that screen opens.
-const VersusScreen = lazy(() => import('./features/versus/VersusScreen'));
-import WordBook from './features/words/WordBook';
-import TutorialStage from './features/tutorial/TutorialStage';
 import PrologueScreen from './features/prologue/PrologueScreen';
 import KanaEpisode from './features/kana/KanaEpisode';
 import MojiEpisodeScreen from './features/moji/MojiEpisodeScreen';
 import EquipScreen from './features/equip/EquipScreen';
 import ZukanScreen from './features/zukan/ZukanScreen';
+
+/**
+ * Screens outside 文字が 消えた 町 — the older arcs (closing), versus, the word
+ * book — are separate files, so the first load carries only what a player
+ * meets first. They are fetched quietly once the title is up (warmLater), so
+ * opening one later does not wait.
+ */
+const later = {
+  arcSelect: () => import('./features/map/ArcSelect'),
+  stageSelect: () => import('./features/map/StageSelect'),
+  stagePlayer: () => import('./features/stage/StagePlayer'),
+  gacha: () => import('./features/gacha/GachaScreen'),
+  collection: () => import('./features/collection/CollectionScreen'),
+  daily: () => import('./features/daily/DailyScreen'),
+  // Versus brings the network library.
+  versus: () => import('./features/versus/VersusScreen'),
+  words: () => import('./features/words/WordBook'),
+  tutorial: () => import('./features/tutorial/TutorialStage'),
+};
+const ArcSelect = lazy(later.arcSelect);
+const StageSelect = lazy(later.stageSelect);
+const StagePlayer = lazy(later.stagePlayer);
+const GachaScreen = lazy(later.gacha);
+const CollectionScreen = lazy(later.collection);
+const DailyScreen = lazy(later.daily);
+const VersusScreen = lazy(later.versus);
+const WordBook = lazy(later.words);
+const TutorialStage = lazy(later.tutorial);
+
+const warmLater = () => {
+  const run = () => Object.values(later).forEach((load) => void load().catch(() => {}));
+  if ('requestIdleCallback' in window) window.requestIdleCallback(run, { timeout: 6000 });
+  else setTimeout(run, 3000);
+};
+
+/** /map/moji is the town's stage select (in the first load); the older arcs' maps come later. */
+const MapRoute = () => {
+  const { arc } = useParams<{ arc: string }>();
+  return arc === 'moji' ? <MojiRouteMap /> : <StageSelect />;
+};
+
+const Later = ({ children }: { children: ReactNode }) => <Suspense fallback={null}>{children}</Suspense>;
 
 /**
  * Routing is hash-based: the game ships to GitHub Pages, which has no
@@ -93,6 +126,7 @@ const App = () => {
   // The forge's pictures are the heaviest a player opens from the map.
   useEffect(() => {
     preloadScreens(['forge']);
+    warmLater();
   }, []);
 
   return (
@@ -102,16 +136,16 @@ const App = () => {
         {(location) => (
           <Routes location={location}>
             <Route path="/" element={<TitleScreen />} />
-            <Route path="/map" element={<ArcSelect />} />
-            <Route path="/map/:arc" element={<StageSelect />} />
-            <Route path="/stage/:stageId" element={<StagePlayer />} />
+            <Route path="/map" element={<Later><ArcSelect /></Later>} />
+            <Route path="/map/:arc" element={<Later><MapRoute /></Later>} />
+            <Route path="/stage/:stageId" element={<Later><StagePlayer /></Later>} />
             <Route path="/forge" element={<ForgeScreen />} />
-            <Route path="/gacha" element={<GachaScreen />} />
-            <Route path="/collection" element={<CollectionScreen />} />
-            <Route path="/daily" element={<DailyScreen />} />
-            <Route path="/versus" element={<Suspense fallback={null}><VersusScreen /></Suspense>} />
-            <Route path="/words" element={<WordBook />} />
-            <Route path="/tutorial" element={<TutorialStage />} />
+            <Route path="/gacha" element={<Later><GachaScreen /></Later>} />
+            <Route path="/collection" element={<Later><CollectionScreen /></Later>} />
+            <Route path="/daily" element={<Later><DailyScreen /></Later>} />
+            <Route path="/versus" element={<Later><VersusScreen /></Later>} />
+            <Route path="/words" element={<Later><WordBook /></Later>} />
+            <Route path="/tutorial" element={<Later><TutorialStage /></Later>} />
             <Route path="/prologue" element={<PrologueScreen />} />
             <Route path="/kana/:id" element={<KanaEpisode />} />
             <Route path="/moji/:id" element={<MojiEpisodeScreen />} />
