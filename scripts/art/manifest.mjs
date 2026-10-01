@@ -413,6 +413,10 @@ const NANIWA = [
   naniwa('naniwa_town_station', 'inside the main station of Naniwa Town on the morning the train arrives: a grand steampunk concourse with brass pillars, a glass roof and hanging lanterns; on the wall a huge station calendar board with a row of seven EMPTY dark panels, and above it a big round clock with no numerals (dots only); a blue train at a platform on one side. No people.', '1章 1話「きえた カレンダー」（町の 駅・空っぽの カレンダー）'),
   naniwa('naniwa_station_square', 'the square in front of Naniwa Town station in the morning: a large town-map board in a brass frame showing only simple drawn shapes (a mountain, a river, rice fields — no letters at all), shopfronts with BLANK signboards, lanterns and a few street trees, and beyond the rooftops a green mountain rising behind the town. No people.', '1章 2話「山田さん」（駅前の 広場・町の 地図）'),
   naniwa('naniwa_train', 'inside a blue commuter train crossing a long bridge over the bay at sunrise: rows of seats on both sides, brass handrails and hanging straps, big windows showing the sea and, straight ahead, a town on a high hill with a red Ferris wheel catching the morning light.', 'かな編 9話（海を わたる 青い 電車）'),
+  {
+    ...naniwa('naniwa_last_car', 'the last car of the blue commuter train on the bridge over the bay at sunset, the connecting door thrown open: inside, the whole car has become a swirling whirlpool of tiny glowing golden motes of light and blank cream paper slips spinning in a vortex between the brass handrails and hanging straps; at the center of the whirlpool the ink-shadow creature from the second reference image (black-violet ink smoke, glowing amber eyes, paper talismans) slurps a long ribbon of golden motes into its mouth like noodles; the windows on both sides show the sea glowing orange. Exciting but kid-friendly.', 'かな編 10話（最後の 車両・字の 渦）'),
+    refs: ['art-src/naniwa_train.png', 'art-src/battle/04_敵_モジクイ.png'],
+  },
 ];
 
 // ---------------------------------------------------------------------------

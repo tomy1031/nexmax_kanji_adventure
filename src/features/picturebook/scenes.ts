@@ -646,6 +646,7 @@ export const PHOTO_SCENES: Record<string, SceneDef> = {
   naniwa_runway_night: photoScene('img/naniwa/naniwa_runway_night.webp'),
   naniwa_station: photoScene('img/naniwa/naniwa_station.webp'),
   naniwa_train: photoScene('img/naniwa/naniwa_train.webp'),
+  naniwa_last_car: photoScene('img/naniwa/naniwa_last_car.webp'),
   // 1章: ナニワタウン
   naniwa_town: photoScene('img/title/bg.webp'),
   naniwa_town_station: photoScene('img/naniwa/naniwa_town_station.webp'),

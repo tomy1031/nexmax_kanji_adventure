@@ -170,9 +170,42 @@ const ReadyScreen = ({
           </button>
         )}
 
+        {/* Face to face before the fight: Nexmax and the opponent, in the room left above the button. */}
+        {ep.boss.img && (
+          <div aria-hidden className="relative mt-1 flex flex-1 items-end justify-center gap-1 [@media(max-height:699px)]:hidden">
+            <motion.img
+              src={assetPath('img/chara/naniwa/nexmax_determined.webp')}
+              alt=""
+              className="h-[min(210px,22dvh)] w-auto object-contain"
+              style={{ filter: 'drop-shadow(0 8px 10px rgba(10,6,30,0.45))' }}
+              initial={{ x: -40, opacity: 0 }}
+              animate={{ x: 0, opacity: 1 }}
+              transition={{ type: 'spring', stiffness: 220, damping: 20, delay: 0.15 }}
+            />
+            <motion.span
+              className="mb-[12%] font-black text-[34px] leading-none text-[#ffd36a]"
+              style={{ textShadow: '0 3px 0 #7a2a00, 0 0 18px rgba(255,150,40,0.8)', fontFamily: 'var(--font-display)' }}
+              initial={{ scale: 2.2, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{ type: 'spring', stiffness: 380, damping: 14, delay: 0.45 }}
+            >
+              VS
+            </motion.span>
+            <motion.img
+              src={assetPath(ep.boss.img)}
+              alt=""
+              className="h-[min(210px,22dvh)] w-auto object-contain"
+              style={{ filter: 'drop-shadow(0 0 16px rgba(130,70,210,0.55))' }}
+              initial={{ x: 40, opacity: 0 }}
+              animate={{ x: 0, opacity: 1 }}
+              transition={{ type: 'spring', stiffness: 220, damping: 20, delay: 0.25 }}
+            />
+          </div>
+        )}
+
         <motion.button
           type="button"
-          className="g-btn g-btn-red mt-auto w-full text-xl"
+          className="g-btn g-btn-red sticky bottom-[max(12px,env(safe-area-inset-bottom))] z-10 mt-auto w-full text-xl"
           onClick={onFight}
           animate={{ scale: [1, 1.03, 1] }}
           transition={{ duration: 1.6, repeat: Infinity }}
