@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { lazy, Suspense, useEffect } from 'react';
 import type { ReactNode } from 'react';
 import { HashRouter, Routes, Route, UNSAFE_LocationContext, useLocation, useNavigationType } from 'react-router-dom';
 import type { Location } from 'react-router-dom';
@@ -17,7 +17,8 @@ import GachaScreen from './features/gacha/GachaScreen';
 import CollectionScreen from './features/collection/CollectionScreen';
 import DailyScreen from './features/daily/DailyScreen';
 import SettingsScreen from './features/settings/SettingsScreen';
-import VersusScreen from './features/versus/VersusScreen';
+// Versus brings the network library; it is fetched only when that screen opens.
+const VersusScreen = lazy(() => import('./features/versus/VersusScreen'));
 import WordBook from './features/words/WordBook';
 import TutorialStage from './features/tutorial/TutorialStage';
 import PrologueScreen from './features/prologue/PrologueScreen';
@@ -108,7 +109,7 @@ const App = () => {
             <Route path="/gacha" element={<GachaScreen />} />
             <Route path="/collection" element={<CollectionScreen />} />
             <Route path="/daily" element={<DailyScreen />} />
-            <Route path="/versus" element={<VersusScreen />} />
+            <Route path="/versus" element={<Suspense fallback={null}><VersusScreen /></Suspense>} />
             <Route path="/words" element={<WordBook />} />
             <Route path="/tutorial" element={<TutorialStage />} />
             <Route path="/prologue" element={<PrologueScreen />} />
