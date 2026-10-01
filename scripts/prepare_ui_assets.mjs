@@ -6,6 +6,7 @@
  *
  *   title       art-src/titlesozai/ → public/img/title/      (TitleScreen)
  *   kanjiyasan  art-src/kanjiyasan/ → public/img/kanjiyasan/ (ForgeScreen, 漢字やさん)
+ *   battle      art-src/battle/     → public/img/battle/     (NaniwaBattleView, 文字が 消えた 町の たたかい)
  *
  * Every picture is written no larger than the screen ever shows it (about 2x
  * its largest CSS size). Re-runnable: it always overwrites.
@@ -179,5 +180,54 @@ const kanjiyasan = async () => {
   await report(OUT, out);
 };
 
+// --------------------------------------------------------------- battle --
+const battle = async () => {
+  const need = needIn('art-src/battle');
+  const OUT = 'public/img/battle';
+  mkdirSync(OUT, { recursive: true });
+  const out = [];
+
+  // The terrace at sunset. Wide for PCs. For phones only the sky, the city,
+  // the river and the start of the terrace show above the deck of the frame,
+  // so the tall copy is that band, from the Ferris wheel to past the sun.
+  const BG = need('01_背景_蒸気都市テラス.png');
+  await sharp(BG).webp({ quality: 74 }).toFile(`${OUT}/bg_wide.webp`);
+  out.push('bg_wide.webp');
+  await sharp(BG).extract({ left: 130, top: 0, width: 1000, height: 760 }).webp({ quality: 76 }).toFile(`${OUT}/bg_tall.webp`);
+  out.push('bg_tall.webp');
+
+  // The UI frame, cut in two across its empty middle (rows 600–700 are fully
+  // transparent): the top holds the opponent's plate and bar and the corner
+  // posts, the bottom the deck, Nexmax's plate and bar, the reading panel and
+  // the writing board. Between them the screen can grow. Kept at the
+  // delivered width: NaniwaBattleView places text by these pixels.
+  const FRAME = need('02_UIフレーム.png');
+  await sharp(FRAME).extract({ left: 0, top: 0, width: 941, height: 660 }).webp({ quality: 84, alphaQuality: 88 }).toFile(`${OUT}/frame_top.webp`);
+  out.push('frame_top.webp');
+  await sharp(FRAME).extract({ left: 0, top: 660, width: 941, height: 1012 }).webp({ quality: 84, alphaQuality: 88 }).toFile(`${OUT}/frame_bottom.webp`);
+  out.push('frame_bottom.webp');
+
+  // Nexmax with the brush and the opponent keep their whole canvas, so the
+  // view's anchor points (the chest, the face) stay where they were measured.
+  for (const [file, name] of [
+    ['03_ネクマックス_魔法筆.png', 'nexmax_brush.webp'],
+    ['04_敵_モジクイ.png', 'mojikui.webp'],
+  ]) {
+    await sharp(need(file)).resize({ width: 600 }).webp({ quality: 84, alphaQuality: 88 }).toFile(`${OUT}/${name}`);
+    out.push(name);
+  }
+
+  const BACK = need('06_ボタン_もどる.png');
+  await sharp(BACK)
+    .extract(padded(await alphaBox(BACK), 6))
+    .resize({ width: 480, withoutEnlargement: true })
+    .webp({ quality: 82, alphaQuality: 85 })
+    .toFile(`${OUT}/btn_back.webp`);
+  out.push('btn_back.webp');
+
+  await report(OUT, out);
+};
+
 if (!only || only === 'title') await title();
 if (!only || only === 'kanjiyasan') await kanjiyasan();
+if (!only || only === 'battle') await battle();

@@ -33,6 +33,7 @@ import EnemyArt from './EnemyArt';
 import { MASTERY_REPS, comboMultiplier, masteryMultiplier, pickWeakest, starsOf, type Stars } from '../../lib/mastery';
 import { FLOW_MS, IMPACT_MS, WIN_DELAY_MASTERY_MS, lightOf } from '../../lib/lightFlow';
 import LightFlow, { type Flow } from './LightFlow';
+import NaniwaBattleView from './NaniwaBattleView';
 
 /**
  * The fight.
@@ -211,6 +212,12 @@ export const BattleScene = ({
   const [totalMistakes, setTotalMistakes] = useState(0);
   const [turn, setTurn] = useState(0);
   const [flash, setFlash] = useState<string | null>(null);
+  /** Counts lines, so the same words said twice still show twice (NaniwaBattleView). */
+  const [flashNo, setFlashNo] = useState(0);
+  const say = useCallback((text: string) => {
+    setFlash(text);
+    setFlashNo((n) => n + 1);
+  }, []);
   const [hit, setHit] = useState<{ n: number; damage: number; critical?: boolean } | null>(null);
   /** Clean writes in a row (新ルート). */
   const [combo, setCombo] = useState(0);
@@ -303,9 +310,9 @@ export const BattleScene = ({
     sfx.hurt();
     void enemyCtl.start({ x: [0, -80, 0], transition: { duration: 0.45 } });
     void fieldCtl.start({ x: [0, -6, 6, -3, 0], transition: { duration: 0.35, delay: 0.25 } });
-    setFlash(`ミスが ${patience}こ たまった。${back} ダメージを うけた`);
+    say(`ミスが ${patience}こ たまった。${back} ダメージを うけた`);
     if (nextPlayerHp <= 0) settle('lose', totalMistakes, 0);
-  }, [rage, patience, stage.boss, individual, stats.defense, playerHp, enemyCtl, fieldCtl, settle, totalMistakes]);
+  }, [rage, patience, stage.boss, individual, stats.defense, playerHp, enemyCtl, fieldCtl, settle, totalMistakes, say]);
 
   const handleMistake = useCallback(() => {
     if (settledRef.current || bossDownRef.current) return;
@@ -397,7 +404,7 @@ export const BattleScene = ({
       const nextBossHp = Math.max(0, bossHp - result.damage);
       setBossHp(nextBossHp);
 
-      setFlash(
+      say(
         critical
           ? `字(じ)の わざ！ ${result.damage} ダメージ`
           : starUp
@@ -428,7 +435,7 @@ export const BattleScene = ({
     [
       tutorial, totalMistakes, target, progress, recordReview, recordRep, weapon, individual, stage.boss,
       rust, bossHp, playerHp, settle, heroCtl, enemyCtl, turn, stats.attackPct, ownsTarget, hinted,
-      mastery, targetStars, kanjiPool, combo,
+      mastery, targetStars, kanjiPool, combo, say,
     ],
   );
 
@@ -452,6 +459,119 @@ export const BattleScene = ({
       />
     </div>
   );
+
+  // Over either layout: the light, 字の わざ, and the result.
+  const overlays = (
+    <>
+        <LightFlow flow={flow} still={still} />
+
+        {/* 字の わざ — the flash of a ★3 kanji written clean. */}
+        <AnimatePresence>
+          {hit?.critical && (
+            <motion.div
+              key={`crit-${hit.n}`}
+              className="pointer-events-none fixed inset-0 z-30 flex items-center justify-center"
+              initial={{ opacity: 1 }}
+              animate={{ opacity: 0 }}
+              transition={{ duration: 1.1, delay: 0.5 }}
+              aria-hidden
+            >
+              <motion.div
+                className="absolute inset-0 bg-white"
+                initial={{ opacity: 0.85 }}
+                animate={{ opacity: 0 }}
+                transition={{ duration: 0.35 }}
+              />
+              <motion.span
+                className="relative text-[64px] leading-[1.4]"
+                initial={{ scale: 3, rotate: -10 }}
+                animate={{ scale: 1, rotate: -6 }}
+                transition={{ type: 'spring', stiffness: 300, damping: 14 }}
+                style={{ willChange: 'transform' }}
+              >
+                <LogoText showFurigana={showFurigana}>字(じ)の わざ！</LogoText>
+              </motion.span>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* 結果 ------------------------------------------------------------ */}
+        <AnimatePresence>
+          {outcome && (
+            <ResultModal
+              outcome={outcome}
+              bossName={stage.boss.name}
+              mistakes={totalMistakes}
+              gems={rewards.gems}
+              newFriend={!!rewards.individual}
+              opened={outcome.kind === 'win' ? opened : []}
+              tutorial={tutorial}
+              hasNext={!!onNext}
+              onNext={() => onNext?.()}
+              onStages={onFinish}
+              onRetry={() => onRetry?.()}
+              onPractice={() => (onPractice ? onPractice() : onFinish())}
+              onForge={() => (onForge ? onForge() : navigate('/forge'))}
+              onFeature={(f) => {
+                onFinish();
+                navigate(FEATURE_INTRO[f].to);
+              }}
+              onTutorialDone={onFinish}
+            />
+          )}
+        </AnimatePresence>
+    </>
+  );
+
+  // 文字が 消えた 町: the fight laid out from its delivered parts (08 §3.6).
+  if (mastery) {
+    return (
+      <>
+        <BattleIntro bossName={stage.boss.name} showFurigana={showFurigana} />
+        <NaniwaBattleView
+          bossName={stage.boss.name}
+          bossHp={bossHp}
+          bossMaxHp={stage.boss.hp}
+          playerHp={playerHp}
+          playerMaxHp={stats.maxHp}
+          rage={rage}
+          patience={patience}
+          target={target}
+          targetStars={targetStars}
+          showFurigana={showFurigana}
+          hpDelay={IMPACT_MS / 1000}
+          renderWriter={(px) => (
+            <KanjiWriterCanvas
+              ref={writerRef}
+              key={`${target.id}-${turn}`}
+              char={target.char}
+              size={px}
+              quizMode
+              surface="ink"
+              onCorrectStroke={() => sfx.neon(0.35)}
+              onMistake={handleMistake}
+              onComplete={handleComplete}
+            />
+          )}
+          flash={flash}
+          flashKey={flashNo}
+          idle={turn === 0 && !flash ? '💡 書(か)いた 字(じ)の 光(ひかり)で こうげき！' : null}
+          hit={hit}
+          combo={combo}
+          still={still}
+          heroCtl={heroCtl}
+          enemyCtl={enemyCtl}
+          fieldCtl={fieldCtl}
+          boardRef={boardRef}
+          heroRef={heroRef}
+          enemyRef={enemyRef}
+          onStrokeOrder={showStrokeOrder}
+          onFlee={onFlee}
+        />
+        {overlays}
+      </>
+    );
+  }
 
   return (
     <div className="g-sky relative flex min-h-dvh flex-col">
@@ -717,63 +837,7 @@ export const BattleScene = ({
         )}
       </div>
 
-      <LightFlow flow={flow} still={still} />
-
-      {/* 字の わざ — the flash of a ★3 kanji written clean. */}
-      <AnimatePresence>
-        {hit?.critical && (
-          <motion.div
-            key={`crit-${hit.n}`}
-            className="pointer-events-none fixed inset-0 z-30 flex items-center justify-center"
-            initial={{ opacity: 1 }}
-            animate={{ opacity: 0 }}
-            transition={{ duration: 1.1, delay: 0.5 }}
-            aria-hidden
-          >
-            <motion.div
-              className="absolute inset-0 bg-white"
-              initial={{ opacity: 0.85 }}
-              animate={{ opacity: 0 }}
-              transition={{ duration: 0.35 }}
-            />
-            <motion.span
-              className="relative text-[64px] leading-[1.4]"
-              initial={{ scale: 3, rotate: -10 }}
-              animate={{ scale: 1, rotate: -6 }}
-              transition={{ type: 'spring', stiffness: 300, damping: 14 }}
-              style={{ willChange: 'transform' }}
-            >
-              <LogoText showFurigana={showFurigana}>字(じ)の わざ！</LogoText>
-            </motion.span>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* 結果 ------------------------------------------------------------ */}
-      <AnimatePresence>
-        {outcome && (
-          <ResultModal
-            outcome={outcome}
-            bossName={stage.boss.name}
-            mistakes={totalMistakes}
-            gems={rewards.gems}
-            newFriend={!!rewards.individual}
-            opened={outcome.kind === 'win' ? opened : []}
-            tutorial={tutorial}
-            hasNext={!!onNext}
-            onNext={() => onNext?.()}
-            onStages={onFinish}
-            onRetry={() => onRetry?.()}
-            onPractice={() => (onPractice ? onPractice() : onFinish())}
-            onForge={() => (onForge ? onForge() : navigate('/forge'))}
-            onFeature={(f) => {
-              onFinish();
-              navigate(FEATURE_INTRO[f].to);
-            }}
-            onTutorialDone={onFinish}
-          />
-        )}
-      </AnimatePresence>
+      {overlays}
     </div>
   );
 };
