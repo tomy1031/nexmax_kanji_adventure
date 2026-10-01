@@ -301,19 +301,22 @@ export const MojiRouteMap = () => {
             >
               <span aria-hidden className="absolute top-[38%] -left-[3.4%] h-0 w-0 border-y-[1.6cqw] border-r-[2.4cqw] border-y-transparent border-r-[#d4a04a]" />
               <span className="min-w-0 flex-1 leading-[1.6]">
-                <span className="block font-black" style={{ fontSize: cq(20), color: '#b0741a' }}>
-                  <RubyText showFurigana={showFurigana}>{next ? 'つぎの 話(はなし)' : 'つづきは じゅんび中(ちゅう)'}</RubyText>
+                <span className="block font-black whitespace-nowrap" style={{ fontSize: cq(20), color: '#b0741a' }}>
+                  <RubyText showFurigana={showFurigana}>
+                    {nextKana
+                      ? `つぎの 話(はなし) ・ かな ${nextKana.order}`
+                      : nextMoji
+                        ? `つぎの 話(はなし) ・ ${MOJI_CHAPTERS.find((c) => c.id === nextMoji.chapter)?.order ?? 1}章(しょう) ${nextMoji.order}話(わ)`
+                        : 'つづきは じゅんび中(ちゅう)'}
+                  </RubyText>
                 </span>
                 <span className="block truncate font-black" style={{ fontSize: cq(28) }}>
                   {nextKana ? (
-                    <>
-                      {`かな ${nextKana.order} `}
-                      <KanaText known={known} mode="mask">
-                        {nextKana.title}
-                      </KanaText>
-                    </>
+                    <KanaText known={known} mode="mask">
+                      {nextKana.title}
+                    </KanaText>
                   ) : nextMoji ? (
-                    <KanjiBackText owned={owned}>{`${MOJI_CHAPTERS.find((c) => c.id === nextMoji.chapter)?.order ?? 1}章(しょう) ${nextMoji.order}話(わ) ${nextMoji.title}`}</KanjiBackText>
+                    <KanjiBackText owned={owned}>{nextMoji.title}</KanjiBackText>
                   ) : (
                     <RubyText showFurigana={showFurigana}>★を ふやそう</RubyText>
                   )}

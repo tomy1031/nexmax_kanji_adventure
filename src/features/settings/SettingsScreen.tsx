@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useSafeBack } from '../../lib/nav';
 import { Backdrop } from '../../components/ui/Backdrop';
+import { NightStreetBackdrop } from '../write/NightStreet';
 import { useNavigate } from 'react-router-dom';
 import { useGameStore } from '../../store/gameStore';
 import { RubyText } from '../../components/ui/Ruby';
@@ -8,6 +9,7 @@ import { RubyText } from '../../components/ui/Ruby';
 /** Settings, and the credits the asset licences require. */
 export const SettingsScreen = () => {
   const navigate = useNavigate();
+  const moji = useGameStore((st) => st.lastArc) === 'moji';
   const safeBack = useSafeBack();
   const settings = useGameStore((s) => s.settings);
   const setSetting = useGameStore((s) => s.setSetting);
@@ -32,7 +34,8 @@ export const SettingsScreen = () => {
 
   return (
     <div className="g-stage min-h-dvh pb-8">
-      <Backdrop fixed />
+      {/* The world being played behind it: the night town on 文字が 消えた 町 (08 §3.8). */}
+      {moji ? <NightStreetBackdrop /> : <Backdrop fixed />}
       <header
         className="g-header sticky top-0 z-20 flex items-center justify-between px-4 py-3"
       >

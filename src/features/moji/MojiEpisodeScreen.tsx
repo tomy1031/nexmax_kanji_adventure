@@ -165,7 +165,7 @@ const ReadyScreen = ({
 
         {onForge && (
           <button type="button" className="g-btn g-btn-accent w-full" onClick={onForge}>
-            🔨 <RubyText showFurigana={showFurigana}>漢字(かんじ)やさんで 武器(ぶき)を 作(つく)る（★3が 2つ ある）</RubyText>
+            🔨 <RubyText showFurigana={showFurigana}>漢字(かんじ)やさんで 武器(ぶき)を 作(つく)る</RubyText>
           </button>
         )}
 

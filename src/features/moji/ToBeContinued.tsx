@@ -46,7 +46,7 @@ export const ToBeContinued = ({
           <RubyText showFurigana={showFurigana}>つぎの 話(はなし)は じゅんび中(ちゅう)です。</RubyText>
         </p>
         <div className="mt-2 flex justify-center">
-          <NexmaxSays text="⭐を ふやして まって いて ください！" pose="cheer" size={64} />
+          <NexmaxSays text={target ? '⭐を ふやそう！' : 'ぜんぶ ⭐⭐⭐！'} pose="cheer" size={64} />
         </div>
         <div className="mt-4 flex flex-col gap-2">
           {target && (
