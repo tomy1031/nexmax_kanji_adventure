@@ -1,5 +1,5 @@
 /**
- * プロローグ — before the kana forest and the town (08 §10.2).
+ * プロローグ — before 0章「はじまりの 空港」 and Naniwa Town (08 §10.2, §3.7).
  *
  * 2026-09-27「はじまりが 唐突。いきなり 森に いたり ビルに いたり。最初 英語で
  * 説明が できるので、没入できる 世界観と その ための 導入が 欲しい」.
@@ -52,8 +52,8 @@ export const PROLOGUE: PrologueBeat[] = [
   },
   {
     visual: 'town',
-    text: 'In the town on the hill, people live by that light — station signs, clocks, the names on their doors.',
-    ja: '丘(おか)の 上(うえ)の 町(まち)は、その 光(ひかり)で 動(うご)いて います。駅(えき)の 看板(かんばん)、時計(とけい)、ドアの 名前(なまえ)。',
+    text: 'In Naniwa Town, on the hill by the sea, people live by that light — station signs, clocks, names on doors.',
+    ja: '海(うみ)の そばの 丘(おか)の 町(まち)、ナニワタウンは、その 光(ひかり)で 動(うご)いて います。駅(えき)の 看板(かんばん)、時計(とけい)、ドアの 名前(なまえ)。',
   },
   {
     visual: 'town',
@@ -82,13 +82,13 @@ export const PROLOGUE: PrologueBeat[] = [
   },
   {
     visual: 'fall',
-    text: 'The shadow swallowed his words, even his name, and threw him far away — down into the forest.',
-    ja: '影(かげ)は ネクマックスの 言葉(ことば)と 名前(なまえ)を のみこみ、森(もり)へ 投(な)げました。',
+    text: 'The shadow swallowed his words, even his name, and threw him far away — to the airport across the bay.',
+    ja: '影(かげ)は ネクマックスの 言葉(ことば)と 名前(なまえ)を のみこみ、海(うみ)の 向(む)こうの 空港(くうこう)へ 投(な)げました。',
   },
   {
     visual: 'write',
-    text: 'You are a traveler. You cannot read a single letter here.',
-    ja: 'きみは 旅人(たびびと)。ここの 字(じ)は、ひとつも 読(よ)めない。',
+    text: 'You are a traveler. Your plane has just landed at that airport, and you cannot read a single letter here.',
+    ja: 'きみは 旅人(たびびと)。その 空港(くうこう)に 着(つ)いた ばかりで、ここの 字(じ)は ひとつも 読(よ)めない。',
   },
   {
     visual: 'write',
@@ -101,11 +101,11 @@ export const PROLOGUE: PrologueBeat[] = [
 export const PROLOGUE_ASK = {
   ja: 'ひらがなと カタカナが 読(よ)めますか？',
   en: 'Can you read hiragana and katakana?',
-  kana: { ja: 'まだ 読(よ)めない → かなの 森(もり)へ', en: 'Not yet — start in the Kana Forest' },
-  town: { ja: '読(よ)める → 町(まち)へ（1章(しょう)）', en: 'Yes — go to the town (Chapter 1)' },
+  kana: { ja: 'まだ 読(よ)めない → はじまりの 空港(くうこう)へ', en: 'Not yet — start at the airport (Chapter 0)' },
+  town: { ja: '読(よ)める → ナニワタウンへ（1章(しょう)）', en: 'Yes — go on to Naniwa Town (Chapter 1)' },
 };
 
-/** Where the prologue leads: the kana forest for beginners, the town for those who read kana. */
+/** Where the prologue leads: the airport (0章) for beginners, Naniwa Town for those who read kana. */
 export const PROLOGUE_EXITS = {
   kana: '/kana/kana-1',
   town: '/moji/moji-1-1',

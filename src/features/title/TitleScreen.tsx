@@ -1,6 +1,8 @@
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { motion, useReducedMotion } from 'framer-motion';
+import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
 import { assetPath } from '../../lib/assetPath';
+import { RubyText } from '../../components/ui/Ruby';
 import { useGameStore } from '../../store/gameStore';
 
 /**
@@ -18,14 +20,13 @@ import { useGameStore } from '../../store/gameStore';
  * picture-book worlds are closing (2026-09-30) and are reached only from the
  * route map's small ほかの 物語 link.
  *
- *   new player    はじめから (blue) → the prologue, which runs on into the map
+ *   new player    はじめから (blue) → the prologue, which leads into 0章 or 1章
  *                 つづきから (brown, greyed: nothing to continue yet)
- *   returning     つづきから (blue) → the route map — the game's home, one tap
- *                   from the next episode, with the forge and daily tasks
- *                   around it
- *                 はじめから (brown) → the prologue again; nothing is lost.
- *                   Wiping the save lives in せってい, behind its own
- *                   confirmation.
+ *   returning     つづきから (blue) → ステージせんたく, whose つづき bar names
+ *                   the next episode — one tap to play it (08 §3.8)
+ *                 はじめから (brown) → asks first: watch the prologue again
+ *                   (nothing is lost) or carry on; wiping the save lives in
+ *                   せってい, behind its own confirmation.
  *   always        せってい (brown)
  *
  * The screen comes in as a sequence — the logo drops in, Nexmax rises, the
@@ -97,8 +98,12 @@ export const TitleScreen = () => {
   const settingReduced = useGameStore((s) => s.settings.reducedMotion);
   const still = Boolean(prefersReduced || settingReduced);
 
-  // A new player starts with the prologue of 文字が 消えた 町 (08 §10.2).
-  const startOver = () => navigate('/prologue');
+  // A new player starts with the prologue of 文字が 消えた 町 (08 §10.2). A
+  // returning one is asked first (08 §3.8): はじめから keeps the record, and
+  // wiping it is in せってい — so nobody loses their progress to a tap here.
+  const [asking, setAsking] = useState(false);
+  const startOver = () => (canContinue ? setAsking(true) : navigate('/prologue'));
+  const showFurigana = useGameStore((s) => s.settings.furigana);
   const carryOn = () => navigate('/map/moji');
   const settings: PlateSpec = { art: PLATES.settings, width: SMALL, onClick: () => navigate('/settings') };
   const plates: PlateSpec[] = canContinue
@@ -172,6 +177,47 @@ export const TitleScreen = () => {
           </motion.div>
         </div>
       </div>
+
+      {/* はじめから, with a save: what it does and does not do */}
+      <AnimatePresence>
+        {asking && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="absolute inset-0 z-20 flex items-center justify-center bg-black/60 px-6"
+            onClick={() => setAsking(false)}
+          >
+            <motion.div
+              initial={{ scale: 0.92, y: 10 }}
+              animate={{ scale: 1, y: 0 }}
+              className="g-parchment w-full max-w-sm px-5 py-5 text-center"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <p className="text-xl leading-[2] font-black" style={{ color: 'var(--accent-2)' }}>
+                はじめから
+              </p>
+              <p className="mt-1 text-sm leading-[2] font-bold">
+                <RubyText showFurigana={showFurigana}>プロローグから もう一度(いちど) 見(み)ます。きろくは のこります。</RubyText>
+              </p>
+              <div className="mt-4 flex flex-col gap-2">
+                <button type="button" className="g-btn g-btn-primary w-full" onClick={() => navigate('/prologue')}>
+                  <RubyText showFurigana={showFurigana}>プロローグを 見(み)る</RubyText>
+                </button>
+                <button type="button" className="g-btn g-btn-accent w-full" onClick={carryOn}>
+                  <RubyText showFurigana={showFurigana}>つづきから あそぶ</RubyText>
+                </button>
+                <button type="button" className="g-btn g-btn-ghost w-full" onClick={() => setAsking(false)}>
+                  やめる
+                </button>
+              </div>
+              <p className="mt-3 text-xs font-bold" style={{ color: 'var(--ink-2)' }}>
+                <RubyText showFurigana={showFurigana}>データを 消(け)す ときは「せってい」から。</RubyText>
+              </p>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };

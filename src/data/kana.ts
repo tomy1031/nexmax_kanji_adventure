@@ -89,7 +89,7 @@ export const KANA_EPISODES: KanaEpisode[] = (
   [
   { order: 1, script: 'hiragana', title: 'きえた こえ', en: 'The Lost Voice', kana: slice(HIRAGANA, 'あ', 'お') },
   { order: 2, script: 'hiragana', title: 'かおの ない き', en: 'The Faceless Tree', kana: slice(HIRAGANA, 'か', 'そ') },
-  { order: 3, script: 'hiragana', title: 'なまえの ない むら', en: 'The Nameless Village', kana: slice(HIRAGANA, 'た', 'の') },
+  { order: 3, script: 'hiragana', title: 'なまえの ない いぬ', en: 'The Nameless Dog', kana: slice(HIRAGANA, 'た', 'の') },
   { order: 4, script: 'hiragana', title: 'くろい くも', en: 'Black Clouds', kana: slice(HIRAGANA, 'は', 'も') },
   { order: 5, script: 'hiragana', title: 'ほしの ない よる', en: 'The Starless Night', kana: slice(HIRAGANA, 'や', 'ん') },
   { order: 6, script: 'katakana', title: 'カタカナの えき', en: 'Katakana Station', kana: slice(KATAKANA, 'ア', 'コ') },

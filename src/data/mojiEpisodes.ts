@@ -14,6 +14,8 @@ import { Element } from '../lib/forge/elements';
 export interface MojiBoss {
   /** Name in furigana notation. */
   name: string;
+  /** Its picture (a path under public/), in the story and the fight. */
+  img?: string;
   hp: number;
   attack: number;
   element: Element;
@@ -44,8 +46,8 @@ export const MOJI_EPISODES: MojiEpisode[] = [
     order: 1,
     title: 'きえた カレンダー',
     kanji: [...'日月火水木'],
-    bg: 'gendai_city',
-    boss: { name: 'モジクイの こども', hp: 70, attack: 25, element: Element.AN, icon: 'GiShadowGrasp' },
+    bg: 'naniwa_town_station',
+    boss: { name: 'モジクイの こども', img: 'img/battle/mojikui_kid.webp', hp: 70, attack: 25, element: Element.AN, icon: 'GiShadowGrasp' },
   },
   {
     id: 'moji-1-2',
@@ -53,8 +55,8 @@ export const MOJI_EPISODES: MojiEpisode[] = [
     order: 2,
     title: '山(やま)田(だ)さん',
     kanji: [...'金土山川田'],
-    bg: 'gendai_city',
-    boss: { name: 'モジクイ', hp: 80, attack: 30, element: Element.AN, icon: 'GiShadowFollower' },
+    bg: 'naniwa_station_square',
+    boss: { name: 'モジクイ', img: 'img/battle/mojikui.webp', hp: 80, attack: 30, element: Element.AN, icon: 'GiShadowFollower' },
   },
 ];
 

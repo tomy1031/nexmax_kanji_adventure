@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useSafeBack } from '../../lib/nav';
 import { Backdrop } from '../../components/ui/Backdrop';
+import { NightStreetBackdrop } from '../write/NightStreet';
 import { useNavigate } from 'react-router-dom';
 import { useGameStore } from '../../store/gameStore';
 import { RubyText } from '../../components/ui/Ruby';
@@ -8,6 +9,7 @@ import { RubyText } from '../../components/ui/Ruby';
 /** Settings, and the credits the asset licences require. */
 export const SettingsScreen = () => {
   const navigate = useNavigate();
+  const moji = useGameStore((st) => st.lastArc) === 'moji';
   const safeBack = useSafeBack();
   const settings = useGameStore((s) => s.settings);
   const setSetting = useGameStore((s) => s.setSetting);
@@ -32,7 +34,8 @@ export const SettingsScreen = () => {
 
   return (
     <div className="g-stage min-h-dvh pb-8">
-      <Backdrop fixed />
+      {/* The world being played behind it: the night town on 文字が 消えた 町 (08 §3.8). */}
+      {moji ? <NightStreetBackdrop /> : <Backdrop fixed />}
       <header
         className="g-header sticky top-0 z-20 flex items-center justify-between px-4 py-3"
       >
@@ -40,7 +43,10 @@ export const SettingsScreen = () => {
           <span aria-hidden>◀</span>もどる
         </button>
         <h1 className="g-title text-base">せってい</h1>
-        <span className="w-16" />
+        {/* The title is the game's front door; ホーム everywhere else leads to the map (08 §3.8). */}
+        <button type="button" className="g-btn g-btn-ghost !min-h-[38px] !px-3 text-xs" onClick={() => navigate('/')}>
+          <RubyText showFurigana={showFurigana}>タイトルへ</RubyText>
+        </button>
       </header>
 
       <div className="mx-auto max-w-md px-4 pt-4">

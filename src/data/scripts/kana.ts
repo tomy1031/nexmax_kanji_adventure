@@ -2,7 +2,12 @@ import type { CastMember, NovelLine, NovelScript } from '../../types/novel';
 import { MUKASHI_CAST } from './mukashi';
 
 /**
- * かな編「かなの もり」の 脚本 (08 §3.4, §3.4.2).
+ * かな編 ＝ 0章「はじまりの 空港」の 脚本 (08 §3.4, §3.4.2, §3.7).
+ *
+ * 2026-10-01: ナニワタウンへ 向かう 前の 話（前日譚）に 語り直した。舞台は
+ * 森と 村から、主人公が 降りた ばかりの 空港へ: 展望デッキ → 屋上の 庭 →
+ * 待合 → 駅への 連絡通路 → 夜の 滑走路 → 空港の 駅 → 海を わたる 電車。
+ * 10話の 終わりで「うえの まち」の 名前「ナニワタウン」が ぜんぶ 読める。
  *
  * 2026-09-26 の 指定で 作り直した:
  *  - ネクマックスは **戻った かなで しか 話せない**。まだ 書いて いない かなは
@@ -11,10 +16,10 @@ import { MUKASHI_CAST } from './mukashi';
  *  - 地の文は **主人公の 目と 考えで、英語**。ネクマックスの 言葉の かけらを
  *    英語で 解釈しながら 進む（「あお… blue? うえ… up?」）。
  *  - ネクマックスは 絵文字（🙆‍♂️ 🙅 👆 …）でも 気持ちを 伝える。
- *  - 「あお」「うえ」は 伏線: 青い 階段 → 青い 電車 →「うえの まち」（1章の 町）。
+ *  - 「あお」「うえ」は 伏線: 青い エスカレーター → 青い 電車 →「うえの まち」＝ ナニワタウン（1章の 町）。
  *
  * すじ（§3.4.1）は そのまま: 影（モジクイ）が 言葉と 名前を 食べて 町へ。
- * 朝の 電車より 先に 駅へ。字は 書くと 戻るが、ネクマックスは 形を 忘れた。
+ * 朝の 電車より 先に 空港の 駅へ。字は 書くと 戻るが、ネクマックスは 形を 忘れた。
  * kana.test.ts が「ネクマックスの 台詞は かなと 絵文字だけ」「地の文は 英語」を 確かめる。
  */
 
@@ -43,11 +48,11 @@ export const KANA_SCRIPTS: Record<string, KanaScript> = Object.fromEntries([
   script(
     'kana-1',
     [
-      { bg: 'mukashi_meadow', text: 'The falling star crashes into the grass in front of me. Boom! It is the little robot — the one whose name was eaten.' },
+      { bg: 'naniwa_airport', text: 'My plane has just landed. Out on the observation deck, a falling star crashes down in front of me. Boom! It is a little robot — the one whose name was eaten.' },
       { speaker: 'nexmax', sprite: 'nexmax:think', text: 'たすけて。ことばを たべられた。' },
       { text: "It's trying to talk, but its words come out full of holes." },
       { speaker: 'nexmax', text: '🙅 だめだ……' },
-      { text: 'Five empty signboards hang over the path. On each one, the ghost of a letter shows through the dark glass.' },
+      { text: 'Five arrival signs hang over the deck. All of them are blank — only the ghost of a letter shows through the dark glass.' },
       { speaker: 'nexmax', sprite: 'nexmax:guide', text: '🗣️ → 🐛 → 🪧' },
       { text: 'Words… eaten, and the signs went dark? The words it lost left these blank signs behind?' },
       { speaker: 'nexmax', sprite: 'nexmax:determined', text: '✍️ → 💡🪧 → 🗣️' },
@@ -66,30 +71,30 @@ export const KANA_SCRIPTS: Record<string, KanaScript> = Object.fromEntries([
       { text: 'あお ao… It points at the sky. Blue? Does あお mean blue?' },
       { speaker: 'nexmax', sprite: 'nexmax:guide', text: 'うえ！ 👆' },
       { text: 'うえ ue… and it points up. Up?' },
-      { fx: ['fork'], text: 'Ahead, the path splits: a red gate going down, and blue stone steps going up the hill.' },
+      { text: 'Inside, the terminal splits two ways: a red escalator going down, and a blue one going up.' },
       { speaker: 'nexmax', text: 'あお、うえ！ 🙆‍♂️ あか 🙅' },
-      { text: 'Blue, up — not red. We should take the blue steps up!' },
+      { text: 'Blue, up — not red. We should take the blue escalator up!' },
     ],
   ),
   script(
     'kana-2',
     [
-      { bg: 'mukashi_forest', fx: ['morning'], text: 'At the top of the blue steps, a deep forest. The path splits three ways.' },
-      { text: 'Something black slips between the trees — a shadow, munching on something. Letters?' },
+      { bg: 'naniwa_sky_garden', text: 'The blue escalator carries us up to a garden on the roof. In the middle stands an old cherry tree — no blossoms, no leaves.' },
+      { text: 'Something black slips between the planters — a shadow, munching on something. Letters?' },
       { speaker: 'nexmax', sprite: 'nexmax:think', text: 'え？ え？ 🤔' },
-      { text: "An old tree stands at the fork. Its face has been eaten away." },
+      { text: "The old tree's face has been eaten away." },
       { speaker: 'nexmax', text: 'き！ かお！' },
       { text: '「□！ □お！」 …o? I can\'t make it out.' },
       { text: 'Dark signs hang from the branches — the pieces of its face, eaten blank.' },
       { speaker: 'nexmax', sprite: 'nexmax:guide', text: '✍️💡🪧 かいて！' },
-      { text: 'Same as before: write, cut, and the words come back.' },
+      { text: 'Same as before: write, the signs light up, and the words come back.' },
     ],
     [
       { speaker: 'nexmax', sprite: 'nexmax:guide', text: 'き！ かお！' },
       { text: 'き ki… かお kao. He points at the tree, then at its face. き — tree. かお — face!' },
-      { text: 'The bark shifts. Two eyes open. The tree has a face again.' },
+      { text: 'The bark shifts. Two eyes open, and a few pink blossoms burst out. The tree has a face again.' },
       { text: '「えき。 あそこ。」' },
-      { text: 'えき eki… a station? あそこ asoko — over there?' },
+      { text: 'えき eki… a station? あそこ asoko — over there? A branch points across the terminal, to the airport station.' },
       { speaker: 'nexmax', sprite: 'nexmax:smile', text: 'えき！ いこう！ 🙆‍♂️' },
       { text: 'いこう ikou — let\'s go. The shadow is heading for the station.' },
     ],
@@ -97,12 +102,12 @@ export const KANA_SCRIPTS: Record<string, KanaScript> = Object.fromEntries([
   script(
     'kana-3',
     [
-      { bg: 'mukashi_village', fx: ['gloom'], text: 'We reach a small village. It is silent. Nobody is calling anybody.' },
-      { text: 'A girl sits by the road, holding an empty dog collar.' },
+      { bg: 'naniwa_lounge', text: 'The way to the station runs through the waiting lounge. It is silent. Nobody is calling anybody.' },
+      { text: 'A girl sits by the gate, holding an empty dog collar.' },
       { text: '「いぬが いない……」' },
       { text: 'Her words are full of holes too.' },
       { speaker: 'nexmax', sprite: 'nexmax:think', text: '……😢' },
-      { text: 'Blank nameplates hang at the village gate, each one missing a name.' },
+      { text: 'On the lost-and-found board, every name tag is blank.' },
       { speaker: 'nexmax', sprite: 'nexmax:guide', text: '✍️💡🪧 かく！' },
       { text: 'かく kaku — write. Now that he has か and く back, he says it the short way.' },
     ],
@@ -112,26 +117,26 @@ export const KANA_SCRIPTS: Record<string, KanaScript> = Object.fromEntries([
       { glyph: 'なな', text: 'The name tag on the collar fills back in.' },
       { speaker: 'nexmax', sprite: 'nexmax:smile', text: 'なな！ いぬ、なな！' },
       { text: '「ななー！」' },
-      { fx: ['sparkle'], text: 'She calls the name, and a dog comes running out of the trees.' },
-      { text: 'Nana sniffs the air, then barks at the mountain. Woof!' },
+      { fx: ['sparkle'], text: 'She calls the name, and a little dog comes running out from behind the suitcases.' },
+      { text: 'Nana sniffs the air, then barks at the long walkway to the station. Woof!' },
       { speaker: 'nexmax', sprite: 'nexmax:guide', text: 'あっち！ 👉' },
-      { text: 'あっち acchi — that way. The shadow went over the mountain.' },
+      { text: 'あっち acchi — that way. The shadow went down the walkway.' },
     ],
   ),
   script(
     'kana-4',
     [
-      { bg: 'mukashi_mountain', fx: ['darkclouds'], text: 'Nana leads us up the mountain. Then black clouds pour down — the shadow\'s smoke.' },
-      { text: 'The trail markers are fading one by one. I can barely see where to step.' },
+      { bg: 'naniwa_walkway', fx: ['darkclouds'], text: 'Nana leads us onto the long walkway to the station. Then black smoke pours in — the shadow\'s smoke.' },
+      { text: 'The arrows on the floor are fading one by one. I can barely see which way to go.' },
       { speaker: 'nexmax', sprite: 'nexmax:think', text: 'みちが……！' },
-      { text: '「□ちが」 …chi ga? Something about the markers.' },
-      { text: 'The trail markers are blank signs now — dark where the letters used to glow.' },
+      { text: '「□ちが」 …chi ga? Something about the arrows.' },
+      { text: 'The guide signs over the walkway are blank now — dark where the letters used to glow.' },
       { speaker: 'nexmax', sprite: 'nexmax:determined', text: '✍️💡🪧 かく！' },
     ],
     [
       { fx: [], speaker: 'nexmax', sprite: 'nexmax:smile', text: 'みち！ 🙆‍♂️' },
-      { text: 'みち michi — the path. The markers glow again, and the clouds scatter.' },
-      { text: 'From the top I can see the sea, a town on a high hill, and a station at the foot of the mountain.' },
+      { text: 'みち michi — the way. The arrows glow again, and the smoke scatters.' },
+      { text: 'Through the glass I can see the sea, a long bridge, and a town on a high hill across the bay.' },
       { speaker: 'nexmax', sprite: 'nexmax:guide', text: 'うえの まち！ 👆' },
       { text: 'うえの まち ue no machi — the town up there. まち means town!' },
       { speaker: 'nexmax', sprite: 'nexmax:think', text: 'あの まちに、かげが いく。' },
@@ -142,24 +147,24 @@ export const KANA_SCRIPTS: Record<string, KanaScript> = Object.fromEntries([
   script(
     'kana-5',
     [
-      { bg: 'mukashi_greattree', fx: ['dusk'], text: 'Night falls before we reach the station. The way down is pitch black.' },
+      { bg: 'naniwa_runway_night', text: 'Night falls before we reach the station. The runway lights have gone dark, one after another.' },
       { speaker: 'nexmax', sprite: 'nexmax:think', text: 'ほしが ない。' },
-      { text: 'ほし hoshi… が ない ga nai. No stars. The shadow ate them too.' },
+      { text: 'ほし hoshi… が ない ga nai. No stars. The shadow ate them too — and the runway lights.' },
       { speaker: 'nexmax', text: 'みちが みえない。よるは こわい。' },
       { text: 'みちが みえない michi ga mienai — we can\'t see the path. The rest is eaten, but I can tell he is scared.' },
-      { text: 'Dark signs lie where the stars fell. They glow faintly, like coals.' },
+      { text: 'Dark signs lie along the runway where the lights went out. They glow faintly, like coals.' },
       { speaker: 'nexmax', sprite: 'nexmax:guide', text: '✍️💡🪧 かきます！' },
       { text: 'かきます kakimasu — the polite way to say "write". That is how they say it in class.' },
     ],
     [
-      { fx: [], text: 'Stars bloom across the sky, one by one, and light the path down.' },
+      { fx: ['sparkle'], text: 'Stars bloom across the sky, one by one, and the runway lights come back on.' },
       { speaker: 'nexmax', sprite: 'nexmax:smile', text: 'よるの ほし、きれい！' },
       { text: 'よるの ほし yoru no hoshi — stars at night. きれい kirei — beautiful.' },
       { speaker: 'nexmax', sprite: 'nexmax:smile', text: 'ありがとう！' },
       { text: 'ありがとう arigatou. That is what he tried to say at the very beginning. Thank you.' },
       { speaker: 'nexmax', text: 'でんしゃは あさ。' },
       { text: 'で de — that is て with two little dots. でんしゃ densha… the train, in the morning.' },
-      { text: 'At dawn we reach the station. But every sign here is written in sharper, different letters.' },
+      { text: 'At dawn we reach the airport station. But every sign here is written in sharper, different letters.' },
       { speaker: 'nexmax', sprite: 'nexmax:think', text: 'ここは カタカナの えき。' },
       { text: 'ここは …の えき koko wa …no eki. This is the something station. Letters I can\'t read yet.' },
     ],
@@ -167,7 +172,7 @@ export const KANA_SCRIPTS: Record<string, KanaScript> = Object.fromEntries([
   script(
     'kana-6',
     [
-      { bg: 'gendai_city', text: 'The station is covered in signs, and every one of them is full of holes.' },
+      { bg: 'naniwa_station', text: 'The airport station is covered in signs, and every one of them is full of holes.' },
       { glyph: 'ネクマックス', text: "There is a badge on the robot's chest. It is full of holes too." },
       { speaker: 'nexmax', sprite: 'nexmax:think', text: 'ぼくの なまえも、カタカナ だった。' },
       { text: 'ぼくの なまえも boku no namae mo… his name was written in these letters. That is why he can\'t say it.' },
@@ -186,7 +191,7 @@ export const KANA_SCRIPTS: Record<string, KanaScript> = Object.fromEntries([
   script(
     'kana-7',
     [
-      { bg: 'gendai_city', text: 'A ticket machine. Its screen is blank.' },
+      { bg: 'naniwa_station', text: 'A ticket machine. Its screen is blank.' },
       { speaker: 'nexmax', sprite: 'nexmax:think', text: 'キップを かいたい。どこを おす？ 🤔' },
       { text: 'かいたい kaitai — he wants to buy something. どこを おす doko o osu — where do I press?' },
       { text: "The ticket machine's buttons are blank — one dark square after another." },
@@ -203,7 +208,7 @@ export const KANA_SCRIPTS: Record<string, KanaScript> = Object.fromEntries([
   script(
     'kana-8',
     [
-      { bg: 'gendai_city', text: 'A train is coming. I can hear it on the tracks.' },
+      { bg: 'naniwa_station', text: 'A train is coming. I can hear it on the tracks.' },
       { speaker: 'nexmax', sprite: 'nexmax:determined', text: 'キップが ないと、のれない！' },
       { text: 'のれない norenai — without a ticket we can\'t get on!' },
       { text: 'The sign over the platform gate has gone dark.' },
@@ -213,7 +218,7 @@ export const KANA_SCRIPTS: Record<string, KanaScript> = Object.fromEntries([
       { text: 'A ticket slides out: キップ kippu! The little ○ on フ makes プ.' },
       { text: 'Two trains stand at the platform: a red one and a blue one.' },
       { speaker: 'nexmax', sprite: 'nexmax:guide', text: 'あお！ うえの まち！ 👆' },
-      { text: 'The blue one goes to the town up the hill. Blue and up — just like the blue steps.' },
+      { text: 'The blue one crosses the bridge to the town up on the hill. Blue and up — just like the blue escalator.' },
       { text: 'A black shadow slides into the last car of the blue train.' },
       { speaker: 'nexmax', sprite: 'nexmax:determined', text: 'かげ！ いそいで！' },
       { glyph: 'ネクマックス', text: 'Only one hole is left on his badge.' },
@@ -222,7 +227,7 @@ export const KANA_SCRIPTS: Record<string, KanaScript> = Object.fromEntries([
   script(
     'kana-9',
     [
-      { bg: 'gendai_bus', text: 'The blue train climbs toward the upper town. The shadow waits in the last car.' },
+      { bg: 'naniwa_train', text: 'The blue train runs out over the long bridge across the bay, toward the town on the hill. The shadow waits in the last car.' },
       { speaker: 'nexmax', sprite: 'nexmax:think', text: 'なまえが ないと、ちからが でない。' },
       { text: 'なまえが ないと namae ga nai to… ちからが でない chikara ga denai. Without his name, he has no strength.' },
       { text: 'Dark, blank signs hang all along the aisle to the last car.' },
@@ -249,9 +254,12 @@ export const KANA_SCRIPTS: Record<string, KanaScript> = Object.fromEntries([
     ],
     [
       { fx: ['heal'], text: 'The Mojikui chokes, and kana burst out of it like confetti.' },
-      { text: 'But it leaps through the window and flees into the upper town.' },
-      { speaker: 'nexmax', sprite: 'nexmax:think', text: 'うえの まちで、かんじが きえて いる。' },
-      { text: 'In the upper town, the kanji are disappearing.' },
+      { text: 'But it leaps through the window and flees ahead, into the town on the hill.' },
+      { bg: 'naniwa_train', glyph: 'ナニワタウン', text: 'The train comes off the bridge. Over the station ahead hangs a big sign — and I can read every letter of it.' },
+      { speaker: 'nexmax', sprite: 'nexmax:smile', text: 'うえの まちは、ナニワタウン！' },
+      { text: 'ナニワタウン Naniwa Taun — Naniwa Town. That is the town up on the hill.' },
+      { speaker: 'nexmax', sprite: 'nexmax:think', text: 'ナニワタウンで、かんじが きえて いる。' },
+      { text: 'In Naniwa Town, the kanji are disappearing.' },
       { speaker: 'nexmax', sprite: 'nexmax:smile', text: 'あなたは もう、ひらがなも カタカナも よめる。' },
       { speaker: 'nexmax', text: 'ありがとう。つぎは かんじ！ 🙆‍♂️' },
       { text: 'ありがとう. This time I understood every word.' },
