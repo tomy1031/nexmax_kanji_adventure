@@ -1,5 +1,5 @@
 import type { CastMember, NovelScript } from '../../types/novel';
-import { MUKASHI_CAST } from './mukashi';
+import { NANIWA_NEXMAX } from './naniwaCast';
 
 /**
  * 1章「字(じ)の ない 町(まち)」の 脚本（08 §3.3・§4.2.1）。
@@ -22,7 +22,7 @@ import { MUKASHI_CAST } from './mukashi';
  */
 
 export const MOJI1_CAST: CastMember[] = [
-  ...MUKASHI_CAST.filter((c) => c.id === 'nexmax'),
+  NANIWA_NEXMAX,
   { id: 'yamada', name: '山(やま)田(だ)さん', color: '#e2799a', sprites: { normal: 'img/chara/cut/ESFJ_f.webp' } },
   { id: 'mojikui_kid', name: 'モジクイの こども', color: '#7b4bb3', sprites: { normal: 'img/battle/mojikui_kid.webp' } },
   { id: 'mojikui', name: 'モジクイ', color: '#5a2d8c', sprites: { normal: 'img/battle/mojikui.webp' } },

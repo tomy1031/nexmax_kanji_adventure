@@ -1,5 +1,5 @@
 import type { CastMember, NovelLine, NovelScript } from '../../types/novel';
-import { MUKASHI_CAST } from './mukashi';
+import { NANIWA_NEXMAX } from './naniwaCast';
 
 /**
  * かな編 ＝ 0章「はじまりの 空港」の 脚本 (08 §3.4, §3.4.2, §3.7).
@@ -23,7 +23,7 @@ import { MUKASHI_CAST } from './mukashi';
  * kana.test.ts が「ネクマックスの 台詞は かなと 絵文字だけ」「地の文は 英語」を 確かめる。
  */
 
-export const KANA_CAST: CastMember[] = MUKASHI_CAST.filter((c) => c.id === 'nexmax');
+export const KANA_CAST: CastMember[] = [NANIWA_NEXMAX];
 
 /** Before his name comes back (kana-9), the name plate can only say what he is. */
 export const KANA_CAST_NAMELESS: CastMember[] = KANA_CAST.map((c) => ({ ...c, name: 'ロボット' }));

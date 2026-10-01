@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import type { CastMember, NovelScript } from '../../types/novel';
 import { RubyText } from '../../components/ui/Ruby';
 import { assetPath } from '../../lib/assetPath';
@@ -8,6 +8,8 @@ import { glossFor } from '../../data/glossary';
 import { canSpeak, speak, stopSpeaking } from '../../lib/speech';
 import { useGameStore } from '../../store/gameStore';
 import PictureBook from '../picturebook/PictureBook';
+import { SCENES } from '../picturebook/scenes';
+import { TypeReveal } from '../../components/ui/TypeReveal';
 
 /**
  * The novel scene, set in a moving picture book.
@@ -74,10 +76,29 @@ export const NovelScene = ({ script, cast, onFinish, chapter, renderText, speech
   const [wordsFor, setWordsFor] = useState<number | null>(null);
   /** The line whose English is open. */
   const [enFor, setEnFor] = useState<number | null>(null);
+  /** The line whose text has finished appearing (a tap while it appears shows it all). */
+  const [shown, setShown] = useState(-1);
+  const reducedSetting = useGameStore((s) => s.settings.reducedMotion);
+  const still = Boolean(useReducedMotion() || reducedSetting);
   useEffect(() => stopSpeaking, []);
 
   const castById = useMemo(() => new Map(cast.map((c) => [c.id, c])), [cast]);
   const line = script.lines[index];
+
+  // Fetch every portrait this script will show, so a change of expression
+  // never leaves an empty gap while the picture loads.
+  useEffect(() => {
+    const srcs = new Set<string>();
+    for (const l of script.lines) {
+      const [id, expr] = (l.sprite && l.sprite !== 'none' ? l.sprite : l.speaker ? `${l.speaker}:normal` : '').split(':');
+      const src = id ? (castById.get(id)?.sprites[expr ?? 'normal'] ?? castById.get(id)?.sprites.normal) : undefined;
+      if (src) srcs.add(src);
+    }
+    for (const src of srcs) {
+      const img = new Image();
+      img.src = assetPath(src);
+    }
+  }, [script, castById]);
 
   /**
    * Scene, effects and sprite carry over from earlier lines, so the current
@@ -147,6 +168,12 @@ export const NovelScene = ({ script, cast, onFinish, chapter, renderText, speech
     goTo(index + 1);
   }, [line, script.lines, index, goTo]);
 
+  /** A tap while the line is still appearing shows the rest of it; the next tap turns the page. */
+  const tap = useCallback(() => {
+    if (shown !== index) setShown(index);
+    else advance();
+  }, [shown, index, advance]);
+
   const choose = (label: string) => {
     const target = script.lines.findIndex((l) => l.label === label);
     goTo(target === -1 ? index + 1 : target);
@@ -157,12 +184,12 @@ export const NovelScene = ({ script, cast, onFinish, chapter, renderText, speech
     const onKey = (e: KeyboardEvent) => {
       if (e.key === ' ' || e.key === 'Enter') {
         e.preventDefault();
-        advance();
+        tap();
       }
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [advance]);
+  }, [tap]);
 
   // オート: turn the page after a reading pause. Choices always wait.
   useEffect(() => {
@@ -229,12 +256,15 @@ export const NovelScene = ({ script, cast, onFinish, chapter, renderText, speech
                 alt=""
                 aria-hidden
                 className="h-full w-auto object-contain"
-                // A paper cut-out: white rim, soft shadow — the same finish as
-                // the scene, without redrawing the character.
+                // On the paper picture book: a paper cut-out, white rim and soft
+                // shadow — the same finish as the scene. On a painted scene the
+                // character stands in it: only a soft shadow, no sticker rim.
                 style={{
                   filter: spriteMember?.silhouette
                     ? 'brightness(0.08) drop-shadow(0 0 14px rgba(130,70,210,0.85))'
-                    : 'drop-shadow(2px 0 0 #fffaf0) drop-shadow(-2px 0 0 #fffaf0) drop-shadow(0 2px 0 #fffaf0) drop-shadow(0 -2px 0 #fffaf0) drop-shadow(0 8px 10px rgba(40,25,5,0.35))',
+                    : SCENES[bg]?.photo
+                      ? 'drop-shadow(0 10px 14px rgba(10,6,30,0.45))'
+                      : 'drop-shadow(2px 0 0 #fffaf0) drop-shadow(-2px 0 0 #fffaf0) drop-shadow(0 2px 0 #fffaf0) drop-shadow(0 -2px 0 #fffaf0) drop-shadow(0 8px 10px rgba(40,25,5,0.35))',
                 }}
               />
             </motion.div>
@@ -279,7 +309,7 @@ export const NovelScene = ({ script, cast, onFinish, chapter, renderText, speech
       {/* 画面ぜんたいで ページを めくる --------------------------------- */}
       <button
         type="button"
-        onClick={advance}
+        onClick={tap}
         aria-label="つぎへ"
         className="absolute inset-0 z-10 cursor-pointer"
         disabled={Boolean(line.choices?.length)}
@@ -300,11 +330,16 @@ export const NovelScene = ({ script, cast, onFinish, chapter, renderText, speech
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.22 }}
             className="g-novel-box min-h-[23dvh] px-5 pt-5 pb-3"
-            onClick={advance}
+            onClick={tap}
           >
-            <p className="text-[16px] leading-[2.15] font-bold whitespace-pre-line">
+            <TypeReveal
+              revealKey={index}
+              full={still || shown === index}
+              onDone={() => setShown(index)}
+              className="text-[16px] leading-[2.15] font-bold whitespace-pre-line"
+            >
               {renderText ? renderText(line.text) : <RubyText showFurigana={showFurigana}>{line.text}</RubyText>}
-            </p>
+            </TypeReveal>
 
             {enFor === index && line.en && (
               <p className="mt-1 text-[13px] leading-snug font-bold" style={{ color: '#1b63b0' }} lang="en">
@@ -343,12 +378,12 @@ export const NovelScene = ({ script, cast, onFinish, chapter, renderText, speech
               </div>
             ) : (
               <div className="mt-1 flex items-center justify-end gap-1 text-xs font-bold" style={{ color: '#8a6a44' }}>
-                <div className="mr-auto flex gap-1.5">
+                <div className="mr-auto flex min-w-0 flex-wrap gap-1.5">
                   {canSpeak() && (speechFor ? speechFor(line.text) : line.text) && (
                     <button
                       type="button"
                       aria-label="よみあげ"
-                      className="rounded-full border-2 border-[#caa468] bg-white/80 px-2.5 py-0.5 text-[12px]"
+                      className="rounded-full border-2 border-[#caa468] bg-white/80 px-2.5 py-0.5 text-[12px] whitespace-nowrap"
                       onClick={(e) => {
                         e.stopPropagation();
                         speak((speechFor ? speechFor(line.text) : line.text) ?? '');
@@ -361,7 +396,7 @@ export const NovelScene = ({ script, cast, onFinish, chapter, renderText, speech
                     <button
                       type="button"
                       aria-pressed={enFor === index}
-                      className="rounded-full border-2 border-[#caa468] bg-white/80 px-2.5 py-0.5 text-[12px]"
+                      className="rounded-full border-2 border-[#caa468] bg-white/80 px-2.5 py-0.5 text-[12px] whitespace-nowrap"
                       onClick={(e) => {
                         e.stopPropagation();
                         setEnFor(enFor === index ? null : index);
@@ -374,7 +409,7 @@ export const NovelScene = ({ script, cast, onFinish, chapter, renderText, speech
                     <button
                       type="button"
                       aria-pressed={wordsFor === index}
-                      className="rounded-full border-2 border-[#caa468] bg-white/80 px-2.5 py-0.5 text-[12px]"
+                      className="rounded-full border-2 border-[#caa468] bg-white/80 px-2.5 py-0.5 text-[12px] whitespace-nowrap"
                       onClick={(e) => {
                         e.stopPropagation();
                         setWordsFor(wordsFor === index ? null : index);
@@ -384,15 +419,18 @@ export const NovelScene = ({ script, cast, onFinish, chapter, renderText, speech
                     </button>
                   )}
                 </div>
-                タップで つづく
-                <motion.span
-                  aria-hidden
-                  animate={{ y: [0, 3, 0] }}
-                  transition={{ repeat: Infinity, duration: 1.2 }}
-                  className="text-base"
-                >
-                  ▼
-                </motion.span>
+                {/* The page-turn mark appears once the line has finished appearing. */}
+                <span className={`flex shrink-0 items-center gap-1 whitespace-nowrap transition-opacity duration-200 ${shown === index ? 'opacity-100' : 'opacity-0'}`}>
+                  タップで つづく
+                  <motion.span
+                    aria-hidden
+                    animate={{ y: [0, 3, 0] }}
+                    transition={{ repeat: Infinity, duration: 1.2 }}
+                    className="text-base"
+                  >
+                    ▼
+                  </motion.span>
+                </span>
               </div>
             )}
           </motion.div>
