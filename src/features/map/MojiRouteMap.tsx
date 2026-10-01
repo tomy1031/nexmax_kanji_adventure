@@ -18,6 +18,8 @@ import { getKanaEpisode } from '../../data/kana';
 import { getMojiEpisode } from '../../data/mojiEpisodes';
 import { nextUp } from '../../data/mojiFlow';
 import { useBgm } from '../../lib/bgm';
+import { preloadImages } from '../../lib/preload';
+import { episodeArt } from '../../data/episodeArt';
 
 /**
  * ステージせんたく — 文字が 消えた 町の 入口 (08 §3.7).
@@ -226,6 +228,10 @@ export const MojiRouteMap = () => {
   /** つづき: the episode to play next (data/mojiFlow.ts), and its card, which gets the glow. */
   const startPath = useGameStore((s) => s.startPath);
   const next = nextUp(cleared, startPath);
+  // The episode the つづき bubble points at: fetch its pictures while the player looks at the map.
+  useEffect(() => {
+    if (next) preloadImages(episodeArt(next));
+  }, [next]);
   const nextGroup: GroupId = next ? (groupOf(next) ?? 'n5') : 'n5';
   const nextKana = next ? getKanaEpisode(next) : undefined;
   const nextMoji = next ? getMojiEpisode(next) : undefined;

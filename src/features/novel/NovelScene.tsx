@@ -159,6 +159,11 @@ export const NovelScene = ({ script, cast, onFinish, chapter, renderText, speech
   const [spriteId, spriteExpr] = sprite?.split(':') ?? [];
   const spriteMember = spriteId ? castById.get(spriteId) : undefined;
   const spriteSrc = spriteMember?.sprites[spriteExpr ?? 'normal'] ?? spriteMember?.sprites.normal;
+  /**
+   * The standing character is not the one saying this line. A line that sets
+   * the picture itself is showing that character's reaction, so it stays bright.
+   */
+  const listening = Boolean(spriteId) && line?.speaker !== spriteId && !line?.sprite;
 
   const goTo = useCallback(
     (nextIndex: number) => {
@@ -276,12 +281,17 @@ export const NovelScene = ({ script, cast, onFinish, chapter, renderText, speech
                 // On the paper picture book: a paper cut-out, white rim and soft
                 // shadow — the same finish as the scene. On a painted scene the
                 // character stands in it: only a soft shadow, no sticker rim.
+                // Not the one talking (narration, or someone else): a little
+                // darker, so it is clear who says the line (2026-10-02「誰の セリフか」).
                 style={{
                   filter: spriteMember?.silhouette
                     ? 'brightness(0.08) drop-shadow(0 0 14px rgba(130,70,210,0.85))'
-                    : SCENES[bg]?.photo
-                      ? 'drop-shadow(0 10px 14px rgba(10,6,30,0.45))'
-                      : 'drop-shadow(2px 0 0 #fffaf0) drop-shadow(-2px 0 0 #fffaf0) drop-shadow(0 2px 0 #fffaf0) drop-shadow(0 -2px 0 #fffaf0) drop-shadow(0 8px 10px rgba(40,25,5,0.35))',
+                    : `${listening ? 'brightness(0.7) ' : ''}${
+                        SCENES[bg]?.photo
+                          ? 'drop-shadow(0 10px 14px rgba(10,6,30,0.45))'
+                          : 'drop-shadow(2px 0 0 #fffaf0) drop-shadow(-2px 0 0 #fffaf0) drop-shadow(0 2px 0 #fffaf0) drop-shadow(0 -2px 0 #fffaf0) drop-shadow(0 8px 10px rgba(40,25,5,0.35))'
+                      }`,
+                  transition: 'filter 200ms',
                 }}
               />
             </motion.div>
