@@ -129,6 +129,12 @@ brown leather satchel on a strap across his body. Cute, about 2 heads tall. Kid-
 The navy chest mark must always be visible and unobstructed — never covered by the arms, the strap or the bag.
 Never: realistic rendering, extra fingers, readable letters, angry or scary face.`,
 
+  // ナニワタウンの 町の 人: public/img/chara/types の ロボットを そのまま、表情と しぐさだけ 変える。
+  FOLK_PAINTED: `Character: exactly the robot in the reference image — the same body shape, colors, antenna,
+accessories and outfit, the same glossy 3D-like Japanese anime game rendering with soft shading. Only the pose and
+the expression on the face-screen change, as described below. Kid-friendly, expressive and easy to read at a small
+size. No readable letters or numbers anywhere (any paper, card or tag is blank).`,
+
   ICON: `Output: 1024x1024 PNG. App icon for a kids' kanji learning game. Keep all important shapes inside the
 central 80% circle (the edges are cropped into a circle or rounded square on phones). Bold, simple, readable at 48px.
 No text, no letters, no kanji.`,
@@ -448,6 +454,37 @@ const NEXMAX_NANIWA = [
 ];
 
 // ---------------------------------------------------------------------------
+// 町の 人の 表情 — 字が 消えて 困る 顔と、戻って よろこぶ 顔（2026-10-02「もっと 文字が なくて
+// みんな 困って いる 表情に したり 工夫が 欲しい」）。元の 絵は public/img/chara/types。
+// ---------------------------------------------------------------------------
+
+const folk = (id, type, diff, used) => ({
+  id: `folk_${id}`,
+  group: 'folk_naniwa',
+  prio: 'A',
+  out: `img/chara/naniwa/folk_${id}.webp`,
+  kind: 'chara',
+  bgmode: 'white',
+  refs: [`public/img/chara/types/${type}.webp`],
+  style: ['FOLK_PAINTED', 'CHARA_OUT'],
+  diff: `Pose and expression: ${diff}`,
+  used,
+  note: '白い 背景を import.mjs が 切り抜く',
+});
+
+const FOLK = [
+  folk('yamada_sad', 'ESFJ_f', 'worried and sad: both mitten hands pressed to her cheeks, eyes looking down with a small tear, a wobbly little frown; the flower on her head stays.', '1章 2話 山田さん（名前の 漢字が 消えた）'),
+  folk('yamada_happy', 'ESFJ_f', 'overjoyed: both hands clasped beside her cheek, eyes closed in a big happy smile, a few small sparkles around her.', '1章 2話 山田さん（名前が 戻った）'),
+  folk('girl_sad', 'ISFP_f', 'sad and worried: holding an empty red dog collar with a small blank tag in both hands against her chest, teary eyes, looking down.', 'かな編 3話 犬を さがす 女の子'),
+  folk('girl_happy', 'ISFP_f', 'overjoyed: hugging a small fluffy white puppy (a cute real dog) in her arms, eyes closed in a big smile.', 'かな編 3話 犬が 戻った 女の子'),
+  folk('kiosk_trouble', 'ISFJ_f', 'puzzled and troubled: holding her tray with a cup in one hand, scratching her head with the other, staring at a blank menu card in confusion, a sweat drop by her head.', 'かな編 7話 売店の 人（品書きが 消えた）'),
+  folk('kiosk_happy', 'ISFJ_f', 'cheerful: holding out two steaming mugs of cocoa toward the viewer with a big smile.', 'かな編 7話 売店の 人（ココア）'),
+  folk('staff_trouble', 'ISTJ', 'a troubled station clerk: staring at his blank clipboard with a confused frown, his other hand on top of his head, a sweat drop.', 'かな編 7・8話 駅員（切符の 機械が 読めない）'),
+  folk('announcer_trouble', 'ESTJ', 'confused: the megaphone lowered at his side, the other hand raised palm-up in a shrug, eyebrows raised, mouth open as if saying "huh?".', '1章 1話 駅の 案内係（きょうは 何曜日？）'),
+  folk('traveler_trouble', 'ESTP', 'a lost traveler: pulling a small rolling suitcase, looking around anxiously with one hand shading his eyes, a worried frown.', 'かな編 1話 空港の 旅行者（行き先が 読めない）'),
+];
+
+// ---------------------------------------------------------------------------
 // プロローグ — タイトルの すぐ あと。字が 生きる 国・灯る 町・字を 食べる 影・投げられる ネクマックス
 // （data/scripts/prologue.ts の visual ごとに 1枚）。ナニワタウンの 絵と 同じ 画風。
 // ---------------------------------------------------------------------------
@@ -523,7 +560,7 @@ a few tiny warm sparkles. High contrast: the sky-blue robot pops against the ind
   },
 ];
 
-export const ASSETS = [...NEXMAX, ...GENDAI, ...MUKASHI_FOLK, ...ENEMIES, ...CREATURES, ...BG, ...NANIWA, ...NEXMAX_NANIWA, ...PROLOGUE_ART, ...PROLOGUE_EATEN, ...MAPS, ...ICONS];
+export const ASSETS = [...NEXMAX, ...GENDAI, ...MUKASHI_FOLK, ...ENEMIES, ...CREATURES, ...BG, ...NANIWA, ...NEXMAX_NANIWA, ...FOLK, ...PROLOGUE_ART, ...PROLOGUE_EATEN, ...MAPS, ...ICONS];
 
 export const GROUPS = {
   nexmax: 'ネクマックス（表情・ポーズ）',
@@ -535,6 +572,7 @@ export const GROUPS = {
   bg_naniwa: '背景 — 0章「はじまりの 空港」（ナニワタウン）',
   bg_prologue: 'プロローグの 1枚絵',
   nexmax_naniwa: 'ナニワタウンの ネクマックス（新ルートの 立ち絵）',
+  folk_naniwa: '町の 人の 表情（困る・よろこぶ）',
   map: 'ステージ選択の 地図',
   icon: 'アプリの アイコン',
 };

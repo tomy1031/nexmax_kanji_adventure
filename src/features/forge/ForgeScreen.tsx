@@ -34,6 +34,7 @@ import { remainingForChar, FoundVia, discoveryKind, KIND_LABEL } from '../../lib
 import { REPS_TO_OBTAIN } from '../../types/kanji';
 import { Feature, isFeatureUnlocked } from '../../data/unlocks';
 import { isForgeOpen, practiceTarget } from '../../data/mojiFlow';
+import { useBgm } from '../../lib/bgm';
 
 /**
  * The forge — 漢字やさん (the layout example delivered with the parts,
@@ -214,6 +215,7 @@ const RoundButton = ({ icon: Icon, label, onClick, locked, showFurigana }: { ico
 );
 
 export const ForgeScreen = () => {
+  useBgm('town');
   const navigate = useNavigate();
   const [params] = useSearchParams();
   // もどる goes back where the player came from (08 §3.8): `?back=` when the

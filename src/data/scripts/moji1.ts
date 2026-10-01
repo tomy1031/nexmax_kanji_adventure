@@ -1,5 +1,5 @@
 import type { CastMember, NovelScript } from '../../types/novel';
-import { NANIWA_NEXMAX } from './naniwaCast';
+import { NANIWA_FOLK, NANIWA_NEXMAX } from './naniwaCast';
 
 /**
  * 1章「字(じ)の ない 町(まち)」の 脚本（08 §3.3・§4.2.1）。
@@ -23,9 +23,15 @@ import { NANIWA_NEXMAX } from './naniwaCast';
 
 export const MOJI1_CAST: CastMember[] = [
   NANIWA_NEXMAX,
-  { id: 'yamada', name: '山(やま)田(だ)さん', color: '#e2799a', sprites: { normal: 'img/chara/cut/ESFJ_f.webp' } },
+  {
+    id: 'yamada',
+    name: '山(やま)田(だ)さん',
+    color: '#e2799a',
+    sprites: { normal: 'img/chara/cut/ESFJ_f.webp', sad: 'img/chara/naniwa/folk_yamada_sad.webp', happy: 'img/chara/naniwa/folk_yamada_happy.webp' },
+  },
   { id: 'mojikui_kid', name: 'モジクイの こども', color: '#7b4bb3', sprites: { normal: 'img/battle/mojikui_kid.webp' } },
   { id: 'mojikui', name: 'モジクイ', color: '#5a2d8c', sprites: { normal: 'img/battle/mojikui.webp' } },
+  ...NANIWA_FOLK,
 ];
 
 interface EpisodeScript {
@@ -57,6 +63,7 @@ export const MOJI1_SCRIPTS: Record<string, EpisodeScript> = {
         { bg: 'naniwa_town_station', text: 'でんしゃが、ナニワタウンに つきました。', en: 'The train arrives in Naniwa Town, the town on the hill.' },
         { speaker: 'nexmax', sprite: 'nexmax:hello', text: 'ここは えきです。', en: 'This is the station.' },
         { glyph: '📅 ❓', text: 'えきの カレンダーの じが、ありません。', en: 'The letters on the station calendar are gone.' },
+        { speaker: 'announcer', sprite: 'announcer:trouble', text: 'きょうは なんようび？ だれも わかりません……😰', en: 'What day is it today? Nobody can tell…' },
         { text: '日(にち)、月(げつ)、火(か)、水(すい)、木(もく)……おとだけ、のこって います。', en: 'Only the sounds are left: nichi, getsu, ka, sui, moku.' },
         { glyph: '👀 💨', text: '……あれは？', en: 'What was that? Something small and dark slips away behind the calendar.' },
         { speaker: 'nexmax', sprite: 'nexmax:think', text: 'かんじが ない。🪧🪧🪧🪧🪧', en: 'No kanji. Five empty signs.' },
@@ -95,7 +102,7 @@ export const MOJI1_SCRIPTS: Record<string, EpisodeScript> = {
         { bg: 'naniwa_station_square', text: 'えきの まえに、ロボットが います。', en: 'A robot stands in front of the station.' },
         { speaker: 'yamada', sprite: 'yamada:normal', text: 'はじめまして。わたしは 山(やま)田(だ)です。', en: 'Nice to meet you. I am Yamada.' },
         { speaker: 'nexmax', sprite: 'nexmax:hello', text: 'はじめまして。ぼくは ネクマックスです。', en: 'Nice to meet you. I am Nexmax.' },
-        { speaker: 'yamada', sprite: 'yamada:normal', glyph: '山(やま)田(だ)', text: 'わたしの なまえの かんじが きえました。😢', en: 'The kanji of my name disappeared.' },
+        { speaker: 'yamada', sprite: 'yamada:sad', glyph: '山(やま)田(だ)', text: 'わたしの なまえの かんじが きえました。😢', en: 'The kanji of my name disappeared.' },
         { speaker: 'yamada', text: 'まちの ちずも……。', en: 'The town map too...' },
         { glyph: '山(やま) 川(かわ) 田(た)', text: '⛰️ 🏞️ 🌾', en: 'Mountain, river, rice field.' },
         { speaker: 'nexmax', sprite: 'nexmax:think', text: '金(きん)曜(よう)日(び)、土(ど)曜(よう)日(び)も ありません。', en: 'Friday and Saturday are missing too.' },
@@ -109,7 +116,7 @@ export const MOJI1_SCRIPTS: Record<string, EpisodeScript> = {
         { bg: 'naniwa_station_square', glyph: '山(やま)田(だ)', text: 'なまえが ひかります。💡', en: "Yamada-san's name lights up." },
         { fx: ['darkclouds'], speaker: 'mojikui', sprite: 'mojikui:normal', text: 'その なまえ、たべます！ 😈', en: "That name — I'll eat it!" },
         { speaker: 'nexmax', sprite: 'nexmax:determined', text: 'でんしゃの モジクイです！', en: 'The Mojikui from the train!' },
-        { speaker: 'yamada', sprite: 'yamada:normal', text: '……！ 😱', en: 'Yamada-san freezes.' },
+        { speaker: 'yamada', sprite: 'yamada:sad', text: '……！ 😱', en: 'Yamada-san freezes.' },
         { speaker: 'nexmax', sprite: 'nexmax:guide', glyph: '✍️ → 💡 → 🤖', text: 'あなたは かきます。ぼくが たたかいます！', en: "You write. I'll fight — I'll protect you!" },
       ],
     },
@@ -117,7 +124,7 @@ export const MOJI1_SCRIPTS: Record<string, EpisodeScript> = {
       stageId: 'moji-1-2',
       lines: [
         { bg: 'naniwa_station_square', fx: ['darkclouds'], sprite: 'mojikui:normal', glyph: '⛰️ 💨', text: 'モジクイは にげました。', en: 'The Mojikui fled — toward the mountain behind the town.' },
-        { fx: ['spring'], speaker: 'yamada', sprite: 'yamada:normal', glyph: '山(やま)田(だ)', text: 'わたしの なまえ！ ありがとう！', en: 'My name! Thank you!' },
+        { fx: ['spring'], speaker: 'yamada', sprite: 'yamada:happy', glyph: '山(やま)田(だ)', text: 'わたしの なまえ！ ありがとう！', en: 'My name! Thank you!' },
         { speaker: 'nexmax', sprite: 'nexmax:smile', glyph: '⛰️ 🏞️ 🌾', text: '山(やま)、川(かわ)、田(た)。', en: 'Mountain, river, rice field.' },
         { speaker: 'nexmax', glyph: '金(きん) 土(ど)', text: '金(きん)曜(よう)日(び)、土(ど)曜(よう)日(び)。', en: 'Friday, Saturday.' },
         { speaker: 'yamada', sprite: 'yamada:normal', text: 'モジクイは 山(やま)の ほうへ いきました。👉', en: 'The Mojikui went toward the mountain.' },

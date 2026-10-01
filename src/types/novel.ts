@@ -53,6 +53,11 @@ export interface NovelLine {
    * when the EN button is pressed — the line itself stays Japanese.
    */
   en?: string;
+  /**
+   * Japanese for a line written in English (かな編の 地の文, kana only).
+   * Shown under it, always (2026-10-02「ひらがなの ところも 日本語訳 ほしい」).
+   */
+  ja?: string;
 }
 
 export interface NovelScript {

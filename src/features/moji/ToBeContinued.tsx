@@ -5,6 +5,7 @@ import { NexmaxSays } from '../../components/ui/Chrome';
 import { useGameStore } from '../../store/gameStore';
 import { isForgeOpen, practiceTarget } from '../../data/mojiFlow';
 import { charRuby } from '../../lib/reading';
+import { useBgm } from '../../lib/bgm';
 
 /**
  * The end of the last written episode (08 §3.8): instead of dropping the
@@ -23,6 +24,7 @@ export const ToBeContinued = ({
   onForge: () => void;
   onStages: () => void;
 }) => {
+  useBgm('town');
   const showFurigana = useGameStore((s) => s.settings.furigana);
   const progress = useGameStore((s) => s.progress);
   const cleared = useGameStore((s) => s.clearedStages);

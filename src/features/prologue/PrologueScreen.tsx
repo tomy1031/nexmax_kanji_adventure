@@ -6,6 +6,7 @@ import { assetPath } from '../../lib/assetPath';
 import { useGameStore } from '../../store/gameStore';
 import * as sfx from '../../lib/sfx';
 import { PROLOGUE, PROLOGUE_ASK, PROLOGUE_EXITS, type PrologueVisual } from '../../data/scripts/prologue';
+import { useBgm } from '../../lib/bgm';
 
 /**
  * プロローグ (08 §10.2): the world, the shadow, the fallen robot, and you —
@@ -174,6 +175,7 @@ const Overlay = ({ visual, still }: { visual: PrologueVisual; still: boolean }) 
 };
 
 export const PrologueScreen = () => {
+  useBgm('story');
   const navigate = useNavigate();
   const markSeen = useGameStore((s) => s.markTutorialSeen);
   const setLastArc = useGameStore((s) => s.setLastArc);

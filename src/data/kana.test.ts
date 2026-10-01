@@ -60,6 +60,18 @@ describe('かな編: the scripts', () => {
     expect(bad).toEqual([]);
   });
 
+  it('gives every English line its Japanese, in kana only (2026-10-02「日本語訳 ほしい」)', () => {
+    const bad: string[] = [];
+    for (const s of all) {
+      for (const l of s.lines) {
+        if (l.speaker || !/[A-Za-z]/.test(l.text)) continue;
+        if (!l.ja) bad.push(`${s.stageId}: no Japanese for "${l.text}"`);
+        else if (/[一-龯A-Za-z]/.test(l.ja)) bad.push(`${s.stageId}: not kana only "${l.ja}"`);
+      }
+    }
+    expect(bad).toEqual([]);
+  });
+
   it('shows the first thank-you with holes, and the whole word once hiragana is done', () => {
     const upTo = (n: number) => new Set(KANA_EPISODES.filter((e) => e.order <= n).flatMap((e) => e.kana));
     const seen = (known: Set<string>) =>

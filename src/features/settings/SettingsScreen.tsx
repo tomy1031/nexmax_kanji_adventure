@@ -25,6 +25,7 @@ export const SettingsScreen = () => {
       note: '漢字(かんじ)の 上(うえ)に 読(よ)みかたを 出(だ)します。',
     },
     { key: 'muted' as const, label: '音(おと)を 消(け)す', note: '' },
+    { key: 'bgmOff' as const, label: 'BGM（音楽(おんがく)）を 消(け)す', note: '効果音(こうかおん)は 鳴(な)ります。' },
     {
       key: 'reducedMotion' as const,
       label: '動(うご)きを 少(すく)なく する',
