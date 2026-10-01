@@ -1,4 +1,5 @@
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
+import { isVersusConfigured } from './versusConfig';
 
 /**
  * Supabase, used purely as a free realtime relay for versus battles.
@@ -24,7 +25,7 @@ const URL = import.meta.env.VITE_SUPABASE_URL as string | undefined;
 const ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY as string | undefined;
 
 /** True when a relay is configured and versus play can be offered. */
-export const isVersusConfigured = Boolean(URL && ANON_KEY);
+export { isVersusConfigured };
 
 let client: SupabaseClient | null = null;
 

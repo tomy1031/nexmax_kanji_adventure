@@ -13,7 +13,7 @@ import { toDataUrl } from '../picturebook/paper';
 import PictureBook from '../picturebook/PictureBook';
 import { useGameStore } from '../../store/gameStore';
 import * as sfx from '../../lib/sfx';
-import { isVersusConfigured } from '../../lib/supabaseClient';
+import { isVersusConfigured } from '../../lib/versusConfig';
 import { Feature, FEATURE_INTRO, isFeatureUnlocked } from '../../data/unlocks';
 import { MAP_H, MAP_W, NODE_POS, gendaiMapSvg, mapSvg } from './mapArt';
 import MojiRouteMap from './MojiRouteMap';

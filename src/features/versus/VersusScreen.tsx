@@ -10,7 +10,7 @@ import { useGameStore } from '../../store/gameStore';
 import { getKanjiByChar, getKanjiById, ALL_KANJI } from '../../lib/kanjiDb';
 import { weaponOf } from '../../lib/forge/weapon';
 import { preloadCharData } from '../../lib/strokeLoader';
-import { isVersusConfigured } from '../../lib/supabaseClient';
+import { isVersusConfigured } from '../../lib/versusConfig';
 import { networkManager, MatchCancelledError } from './NetworkManager';
 import { BattleEventType, ratingChange, rankFor, type BattleEvent } from './types';
 import { REPS_TO_OBTAIN } from '../../types/kanji';

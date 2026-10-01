@@ -406,6 +406,32 @@ const NANIWA = [
 ];
 
 // ---------------------------------------------------------------------------
+// プロローグ — タイトルの すぐ あと。字が 生きる 国・灯る 町・字を 食べる 影・投げられる ネクマックス
+// （data/scripts/prologue.ts の visual ごとに 1枚）。ナニワタウンの 絵と 同じ 画風。
+// ---------------------------------------------------------------------------
+
+const NX_PAINTED = 'art-src/titlesozai/01_ネクマックス_キャラクター.png';
+const MOJIKUI_REF = 'art-src/battle/04_敵_モジクイ.png';
+const prologue = (id, desc, refs) => ({
+  ...naniwa(id, desc, `プロローグ（PrologueScreen.tsx の ${id.replace('prologue_', '')}）`),
+  group: 'bg_prologue',
+  out: `img/prologue/${id}.webp`,
+  refs: refs ?? ['public/img/stageselect/bg_tall.webp'],
+  note: 'プロローグの 1枚絵。下 35% に 語りの 文字が 乗る',
+});
+
+const PROLOGUE_ART = [
+  prologue('prologue_sky', 'a vast deep indigo-violet night sky high above a calm sea, filled with hundreds of tiny warm golden motes of light drifting upward like fireflies or embers (only soft dots and small glowing curls — never shapes of letters), a thin crescent moon, soft violet clouds lit from below; at the very bottom, far away, a port town on a hill by the sea glowing with warm amber lights along the coast. Keep the upper two-thirds open and calm.'),
+  prologue('prologue_town', 'Naniwa Town at night seen from slightly above: a port town climbing a hill by the sea, packed with warm-glowing signboards, lanterns and lit windows — every signboard is a softly glowing BLANK panel of amber light; a station with a big round clock that has no numerals, a red Ferris wheel, steampunk brass rooftops, chimneys and pipes, tiny golden motes of light floating up from the signs, the bay reflecting all the lights. Lively, warm and magical.'),
+  prologue('prologue_guard', 'on a brass rooftop of the town at night, seen from behind and slightly to the side: the small sky-blue robot from the first reference image (glossy rounded helmet head with ear pods, a small brown backpack) stands bravely with his arms spread, facing an enormous creature of black-violet ink smoke that fills the sky in front of him — two huge glowing amber eyes, torn cream paper talismans with abstract brush strokes swirling around it (from the second reference). A warm light glows from the robot\'s chest and spills around him. The town below has gone dark, its signboards empty black holes.', [NX_PAINTED, MOJIKUI_REF]),
+  prologue('prologue_fall', 'night over the wide bay: a bright falling star with a long glowing golden tail streaks across the sky from a dark town on a hill (upper left) down toward the lights of a big airport on the far shore (lower right); in the bright head of the star, small but clearly visible, the sky-blue robot from the reference image curled up and tumbling. Calm sea reflecting the streak, a distant control tower and rows of runway lights.', [NX_PAINTED, 'public/img/stageselect/bg_night.webp']),
+];
+
+const PROLOGUE_EATEN = [
+  prologue('prologue_eaten', 'the SAME port town on the hill at night as in the first reference image, the same composition, but its lights have been eaten: every signboard is a dark empty hole, windows black, lanterns out, only cold blue moonlight; above the town looms an enormous creature of black-violet ink smoke (like the second reference, but huge) filling the upper sky, two huge glowing amber eyes, torn cream paper talismans with abstract brush strokes swirling into it, thin streams of tiny golden motes of light being pulled up into its wide mouth. Ominous but not gory — suitable for children.', ['art-src/prologue_town.png', MOJIKUI_REF]),
+];
+
+// ---------------------------------------------------------------------------
 // 地図 — 1枚の 縦長を 上下 2枚に 分けて 撮り、import.mjs が つなぐ
 // ---------------------------------------------------------------------------
 
@@ -455,7 +481,7 @@ a few tiny warm sparkles. High contrast: the sky-blue robot pops against the ind
   },
 ];
 
-export const ASSETS = [...NEXMAX, ...GENDAI, ...MUKASHI_FOLK, ...ENEMIES, ...CREATURES, ...BG, ...NANIWA, ...MAPS, ...ICONS];
+export const ASSETS = [...NEXMAX, ...GENDAI, ...MUKASHI_FOLK, ...ENEMIES, ...CREATURES, ...BG, ...NANIWA, ...PROLOGUE_ART, ...PROLOGUE_EATEN, ...MAPS, ...ICONS];
 
 export const GROUPS = {
   nexmax: 'ネクマックス（表情・ポーズ）',
@@ -465,6 +491,7 @@ export const GROUPS = {
   bg_mukashi: '背景 — むかし編（と タイトル・メニュー）',
   bg_gendai: '背景 — 現代編',
   bg_naniwa: '背景 — 0章「はじまりの 空港」（ナニワタウン）',
+  bg_prologue: 'プロローグの 1枚絵',
   map: 'ステージ選択の 地図',
   icon: 'アプリの アイコン',
 };
