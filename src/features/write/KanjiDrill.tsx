@@ -9,7 +9,10 @@ import { useGameStore } from '../../store/gameStore';
 import { kanjiRuby } from '../../lib/reading';
 import { REPS_TO_OBTAIN, type KanjiData } from '../../types/kanji';
 import { MASTERY_REPS, repsToNextStar, starsOf } from '../../lib/mastery';
-import RockSlash, { type RockSlashHandle } from './RockSlash';
+import RockSlash from './RockSlash';
+import SignLight from './SignLight';
+import { NightStreetBackdrop, SignStreet } from './NightStreet';
+import { streetOf } from '../../lib/signStreet';
 import * as sfx from '../../lib/sfx';
 
 /**
@@ -23,6 +26,10 @@ import * as sfx from '../../lib/sfx';
  * hides the result is worse than no praise.
  *
  * Layout follows public/img/design/森の漢字アドベンチャー_ui.png.
+ *
+ * 文字が 消えた 町 writes on empty signboards instead (`look="sign"`, 08 §3.6):
+ * each write lights a sign, and the signs line up in streets under the drill —
+ * one street per star. The old arcs keep the rocks.
  */
 
 interface KanjiDrillProps {
@@ -43,18 +50,41 @@ interface KanjiDrillProps {
    * (lib/mastery.ts). Without it the drill is the old ten-to-obtain one.
    */
   goal?: number;
+  /** What a write does: cut a rock (むかし編・現代編) or light a sign (文字が 消えた 町). */
+  look?: 'rock' | 'sign';
 }
 
-type Verdict = { kind: 'perfect' | 'clean' | 'close'; mistakes: number } | null;
+type Verdict = { kind: VerdictKind; mistakes: number } | null;
 
 /** Reps that show the model underneath before the learner is on their own. */
 const SAMPLE_REPS = 3;
 
-const VERDICT_TEXT: Record<'perfect' | 'clean' | 'close', { head: string; next: string }> = {
-  perfect: { head: '正(せい)かい — かんぺき', next: '岩(いわ)が 割(わ)れた。この ちょうしで つづけよう。' },
-  clean: { head: '正(せい)かい', next: '岩(いわ)が 割(わ)れた。つぎは まちがえずに 書(か)いてみよう。' },
-  // Not a pass. Say so, then say what to do about it.
-  close: { head: 'まだ 正(せい)かいでは ない', next: '岩(いわ)は 割(わ)れない。「書(か)きじゅん」を 見(み)てから もう一度(いちど)。' },
+type VerdictKind = 'perfect' | 'clean' | 'close';
+
+/** Everything the drill says that depends on what a write does. */
+const COPY: Record<'rock' | 'sign', { verdict: Record<VerdictKind, { head: string; next: string }>; nexmax: string; first: string; idle: string }> = {
+  rock: {
+    verdict: {
+      perfect: { head: '正(せい)かい — かんぺき', next: '岩(いわ)が 割(わ)れた。この ちょうしで つづけよう。' },
+      clean: { head: '正(せい)かい', next: '岩(いわ)が 割(わ)れた。つぎは まちがえずに 書(か)いてみよう。' },
+      // Not a pass. Say so, then say what to do about it.
+      close: { head: 'まだ 正(せい)かいでは ない', next: '岩(いわ)は 割(わ)れない。「書(か)きじゅん」を 見(み)てから もう一度(いちど)。' },
+    },
+    nexmax: '書(か)いて 岩(いわ)を 切(き)ろう！',
+    first: '手本(てほん)の 上(うえ)を なぞると、線(せん)が 刀(かたな)に なる。',
+    idle: '書(か)ききると 岩(いわ)が 割(わ)れる。',
+  },
+  // N5 words: あかりが つく / ひかる (08 §3.6), not 灯す.
+  sign: {
+    verdict: {
+      perfect: { head: '正(せい)かい — かんぺき', next: '看板(かんばん)に あかりが ついた。この ちょうしで つづけよう。' },
+      clean: { head: '正(せい)かい', next: '看板(かんばん)に あかりが ついた。つぎは まちがえずに 書(か)いてみよう。' },
+      close: { head: 'まだ 正(せい)かいでは ない', next: 'あかりが つかない。「書(か)きじゅん」を 見(み)てから もう一度(いちど)。' },
+    },
+    nexmax: '書(か)くと ひかる！',
+    first: '手本(てほん)の 上(うえ)を なぞると、線(せん)が ひかる。',
+    idle: '書(か)ききると 看板(かんばん)に あかりが つく。',
+  },
 };
 
 /** Eight stars flying out from the centre: a star was gained. */
@@ -78,9 +108,11 @@ const StarBurst = () => (
   </div>
 );
 
-export const KanjiDrill = ({ kanji, onObtained, onExit, onDone, nextLabel = 'つぎへ', extra, goal }: KanjiDrillProps) => {
+export const KanjiDrill = ({ kanji, onObtained, onExit, onDone, nextLabel = 'つぎへ', extra, goal, look = 'rock' }: KanjiDrillProps) => {
   const size = useCanvasSize(300, 0.4, 72);
-  const slashRef = useRef<RockSlashHandle>(null);
+  const slashRef = useRef<{ animateStroke: () => void }>(null);
+  const sign = look === 'sign';
+  const copy = COPY[look];
 
   const recordRep = useGameStore((s) => s.recordRep);
   const recordReview = useGameStore((s) => s.recordReview);
@@ -113,7 +145,7 @@ export const KanjiDrill = ({ kanji, onObtained, onExit, onDone, nextLabel = 'つ
    */
   const [ownedAtStart] = useState(() => reps >= REPS_TO_OBTAIN);
   const [reviewed, setReviewed] = useState<'no' | 'card' | 'done'>('no');
-  /** Which rock this is — a new one rolls in after each split. */
+  /** Which rock (or sign) this is — a new one comes after each write that passes. */
   const [rockNo, setRockNo] = useState(0);
   const pendingObtained = useRef(false);
 
@@ -168,6 +200,7 @@ export const KanjiDrill = ({ kanji, onObtained, onExit, onDone, nextLabel = 'つ
 
   const done = Math.min(reps, REPS_TO_OBTAIN);
   const stars = starsOf(reps);
+  const street = streetOf(reps, goal != null ? MASTERY_REPS : [REPS_TO_OBTAIN]);
 
   useEffect(() => {
     if (goalCard) sfx.fanfare();
@@ -182,7 +215,7 @@ export const KanjiDrill = ({ kanji, onObtained, onExit, onDone, nextLabel = 'つ
 
   return (
     <div className="isolate relative flex min-h-dvh flex-col items-center pb-5">
-      <PictureBook scene="mukashi_meadow" className="!fixed -z-10" still />
+      {sign ? <NightStreetBackdrop /> : <PictureBook scene="mukashi_meadow" className="!fixed -z-10" still />}
       <TopBar onBack={onExit} />
 
       <div className="flex w-full max-w-md flex-1 flex-col gap-3 px-3 pt-3">
@@ -199,34 +232,61 @@ export const KanjiDrill = ({ kanji, onObtained, onExit, onDone, nextLabel = 'つ
               </p>
             </div>
           </div>
-          <NexmaxSays text="書(か)いて 岩(いわ)を 切(き)ろう！" size={70} />
+          <NexmaxSays text={copy.nexmax} size={70} />
         </div>
 
-        {/* 岩と 書く面（木のわく） --------------------------------------- */}
+        {/* 岩（看板）と 書く面 — 木の わく、看板は 真ちゅうの わく ------------- */}
         <div
           className="relative mx-auto flex items-center justify-center rounded-[22px] p-3"
-          style={{
-            background: 'linear-gradient(180deg, #a8703a 0%, #7d4b1c 100%)',
-            border: '3px solid #5b3412',
-            boxShadow: 'inset 0 2px 0 rgba(255,220,170,0.35), 0 10px 22px rgba(40,20,0,0.35)',
-          }}
+          style={
+            sign
+              ? {
+                  background: 'linear-gradient(180deg, #c7964a 0%, #7a5220 100%)',
+                  border: '3px solid #4a3210',
+                  boxShadow: 'inset 0 2px 0 rgba(255,230,170,0.45), 0 10px 22px rgba(0,0,0,0.45)',
+                }
+              : {
+                  background: 'linear-gradient(180deg, #a8703a 0%, #7d4b1c 100%)',
+                  border: '3px solid #5b3412',
+                  boxShadow: 'inset 0 2px 0 rgba(255,220,170,0.35), 0 10px 22px rgba(40,20,0,0.35)',
+                }
+          }
         >
           <div
-            className="relative overflow-hidden rounded-2xl"
-            style={{ background: 'radial-gradient(ellipse at 50% 90%, #9ccf6a 0%, #cfeaf5 60%, #e8f6fb 100%)' }}
+            className={`relative rounded-2xl ${sign ? '' : 'overflow-hidden'}`}
+            style={{
+              background: sign
+                ? 'radial-gradient(ellipse at 50% 35%, #2f2860 0%, #17132f 70%, #0e0b22 100%)'
+                : 'radial-gradient(ellipse at 50% 90%, #9ccf6a 0%, #cfeaf5 60%, #e8f6fb 100%)',
+            }}
           >
-            <RockSlash
-              key={`${kanji.id}-${rockNo}`}
-              ref={slashRef}
-              char={kanji.char}
-              material={ruby}
-              size={size}
-              seed={rockNo + kanji.strokes * 7}
-              showSample={showSample}
-              onMistake={handleMistake}
-              onWritten={handleWritten}
-              onSplit={handleSplit}
-            />
+            {sign ? (
+              <SignLight
+                key={`${kanji.id}-${rockNo}`}
+                ref={slashRef}
+                char={kanji.char}
+                material={ruby}
+                size={size}
+                seed={rockNo}
+                showSample={showSample}
+                onMistake={handleMistake}
+                onWritten={handleWritten}
+                onLit={handleSplit}
+              />
+            ) : (
+              <RockSlash
+                key={`${kanji.id}-${rockNo}`}
+                ref={slashRef}
+                char={kanji.char}
+                material={ruby}
+                size={size}
+                seed={rockNo + kanji.strokes * 7}
+                showSample={showSample}
+                onMistake={handleMistake}
+                onWritten={handleWritten}
+                onSplit={handleSplit}
+              />
+            )}
           </div>
 
           {/* 足場 — 書く面の 横に 置く（指で 隠れない） ------------------- */}
@@ -277,7 +337,7 @@ export const KanjiDrill = ({ kanji, onObtained, onExit, onDone, nextLabel = 'つ
                 transition={{ type: 'spring', stiffness: 500, damping: 22 }}
                 style={{ willChange: 'transform' }}
               >
-                <RubyText showFurigana={showFurigana}>{VERDICT_TEXT[verdict.kind].head}</RubyText>
+                <RubyText showFurigana={showFurigana}>{copy.verdict[verdict.kind].head}</RubyText>
                 {verdict.mistakes > 0 && (
                   <span className="ml-2 text-sm font-normal" style={{ color: 'var(--ink-2)' }}>
                     まちがえた ところ {verdict.mistakes}
@@ -285,83 +345,108 @@ export const KanjiDrill = ({ kanji, onObtained, onExit, onDone, nextLabel = 'つ
                 )}
               </motion.p>
               <p className="text-xs" style={{ color: 'var(--ink-2)' }}>
-                <RubyText showFurigana={showFurigana}>{VERDICT_TEXT[verdict.kind].next}</RubyText>
+                <RubyText showFurigana={showFurigana}>{copy.verdict[verdict.kind].next}</RubyText>
               </p>
             </>
           ) : (
             <p className="text-sm font-bold" style={{ color: 'var(--ink-2)' }}>
               <RubyText showFurigana={showFurigana}>
                 {reps === 0
-                  ? '手本(てほん)の 上(うえ)を なぞると、線(せん)が 刀(かたな)に なる。'
+                  ? copy.first
                   : sampleOverride === null && reps === SAMPLE_REPS
                     ? 'ここからは 手本(てほん)なしで 書(か)いてみよう。'
                     : strokeMistakes > 0
                       ? `いま ${strokeMistakes} かい まちがえています`
-                      : '書(か)ききると 岩(いわ)が 割(わ)れる。'}
+                      : copy.idle}
               </RubyText>
             </p>
           )}
         </div>
 
-        {/* 集めた かけら ------------------------------------------------ */}
-        <div className="g-parchment mt-auto px-3 py-2.5">
-          <div className="mb-2 flex items-center gap-2">
-            {goal != null ? (
-              <span className="text-sm font-black">
-                <span aria-hidden style={{ color: stars ? '#e8a317' : 'rgba(122,82,38,0.35)' }}>
-                  {'★'.repeat(stars) + '☆'.repeat(3 - stars)}{' '}
+        {sign ? (
+          // 灯った 看板の 通り — one street per star (lib/signStreet.ts).
+          <div className="g-parchment mt-auto px-3 py-2.5">
+            <div className="mb-1.5 flex justify-center">
+              {goal != null ? (
+                <span className="text-sm font-black">
+                  <span aria-hidden style={{ color: stars ? '#e8a317' : 'rgba(122,82,38,0.35)' }}>
+                    {'★'.repeat(stars) + '☆'.repeat(3 - stars)}{' '}
+                  </span>
+                  <RubyText showFurigana={showFurigana}>{stars === 3 ? 'マスター' : `★${stars + 1}まで あと ${repsToNextStar(reps)}`}</RubyText>
                 </span>
-                <RubyText showFurigana={showFurigana}>{stars === 3 ? 'マスター' : `★${stars + 1}まで あと ${repsToNextStar(reps)}`}</RubyText>
-              </span>
-            ) : (
-              <span className="text-sm font-black">
-                <span aria-hidden>🍃 </span>
-                <RubyText showFurigana={showFurigana}>集(あつ)めた かけら</RubyText>
-              </span>
-            )}
-            <div className="h-3 flex-1 overflow-hidden rounded-full border border-[#8fb7d8] bg-[#e3f1fb]">
-              <motion.div
-                className="h-full rounded-full"
-                style={{ background: 'linear-gradient(90deg, #7ed36b, #3e9b3a)' }}
-                animate={{ width: `${(done / REPS_TO_OBTAIN) * 100}%` }}
-              />
+              ) : (
+                <span className="text-sm font-black tabular-nums">
+                  {done}/{REPS_TO_OBTAIN}
+                </span>
+              )}
             </div>
-            <span className="text-lg font-black tabular-nums" style={{ color: '#1b4f8a' }}>
-              {done}
-              <span className="text-sm">/{REPS_TO_OBTAIN}</span>
-            </span>
+            <SignStreet
+              street={street}
+              glyph={<KanjiWord kanji={kanji} showFurigana={showFurigana} />}
+              label={`${street.size}まいの うち ${street.lit}まい ひかった`}
+            />
           </div>
-          <div className="grid grid-cols-10 gap-1" role="img" aria-label={`${REPS_TO_OBTAIN}こ のうち ${done}こ`}>
-            {Array.from({ length: REPS_TO_OBTAIN }, (_, i) => {
-              const got = i < done;
-              const tier = goal != null ? MASTERY_REPS.indexOf((i + 1) as (typeof MASTERY_REPS)[number]) : -1;
-              return (
+        ) : (
+          // 集めた かけら
+          <div className="g-parchment mt-auto px-3 py-2.5">
+            <div className="mb-2 flex items-center gap-2">
+              {goal != null ? (
+                <span className="text-sm font-black">
+                  <span aria-hidden style={{ color: stars ? '#e8a317' : 'rgba(122,82,38,0.35)' }}>
+                    {'★'.repeat(stars) + '☆'.repeat(3 - stars)}{' '}
+                  </span>
+                  <RubyText showFurigana={showFurigana}>{stars === 3 ? 'マスター' : `★${stars + 1}まで あと ${repsToNextStar(reps)}`}</RubyText>
+                </span>
+              ) : (
+                <span className="text-sm font-black">
+                  <span aria-hidden>🍃 </span>
+                  <RubyText showFurigana={showFurigana}>集(あつ)めた かけら</RubyText>
+                </span>
+              )}
+              <div className="h-3 flex-1 overflow-hidden rounded-full border border-[#8fb7d8] bg-[#e3f1fb]">
                 <motion.div
-                  key={i}
-                  initial={false}
-                  animate={got ? { scale: [1.3, 1] } : { scale: 1 }}
-                  className="relative flex aspect-[3/4] flex-col items-center justify-end rounded-md border pb-0.5 text-[15px] leading-none font-black"
-                  style={{
-                    background: got ? 'linear-gradient(160deg,#fffbe8,#ffe7a3)' : 'rgba(255,255,255,0.55)',
-                    borderColor: got ? '#f2b53a' : 'rgba(122,82,38,0.25)',
-                    color: got ? '#4a3220' : 'rgba(122,82,38,0.3)',
-                  }}
-                >
-                  {tier >= 0 && (
-                    <span
-                      aria-hidden
-                      className="absolute -top-2 left-1/2 -translate-x-1/2 text-[11px] leading-none font-black"
-                      style={{ color: got ? '#e8a317' : 'rgba(122,82,38,0.45)' }}
-                    >
-                      ★{tier + 1}
-                    </span>
-                  )}
-                  {got ? <KanjiWord kanji={kanji} showFurigana={showFurigana} /> : <span className="mb-1 text-xs">♛</span>}
-                </motion.div>
-              );
-            })}
+                  className="h-full rounded-full"
+                  style={{ background: 'linear-gradient(90deg, #7ed36b, #3e9b3a)' }}
+                  animate={{ width: `${(done / REPS_TO_OBTAIN) * 100}%` }}
+                />
+              </div>
+              <span className="text-lg font-black tabular-nums" style={{ color: '#1b4f8a' }}>
+                {done}
+                <span className="text-sm">/{REPS_TO_OBTAIN}</span>
+              </span>
+            </div>
+            <div className="grid grid-cols-10 gap-1" role="img" aria-label={`${REPS_TO_OBTAIN}こ のうち ${done}こ`}>
+              {Array.from({ length: REPS_TO_OBTAIN }, (_, i) => {
+                const got = i < done;
+                const tier = goal != null ? MASTERY_REPS.indexOf((i + 1) as (typeof MASTERY_REPS)[number]) : -1;
+                return (
+                  <motion.div
+                    key={i}
+                    initial={false}
+                    animate={got ? { scale: [1.3, 1] } : { scale: 1 }}
+                    className="relative flex aspect-[3/4] flex-col items-center justify-end rounded-md border pb-0.5 text-[15px] leading-none font-black"
+                    style={{
+                      background: got ? 'linear-gradient(160deg,#fffbe8,#ffe7a3)' : 'rgba(255,255,255,0.55)',
+                      borderColor: got ? '#f2b53a' : 'rgba(122,82,38,0.25)',
+                      color: got ? '#4a3220' : 'rgba(122,82,38,0.3)',
+                    }}
+                  >
+                    {tier >= 0 && (
+                      <span
+                        aria-hidden
+                        className="absolute -top-2 left-1/2 -translate-x-1/2 text-[11px] leading-none font-black"
+                        style={{ color: got ? '#e8a317' : 'rgba(122,82,38,0.45)' }}
+                      >
+                        ★{tier + 1}
+                      </span>
+                    )}
+                    {got ? <KanjiWord kanji={kanji} showFurigana={showFurigana} /> : <span className="mb-1 text-xs">♛</span>}
+                  </motion.div>
+                );
+              })}
+            </div>
           </div>
-        </div>
+        )}
         {extra}
       </div>
 

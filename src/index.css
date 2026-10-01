@@ -14,6 +14,8 @@
   --font-body: 'M PLUS Rounded 1c', 'Hiragino Sans', 'Noto Sans JP', system-ui, sans-serif;
   /* ロゴ・大見出しの 書体。太く 角の ある ゲームの 看板文字。 */
   --font-logo: 'Dela Gothic One', 'M PLUS Rounded 1c', 'Hiragino Sans', system-ui, sans-serif;
+  /* 文字が 消えた 町の たたかい (public/img/battle/): the brush-and-paper serif of its layout example. */
+  --font-mincho: 'Shippori Mincho B1', 'Hiragino Mincho ProN', 'Yu Mincho', serif;
 
   /* かたち ---------------------------------------------------------------- */
   --radius-tile: 14px;

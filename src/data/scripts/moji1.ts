@@ -33,8 +33,8 @@ export const MOJI1_SCRIPTS: Record<string, EpisodeScript> = {
         { speaker: 'nexmax', sprite: 'nexmax:hello', text: 'ここは えきです。', en: 'This is the station.' },
         { glyph: '📅 ❓', text: 'えきの カレンダーの じが、ありません。', en: 'The letters on the station calendar are gone.' },
         { text: '日(にち)、月(げつ)、火(か)、水(すい)、木(もく)……おとだけ、のこって います。', en: 'Only the sounds are left: nichi, getsu, ka, sui, moku.' },
-        { speaker: 'nexmax', sprite: 'nexmax:think', text: 'かんじが ない。🪨🪨🪨🪨🪨', en: 'No kanji. Five rocks.' },
-        { speaker: 'nexmax', sprite: 'nexmax:guide', text: '🪨 ⚔️ かきます！', en: "Let's write!" },
+        { speaker: 'nexmax', sprite: 'nexmax:think', text: 'かんじが ない。🪧🪧🪧🪧🪧', en: 'No kanji. Five empty signs.' },
+        { speaker: 'nexmax', sprite: 'nexmax:guide', text: '✍️💡🪧 かきます！', en: "Let's write!" },
       ],
     },
     outro: {
@@ -60,7 +60,7 @@ export const MOJI1_SCRIPTS: Record<string, EpisodeScript> = {
         { speaker: 'yamada', text: 'まちの ちずも……。', en: 'The town map too...' },
         { glyph: '山(やま) 川(かわ) 田(た)', text: '⛰️ 🏞️ 🌾', en: 'Mountain, river, rice field.' },
         { speaker: 'nexmax', sprite: 'nexmax:think', text: '金(きん)曜(よう)日(び)、土(ど)曜(よう)日(び)も ありません。', en: 'Friday and Saturday are missing too.' },
-        { speaker: 'nexmax', sprite: 'nexmax:guide', text: '🪨 ⚔️ かきます！', en: "Let's write!" },
+        { speaker: 'nexmax', sprite: 'nexmax:guide', text: '✍️💡🪧 かきます！', en: "Let's write!" },
       ],
     },
     outro: {

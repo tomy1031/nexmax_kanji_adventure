@@ -215,6 +215,7 @@ const EpisodePlayer = ({ id }: { id: string }) => {
           key={k.id}
           kanji={k}
           goal={MOJI_OWN_REPS}
+          look="sign"
           onExit={leave}
           onDone={nextKanji}
           nextLabel={idx + 1 < queue.length ? `つぎの 字(じ)（${idx + 2}/${queue.length}）` : 'じゅんびへ'}
@@ -243,6 +244,7 @@ const EpisodePlayer = ({ id }: { id: string }) => {
           key={practice!.id}
           kanji={practice!}
           goal={MOJI_OWN_REPS}
+          look="sign"
           onExit={toReady}
           onDone={toReady}
           nextLabel="じゅんびに もどる"
