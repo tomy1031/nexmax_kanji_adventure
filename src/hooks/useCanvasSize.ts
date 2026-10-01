@@ -6,11 +6,18 @@ import { useEffect, useState } from 'react';
  *
  * Ported from kanji_go.
  */
-export const useCanvasSize = (maxSize = 300, heightRatio = 0.4, widthMargin = 64): number => {
+export const useCanvasSize = (maxSize = 300, heightRatio = 0.4, widthMargin = 64, heightReserve = 0): number => {
+  // heightReserve: the height everything else on the screen needs, so the
+  // canvas takes what is left (a phone browser's bars make the screen short).
   const compute = () =>
     Math.max(
       160,
-      Math.min(maxSize, window.innerWidth - widthMargin, Math.floor(window.innerHeight * heightRatio)),
+      Math.min(
+        maxSize,
+        window.innerWidth - widthMargin,
+        Math.floor(window.innerHeight * heightRatio),
+        heightReserve ? window.innerHeight - heightReserve : Infinity,
+      ),
     );
 
   const [size, setSize] = useState(compute);
@@ -24,7 +31,7 @@ export const useCanvasSize = (maxSize = 300, heightRatio = 0.4, widthMargin = 64
       window.removeEventListener('orientationchange', onResize);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [maxSize, heightRatio, widthMargin]);
+  }, [maxSize, heightRatio, widthMargin, heightReserve]);
 
   return size;
 };

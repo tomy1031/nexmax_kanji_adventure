@@ -246,7 +246,7 @@ export const KANA_SCRIPTS: Record<string, KanaScript> = Object.fromEntries([
   script(
     'kana-10',
     [
-      { bg: 'mukashi_portal', fx: ['portal'], text: 'Behind the door: a whirlpool of letters. In the middle, the Mojikui is slurping them up like ramen.' },
+      { bg: 'naniwa_last_car', fx: ['sparkle'], text: 'Behind the door: a whirlpool of letters. In the middle, the Mojikui is slurping them up like ramen.' },
       { speaker: 'nexmax', sprite: 'nexmax:determined', text: 'かえして！ ぜんぶ かえして！' },
       { text: 'かえして kaeshite — give them back!' },
       { text: 'The last blank signs spin in the whirlpool.' },

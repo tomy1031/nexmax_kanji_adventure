@@ -5,6 +5,7 @@ import PictureBook from '../picturebook/PictureBook';
 import { KanjiWord, Readings } from '../../components/ui/Readings';
 import { NexmaxSays, TopBar } from '../../components/ui/Chrome';
 import { useCanvasSize } from '../../hooks/useCanvasSize';
+import { useCompactHeight } from '../../hooks/useCompactHeight';
 import { useGameStore } from '../../store/gameStore';
 import { kanjiRuby } from '../../lib/reading';
 import { REPS_TO_OBTAIN, type KanjiData } from '../../types/kanji';
@@ -62,7 +63,7 @@ const SAMPLE_REPS = 3;
 type VerdictKind = 'perfect' | 'clean' | 'close';
 
 /** Everything the drill says that depends on what a write does. */
-const COPY: Record<'rock' | 'sign', { verdict: Record<VerdictKind, { head: string; next: string }>; nexmax: string; first: string; idle: string }> = {
+const COPY: Record<'rock' | 'sign', { verdict: Record<VerdictKind, { head: string; next: string }>; first: string; idle: string }> = {
   rock: {
     verdict: {
       perfect: { head: '正(せい)かい — かんぺき', next: '岩(いわ)が 割(わ)れた。この ちょうしで つづけよう。' },
@@ -70,7 +71,6 @@ const COPY: Record<'rock' | 'sign', { verdict: Record<VerdictKind, { head: strin
       // Not a pass. Say so, then say what to do about it.
       close: { head: 'まだ 正(せい)かいでは ない', next: '岩(いわ)は 割(わ)れない。「書(か)きじゅん」を 見(み)てから もう一度(いちど)。' },
     },
-    nexmax: '書(か)いて 岩(いわ)を 切(き)ろう！',
     first: '手本(てほん)の 上(うえ)を なぞると、線(せん)が 刀(かたな)に なる。',
     idle: '書(か)ききると 岩(いわ)が 割(わ)れる。',
   },
@@ -81,7 +81,6 @@ const COPY: Record<'rock' | 'sign', { verdict: Record<VerdictKind, { head: strin
       clean: { head: '正(せい)かい', next: '看板(かんばん)に あかりが ついた。つぎは まちがえずに 書(か)いてみよう。' },
       close: { head: 'まだ 正(せい)かいでは ない', next: 'あかりが つかない。「書(か)きじゅん」を 見(み)てから もう一度(いちど)。' },
     },
-    nexmax: '書(か)くと ひかる！',
     first: '手本(てほん)の 上(うえ)を なぞると、線(せん)が ひかる。',
     idle: '書(か)ききると 看板(かんばん)に あかりが つく。',
   },
@@ -109,7 +108,11 @@ const StarBurst = () => (
 );
 
 export const KanjiDrill = ({ kanji, onObtained, onExit, onDone, nextLabel = 'つぎへ', extra, goal, look = 'rock' }: KanjiDrillProps) => {
-  const size = useCanvasSize(300, 0.4, 72);
+  // On a short screen the progress moves up beside the kanji and the page
+  // packs tighter, so the sign still fits without scrolling (an iPhone SE
+  // in its browser leaves about 550px).
+  const compact = useCompactHeight();
+  const size = useCanvasSize(300, compact ? 1 : 0.4, 88, compact ? 300 : 0);
   const slashRef = useRef<{ animateStroke: () => void }>(null);
   const sign = look === 'sign';
   const copy = COPY[look];
@@ -218,11 +221,11 @@ export const KanjiDrill = ({ kanji, onObtained, onExit, onDone, nextLabel = 'つ
       {sign ? <NightStreetBackdrop /> : <PictureBook scene="mukashi_meadow" className="!fixed -z-10" still />}
       <TopBar onBack={onExit} />
 
-      <div className="flex w-full max-w-md flex-1 flex-col gap-3 px-3 pt-3">
+      <div className={`flex w-full max-w-md flex-1 flex-col px-3 ${compact ? 'gap-2 pt-2' : 'gap-3 pt-3'}`}>
         {/* いま書く字 ---------------------------------------------------- */}
         <div className="flex items-end justify-between gap-2">
-          <div className="g-parchment flex flex-1 items-center gap-3 px-4 py-2.5">
-            <span className="text-[44px] leading-[1.5] font-black">
+          <div className={`g-parchment flex min-w-0 flex-1 items-center gap-3 px-4 ${compact ? 'py-1' : 'py-2.5'}`}>
+            <span className={`leading-[1.5] font-black ${compact ? 'text-[36px]' : 'text-[44px]'}`}>
               <KanjiWord kanji={kanji} showFurigana={showFurigana} />
             </span>
             <div className="min-w-0 text-sm leading-relaxed">
@@ -232,12 +235,29 @@ export const KanjiDrill = ({ kanji, onObtained, onExit, onDone, nextLabel = 'つ
               </p>
             </div>
           </div>
-          <NexmaxSays text={copy.nexmax} size={70} />
+          {compact && sign ? (
+            // The street, small, where Nexmax would stand.
+            <div className="g-parchment flex shrink-0 flex-col items-center px-2 py-1">
+              <span className="text-[11px] leading-[1.9] font-black whitespace-nowrap">
+                <span aria-hidden style={{ color: stars ? '#e8a317' : 'rgba(122,82,38,0.35)' }}>
+                  {'★'.repeat(stars) + '☆'.repeat(3 - stars)}
+                </span>{' '}
+                {goal != null && stars < 3 ? <RubyText showFurigana={showFurigana}>{`あと ${repsToNextStar(reps)}`}</RubyText> : null}
+              </span>
+              <SignStreet small street={street} glyph={<KanjiWord kanji={kanji} showFurigana={false} />} label={`${street.size}まいの うち ${street.lit}まい ひかった`} />
+            </div>
+          ) : (
+            // No bubble: the box under the sign already says what to do, and
+            // the kanji's card needs the width for its meaning.
+            <NexmaxSays text="" size={64} />
+          )}
         </div>
 
         {/* 岩（看板）と 書く面 — 木の わく、看板は 真ちゅうの わく ------------- */}
+        {/* Shifted left by half the side buttons' overhang, so the sign and its
+            buttons sit centred together and nothing runs off the screen. */}
         <div
-          className="relative mx-auto flex items-center justify-center rounded-[22px] p-3"
+          className="relative -left-4 mx-auto flex items-center justify-center rounded-[22px] p-3"
           style={
             sign
               ? {
@@ -323,7 +343,7 @@ export const KanjiDrill = ({ kanji, onObtained, onExit, onDone, nextLabel = 'つ
             never change; only a new verdict gives the heading one small pop
             (transform only). */}
         <div
-          className="g-parchment flex h-[68px] flex-col items-center justify-center px-4 text-center"
+          className={`g-parchment flex flex-col items-center justify-center px-4 text-center ${compact ? 'h-[52px]' : 'h-[68px]'}`}
           style={{ borderColor: verdict ? (verdict.kind === 'close' ? 'var(--color-danger)' : 'var(--color-success)') : undefined }}
           aria-live="polite"
         >
@@ -363,7 +383,7 @@ export const KanjiDrill = ({ kanji, onObtained, onExit, onDone, nextLabel = 'つ
           )}
         </div>
 
-        {sign ? (
+        {sign && compact ? null : sign ? (
           // 灯った 看板の 通り — one street per star (lib/signStreet.ts).
           <div className="g-parchment mt-auto px-3 py-2.5">
             <div className="mb-1.5 flex justify-center">
@@ -447,7 +467,8 @@ export const KanjiDrill = ({ kanji, onObtained, onExit, onDone, nextLabel = 'つ
             </div>
           </div>
         )}
-        {extra}
+        {/* Its own way back is the top bar's もどる, which is enough on a short screen. */}
+        {compact ? null : extra}
       </div>
 
       {/* ★2 — a star on the way, without stopping the hand ------------- */}

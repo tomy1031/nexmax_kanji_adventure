@@ -76,7 +76,7 @@ export const LogoTitle = ({ children, sub, size = 34 }: { children: string; sub?
 /** The same poses in the new route's glossy art (data/scripts/naniwaCast.ts). */
 const NANIWA_POSE = { guide: 'guide', cheer: 'smile', hello: 'hello', nexmax: 'normal', book: 'think', build: 'determined' } as const;
 
-/** Nexmax with a speech bubble. The bubble text is furigana notation. */
+/** Nexmax with a speech bubble (none when `text` is empty). The bubble text is furigana notation. */
 export const NexmaxSays = ({
   text,
   pose = 'guide',
@@ -93,14 +93,16 @@ export const NexmaxSays = ({
   const src = naniwa ? `img/chara/naniwa/nexmax_${NANIWA_POSE[pose]}.webp` : `img/chara/cut/${pose}.webp`;
   return (
     <div className={`flex shrink-0 items-end gap-1 ${flip ? 'flex-row-reverse' : ''}`}>
-      <motion.div
-        key={text}
-        initial={{ scale: 0.8, opacity: 0 }}
-        animate={{ scale: 1, opacity: 1 }}
-        className="relative mb-8 w-max max-w-[128px] rounded-2xl border-2 border-[#2f8fe0] bg-white px-3 py-1.5 text-center text-[13px] leading-snug font-black text-[#1b4f8a] shadow-md"
-      >
-        <RubyText showFurigana={showFurigana}>{text}</RubyText>
-      </motion.div>
+      {text && (
+        <motion.div
+          key={text}
+          initial={{ scale: 0.8, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          className="relative mb-8 w-max max-w-[128px] rounded-2xl border-2 border-[#2f8fe0] bg-white px-3 py-1.5 text-center text-[13px] leading-snug font-black text-[#1b4f8a] shadow-md"
+        >
+          <RubyText showFurigana={showFurigana}>{text}</RubyText>
+        </motion.div>
+      )}
       {/* The bob moves the wrapper; the shadowed picture stays still (iPhone). */}
       <motion.div
         style={{ width: size, willChange: 'transform' }}
