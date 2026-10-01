@@ -73,6 +73,9 @@ export const LogoTitle = ({ children, sub, size = 34 }: { children: string; sub?
   );
 };
 
+/** The same poses in the new route's glossy art (data/scripts/naniwaCast.ts). */
+const NANIWA_POSE = { guide: 'guide', cheer: 'smile', hello: 'hello', nexmax: 'normal', book: 'think', build: 'determined' } as const;
+
 /** Nexmax with a speech bubble. The bubble text is furigana notation. */
 export const NexmaxSays = ({
   text,
@@ -86,6 +89,8 @@ export const NexmaxSays = ({
   flip?: boolean;
 }) => {
   const showFurigana = useGameStore((s) => s.settings.furigana);
+  const naniwa = useGameStore((s) => s.lastArc === 'moji');
+  const src = naniwa ? `img/chara/naniwa/nexmax_${NANIWA_POSE[pose]}.webp` : `img/chara/cut/${pose}.webp`;
   return (
     <div className={`flex shrink-0 items-end gap-1 ${flip ? 'flex-row-reverse' : ''}`}>
       <motion.div
@@ -96,14 +101,14 @@ export const NexmaxSays = ({
       >
         <RubyText showFurigana={showFurigana}>{text}</RubyText>
       </motion.div>
-      <motion.img
-        src={assetPath(`img/chara/cut/${pose}.webp`)}
-        alt=""
-        aria-hidden
-        style={{ width: size, filter: 'drop-shadow(0 4px 6px rgba(0,40,90,0.3))', willChange: 'transform' }}
+      {/* The bob moves the wrapper; the shadowed picture stays still (iPhone). */}
+      <motion.div
+        style={{ width: size, willChange: 'transform' }}
         animate={{ y: [0, -4, 0] }}
         transition={{ duration: 2.4, repeat: Infinity, ease: 'easeInOut' }}
-      />
+      >
+        <img src={assetPath(src)} alt="" aria-hidden className="w-full" style={{ filter: 'drop-shadow(0 4px 6px rgba(0,40,90,0.3))' }} />
+      </motion.div>
     </div>
   );
 };

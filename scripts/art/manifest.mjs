@@ -119,6 +119,16 @@ Do NOT draw any road, path, trail, bridge line or route markers — the game dra
 stage stones on top. Leave a clear open strip down the middle third of the width for that road.
 No text, no labels, no people.`,
 
+  // ナニワタウンの ネクマックス: タイトル・ステージせんたくで 渡された つやの ある 絵と 同じ 姿。
+  NEXMAX_PAINTED: `Character: the small robot from the reference image, drawn exactly as there — polished Japanese anime
+game art with soft glossy shading and a clean dark outline. Anatomy (must match the reference): a rounded light
+sky-blue helmet head wider than tall with two round ear pods, a big white face-screen with two large black oval
+eyes with white highlights, small curved eyebrow marks, a small mouth; a sky-blue body with the navy double-peak
+"M" mark on the chest; segmented ball-joint arms with round mitten hands; short legs with rounded boots; a small
+brown leather satchel on a strap across his body. Cute, about 2 heads tall. Kid-friendly and warm.
+The navy chest mark must always be visible and unobstructed — never covered by the arms, the strap or the bag.
+Never: realistic rendering, extra fingers, readable letters, angry or scary face.`,
+
   ICON: `Output: 1024x1024 PNG. App icon for a kids' kanji learning game. Keep all important shapes inside the
 central 80% circle (the edges are cropped into a circle or rounded square on phones). Bold, simple, readable at 48px.
 No text, no letters, no kanji.`,
@@ -406,11 +416,39 @@ const NANIWA = [
 ];
 
 // ---------------------------------------------------------------------------
+// ナニワタウンの ネクマックス — 新ルート（かな編・1章〜）の 立ち絵。むかし編の 平たい 絵（img/chara/cut）は そのまま。
+// ---------------------------------------------------------------------------
+
+const NX_PAINTED = 'art-src/titlesozai/01_ネクマックス_キャラクター.png';
+const nxPainted = (pose, diff, used) => ({
+  id: `nexmax_naniwa_${pose}`,
+  group: 'nexmax_naniwa',
+  prio: 'A',
+  out: `img/chara/naniwa/nexmax_${pose}.webp`,
+  kind: 'chara',
+  bgmode: 'white',
+  refs: [NX_PAINTED],
+  style: ['NEXMAX_PAINTED', 'CHARA_OUT'],
+  diff: `Pose and expression: ${diff}`,
+  used,
+  note: '白い 背景を import.mjs が 切り抜く',
+});
+
+const NEXMAX_NANIWA = [
+  nxPainted('normal', 'standing relaxed and friendly, arms loosely at his sides, a gentle smile, looking at the viewer.', 'ふだん'),
+  nxPainted('smile', 'overjoyed, both arms raised high in a cheer, eyes happily curved, mouth open in a big smile, a little hop.', 'よろこぶ・ほめる'),
+  nxPainted('think', 'worried and puzzled: one mitten hand at his chin, the other arm hugging his body, eyebrows tilted up anxiously, a small wobbly mouth, head slightly tilted.', 'こまる・かなしい・ふしぎ（「たすけて」「……😢」）'),
+  nxPainted('determined', 'determined and ready: leaning forward, both fists clenched in front of his chest (not covering the chest mark), brows set, a confident grin; the chest mark glowing with a warm amber light.', 'いそぐ・がんばる（「かく！」「いそいで！」）'),
+  nxPainted('guide', 'guiding: one arm stretched out pointing up and to the side with his mitten hand, the other hand on his hip, a cheerful encouraging smile, looking toward where he points.', 'あんない（「うえ！👆」「かいて！」）'),
+  nxPainted('hello', 'greeting: waving one hand high above his head, the other hand at his side, a bright friendly smile.', 'あいさつ'),
+];
+
+// ---------------------------------------------------------------------------
 // プロローグ — タイトルの すぐ あと。字が 生きる 国・灯る 町・字を 食べる 影・投げられる ネクマックス
 // （data/scripts/prologue.ts の visual ごとに 1枚）。ナニワタウンの 絵と 同じ 画風。
 // ---------------------------------------------------------------------------
 
-const NX_PAINTED = 'art-src/titlesozai/01_ネクマックス_キャラクター.png';
+
 const MOJIKUI_REF = 'art-src/battle/04_敵_モジクイ.png';
 const prologue = (id, desc, refs) => ({
   ...naniwa(id, desc, `プロローグ（PrologueScreen.tsx の ${id.replace('prologue_', '')}）`),
@@ -481,7 +519,7 @@ a few tiny warm sparkles. High contrast: the sky-blue robot pops against the ind
   },
 ];
 
-export const ASSETS = [...NEXMAX, ...GENDAI, ...MUKASHI_FOLK, ...ENEMIES, ...CREATURES, ...BG, ...NANIWA, ...PROLOGUE_ART, ...PROLOGUE_EATEN, ...MAPS, ...ICONS];
+export const ASSETS = [...NEXMAX, ...GENDAI, ...MUKASHI_FOLK, ...ENEMIES, ...CREATURES, ...BG, ...NANIWA, ...NEXMAX_NANIWA, ...PROLOGUE_ART, ...PROLOGUE_EATEN, ...MAPS, ...ICONS];
 
 export const GROUPS = {
   nexmax: 'ネクマックス（表情・ポーズ）',
@@ -492,6 +530,7 @@ export const GROUPS = {
   bg_gendai: '背景 — 現代編',
   bg_naniwa: '背景 — 0章「はじまりの 空港」（ナニワタウン）',
   bg_prologue: 'プロローグの 1枚絵',
+  nexmax_naniwa: 'ナニワタウンの ネクマックス（新ルートの 立ち絵）',
   map: 'ステージ選択の 地図',
   icon: 'アプリの アイコン',
 };
