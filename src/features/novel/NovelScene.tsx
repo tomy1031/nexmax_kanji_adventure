@@ -213,23 +213,31 @@ export const NovelScene = ({ script, cast, onFinish, chapter, renderText, speech
             transition={{ duration: 0.35 }}
             // Anchored above the dialogue box so the character is never cut
             // off by it.
-            className="pointer-events-none absolute bottom-[33dvh] left-1/2 z-10 h-[34dvh] -translate-x-1/2"
+            className="pointer-events-none absolute bottom-[27dvh] left-1/2 z-10 h-[38dvh] -translate-x-1/2"
           >
-            <motion.img
-              src={assetPath(spriteSrc)}
-              alt=""
-              aria-hidden
-              className="h-full w-auto object-contain"
-              // A paper cut-out: white rim, soft shadow — the same finish as
-              // the scene, without redrawing the character.
-              style={{
-                filter: spriteMember?.silhouette
-                  ? 'brightness(0.08) drop-shadow(0 0 14px rgba(130,70,210,0.85))'
-                  : 'drop-shadow(2px 0 0 #fffaf0) drop-shadow(-2px 0 0 #fffaf0) drop-shadow(0 2px 0 #fffaf0) drop-shadow(0 -2px 0 #fffaf0) drop-shadow(0 8px 10px rgba(40,25,5,0.35))',
-              }}
+            {/* The breathing moves this wrapper; the filtered picture inside
+                stays still, so the phone draws its outline once instead of
+                every frame. */}
+            <motion.div
+              className="h-full"
+              style={{ willChange: 'transform' }}
               animate={{ y: [0, -5, 0] }}
               transition={{ duration: 2.6, repeat: Infinity, ease: 'easeInOut' }}
-            />
+            >
+              <img
+                src={assetPath(spriteSrc)}
+                alt=""
+                aria-hidden
+                className="h-full w-auto object-contain"
+                // A paper cut-out: white rim, soft shadow — the same finish as
+                // the scene, without redrawing the character.
+                style={{
+                  filter: spriteMember?.silhouette
+                    ? 'brightness(0.08) drop-shadow(0 0 14px rgba(130,70,210,0.85))'
+                    : 'drop-shadow(2px 0 0 #fffaf0) drop-shadow(-2px 0 0 #fffaf0) drop-shadow(0 2px 0 #fffaf0) drop-shadow(0 -2px 0 #fffaf0) drop-shadow(0 8px 10px rgba(40,25,5,0.35))',
+                }}
+              />
+            </motion.div>
           </motion.div>
         )}
       </AnimatePresence>
@@ -291,7 +299,7 @@ export const NovelScene = ({ script, cast, onFinish, chapter, renderText, speech
             initial={{ opacity: 0.6, y: 4 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.22 }}
-            className="g-novel-box min-h-[29dvh] px-5 pt-5 pb-3"
+            className="g-novel-box min-h-[23dvh] px-5 pt-5 pb-3"
             onClick={advance}
           >
             <p className="text-[16px] leading-[2.15] font-bold whitespace-pre-line">

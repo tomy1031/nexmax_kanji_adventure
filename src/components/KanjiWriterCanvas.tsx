@@ -161,6 +161,10 @@ const KanjiWriterCanvas = forwardRef<KanjiWriterHandle, KanjiWriterCanvasProps>(
         container.appendChild(el);
       };
 
+      // The data loads asynchronously: if this effect is torn down first (the
+      // character changed, or React mounted it twice), the late load must not
+      // draw a second writer into the box.
+      let cancelled = false;
       const init = async () => {
         try {
           target.innerHTML = `
@@ -171,6 +175,7 @@ const KanjiWriterCanvas = forwardRef<KanjiWriterHandle, KanjiWriterCanvasProps>(
             <style>@keyframes kw-spin{to{transform:rotate(360deg)}}</style>`;
 
           const data = await loadCharData(char);
+          if (cancelled) return;
           target.innerHTML = '';
           if (!data) {
             showFallback(target);
@@ -201,6 +206,7 @@ const KanjiWriterCanvas = forwardRef<KanjiWriterHandle, KanjiWriterCanvasProps>(
 
           if (quizMode) startQuiz();
         } catch (error) {
+          if (cancelled) return;
           console.error('Failed to initialize HanziWriter:', error);
           showFallback(target);
         }
@@ -209,6 +215,7 @@ const KanjiWriterCanvas = forwardRef<KanjiWriterHandle, KanjiWriterCanvasProps>(
       init();
 
       return () => {
+        cancelled = true;
         writerRef.current?.cancelQuiz();
         isQuizActiveRef.current = false;
         target.innerHTML = '';
@@ -227,9 +234,11 @@ const KanjiWriterCanvas = forwardRef<KanjiWriterHandle, KanjiWriterCanvasProps>(
         return;
       }
 
+      let cancelled = false;
       (async () => {
         const data = await loadCharData(char);
-        if (!data) return;
+        if (!data || cancelled) return;
+        sampleTarget.innerHTML = '';
         sampleWriterRef.current = HanziWriter.create(sampleTarget, char, {
           width: size,
           height: size,
@@ -251,6 +260,7 @@ const KanjiWriterCanvas = forwardRef<KanjiWriterHandle, KanjiWriterCanvasProps>(
       })();
 
       return () => {
+        cancelled = true;
         sampleTarget.innerHTML = '';
       };
     }, [char, size, showSample, rock, neon, ink]);

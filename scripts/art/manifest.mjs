@@ -441,11 +441,17 @@ const ICONS = [
     out: 'icon-512x512.png',
     kind: 'icon',
     bgmode: 'none',
-    refs: NX_REFS,
-    style: ['NEXMAX', 'ICON'],
-    diff: 'Content: NexMax\'s head and shoulders, big and centered, cheerful smile, a short wooden sword raised beside him, on a round sky-blue background with a soft white glow and a thin golden ring. (Override: the background is NOT white here — it is the sky-blue disc filling the square.)',
-    used: 'ホーム画面の アイコン（PWA）。vite.config.ts が icon-192x192.png と icon-512x512.png を 指して いるが、いま ファイルが 無い',
-    note: 'import.mjs が 512 と 192 の 2つを 書き出す',
+    refs: ['art-src/titlesozai/01_ネクマックス_キャラクター.png'],
+    style: ['ICON'],
+    diff: `Content: the robot from the reference image — exactly his look: glossy rounded light sky-blue helmet head
+with ear pods, a big white face-screen with two black oval eyes and a small happy open smile, the navy double-peak
+"M" mark on the chest — shown from the chest up, big and centered, cheerful, one mitten hand raised in a little wave.
+Style: polished Japanese anime game art like the reference, soft glossy shading, clean dark outline so he reads at 48px.
+Background: fills the whole square edge to edge — a deep indigo-violet night (#1b1f4a to #2c2a6b) with a large warm
+amber-orange glowing round lantern light behind his head like a halo, a thin brass gear ring around that glow,
+a few tiny warm sparkles. High contrast: the sky-blue robot pops against the indigo and amber.`,
+    used: 'ホーム画面の アイコン（PWA）・favicon・apple-touch-icon。vite.config.ts と index.html が 指す',
+    note: 'import.mjs が 512・192・180（apple-touch-icon）・48（favicon）を 書き出す',
   },
 ];
 
