@@ -628,7 +628,13 @@ const meadow: SceneDef = {
 const photoScene = (photo: string): SceneDef => ({
   photo,
   layers: [],
-  fx: { sparkle: village.fx.sparkle, darkclouds: mountain.fx.darkclouds, heal: wildpath.fx.heal },
+  fx: {
+    sparkle: village.fx.sparkle,
+    darkclouds: mountain.fx.darkclouds,
+    heal: wildpath.fx.heal,
+    // Falling petals only — the paper cherry trees of 現代編's street would sit oddly on a painting.
+    spring: GENDAI_SCENES.gendai_city.fx.spring.slice(1),
+  },
 });
 
 export const PHOTO_SCENES: Record<string, SceneDef> = {
@@ -640,6 +646,11 @@ export const PHOTO_SCENES: Record<string, SceneDef> = {
   naniwa_runway_night: photoScene('img/naniwa/naniwa_runway_night.webp'),
   naniwa_station: photoScene('img/naniwa/naniwa_station.webp'),
   naniwa_train: photoScene('img/naniwa/naniwa_train.webp'),
+  // 1章: ナニワタウン
+  naniwa_town: photoScene('img/title/bg.webp'),
+  naniwa_town_station: photoScene('img/naniwa/naniwa_town_station.webp'),
+  naniwa_station_square: photoScene('img/naniwa/naniwa_station_square.webp'),
+  naniwa_kanjiyasan: photoScene('img/kanjiyasan/bg_tall.webp'),
 };
 
 export const SCENES: Record<string, SceneDef> = {

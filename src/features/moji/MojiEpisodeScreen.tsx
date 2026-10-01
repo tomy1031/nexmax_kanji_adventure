@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { Navigate, useNavigate, useParams } from 'react-router-dom';
+import { Navigate, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import NovelScene from '../novel/NovelScene';
 import KanjiDrill from '../write/KanjiDrill';
@@ -15,16 +15,26 @@ import { basePatience } from '../../lib/battle';
 import { MOJI_OWN_REPS, repsToNextStar, starsOf } from '../../lib/mastery';
 import { useGameStore } from '../../store/gameStore';
 import type { KanjiData } from '../../types/kanji';
-import { episodesOf, getMojiEpisode, type MojiEpisode } from '../../data/mojiEpisodes';
+import { getMojiEpisode, type MojiEpisode } from '../../data/mojiEpisodes';
 import { MOJI_CHAPTERS } from '../../data/mojiRoute';
-import { MOJI1_CAST, MOJI1_SCRIPTS } from '../../data/scripts/moji1';
+import { MOJI1_CAST, MOJI1_PRELUDE, MOJI1_SCRIPTS } from '../../data/scripts/moji1';
+import { afterEpisode, canForge, isForgeOpen } from '../../data/mojiFlow';
+import { assetPath } from '../../lib/assetPath';
+import { PhaseDoors } from '../../components/ui/Doors';
 import KanjiBackText from './KanjiBackText';
+import ToBeContinued from './ToBeContinued';
 import { useOwnedKanji } from './useOwnedKanji';
 
 /**
- * 文字が 消えた 町 — one episode (08 §4.2.1, §4.2.2):
+ * 文字が 消えた 町 — one episode (08 §4.2.1, §4.2.2, §3.8):
  *
- *   お話 → write each kanji three times (★1) → じゅんび → たたかい → お話
+ *   (出会いの お話) → お話 → write each kanji three times (★1) → 出会い →
+ *   じゅんび → たたかい → お話 → the next episode on the map, or つづく
+ *
+ * 出会い (encounter): the letters just lit draw the opponent in, so the fight
+ * is with someone the story has introduced (2026-10-02「いきなり 敵が 出てくる
+ * のは 意味不明」). The parts change behind the doors (PhaseDoors).
+ * `?at=ready` opens on じゅんび — the way back from 漢字やさん.
  *
  * じゅんび is where writing more pays: each kanji shows its stars and what
  * the next one needs, and a tap goes back to writing it. The fight is
@@ -36,7 +46,7 @@ import { useOwnedKanji } from './useOwnedKanji';
  * (KanjiBackText).
  */
 
-type Phase = 'intro' | 'write' | 'ready' | 'practice' | 'battle' | 'outro';
+type Phase = 'prelude' | 'intro' | 'write' | 'encounter' | 'ready' | 'practice' | 'battle' | 'outro' | 'end';
 
 const SCRIPTS = MOJI1_SCRIPTS;
 const CAST = MOJI1_CAST;
@@ -61,12 +71,15 @@ const ReadyScreen = ({
   onPractice,
   onFight,
   onExit,
+  onForge,
 }: {
   ep: MojiEpisode;
   kanji: KanjiData[];
   onPractice: (k: KanjiData) => void;
   onFight: () => void;
   onExit: () => void;
+  /** 漢字やさん, offered only when it is open and something can be made. */
+  onForge?: () => void;
 }) => {
   const showFurigana = useGameStore((s) => s.settings.furigana);
   const progress = useGameStore((s) => s.progress);
@@ -81,8 +94,12 @@ const ReadyScreen = ({
       <div className="flex w-full max-w-md flex-1 flex-col gap-3 px-3 pt-3">
         {/* The opponent, so the writing has a reason. */}
         <div className="g-parchment flex items-center gap-3 px-3 py-2">
-          <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-xl bg-[#2a1840] text-[#c9a4ff]">
-            <GameIcon name={ep.boss.icon} size={38} fallback="☠" />
+          <span className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-[#2a1840] text-[#c9a4ff]">
+            {ep.boss.img ? (
+              <img src={assetPath(ep.boss.img)} alt="" aria-hidden className="h-full w-full object-contain" />
+            ) : (
+              <GameIcon name={ep.boss.icon} size={38} fallback="☠" />
+            )}
           </span>
           <div className="min-w-0 flex-1">
             <p className="text-xs font-black" style={{ color: 'var(--color-danger)' }}>
@@ -146,6 +163,12 @@ const ReadyScreen = ({
           <RubyText showFurigana={showFurigana}>{`★ ${total} / ${kanji.length * 3} ・ 字(じ)を タップすると もっと 書(か)ける`}</RubyText>
         </p>
 
+        {onForge && (
+          <button type="button" className="g-btn g-btn-accent w-full" onClick={onForge}>
+            🔨 <RubyText showFurigana={showFurigana}>漢字(かんじ)やさんで 武器(ぶき)を 作(つく)る（★3が 2つ ある）</RubyText>
+          </button>
+        )}
+
         <motion.button
           type="button"
           className="g-btn g-btn-red mt-auto w-full text-xl"
@@ -164,18 +187,28 @@ const ReadyScreen = ({
 
 const EpisodePlayer = ({ id }: { id: string }) => {
   const navigate = useNavigate();
+  const [params] = useSearchParams();
   const ep = getMojiEpisode(id)!;
   const lines = SCRIPTS[id];
   const chapter = MOJI_CHAPTERS.find((c) => c.id === ep.chapter)!;
   const owned = useOwnedKanji();
   const showFurigana = useGameStore((s) => s.settings.furigana);
+  const progress = useGameStore((s) => s.progress);
+  const cleared = useGameStore((s) => s.clearedStages);
   const [kanji] = useState(() => ep.kanji.map((c) => getKanjiByChar(c)!));
   // The kanji still short of ★1, fixed on arrival.
   const [queue] = useState(() => {
     const progress = useGameStore.getState().progress;
     return kanji.filter((k) => (progress[k.id]?.reps ?? 0) < MOJI_OWN_REPS);
   });
-  const [phase, setPhase] = useState<Phase>('intro');
+  // Where the episode opens: じゅんび when coming back to it (漢字やさん,
+  // つづく), the meeting with Nexmax for a player who skipped 0章 and has not
+  // played this episode yet, otherwise the story.
+  const [phase, setPhase] = useState<Phase>(() => {
+    if (params.get('at') === 'ready') return 'ready';
+    const saw = useGameStore.getState().clearedStages;
+    return ep.id === 'moji-1-1' && !saw.includes('kana-10') && !saw.includes(ep.id) ? 'prelude' : 'intro';
+  });
   const [idx, setIdx] = useState(0);
   const [practice, setPractice] = useState<KanjiData | null>(null);
   const [battleKey, setBattleKey] = useState(0);
@@ -188,92 +221,114 @@ const EpisodePlayer = ({ id }: { id: string }) => {
   const label = { label: `${chapter.order}章(しょう) ${ep.order}`, title: ep.title };
   const leave = () => navigate('/map/moji');
   const toReady = () => setPhase('ready');
+  const forgeHere = `/forge?back=${encodeURIComponent(`/moji/${ep.id}?at=ready`)}`;
 
   // The win records the clear (BattleScene); the story's end moves on.
   const finish = () => {
-    const next = episodesOf(ep.chapter).find((e) => e.order === ep.order + 1);
-    navigate(next ? `/map/moji?new=${next.id}` : '/map/moji');
+    const next = afterEpisode(ep.id);
+    if (next) navigate(`/map/moji?new=${next}`);
+    else setPhase('end');
   };
 
-  switch (phase) {
-    case 'intro':
-      return (
-        <NovelScene
-          key="intro"
-          script={lines.intro}
-          cast={CAST}
-          chapter={label}
-          renderText={renderText}
-          onFinish={() => setPhase(queue.length ? 'write' : 'ready')}
-        />
-      );
-    case 'write': {
-      const k = queue[idx];
-      const nextKanji = () => (idx + 1 < queue.length ? setIdx(idx + 1) : toReady());
-      return (
-        <KanjiDrill
-          key={k.id}
-          kanji={k}
-          goal={MOJI_OWN_REPS}
-          look="sign"
-          onExit={leave}
-          onDone={nextKanji}
-          nextLabel={idx + 1 < queue.length ? `つぎの 字(じ)（${idx + 2}/${queue.length}）` : 'じゅんびへ'}
-        />
-      );
+  const view = (() => {
+    switch (phase) {
+      case 'prelude':
+        return <NovelScene key="prelude" script={MOJI1_PRELUDE} cast={CAST} chapter={label} renderText={renderText} onFinish={() => setPhase('intro')} />;
+      case 'intro':
+        return (
+          <NovelScene
+            key="intro"
+            script={lines.intro}
+            cast={CAST}
+            chapter={label}
+            renderText={renderText}
+            onFinish={() => setPhase(queue.length ? 'write' : 'encounter')}
+          />
+        );
+      case 'write': {
+        const k = queue[idx];
+        const nextKanji = () => (idx + 1 < queue.length ? setIdx(idx + 1) : setPhase('encounter'));
+        return (
+          <KanjiDrill
+            key={k.id}
+            kanji={k}
+            goal={MOJI_OWN_REPS}
+            look="sign"
+            onExit={leave}
+            onDone={nextKanji}
+            nextLabel={idx + 1 < queue.length ? `つぎの 字(じ)（${idx + 2}/${queue.length}）` : 'つぎへ'}
+          />
+        );
+      }
+      case 'encounter':
+        return <NovelScene key="encounter" script={lines.encounter} cast={CAST} chapter={label} renderText={renderText} onFinish={toReady} />;
+      case 'ready':
+        return (
+          <ReadyScreen
+            ep={ep}
+            kanji={kanji}
+            onExit={leave}
+            onFight={() => {
+              setBattleKey((n) => n + 1);
+              setPhase('battle');
+            }}
+            onPractice={(k) => {
+              setPractice(k);
+              setPhase('practice');
+            }}
+            onForge={isForgeOpen(cleared) && canForge(progress) ? () => navigate(forgeHere) : undefined}
+          />
+        );
+      case 'practice':
+        return (
+          <KanjiDrill
+            key={practice!.id}
+            kanji={practice!}
+            goal={MOJI_OWN_REPS}
+            look="sign"
+            onExit={toReady}
+            onDone={toReady}
+            nextLabel="じゅんびに もどる"
+            extra={
+              <button type="button" className="g-btn g-btn-accent w-full" onClick={toReady}>
+                <RubyText showFurigana={showFurigana}>じゅんびに もどる</RubyText>
+              </button>
+            }
+          />
+        );
+      case 'battle':
+        return (
+          <BattleScene
+            key={battleKey}
+            stage={{ id: ep.id, bg: ep.bg, boss: ep.boss, reward: EPISODE_REWARD }}
+            kanjiPool={kanji}
+            patience={basePatience(ep.order)}
+            mastery
+            onFinish={leave}
+            onFlee={toReady}
+            onNext={() => setPhase('outro')}
+            onRetry={() => setBattleKey((n) => n + 1)}
+            onPractice={toReady}
+            onForge={() => navigate(forgeHere)}
+          />
+        );
+      case 'outro':
+        return <NovelScene key="outro" script={lines.outro} cast={CAST} chapter={label} renderText={renderText} onFinish={finish} />;
+      case 'end':
+        return (
+          <ToBeContinued
+            scene={ep.bg}
+            onPractice={(target) => (target === ep.id ? toReady() : navigate(`/moji/${target}?at=ready`))}
+            onForge={() => navigate(`/forge?back=${encodeURIComponent('/map/moji')}`)}
+            onStages={leave}
+          />
+        );
     }
-    case 'ready':
-      return (
-        <ReadyScreen
-          ep={ep}
-          kanji={kanji}
-          onExit={leave}
-          onFight={() => {
-            setBattleKey((n) => n + 1);
-            setPhase('battle');
-          }}
-          onPractice={(k) => {
-            setPractice(k);
-            setPhase('practice');
-          }}
-        />
-      );
-    case 'practice':
-      return (
-        <KanjiDrill
-          key={practice!.id}
-          kanji={practice!}
-          goal={MOJI_OWN_REPS}
-          look="sign"
-          onExit={toReady}
-          onDone={toReady}
-          nextLabel="じゅんびに もどる"
-          extra={
-            <button type="button" className="g-btn g-btn-accent w-full" onClick={toReady}>
-              <RubyText showFurigana={showFurigana}>じゅんびに もどる</RubyText>
-            </button>
-          }
-        />
-      );
-    case 'battle':
-      return (
-        <BattleScene
-          key={battleKey}
-          stage={{ id: ep.id, bg: ep.bg, boss: ep.boss, reward: EPISODE_REWARD }}
-          kanjiPool={kanji}
-          patience={basePatience(ep.order)}
-          mastery
-          onFinish={leave}
-          onFlee={toReady}
-          onNext={() => setPhase('outro')}
-          onRetry={() => setBattleKey((n) => n + 1)}
-          onPractice={toReady}
-          onForge={() => navigate('/forge')}
-        />
-      );
-    case 'outro':
-      return <NovelScene key="outro" script={lines.outro} cast={CAST} chapter={label} renderText={renderText} onFinish={finish} />;
-  }
+  })();
+
+  // じゅんび ⇄ れんしゅう and the story's parts change behind the doors; one
+  // kanji to the next (same part) does not.
+  return <PhaseDoors phase={phase}>{view}</PhaseDoors>;
 };
 
 export const MojiEpisodeScreen = () => {

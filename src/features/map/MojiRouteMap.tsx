@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useState, type CSSProperties, type ReactNode } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
-import { GiPadlock } from 'react-icons/gi';
 import { RubyText } from '../../components/ui/Ruby';
 import { useGameStore } from '../../store/gameStore';
 import { MOJI_CHAPTERS, isChapterReady } from '../../data/mojiRoute';
@@ -15,7 +14,9 @@ import { getKanjiByChar } from '../../lib/kanjiDb';
 import { kanjiRuby } from '../../lib/reading';
 import { MASTERY_REPS, starsOf } from '../../lib/mastery';
 import { assetPath } from '../../lib/assetPath';
-import { Feature, isFeatureUnlocked } from '../../data/unlocks';
+import { getKanaEpisode } from '../../data/kana';
+import { getMojiEpisode } from '../../data/mojiEpisodes';
+import { nextUp } from '../../data/mojiFlow';
 
 /**
  * ステージせんたく — 文字が 消えた 町の 入口 (08 §3.7).
@@ -220,20 +221,18 @@ export const MojiRouteMap = () => {
     [cleared, owned],
   );
 
-  /** Where the player is headed next: the card that gets the glow. */
-  const nextGroup: GroupId = useMemo(() => {
-    const mojiStarted = MOJI_EPISODES.some((e) => cleared.includes(e.id));
-    const kanaDone = KANA_EPISODES.every((e) => cleared.includes(e.id));
-    if (mojiStarted || kanaDone) return 'n5';
-    const nextKana = KANA_EPISODES.find((e) => !cleared.includes(e.id));
-    return nextKana?.script === 'katakana' ? 'katakana' : 'hiragana';
-  }, [cleared]);
+  /** つづき: the episode to play next (data/mojiFlow.ts), and its card, which gets the glow. */
+  const startPath = useGameStore((s) => s.startPath);
+  const next = nextUp(cleared, startPath);
+  const nextGroup: GroupId = next ? (groupOf(next) ?? 'n5') : 'n5';
+  const nextKana = next ? getKanaEpisode(next) : undefined;
+  const nextMoji = next ? getMojiEpisode(next) : undefined;
+  const playNext = () => (next ? navigate(next.startsWith('kana-') ? `/kana/${next}` : `/moji/${next}`) : setSheet('n5'));
 
-  const wordsOpen = isFeatureUnlocked(Feature.WORDS, cleared);
-  const MENU: { label: string; cx: number; w: number; onClick: () => void; lockedNote?: string }[] = [
+  const MENU: { label: string; cx: number; w: number; onClick: () => void }[] = [
     { label: 'ステージせんたく', cx: 14.2, w: 22, onClick: () => setSheet(null) },
     { label: 'もちもの', cx: 33.6, w: 16, onClick: () => navigate('/equip') },
-    { label: 'ずかん', cx: 50, w: 16, onClick: () => (wordsOpen ? navigate('/words') : setLocked('ずかんは まだ ひらいて いません')), lockedNote: wordsOpen ? undefined : 'locked' },
+    { label: 'ずかん', cx: 50, w: 16, onClick: () => navigate('/zukan') },
     { label: 'せいせき', cx: 68.4, w: 16, onClick: () => setRecord(true) },
     { label: 'せってい', cx: 86.4, w: 16, onClick: () => navigate('/settings') },
   ];
@@ -287,6 +286,44 @@ export const MojiRouteMap = () => {
             animate={still ? undefined : { y: ['0%', '-1.5%', '0%'] }}
             transition={{ duration: 1.4, repeat: Infinity, ease: 'easeInOut' }}
           />
+          {/* つづき — Nexmax says where we go next; a tap plays it (08 §3.8) */}
+          {!sheet && (
+            <motion.button
+              type="button"
+              data-tap
+              onClick={playNext}
+              whileTap={{ scale: 0.96 }}
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.5 }}
+              className="absolute flex items-center gap-[1.6cqw] rounded-[2cqw] border-[0.4cqw] border-[#d4a04a] bg-[#fffaf0]/95 text-left text-[#2a1a0c]"
+              style={{ ...fromTop(500, 548, 400), padding: `${cq(12)} ${cq(18)}`, boxShadow: '0 1cqw 3cqw rgba(0,0,0,0.45)' }}
+            >
+              <span aria-hidden className="absolute top-[38%] -left-[3.4%] h-0 w-0 border-y-[1.6cqw] border-r-[2.4cqw] border-y-transparent border-r-[#d4a04a]" />
+              <span className="min-w-0 flex-1 leading-[1.6]">
+                <span className="block font-black" style={{ fontSize: cq(20), color: '#b0741a' }}>
+                  <RubyText showFurigana={showFurigana}>{next ? 'つぎの 話(はなし)' : 'つづきは じゅんび中(ちゅう)'}</RubyText>
+                </span>
+                <span className="block truncate font-black" style={{ fontSize: cq(28) }}>
+                  {nextKana ? (
+                    <>
+                      {`かな ${nextKana.order} `}
+                      <KanaText known={known} mode="mask">
+                        {nextKana.title}
+                      </KanaText>
+                    </>
+                  ) : nextMoji ? (
+                    <KanjiBackText owned={owned}>{`${MOJI_CHAPTERS.find((c) => c.id === nextMoji.chapter)?.order ?? 1}章(しょう) ${nextMoji.order}話(わ) ${nextMoji.title}`}</KanjiBackText>
+                  ) : (
+                    <RubyText showFurigana={showFurigana}>★を ふやそう</RubyText>
+                  )}
+                </span>
+              </span>
+              <span aria-hidden className="shrink-0 font-black text-[#e2453c]" style={{ fontSize: cq(34) }}>
+                ▶
+              </span>
+            </motion.button>
+          )}
         </div>
 
         {/* 下: 地図・カード・メニュー --------------------------------------------- */}
@@ -339,11 +376,6 @@ export const MojiRouteMap = () => {
                 className="absolute top-0 h-full -translate-x-1/2"
                 style={{ left: `${m.cx}%`, width: `${m.w}%` }}
               >
-                {m.lockedNote && (
-                  <span className="absolute top-[14%] right-[18%] flex items-center justify-center rounded-full border border-[#d4a04a] bg-[#140c06] p-[0.6cqw] text-[#f2c45a]">
-                    <GiPadlock aria-hidden style={{ width: cq(20), height: cq(20) }} />
-                  </span>
-                )}
               </button>
             ))}
           </div>

@@ -14,8 +14,10 @@ import { statsFromGear } from '../../lib/battle';
 import { charRuby } from '../../lib/reading';
 import { REPS_TO_OBTAIN } from '../../types/kanji';
 import { Feature, isFeatureUnlocked } from '../../data/unlocks';
+import { isForgeOpen, mastersOf } from '../../data/mojiFlow';
 import * as sfx from '../../lib/sfx';
 import PictureBook from '../picturebook/PictureBook';
+import { NightStreetBackdrop } from '../write/NightStreet';
 
 /**
  * そうび (public/img/design/ネクマックスのそうび画面.png).
@@ -25,6 +27,11 @@ import PictureBook from '../picturebook/PictureBook';
  * not made yet shows the characters it is made of: gold for the ones owned,
  * dashed for the ones still to learn. That list is the game's promise in one
  * picture: learn a character, wear something new.
+ *
+ * On 文字が 消えた 町 (lastArc moji, 08 §3.8) it is もちもの: the night town,
+ * Nexmax with his travel pack, no むかし編 wording, every item's characters
+ * shown (no "N話まで すすむと わかる"), and the way to 漢字やさん once the
+ * story has opened it. Its menu is the map's own, so no old tab bar.
  */
 
 type Slot = 'weapon' | GearSlot;
@@ -47,6 +54,9 @@ export const EquipScreen = () => {
   const equipGear = useGameStore((s) => s.equipGear);
   const progress = useGameStore((s) => s.progress);
   const cleared = useGameStore((s) => s.clearedStages);
+  const moji = useGameStore((s) => s.lastArc) === 'moji';
+  const forgeOpen = isForgeOpen(cleared);
+  const masters = mastersOf(progress);
 
   const [slot, setSlot] = useState<Slot>('weapon');
   const [showAll, setShowAll] = useState(false);
@@ -76,7 +86,7 @@ export const EquipScreen = () => {
 
   // A stage's gear is shown once the learner has reached that stage.
   const reached = new Set(['mukashi-1', ...cleared, ...cleared.map((id) => id.replace(/\d+$/, (n) => String(Number(n) + 1)))]);
-  const inView = (g: GearItem) => reached.has(g.stage);
+  const inView = (g: GearItem) => moji || reached.has(g.stage);
 
   const slotItem = (s: Slot) => (s === 'weapon' ? (weapon ? { name: weapon.name, icon: weapon.icon } : null) : getGear(equippedGear[s]));
 
@@ -88,21 +98,23 @@ export const EquipScreen = () => {
   };
 
   return (
-    <div className="isolate relative min-h-dvh pb-28">
-      <PictureBook scene="mukashi_meadow" className="!fixed -z-10" />
+    <div className={`isolate relative min-h-dvh ${moji ? 'pb-8' : 'pb-28'}`}>
+      {moji ? <NightStreetBackdrop /> : <PictureBook scene="mukashi_meadow" className="!fixed -z-10" />}
       <div className="relative z-10">
         <TopBar />
         <div className="mx-auto max-w-md px-3 pt-1">
-          <LogoTitle size={30} sub="字(じ)の 力(ちから)で もっと つよく">そうび</LogoTitle>
+          <LogoTitle size={30} sub="字(じ)の 力(ちから)で もっと つよく">
+            {moji ? 'もちもの' : 'そうび'}
+          </LogoTitle>
 
           {/* ネクマックスと 4つの わく ----------------------------------- */}
           <div className="relative mx-auto mt-2 h-[230px] w-full max-w-sm">
             <motion.img
-              src={assetPath('img/chara/cut/guide.webp')}
+              src={assetPath(moji ? 'img/stageselect/nexmax_travel.webp' : 'img/chara/cut/guide.webp')}
               alt=""
               aria-hidden
               className="absolute bottom-3 left-1/2 h-[190px] -translate-x-1/2"
-              style={{ filter: 'drop-shadow(3px 0 0 #fff) drop-shadow(-3px 0 0 #fff) drop-shadow(0 8px 10px rgba(0,0,0,0.3))' }}
+              style={moji ? undefined : { filter: 'drop-shadow(3px 0 0 #fff) drop-shadow(-3px 0 0 #fff) drop-shadow(0 8px 10px rgba(0,0,0,0.3))' }}
               animate={{ y: [0, -5, 0] }}
               transition={{ duration: 2.6, repeat: Infinity }}
             />
@@ -150,7 +162,7 @@ export const EquipScreen = () => {
             <p className="g-wood px-3 py-0.5 text-sm font-black">
               <RubyText showFurigana={showFurigana}>{SLOT_LABEL[slot]}</RubyText>
             </p>
-            {slot !== 'weapon' && (
+            {slot !== 'weapon' && !moji && (
               <button
                 type="button"
                 className="ml-auto rounded-full border-2 border-white bg-[#23456e]/80 px-3 py-0.5 text-xs font-black text-white"
@@ -166,6 +178,11 @@ export const EquipScreen = () => {
               (forged.length === 0 ? (
                 <li className="g-parchment p-3 text-sm">
                   <RubyText showFurigana={showFurigana}>まだ 武器(ぶき)が ありません。</RubyText>
+                  {moji && !forgeOpen && (
+                    <span className="mt-1 block text-xs" style={{ color: 'var(--ink-2)' }}>
+                      <RubyText showFurigana={showFurigana}>武器(ぶき)は 漢字(かんじ)やさんで 作(つく)ります。1章(しょう) 2話(わ)の あとで 行(い)けます。</RubyText>
+                    </span>
+                  )}
                 </li>
               ) : (
                 forged.map((w) => {
@@ -270,6 +287,12 @@ export const EquipScreen = () => {
                 })}
           </ul>
 
+          {slot === 'weapon' && forgeOpen && (
+            <button type="button" className="g-btn g-btn-primary mt-3 w-full" onClick={() => navigate(`/forge?back=${encodeURIComponent('/equip')}`)}>
+              🔨 <RubyText showFurigana={showFurigana}>{`漢字(かんじ)やさんで 作(つく)る（★3の 字(じ) ${masters}）`}</RubyText>
+            </button>
+          )}
+
           {isFeatureUnlocked(Feature.COLLECTION, cleared) && (
             <button type="button" className="g-btn g-btn-slate mt-4 w-full" onClick={() => navigate('/collection')}>
               <RubyText showFurigana={showFurigana}>図鑑(ずかん)（なかま）を 見(み)る</RubyText>
@@ -277,7 +300,7 @@ export const EquipScreen = () => {
           )}
         </div>
       </div>
-      <BottomTabs current="items" />
+      {!moji && <BottomTabs current="items" />}
     </div>
   );
 };

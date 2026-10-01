@@ -517,6 +517,7 @@ export const BattleScene = ({
                 navigate(FEATURE_INTRO[f].to);
               }}
               onTutorialDone={onFinish}
+              route={mastery ? 'moji' : undefined}
             />
           )}
         </AnimatePresence>
@@ -530,6 +531,7 @@ export const BattleScene = ({
         <BattleIntro bossName={stage.boss.name} showFurigana={showFurigana} />
         <NaniwaBattleView
           bossName={stage.boss.name}
+          bossImg={stage.boss.img}
           bossHp={bossHp}
           bossMaxHp={stage.boss.hp}
           playerHp={playerHp}

@@ -99,6 +99,14 @@ rivets, wood and leather details, glass-paned lanterns. Palette: deep indigo-vio
 against warm amber and orange lamplight. Every signboard, screen, board and tag is BLANK — an empty dark
 panel or frame — with no letters, numbers, symbols or logos anywhere. No real place names, no brands.`,
 
+  // The town's creatures, drawn like the delivered Mojikui (art-src/battle/04_敵_モジクイ.png).
+  CREATURE_NANIWA: `Output: 1024x1536 portrait PNG, one creature, full body, centered with a wide margin on every
+side, plain pure white (#FFFFFF) background, no ground, no shadow on the ground, no text, no logo.
+Style: polished Japanese anime game art in exactly the look of the reference creature: inky black-violet body
+with soft purple highlights, glowing amber eyes, scraps of cream-colored paper talismans with brush strokes on
+them (abstract strokes only — no real readable characters), curling wisps of black ink smoke. Mischievous and
+"cute-spooky", never gory, nothing that would scare a young child. Facing LEFT in three-quarter view.`,
+
   FG_LAYER: `Output: 1024x1536 portrait PNG with a FULLY TRANSPARENT background (alpha).
 Draw ONLY the foreground framing elements described below, hugging the bottom edge and the left and right edges,
 leaving the middle and the whole upper half completely empty and transparent.
@@ -370,12 +378,30 @@ const naniwa = (id, desc, used) => ({
   note: '絵本の 場面（scenes.ts の photo）として 使う',
 });
 
+const CREATURES = [
+  {
+    id: 'mojikui_kid',
+    group: 'enemy',
+    prio: 'A',
+    out: 'img/battle/mojikui_kid.webp',
+    kind: 'chara',
+    bgmode: 'white',
+    refs: ['art-src/battle/04_敵_モジクイ.png'],
+    style: ['CREATURE_NANIWA'],
+    diff: 'Creature: a YOUNG Mojikui, the letter-eater\'s little one — a small round blob of ink shadow about the size of a cat, big round glowing amber eyes and a cheeky grin, one crumpled paper talisman worn like a tiny hat, two or three small paper slips stuck to its body, short stubby ink tendrils, a few ink droplets floating around it. Clearly smaller, rounder and sillier than the reference, but obviously the same kind of creature.',
+    used: '1章 1話の あいて「モジクイの こども」（出会いの お話・たたかい）',
+    note: '白い 背景を import.mjs が 切り抜く',
+  },
+];
+
 const NANIWA = [
   naniwa('naniwa_sky_garden', 'the rooftop garden of a grand airport terminal at sunset: in the middle an old cherry tree with bare branches (no blossoms, no leaves) in a round brass-edged planter, stone paving, brass railings and glass-paned lanterns, planters with small shrubs; a few small BLANK wooden signboards hang from the branches; beyond the railing the airport apron with parked jets and, far across the bay, a town skyline with a red Ferris wheel.', 'かな編 2話（屋上の 庭・顔の ない 桜の 木）'),
   naniwa('naniwa_lounge', 'inside a quiet airport departure lounge at dusk: rows of brass-and-leather waiting seats, a huge arched window wall showing a jet at the gate under an orange sunset sky, warm hanging lanterns, on the left wall a board covered in small BLANK name tags (lost and found), a polished floor reflecting the light. Empty and slightly melancholic.', 'かな編 3話（待合・名前の ない 犬）'),
   naniwa('naniwa_walkway', 'a long glass-roofed connecting walkway from the airport terminal toward the train station, at dusk, seen looking down its length: a moving walkway, simple arrow shapes on the floor (no letters), brass ribs holding the glass, hanging lanterns; through the glass on the right, the sea, a long bridge, and a town on a high hill across the bay with warm lights.', 'かな編 4話（駅への 連絡通路・黒い 煙）'),
   naniwa('naniwa_runway_night', 'the airport apron and runway at night after every light has gone out: deep indigo sky with NO stars at all, dark silhouettes of parked jets and a control tower, rows of unlit runway lamps, only a faint warm glow from a few distant windows; calm dark ground in the foreground.', 'かな編 5話（灯りの 消えた 夜の 滑走路。星は お話で 戻る）'),
   naniwa('naniwa_station', 'the airport train station platform in the early morning: a brass-and-glass steampunk station roof with gears and pipes, a sleek BLUE train waiting on one side and a RED train on the other, ticket machines and gates in the background whose screens and signs are all blank, soft dawn light from the open end of the platform, hanging lanterns.', 'かな編 6〜8話（空港の 駅・切符・青い 電車と 赤い 電車）'),
+  naniwa('naniwa_town_station', 'inside the main station of Naniwa Town on the morning the train arrives: a grand steampunk concourse with brass pillars, a glass roof and hanging lanterns; on the wall a huge station calendar board with a row of seven EMPTY dark panels, and above it a big round clock with no numerals (dots only); a blue train at a platform on one side. No people.', '1章 1話「きえた カレンダー」（町の 駅・空っぽの カレンダー）'),
+  naniwa('naniwa_station_square', 'the square in front of Naniwa Town station in the morning: a large town-map board in a brass frame showing only simple drawn shapes (a mountain, a river, rice fields — no letters at all), shopfronts with BLANK signboards, lanterns and a few street trees, and beyond the rooftops a green mountain rising behind the town. No people.', '1章 2話「山田さん」（駅前の 広場・町の 地図）'),
   naniwa('naniwa_train', 'inside a blue commuter train crossing a long bridge over the bay at sunrise: rows of seats on both sides, brass handrails and hanging straps, big windows showing the sea and, straight ahead, a town on a high hill with a red Ferris wheel catching the morning light.', 'かな編 9話（海を わたる 青い 電車）'),
 ];
 
@@ -423,7 +449,7 @@ const ICONS = [
   },
 ];
 
-export const ASSETS = [...NEXMAX, ...GENDAI, ...MUKASHI_FOLK, ...ENEMIES, ...BG, ...NANIWA, ...MAPS, ...ICONS];
+export const ASSETS = [...NEXMAX, ...GENDAI, ...MUKASHI_FOLK, ...ENEMIES, ...CREATURES, ...BG, ...NANIWA, ...MAPS, ...ICONS];
 
 export const GROUPS = {
   nexmax: 'ネクマックス（表情・ポーズ）',

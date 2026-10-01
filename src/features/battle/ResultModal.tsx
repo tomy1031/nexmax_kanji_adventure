@@ -39,6 +39,7 @@ export const ResultModal = ({
   onForge,
   onFeature,
   onTutorialDone,
+  route,
 }: {
   outcome: Outcome;
   bossName: string;
@@ -55,7 +56,15 @@ export const ResultModal = ({
   onForge: () => void;
   onFeature: (f: Feature) => void;
   onTutorialDone: () => void;
+  /**
+   * 文字が 消えた 町 (08 §3.8): the win leads on into the episode's closing
+   * scene (つづきへ); the forge is not offered here — it is reached from
+   * じゅんび and もちもの once the story has shown it — and gems, which have
+   * no use on this route yet, are not announced.
+   */
+  route?: 'moji';
 }) => {
+  const moji = route === 'moji';
   const showFurigana = useGameStore((s) => s.settings.furigana);
   const reduced = useGameStore((s) => s.settings.reducedMotion);
   const still = Boolean(useReducedMotion() || reduced);
@@ -142,11 +151,15 @@ export const ResultModal = ({
         </p>
         <p className="mt-0.5 text-sm" style={{ color: 'var(--ink-2)' }}>
           <RubyText showFurigana={showFurigana}>
-            {win ? `まちがえた ところ ${mistakes}` : 'まだ 持(も)って いない 字(じ)を れんしゅうすると、つよく なる。'}
+            {win
+              ? `まちがえた ところ ${mistakes}`
+              : moji
+                ? '★が 少(すく)ない 字(じ)を もっと 書(か)くと、つよく なる。'
+                : 'まだ 持(も)って いない 字(じ)を れんしゅうすると、つよく なる。'}
           </RubyText>
         </p>
 
-        {gems > 0 && (
+        {gems > 0 && !moji && (
           <motion.p
             className="g-chip g-chip-gold mt-3 !text-base tabular-nums"
             initial={still ? false : { scale: 0 }}
@@ -185,7 +198,7 @@ export const ResultModal = ({
             <button type="button" className="g-btn g-btn-primary g-shine mt-5 w-full !min-h-[56px] text-lg" onClick={hasNext ? onNext : onStages}>
               <span className="relative z-10 flex items-center gap-2">
                 <GiPathDistance aria-hidden size={22} />
-                <RubyText showFurigana={showFurigana}>{hasNext ? 'つぎの 話(はなし)へ' : 'ステージへ'}</RubyText>
+                <RubyText showFurigana={showFurigana}>{moji ? 'つづきへ' : hasNext ? 'つぎの 話(はなし)へ' : 'ステージへ'}</RubyText>
               </span>
             </button>
             <div className="mt-2.5 flex gap-2">
@@ -193,10 +206,12 @@ export const ResultModal = ({
                 <GiCrossedSwords aria-hidden size={16} />
                 <RubyText showFurigana={showFurigana}>もう一度(いちど)</RubyText>
               </button>
-              <button type="button" className="g-btn g-btn-ghost flex-1 !min-h-[42px] !px-2 text-sm" onClick={onForge}>
-                <GiAnvil aria-hidden size={16} />
-                <RubyText showFurigana={showFurigana}>合成(ごうせい)</RubyText>
-              </button>
+              {!moji && (
+                <button type="button" className="g-btn g-btn-ghost flex-1 !min-h-[42px] !px-2 text-sm" onClick={onForge}>
+                  <GiAnvil aria-hidden size={16} />
+                  <RubyText showFurigana={showFurigana}>合成(ごうせい)</RubyText>
+                </button>
+              )}
             </div>
           </>
         ) : (
@@ -212,13 +227,15 @@ export const ResultModal = ({
                 <GiCrossedSwords aria-hidden size={16} />
                 <RubyText showFurigana={showFurigana}>もう一度(いちど)</RubyText>
               </button>
-              <button type="button" className="g-btn g-btn-ghost flex-1 !min-h-[42px] !px-2 text-sm" onClick={onForge}>
-                <GiAnvil aria-hidden size={16} />
-                <RubyText showFurigana={showFurigana}>合成(ごうせい)</RubyText>
-              </button>
+              {!moji && (
+                <button type="button" className="g-btn g-btn-ghost flex-1 !min-h-[42px] !px-2 text-sm" onClick={onForge}>
+                  <GiAnvil aria-hidden size={16} />
+                  <RubyText showFurigana={showFurigana}>合成(ごうせい)</RubyText>
+                </button>
+              )}
             </div>
             <button type="button" className="mt-3 text-xs font-bold underline" style={{ color: 'var(--ink-2)' }} onClick={onStages}>
-              ステージへ もどる
+              {moji ? 'ステージせんたくへ もどる' : 'ステージへ もどる'}
             </button>
           </>
         )}

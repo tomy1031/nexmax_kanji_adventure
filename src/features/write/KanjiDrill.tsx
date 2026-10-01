@@ -581,7 +581,7 @@ export const KanjiDrill = ({ kanji, onObtained, onExit, onDone, nextLabel = 'つ
                 <RubyText showFurigana={showFurigana}>
                   {obtained
                     ? goal != null
-                      ? 'きれいに 書(か)くと「字(じ)の わざ」が 出(で)る。この 字(じ)で 武器(ぶき)も 作(つく)れる。'
+                      ? 'きれいに 書(か)くと「字(じ)の わざ」が 出(で)る。漢字(かんじ)やさんで、この 字(じ)の 武器(ぶき)も 作(つく)れる。'
                       : 'この 字(じ)で 武器(ぶき)が 作(つく)れる。'
                     : 'ふくしゅうとして 1回(かい) 記録(きろく)した。さびた 武器(ぶき)も 直(なお)る。'}
                 </RubyText>

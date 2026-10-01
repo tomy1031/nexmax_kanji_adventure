@@ -40,7 +40,10 @@ export const SettingsScreen = () => {
           <span aria-hidden>◀</span>もどる
         </button>
         <h1 className="g-title text-base">せってい</h1>
-        <span className="w-16" />
+        {/* The title is the game's front door; ホーム everywhere else leads to the map (08 §3.8). */}
+        <button type="button" className="g-btn g-btn-ghost !min-h-[38px] !px-3 text-xs" onClick={() => navigate('/')}>
+          <RubyText showFurigana={showFurigana}>タイトルへ</RubyText>
+        </button>
       </header>
 
       <div className="mx-auto max-w-md px-4 pt-4">

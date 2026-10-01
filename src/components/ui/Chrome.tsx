@@ -35,6 +35,9 @@ export const PillButton = ({
 export const TopBar = ({ onBack, title }: { onBack?: () => void; title?: string }) => {
   const navigate = useNavigate();
   const safeBack = useSafeBack();
+  // ホーム is the map of the world being played (08 §3.8), not the title —
+  // the title is the game's front door, reached again from せってい.
+  const mapPath = useMapPath();
   const showFurigana = useGameStore((s) => s.settings.furigana);
   return (
     <header className="relative z-20 flex w-full items-center justify-between gap-2 px-3 pt-[max(10px,env(safe-area-inset-top))]">
@@ -46,7 +49,7 @@ export const TopBar = ({ onBack, title }: { onBack?: () => void; title?: string 
           <RubyText showFurigana={showFurigana}>{title}</RubyText>
         </div>
       )}
-      <PillButton icon="♛" onClick={() => navigate('/')}>
+      <PillButton icon="♛" onClick={() => navigate(mapPath)}>
         ホーム
       </PillButton>
     </header>
@@ -115,7 +118,8 @@ export const BottomTabs = ({ current }: { current: TabId }) => {
   const cleared = useGameStore((s) => s.clearedStages);
   const tabs: { id: TabId; label: string; icon: IconType; to: string; feature?: Feature }[] = [
     { id: 'story', label: 'ストーリー', icon: GiTreasureMap, to: mapPath },
-    { id: 'kanji', label: '漢字(かんじ)ずかん', icon: GiOpenBook, to: '/words', feature: Feature.WORDS },
+    // ずかん is open from the start (08 §3.8): no lock the new route cannot open.
+    { id: 'kanji', label: '漢字(かんじ)ずかん', icon: GiOpenBook, to: '/zukan' },
     // そうび opens from the start: 0話 already hands over the first blade.
     { id: 'items', label: 'そうび', icon: GiBackpack, to: '/equip' },
     { id: 'settings', label: 'せってい', icon: GiCog, to: '/settings' },

@@ -85,6 +85,12 @@ export interface GameState {
   tutorials: { forge: boolean; intro: boolean; prologue: boolean };
   /** The world last played in — where つづきから, ストーリー and もどる lead back to. */
   lastArc: 'mukashi' | 'gendai' | 'moji';
+  /**
+   * 文字が 消えた 町: how the player chose to start at the end of the
+   * prologue — 0章 (kana) or straight to the town. つづきから follows it
+   * (data/mojiFlow.ts nextUp). null until the prologue's question is answered.
+   */
+  startPath: 'kana' | 'town' | null;
   /** Versus record. */
   versus: VersusStats;
   /**
@@ -124,6 +130,7 @@ export interface GameActions {
   setSetting: <K extends keyof GameState['settings']>(key: K, value: GameState['settings'][K]) => void;
   markTutorialSeen: (key: keyof GameState['tutorials']) => void;
   setLastArc: (arc: GameState['lastArc']) => void;
+  setStartPath: (path: GameState['startPath']) => void;
   recordVersusResult: (won: boolean, ratingDelta: number) => void;
   /** Spend ink on a guess. False when there is not enough. */
   spendSumi: (n: number) => boolean;
@@ -167,6 +174,7 @@ const initialState: GameState = {
   tutorials: { forge: false, intro: false, prologue: false },
   // A new player starts on the new route (08 §10.2).
   lastArc: 'moji',
+  startPath: null,
   versus: DEFAULT_VERSUS_STATS,
   sumi: 0,
   foundWords: {},
@@ -345,6 +353,7 @@ export const useGameStore = create<GameState & GameActions>()(
       markTutorialSeen: (key) => set((s) => ({ tutorials: { ...s.tutorials, [key]: true } })),
 
       setLastArc: (arc) => set((s) => (s.lastArc === arc ? s : { lastArc: arc })),
+      setStartPath: (path) => set({ startPath: path }),
 
       spendSumi: (n) => {
         if (get().sumi < n) return false;

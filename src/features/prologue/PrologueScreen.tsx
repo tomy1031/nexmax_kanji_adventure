@@ -229,6 +229,12 @@ export const PrologueScreen = () => {
   const navigate = useNavigate();
   const markSeen = useGameStore((s) => s.markTutorialSeen);
   const setLastArc = useGameStore((s) => s.setLastArc);
+  const setStartPath = useGameStore((s) => s.setStartPath);
+  // Watched again from はじめから or the map: carrying on is the main way out (08 §3.8).
+  const [returning] = useState(() => {
+    const st = useGameStore.getState();
+    return st.tutorials.prologue || st.clearedStages.length > 0;
+  });
   const reduced = useGameStore((s) => s.settings.reducedMotion);
   const still = Boolean(useReducedMotion() || reduced);
   const [beat, setBeat] = useState(0);
@@ -240,9 +246,11 @@ export const PrologueScreen = () => {
     else if (current.visual === 'write') sfx.chime();
   }, [current.visual]);
 
-  const go = (to: string) => {
+  const go = (to: string, path?: 'kana' | 'town') => {
     markSeen('prologue');
     setLastArc('moji');
+    // つづきから follows the choice (data/mojiFlow.ts nextUp); watching again changes nothing.
+    if (path) setStartPath(path);
     navigate(to);
   };
 
@@ -332,17 +340,32 @@ export const PrologueScreen = () => {
               <p className="text-center text-3xl font-black tracking-[0.3em] text-[#fff8d6]" style={{ textShadow: GLOW }} aria-hidden>
                 あいう アイウ
               </p>
-              <button type="button" className="g-btn g-btn-primary w-full !flex-col !gap-0 text-lg leading-tight" onClick={() => go(PROLOGUE_EXITS.kana)}>
+              {returning && (
+                <button type="button" className="g-btn g-btn-primary w-full text-lg" onClick={() => go('/map/moji')}>
+                  <RubyText showFurigana>つづきから あそぶ</RubyText>
+                </button>
+              )}
+              <button
+                type="button"
+                className={`g-btn ${returning ? 'g-btn-ghost' : 'g-btn-primary text-lg'} w-full !flex-col !gap-0 leading-tight`}
+                onClick={() => go(PROLOGUE_EXITS.kana, 'kana')}
+              >
                 <RubyText showFurigana>{PROLOGUE_ASK.kana.ja}</RubyText>
                 <span className="text-xs font-bold opacity-90">{PROLOGUE_ASK.kana.en}</span>
               </button>
-              <button type="button" className="g-btn g-btn-accent w-full !flex-col !gap-0 text-base leading-tight" onClick={() => go(PROLOGUE_EXITS.town)}>
+              <button
+                type="button"
+                className={`g-btn ${returning ? 'g-btn-ghost' : 'g-btn-accent text-base'} w-full !flex-col !gap-0 leading-tight`}
+                onClick={() => go(PROLOGUE_EXITS.town, 'town')}
+              >
                 <RubyText showFurigana>{PROLOGUE_ASK.town.ja}</RubyText>
                 <span className="text-xs font-bold opacity-90">{PROLOGUE_ASK.town.en}</span>
               </button>
-              <button type="button" className="mx-auto text-sm font-bold text-white/70 underline" onClick={() => go('/map/moji')}>
-                See the chapter map
-              </button>
+              {!returning && (
+                <button type="button" className="mx-auto text-sm font-bold text-white/70 underline" onClick={() => go('/map/moji')}>
+                  See the chapter map
+                </button>
+              )}
             </motion.div>
           )}
         </AnimatePresence>

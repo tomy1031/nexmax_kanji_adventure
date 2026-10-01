@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import type { ReactNode } from 'react';
-import { useMapPath } from '../../lib/nav';
+import { useSafeBack } from '../../lib/nav';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import {
@@ -23,7 +23,7 @@ import { useGameStore } from '../../store/gameStore';
 import { ALL_KANJI } from '../../lib/kanjiDb';
 import { forgeWeapon, type Weapon } from '../../lib/forge/weapon';
 import { Element, ELEMENT_LABEL, elementOf } from '../../lib/forge/elements';
-import { kanjiRuby } from '../../lib/reading';
+import { charRuby, kanjiRuby } from '../../lib/reading';
 import { assetPath } from '../../lib/assetPath';
 import { RubyText } from '../../components/ui/Ruby';
 import { LogoText } from '../../components/ui/LogoText';
@@ -33,6 +33,7 @@ import ForgeTutorial from './ForgeTutorial';
 import { remainingForChar, FoundVia, discoveryKind, KIND_LABEL } from '../../lib/forge/discovery';
 import { REPS_TO_OBTAIN } from '../../types/kanji';
 import { Feature, isFeatureUnlocked } from '../../data/unlocks';
+import { isForgeOpen, practiceTarget } from '../../data/mojiFlow';
 
 /**
  * The forge — 漢字やさん (the layout example delivered with the parts,
@@ -214,11 +215,13 @@ const RoundButton = ({ icon: Icon, label, onClick, locked, showFurigana }: { ico
 
 export const ForgeScreen = () => {
   const navigate = useNavigate();
-  const mapPath = useMapPath();
   const [params] = useSearchParams();
-  // When the forge is opened mid-stage, 'back' returns to that stage's
-  // encounter instead of dumping the player on the map.
-  const backTo = params.get('back') ?? mapPath;
+  // もどる goes back where the player came from (08 §3.8): `?back=` when the
+  // caller names it (じゅんび, StagePlayer), else history; the map only when
+  // the forge was opened directly.
+  const backTo = params.get('back');
+  const safeBack = useSafeBack();
+  const goBack = () => (backTo ? navigate(backTo) : safeBack());
   const showFurigana = useGameStore((s) => s.settings.furigana);
   const progress = useGameStore((s) => s.progress);
   const weapons = useGameStore((s) => s.weapons);
@@ -300,7 +303,10 @@ export const ForgeScreen = () => {
 
   // Two frames to start with; a third, optional one once both are filled.
   const slotCount = slots.length >= 2 ? 3 : 2;
-  const wordsLocked = !isFeatureUnlocked(Feature.WORDS, cleared);
+  // ことば図鑑 opens with the forge on the new route (08 §3.8).
+  const wordsLocked = !isFeatureUnlocked(Feature.WORDS, cleared) && !isForgeOpen(cleared);
+  // An empty forge says where the nearest ★3 is (data/mojiFlow.ts).
+  const practice = owned.length === 0 ? practiceTarget(progress, cleared) : null;
 
   return (
     <div className="relative h-dvh overflow-hidden bg-[#2b1a10] text-[#fff1cf]">
@@ -473,8 +479,18 @@ export const ForgeScreen = () => {
             {owned.length === 0 ? (
               <p className="p-3 text-center text-sm">
                 <RubyText showFurigana={showFurigana}>
-                  まだ 1(ひと)つも ありません。ステージで 漢字(かんじ)を 書(か)くと 手(て)に 入(はい)ります。
+                  10回(かい) 書(か)いた 漢字(かんじ)（★3）が ここに ならびます。まだ ありません。
                 </RubyText>
+                {practice && (
+                  <button
+                    type="button"
+                    data-tap
+                    className="g-btn g-btn-accent mx-auto mt-2 !min-h-[38px] !px-3 text-xs"
+                    onClick={() => navigate(`/moji/${practice.episode}?at=ready`)}
+                  >
+                    <RubyText showFurigana={showFurigana}>{`✎ 書(か)きに いく（「${charRuby(practice.char)}」あと ${practice.left}回(かい)で ★3）`}</RubyText>
+                  </button>
+                )}
               </p>
             ) : shown.length === 0 ? (
               <p className="p-3 text-center text-sm text-white/70">
@@ -528,7 +544,7 @@ export const ForgeScreen = () => {
 
         {/* もどる・つくる・図鑑・持ちもの -------------------------------------- */}
         <div className="mt-[2.5%] flex shrink-0 items-center justify-between">
-          <motion.button type="button" data-tap whileTap={{ scale: 0.95 }} className="w-[30%]" onClick={() => navigate(backTo)}>
+          <motion.button type="button" data-tap whileTap={{ scale: 0.95 }} className="w-[30%]" onClick={goBack}>
             <img src={art('btn_back')} alt="もどる" draggable={false} className="block h-auto w-full select-none" />
           </motion.button>
           <motion.button
