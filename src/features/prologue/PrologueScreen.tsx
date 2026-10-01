@@ -7,6 +7,8 @@ import { useGameStore } from '../../store/gameStore';
 import * as sfx from '../../lib/sfx';
 import { PROLOGUE, PROLOGUE_ASK, PROLOGUE_EXITS, type PrologueVisual } from '../../data/scripts/prologue';
 import { useBgm } from '../../lib/bgm';
+import { preloadImages } from '../../lib/preload';
+import { episodeArt } from '../../data/episodeArt';
 
 /**
  * プロローグ (08 §10.2): the world, the shadow, the fallen robot, and you —
@@ -192,6 +194,8 @@ export const PrologueScreen = () => {
   const current = PROLOGUE[Math.min(beat, PROLOGUE.length - 1)];
 
   useEffect(preloadPictures, []);
+  // Both answers to the question at the end lead straight into an episode.
+  useEffect(() => preloadImages([...episodeArt('kana-1'), ...episodeArt('moji-1-1')]), []);
 
   useEffect(() => {
     if (current.visual === 'wake' || current.visual === 'fall') sfx.hurt();

@@ -25,19 +25,20 @@ const SCREEN_ART: Record<string, () => string[]> = {
 
 const requested = new Set<string>();
 
-export const preloadScreens = (screens: (keyof typeof SCREEN_ART)[]) => {
+/** Fetch these pictures (asset paths) when the app is idle; each only once. */
+export const preloadImages = (paths: string[]) => {
   const run = () => {
-    for (const s of screens) {
-      for (const path of SCREEN_ART[s]()) {
-        const url = assetPath(path);
-        if (requested.has(url)) continue;
-        requested.add(url);
-        const img = new Image();
-        img.decoding = 'async';
-        img.src = url;
-      }
+    for (const path of paths) {
+      const url = assetPath(path);
+      if (requested.has(url)) continue;
+      requested.add(url);
+      const img = new Image();
+      img.decoding = 'async';
+      img.src = url;
     }
   };
   if ('requestIdleCallback' in window) window.requestIdleCallback(run, { timeout: 4000 });
   else setTimeout(run, 1500);
 };
+
+export const preloadScreens = (screens: (keyof typeof SCREEN_ART)[]) => preloadImages(screens.flatMap((s) => SCREEN_ART[s]()));
