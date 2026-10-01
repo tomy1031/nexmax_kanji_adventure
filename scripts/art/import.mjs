@@ -13,7 +13,7 @@
  *   fg      as bg, keeping transparency; a raw file with no alpha is keyed
  *           on #00FF00
  *   map-half  the top and bottom halves stacked into one tall map, 800x2600
- *   icon    icon-512x512.png and icon-192x192.png in public/, opaque
+ *   icon    icon-512x512.png, icon-192x192.png, apple-touch-icon.png and favicon-48.png in public/, opaque
  */
 import { existsSync, mkdirSync } from 'node:fs';
 import { dirname } from 'node:path';
@@ -125,9 +125,18 @@ for (const a of ASSETS) {
     continue;
   } else if (a.kind === 'icon') {
     // Opaque: a transparent corner shows as black on some home screens.
-    await sharp(raw).flatten({ background: '#a9d6f5' }).resize(512, 512, { fit: 'cover' }).png().toFile('public/icon-512x512.png');
-    await sharp(raw).flatten({ background: '#a9d6f5' }).resize(192, 192, { fit: 'cover' }).png().toFile('public/icon-192x192.png');
-    done.push(`${a.id} → public/icon-512x512.png, public/icon-192x192.png`);
+    const sizes = { 'icon-512x512.png': 512, 'icon-192x192.png': 192, 'apple-touch-icon.png': 180, 'favicon-48.png': 48 };
+    for (const [file, px] of Object.entries(sizes)) {
+      await sharp(raw).flatten({ background: '#1b1f4a' }).resize(px, px, { fit: 'cover' }).png({ palette: true, quality: 92, compressionLevel: 9 }).toFile(`public/${file}`);
+    }
+    // Maskable: the launcher may crop to a circle, so the art sits inside the safe 80%.
+    await sharp(raw)
+      .resize(410, 410)
+      .extend({ top: 51, bottom: 51, left: 51, right: 51, background: '#1b1f4a' })
+      .flatten({ background: '#1b1f4a' })
+      .png({ palette: true, quality: 92, compressionLevel: 9 })
+      .toFile('public/icon-maskable-512.png');
+    done.push(`${a.id} → public/${Object.keys(sizes).join(', public/')}, public/icon-maskable-512.png`);
     continue;
   }
   done.push(`${a.id} → ${out}`);
