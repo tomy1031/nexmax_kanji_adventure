@@ -481,6 +481,8 @@ const FOLK = [
   folk('kiosk_happy', 'ISFJ_f', 'cheerful: holding out two steaming mugs of cocoa toward the viewer with a big smile.', 'かな編 7話 売店の 人（ココア）'),
   folk('staff_trouble', 'ISTJ', 'a troubled station clerk: staring at his blank clipboard with a confused frown, his other hand on top of his head, a sweat drop.', 'かな編 7・8話 駅員（切符の 機械が 読めない）'),
   folk('announcer_trouble', 'ESTJ', 'confused: the megaphone lowered at his side, the other hand raised palm-up in a shrug, eyebrows raised, mouth open as if saying "huh?".', '1章 1話 駅の 案内係（きょうは 何曜日？）'),
+  folk('traveler_happy', 'ESTP', 'relieved and happy: one hand on his rolling suitcase, the other giving a thumbs-up, a big grin, eyes bright.', 'かな編 4話 旅行者（道が わかった）'),
+  folk('staff_happy', 'ISTJ', 'a relieved station clerk: holding his clipboard to his chest, the other hand raised in a cheerful salute, a big smile.', 'かな編 7・8話 駅員（切符が 出た・ゲートが 開いた）'),
   folk('traveler_trouble', 'ESTP', 'a lost traveler: pulling a small rolling suitcase, looking around anxiously with one hand shading his eyes, a worried frown.', 'かな編 1話 空港の 旅行者（行き先が 読めない）'),
 ];
 

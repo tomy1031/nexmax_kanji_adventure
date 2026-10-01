@@ -100,6 +100,8 @@
     -webkit-text-size-adjust: 100%;
     /* 指ではじいたときに画面全体が動かないようにする（なぞり書きの邪魔） */
     overscroll-behavior: none;
+    /* お話を すばやく タップしても 画面が 拡大されない（ダブルタップの ズームを 止める）。 */
+    touch-action: manipulation;
   }
 
   body {
@@ -671,5 +673,28 @@
     animation-duration: 0.001ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.001ms !important;
+  }
+}
+
+/* -----------------------------------------------------------------------------
+   スマホを 横に した とき — 縦画面の ゲームなので「たてに して」と 出す。
+   タブレット・PC（横でも 高さが ある）は 横長の 画面で そのまま 遊べる。
+   --------------------------------------------------------------------------- */
+.rotate-hint {
+  display: none;
+}
+@media (orientation: landscape) and (max-height: 500px) {
+  .rotate-hint {
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 14px;
+    background: radial-gradient(ellipse at 50% 40%, #2c2a6b 0%, #141235 60%, #07061a 100%);
+    color: #ffe9c2;
+    text-align: center;
   }
 }

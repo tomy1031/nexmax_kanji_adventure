@@ -131,6 +131,8 @@ export const KANA_SCRIPTS: Record<string, KanaScript> = Object.fromEntries([
     [
       { bg: 'naniwa_walkway', fx: ['darkclouds'], text: 'Nana leads us onto the long walkway to the station. Then black smoke pours in — the shadow\'s smoke.', ja: 'ナナの あとに ついて、えきへの ながい つうろへ。すると くろい けむりが ながれこんで きた。かげの けむりだ。' },
       { text: 'The arrows on the floor are fading one by one. I can barely see which way to go.', ja: 'ゆかの やじるしが ひとつずつ きえて いく。どっちへ いけば いいのか、ほとんど わからない。' },
+      { speaker: 'traveler', sprite: 'traveler:trouble', text: 'どっちへ いけば いいの？ 😰', en: 'Which way do I go?' },
+      { text: 'The traveler from the deck is lost in the smoke too.', ja: 'デッキで あった たびの ひとも、けむりの なかで まよって いる。' },
       { speaker: 'nexmax', sprite: 'nexmax:think', text: 'みちが……！' },
       { text: '「□ちが」 …chi ga? Something about the arrows.', ja: '「□ちが」 ……ちが？ やじるしの ことかな。' },
       { text: 'The guide signs over the walkway are blank now — dark where the letters used to glow.', ja: 'つうろの あんないの かんばんも からっぽ。もじが ひかって いた ところが まっくらだ。' },
@@ -139,6 +141,7 @@ export const KANA_SCRIPTS: Record<string, KanaScript> = Object.fromEntries([
     [
       { fx: [], speaker: 'nexmax', sprite: 'nexmax:smile', text: 'みち！ 🙆‍♂️' },
       { text: 'みち michi — the way. The arrows glow again, and the smoke scatters.', ja: 'みち。やじるしが また ひかって、けむりが ちって いく。' },
+      { speaker: 'traveler', sprite: 'traveler:happy', text: 'みちが わかった！ ありがとう！ 👍', en: 'Now I know the way. Thank you!' },
       { text: 'Through the glass I can see the sea, a long bridge, and a town on a high hill across the bay.', ja: 'ガラスの むこうに、うみと ながい はし。わんの むこうの たかい おかに、まちが みえる。' },
       { speaker: 'nexmax', sprite: 'nexmax:guide', text: 'うえの まち！ 👆' },
       { text: 'うえの まち ue no machi — the town up there. まち means town!', ja: 'うえの まち。うえの ほうに ある まち。あそこの まちの ことだ！' },
@@ -218,10 +221,12 @@ export const KANA_SCRIPTS: Record<string, KanaScript> = Object.fromEntries([
       { speaker: 'nexmax', sprite: 'nexmax:determined', text: 'キップが ないと、のれない！' },
       { text: 'のれない norenai — without a ticket we can\'t get on!', ja: 'のれない。キップが ないと のれない！' },
       { text: 'The sign over the platform gate has gone dark.', ja: 'ホームの ゲートの うえの かんばんが、くらく なって いる。' },
+      { speaker: 'staff', sprite: 'staff:trouble', text: 'ゲートの かんばんも よめない…… 💦', en: "I can't read the gate sign either…" },
       { speaker: 'nexmax', sprite: 'nexmax:guide', text: '✍️💡🪧 かきます！' },
     ],
     [
       { text: 'A ticket slides out: キップ kippu! The little ○ on フ makes プ.', ja: 'キップが でて きた！「フ」に ちいさな まるを つけると「プ」に なる。' },
+      { speaker: 'staff', sprite: 'staff:happy', text: 'きっぷが でた！ これで でんしゃが はしれます！', en: 'Tickets again! Now the trains can run!' },
       { text: 'Two trains stand at the platform: a red one and a blue one.', ja: 'ホームに でんしゃが ふたつ。あかい でんしゃと、あおい でんしゃ。' },
       { speaker: 'nexmax', sprite: 'nexmax:guide', text: 'あお！ うえの まち！ 👆' },
       { text: 'The blue one crosses the bridge to the town up on the hill. Blue and up — just like the blue escalator.', ja: 'あおい でんしゃは はしを わたって、おかの うえの まちへ いく。あおで、うえ。あの あおい エスカレーターと おなじだ。' },
