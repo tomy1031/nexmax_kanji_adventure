@@ -10,6 +10,7 @@ import { NightStreetBackdrop, SignStreet } from '../write/NightStreet';
 import { streetOf } from '../../lib/signStreet';
 import KanaText from './KanaText';
 import { useKnownKana } from './useKnownKana';
+import { useBgm } from '../../lib/bgm';
 
 /**
  * かな編の 書き取り (08 §3.4). Written on the empty signboards of ナニワタウン
@@ -32,6 +33,7 @@ interface KanaDrillProps {
 type Verdict = { pass: boolean; mistakes: number } | null;
 
 export const KanaDrill = ({ kana, onDone, onExit }: KanaDrillProps) => {
+  useBgm('write');
   // A short screen (a phone browser's bars): the signs move up beside the
   // kana and the page packs tighter, so nothing scrolls (see KanjiDrill).
   const compact = useCompactHeight();

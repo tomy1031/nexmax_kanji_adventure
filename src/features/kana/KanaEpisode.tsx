@@ -20,6 +20,9 @@ import { revealKana } from '../../lib/kanaReveal';
 
 type Phase = 'intro' | 'write' | 'outro';
 
+/** The English lines are the player's own thoughts: their plate says わたし (I). */
+const NARRATOR = 'わたし';
+
 const EpisodePlayer = ({ id }: { id: string }) => {
   const navigate = useNavigate();
   const ep = getKanaEpisode(id)!;
@@ -46,6 +49,9 @@ const EpisodePlayer = ({ id }: { id: string }) => {
       ),
     [known],
   );
+  // Names and the Japanese of the English lines: readable, with romaji over
+  // the kana not written yet (only Nexmax's own speech is eaten to holes).
+  const renderPlain = useCallback((text: string) => <KanaText known={known}>{text}</KanaText>, [known]);
   // よみあげ: the Japanese lines, as far as they can be read. The English
   // lines are the player's own thoughts and are not read out.
   const speechFor = useCallback(
@@ -84,6 +90,8 @@ const EpisodePlayer = ({ id }: { id: string }) => {
             cast={castFor('intro')}
             chapter={chapter}
             renderText={renderText}
+            renderPlain={renderPlain}
+            narrator={NARRATOR}
             speechFor={speechFor}
             onFinish={() => setPhase(allKnown ? 'outro' : 'write')}
           />
@@ -92,7 +100,17 @@ const EpisodePlayer = ({ id }: { id: string }) => {
         return <KanaDrill kana={ep.kana} onDone={() => setPhase('outro')} onExit={leave} />;
       case 'outro':
         return (
-          <NovelScene key="outro" script={lines.outro} cast={castFor('outro')} chapter={chapter} renderText={renderText} speechFor={speechFor} onFinish={finish} />
+          <NovelScene
+            key="outro"
+            script={lines.outro}
+            cast={castFor('outro')}
+            chapter={chapter}
+            renderText={renderText}
+            renderPlain={renderPlain}
+            narrator={NARRATOR}
+            speechFor={speechFor}
+            onFinish={finish}
+          />
         );
     }
   })();

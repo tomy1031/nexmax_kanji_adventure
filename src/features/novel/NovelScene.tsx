@@ -10,6 +10,7 @@ import { useGameStore } from '../../store/gameStore';
 import PictureBook from '../picturebook/PictureBook';
 import { SCENES } from '../picturebook/scenes';
 import { TypeReveal } from '../../components/ui/TypeReveal';
+import { useBgm } from '../../lib/bgm';
 
 /**
  * The novel scene, set in a moving picture book.
@@ -38,6 +39,18 @@ interface NovelSceneProps {
    * the letters that have come back, and not the English lines.
    */
   speechFor?: (text: string) => string | null;
+  /**
+   * Who says the narration (lines with no speaker) — かな編's lines are the
+   * player's own thoughts, so their plate says わたし (2026-10-02「誰の
+   * セリフか 表示 必要」). Without it narration has no plate.
+   */
+  narrator?: string;
+  /**
+   * Draws names and translations: plain readable text. かな編 uses it so a
+   * name plate is never eaten to holes the way Nexmax's speech is.
+   * Defaults to renderText.
+   */
+  renderPlain?: (text: string) => ReactNode;
 }
 
 /** One carved letter is huge; a row of them (日 月 火 水 木) has to fit the screen. */
@@ -62,7 +75,8 @@ const lineWords = (text: string): { word: string; gloss: string }[] => {
 /** Reading time for auto mode: a base plus a little per character. */
 const autoDelay = (text: string) => 1600 + stripRuby(text).length * 85;
 
-export const NovelScene = ({ script, cast, onFinish, chapter, renderText, speechFor }: NovelSceneProps) => {
+export const NovelScene = ({ script, cast, onFinish, chapter, renderText, speechFor, narrator, renderPlain }: NovelSceneProps) => {
+  useBgm('story');
   const showFurigana = useGameStore((s) => s.settings.furigana);
   const [index, setIndex] = useState(0);
   const [showLog, setShowLog] = useState(false);
@@ -138,6 +152,9 @@ export const NovelScene = ({ script, cast, onFinish, chapter, renderText, speech
   }, [script, index]);
 
   const speaker = line?.speaker ? castById.get(line.speaker) : undefined;
+  /** The name on the plate: the speaker, or the narrator for narration. */
+  const plateName = speaker?.name ?? (line && !line.speaker ? narrator : undefined);
+  const plain = renderPlain ?? renderText;
 
   const [spriteId, spriteExpr] = sprite?.split(':') ?? [];
   const spriteMember = spriteId ? castById.get(spriteId) : undefined;
@@ -317,9 +334,10 @@ export const NovelScene = ({ script, cast, onFinish, chapter, renderText, speech
 
       {/* 会話ボックス（巻物） ------------------------------------------- */}
       <div className="absolute right-0 bottom-0 left-0 z-20 p-3 pb-[max(12px,env(safe-area-inset-bottom))]">
-        {speaker && (
-          <div className="g-wood relative z-10 mb-[-10px] ml-3 inline-flex items-center px-4 py-1 text-base font-black">
-            {renderText ? renderText(speaker.name) : <RubyText showFurigana={showFurigana}>{speaker.name}</RubyText>}
+        {plateName && (
+          <div className="g-wood relative z-10 mb-[-10px] ml-3 inline-flex items-center gap-1 px-4 py-1 text-base leading-[1.9] font-black">
+            {!speaker && <span aria-hidden>💭</span>}
+            {plain ? plain(plateName) : <RubyText showFurigana={showFurigana}>{plateName}</RubyText>}
           </div>
         )}
 
@@ -340,6 +358,17 @@ export const NovelScene = ({ script, cast, onFinish, chapter, renderText, speech
             >
               {renderText ? renderText(line.text) : <RubyText showFurigana={showFurigana}>{line.text}</RubyText>}
             </TypeReveal>
+
+            {/* The Japanese of an English line, once the line has appeared. */}
+            {line.ja && (
+              <p
+                className={`mt-0.5 text-[14px] leading-[2.2] font-bold transition-opacity duration-300 ${shown === index ? 'opacity-100' : 'opacity-0'}`}
+                style={{ color: '#7a5a3a' }}
+                lang="ja"
+              >
+                {plain ? plain(line.ja) : <RubyText showFurigana={showFurigana}>{line.ja}</RubyText>}
+              </p>
+            )}
 
             {enFor === index && line.en && (
               <p className="mt-1 text-[13px] leading-snug font-bold" style={{ color: '#1b63b0' }} lang="en">
@@ -459,14 +488,16 @@ export const NovelScene = ({ script, cast, onFinish, chapter, renderText, speech
                 .map((i) => {
                   const l = script.lines[i];
                   const who = l.speaker ? castById.get(l.speaker) : undefined;
+                  const name = who?.name ?? (l.speaker ? undefined : narrator);
                   return (
                     <div key={i} className="text-sm">
-                      {who && (
-                        <span className="mr-2 font-black" style={{ color: who.color }}>
-                          {renderText ? renderText(who.name) : <RubyText showFurigana={showFurigana}>{who.name}</RubyText>}
+                      {name && (
+                        <span className="mr-2 font-black" style={{ color: who?.color ?? '#7a5a3a' }}>
+                          {plain ? plain(name) : <RubyText showFurigana={showFurigana}>{name}</RubyText>}
                         </span>
                       )}
                       {renderText ? renderText(l.text) : <RubyText showFurigana={showFurigana}>{l.text}</RubyText>}
+                      {l.ja && <span className="block text-xs" style={{ color: '#7a5a3a' }}>{plain ? plain(l.ja) : l.ja}</span>}
                     </div>
                   );
                 })}

@@ -79,7 +79,7 @@ export interface GameState {
   daily: DailyState;
   /** Consecutive days played. */
   streak: { count: number; lastDate: string };
-  settings: { furigana: boolean; muted: boolean; reducedMotion: boolean };
+  settings: { furigana: boolean; muted: boolean; reducedMotion: boolean; bgmOff: boolean };
   /** One-off explainers the player has already been shown. */
   /** intro: むかし編の 0話. prologue: 文字が 消えた 町の プロローグ (08 §10.2). */
   tutorials: { forge: boolean; intro: boolean; prologue: boolean };
@@ -170,7 +170,7 @@ const initialState: GameState = {
   pityCount: 0,
   daily: freshDaily(),
   streak: { count: 0, lastDate: '' },
-  settings: { furigana: true, muted: false, reducedMotion: false },
+  settings: { furigana: true, muted: false, reducedMotion: false, bgmOff: false },
   tutorials: { forge: false, intro: false, prologue: false },
   // A new player starts on the new route (08 §10.2).
   lastArc: 'moji',

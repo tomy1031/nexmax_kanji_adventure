@@ -17,6 +17,7 @@ import { assetPath } from '../../lib/assetPath';
 import { getKanaEpisode } from '../../data/kana';
 import { getMojiEpisode } from '../../data/mojiEpisodes';
 import { nextUp } from '../../data/mojiFlow';
+import { useBgm } from '../../lib/bgm';
 
 /**
  * ステージせんたく — 文字が 消えた 町の 入口 (08 §3.7).
@@ -180,6 +181,7 @@ const readingOf = (ch: string): string => {
 };
 
 export const MojiRouteMap = () => {
+  useBgm('town');
   const navigate = useNavigate();
   const showFurigana = useGameStore((s) => s.settings.furigana);
   const setLastArc = useGameStore((s) => s.setLastArc);

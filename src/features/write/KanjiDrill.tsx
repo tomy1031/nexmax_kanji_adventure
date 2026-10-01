@@ -15,6 +15,7 @@ import SignLight from './SignLight';
 import { NightStreetBackdrop, SignStreet } from './NightStreet';
 import { streetOf } from '../../lib/signStreet';
 import * as sfx from '../../lib/sfx';
+import { useBgm } from '../../lib/bgm';
 
 /**
  * The writing drill: write the character, and it cuts a rock. Each rock
@@ -108,6 +109,7 @@ const StarBurst = () => (
 );
 
 export const KanjiDrill = ({ kanji, onObtained, onExit, onDone, nextLabel = 'つぎへ', extra, goal, look = 'rock' }: KanjiDrillProps) => {
+  useBgm('write');
   // On a short screen the progress moves up beside the kanji and the page
   // packs tighter, so the sign still fits without scrolling (an iPhone SE
   // in its browser leaves about 550px).

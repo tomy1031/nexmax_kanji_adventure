@@ -4,6 +4,7 @@ import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
 import { assetPath } from '../../lib/assetPath';
 import { RubyText } from '../../components/ui/Ruby';
 import { useGameStore } from '../../store/gameStore';
+import { useBgm } from '../../lib/bgm';
 
 /**
  * Title (the layout example delivered with the parts, 「ChatGPT 画像 2026年9月29日
@@ -89,6 +90,7 @@ const Plate = ({ spec, marginTop, still }: { spec: PlateSpec; marginTop: number;
 );
 
 export const TitleScreen = () => {
+  useBgm('town');
   const navigate = useNavigate();
   const hasSave = useGameStore((s) => s.clearedStages.length > 0 || s.weapons.length > 0);
   const seenIntro = useGameStore((s) => s.tutorials.intro);
