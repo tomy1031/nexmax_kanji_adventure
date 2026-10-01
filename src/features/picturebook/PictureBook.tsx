@@ -131,6 +131,9 @@ export const PictureBook = ({ scene, fx = [], className, children, still: holdSt
           exit={{ opacity: 0 }}
           transition={{ duration: 0.7 }}
         >
+          {def.photo && (
+            <img src={assetPath(def.photo)} alt="" aria-hidden draggable={false} className="absolute inset-0 h-full w-full object-cover select-none" />
+          )}
           {def.layers.map((layer) => (
             <PaperLayer key={layer.key} layer={layer} still={still} isFx={false} />
           ))}

@@ -7,6 +7,7 @@
  *   title       art-src/titlesozai/ → public/img/title/      (TitleScreen)
  *   kanjiyasan  art-src/kanjiyasan/ → public/img/kanjiyasan/ (ForgeScreen, 漢字やさん)
  *   battle      art-src/battle/     → public/img/battle/     (NaniwaBattleView, 文字が 消えた 町の たたかい)
+ *   stageselect art-src/stageselect/ → public/img/stageselect/ (MojiRouteMap ステージせんたく, 0章の 背景)
  *
  * Every picture is written no larger than the screen ever shows it (about 2x
  * its largest CSS size). Re-runnable: it always overwrites.
@@ -228,6 +229,80 @@ const battle = async () => {
   await report(OUT, out);
 };
 
+// ---------------------------------------------------------- stageselect --
+const stageselect = async () => {
+  const need = needIn('art-src/stageselect');
+  const OUT = 'public/img/stageselect';
+  mkdirSync(OUT, { recursive: true });
+  const out = [];
+
+  // The airport at sunset: the stage select's sky, and 0章「はじまりの 空港」's
+  // picture-book page (scenes.ts). A night copy for kana-5 (the lights are
+  // out), and a soft wide copy for the window around the column on a PC.
+  const BG = need('01_背景_空港.png');
+  await sharp(BG).webp({ quality: 76 }).toFile(`${OUT}/bg_tall.webp`);
+  out.push('bg_tall.webp');
+  await sharp(BG)
+    .modulate({ brightness: 0.42, saturation: 0.7 })
+    .composite([{ input: { create: { width: 941, height: 1672, channels: 4, background: { r: 18, g: 22, b: 70, alpha: 0.35 } } }, blend: 'over' }])
+    .webp({ quality: 74 })
+    .toFile(`${OUT}/bg_night.webp`);
+  out.push('bg_night.webp');
+  await sharp(BG)
+    .extract({ left: 0, top: 300, width: 941, height: 529 })
+    .resize(1672, 941)
+    .blur(14)
+    .modulate({ brightness: 0.7 })
+    .webp({ quality: 60 })
+    .toFile(`${OUT}/bg_wide.webp`);
+  out.push('bg_wide.webp');
+
+  const SIGN = need('02_看板_ステージせんたく.png');
+  await sharp(SIGN).extract(padded(await alphaBox(SIGN), 6)).resize({ width: 1000 }).webp({ quality: 84, alphaQuality: 88 }).toFile(`${OUT}/sign.webp`);
+  out.push('sign.webp');
+
+  // Kept on its whole canvas: the screen places it by the canvas.
+  await sharp(need('03_ネクマックス_旅.png')).resize({ width: 520 }).webp({ quality: 84, alphaQuality: 88 }).toFile(`${OUT}/nexmax_travel.webp`);
+  out.push('nexmax_travel.webp');
+
+  // The old map, without its brass frame: the band from the tower to below the
+  // castle, as wide as the screen and down to its bottom (the menu stands on
+  // it), with a torn top edge like the example.
+  const MAP = need('04_古地図.png');
+  const crop = { left: 30, top: 271, width: 1026, height: 962 };
+  let edge = 'M0 26';
+  for (let x = 0, i = 0; x <= crop.width; x += 18, i++) edge += ` L${x} ${(i * 37) % 23 + 4}`;
+  const mask = Buffer.from(
+    `<svg xmlns="http://www.w3.org/2000/svg" width="${crop.width}" height="${crop.height}"><path d="${edge} L${crop.width} ${crop.height} L0 ${crop.height} Z" fill="#fff"/></svg>`,
+  );
+  // (sharp resizes before it composites, so the mask goes on first, in its own pass)
+  const torn = await sharp(await sharp(MAP).extract(crop).png().toBuffer()).composite([{ input: mask, blend: 'dest-in' }]).png().toBuffer();
+  await sharp(torn)
+    .resize({ width: 941 })
+    .webp({ quality: 78, alphaQuality: 85 })
+    .toFile(`${OUT}/map.webp`);
+  out.push('map.webp');
+
+  // The five cards keep their canvas (1536 × 1024): the stars are placed on it.
+  for (const [file, name] of [
+    ['05_カード_ひらがな.png', 'card_hiragana.webp'],
+    ['06_カード_カタカナ.png', 'card_katakana.webp'],
+    ['07_カード_N5.png', 'card_n5.webp'],
+    ['08_カード_N4.png', 'card_n4.webp'],
+    ['09_カード_N3.png', 'card_n3.webp'],
+  ]) {
+    await sharp(need(file)).resize({ width: 720 }).webp({ quality: 80, alphaQuality: 85 }).toFile(`${OUT}/${name}`);
+    out.push(name);
+  }
+
+  const MENU = need('10_メニュー.png');
+  await sharp(MENU).extract(padded(await alphaBox(MENU), 6)).resize({ width: 1300 }).webp({ quality: 82, alphaQuality: 85 }).toFile(`${OUT}/menu.webp`);
+  out.push('menu.webp');
+
+  await report(OUT, out);
+};
+
 if (!only || only === 'title') await title();
 if (!only || only === 'kanjiyasan') await kanjiyasan();
 if (!only || only === 'battle') await battle();
+if (!only || only === 'stageselect') await stageselect();

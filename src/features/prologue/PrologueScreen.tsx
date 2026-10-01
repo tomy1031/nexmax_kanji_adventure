@@ -10,7 +10,7 @@ import { PROLOGUE, PROLOGUE_ASK, PROLOGUE_EXITS, type PrologueVisual } from '../
 
 /**
  * プロローグ (08 §10.2): the world, the shadow, the fallen robot, and you —
- * told in English over moving pictures, before the kana forest.
+ * told in English over moving pictures, before 0章「はじまりの 空港」.
  *
  * Only transforms and opacity move (constraints: iPhone/iPad). Glows are
  * static text-shadows and gradients on layers that are rasterised once and
@@ -146,7 +146,7 @@ const Nexmax = ({ falling, still }: { falling: boolean; still: boolean }) => (
       transition={falling ? { duration: 1.6, ease: 'easeIn' } : { x: { type: 'spring', stiffness: 120, damping: 14 }, y: { duration: 2, repeat: Infinity } }}
     />
     {falling && (
-      // The falling star: a bright head and a tail, crossing once to the forest.
+      // The falling star: a bright head and a tail, crossing once toward the airport.
       <motion.div
         aria-hidden
         className="absolute top-0 left-0 h-2 w-40 origin-right rounded-full"

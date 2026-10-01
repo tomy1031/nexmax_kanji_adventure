@@ -90,6 +90,15 @@ Rural pre-modern Japanese countryside. Match the look of the reference picture-b
 colored pencil on paper grain), but the setting is present-day Japan. Gentle, slightly nostalgic palette.
 Modern objects drawn simply and softly, never photo-real. No brand names, no readable screens.`,
 
+  // 文字が 消えた 町（ナニワタウン）: the look of the delivered title / battle / stage-select art.
+  // Reference works are never named here (constraints 2026-09-30).
+  BG_NANIWA: `Style: polished Japanese anime background art in exactly the look of the reference image:
+richly detailed, painterly, warm cinematic lighting with soft glow. Setting: Naniwa Town — a fictional
+riverside port town inspired by Osaka, with a gentle steampunk touch: brass fittings, pipes, gears and
+rivets, wood and leather details, glass-paned lanterns. Palette: deep indigo-violet sky and blue shadows
+against warm amber and orange lamplight. Every signboard, screen, board and tag is BLANK — an empty dark
+panel or frame — with no letters, numbers, symbols or logos anywhere. No real place names, no brands.`,
+
   FG_LAYER: `Output: 1024x1536 portrait PNG with a FULLY TRANSPARENT background (alpha).
 Draw ONLY the foreground framing elements described below, hugging the bottom edge and the left and right edges,
 leaving the middle and the whole upper half completely empty and transparent.
@@ -343,6 +352,34 @@ const BG = [
 ];
 
 // ---------------------------------------------------------------------------
+// 0章「はじまりの 空港」（08 §3.7）— ナニワタウンへ 向かう 前の 空港。
+// 1話の 展望デッキは 渡された 素材（public/img/stageselect/bg_tall.webp）を そのまま 使う。
+// ---------------------------------------------------------------------------
+
+const naniwa = (id, desc, used) => ({
+  id,
+  group: 'bg_naniwa',
+  prio: 'A',
+  out: `img/naniwa/${id}.webp`,
+  kind: 'bg',
+  bgmode: 'none',
+  refs: ['public/img/stageselect/bg_tall.webp'],
+  style: ['BG_COMMON', 'BG_NANIWA'],
+  diff: `Scene: ${desc}`,
+  used,
+  note: '絵本の 場面（scenes.ts の photo）として 使う',
+});
+
+const NANIWA = [
+  naniwa('naniwa_sky_garden', 'the rooftop garden of a grand airport terminal at sunset: in the middle an old cherry tree with bare branches (no blossoms, no leaves) in a round brass-edged planter, stone paving, brass railings and glass-paned lanterns, planters with small shrubs; a few small BLANK wooden signboards hang from the branches; beyond the railing the airport apron with parked jets and, far across the bay, a town skyline with a red Ferris wheel.', 'かな編 2話（屋上の 庭・顔の ない 桜の 木）'),
+  naniwa('naniwa_lounge', 'inside a quiet airport departure lounge at dusk: rows of brass-and-leather waiting seats, a huge arched window wall showing a jet at the gate under an orange sunset sky, warm hanging lanterns, on the left wall a board covered in small BLANK name tags (lost and found), a polished floor reflecting the light. Empty and slightly melancholic.', 'かな編 3話（待合・名前の ない 犬）'),
+  naniwa('naniwa_walkway', 'a long glass-roofed connecting walkway from the airport terminal toward the train station, at dusk, seen looking down its length: a moving walkway, simple arrow shapes on the floor (no letters), brass ribs holding the glass, hanging lanterns; through the glass on the right, the sea, a long bridge, and a town on a high hill across the bay with warm lights.', 'かな編 4話（駅への 連絡通路・黒い 煙）'),
+  naniwa('naniwa_runway_night', 'the airport apron and runway at night after every light has gone out: deep indigo sky with NO stars at all, dark silhouettes of parked jets and a control tower, rows of unlit runway lamps, only a faint warm glow from a few distant windows; calm dark ground in the foreground.', 'かな編 5話（灯りの 消えた 夜の 滑走路。星は お話で 戻る）'),
+  naniwa('naniwa_station', 'the airport train station platform in the early morning: a brass-and-glass steampunk station roof with gears and pipes, a sleek BLUE train waiting on one side and a RED train on the other, ticket machines and gates in the background whose screens and signs are all blank, soft dawn light from the open end of the platform, hanging lanterns.', 'かな編 6〜8話（空港の 駅・切符・青い 電車と 赤い 電車）'),
+  naniwa('naniwa_train', 'inside a blue commuter train crossing a long bridge over the bay at sunrise: rows of seats on both sides, brass handrails and hanging straps, big windows showing the sea and, straight ahead, a town on a high hill with a red Ferris wheel catching the morning light.', 'かな編 9話（海を わたる 青い 電車）'),
+];
+
+// ---------------------------------------------------------------------------
 // 地図 — 1枚の 縦長を 上下 2枚に 分けて 撮り、import.mjs が つなぐ
 // ---------------------------------------------------------------------------
 
@@ -386,7 +423,7 @@ const ICONS = [
   },
 ];
 
-export const ASSETS = [...NEXMAX, ...GENDAI, ...MUKASHI_FOLK, ...ENEMIES, ...BG, ...MAPS, ...ICONS];
+export const ASSETS = [...NEXMAX, ...GENDAI, ...MUKASHI_FOLK, ...ENEMIES, ...BG, ...NANIWA, ...MAPS, ...ICONS];
 
 export const GROUPS = {
   nexmax: 'ネクマックス（表情・ポーズ）',
@@ -395,6 +432,7 @@ export const GROUPS = {
   enemy: '敵（ステージの ボス）',
   bg_mukashi: '背景 — むかし編（と タイトル・メニュー）',
   bg_gendai: '背景 — 現代編',
+  bg_naniwa: '背景 — 0章「はじまりの 空港」（ナニワタウン）',
   map: 'ステージ選択の 地図',
   icon: 'アプリの アイコン',
 };

@@ -29,7 +29,7 @@ export const MOJI1_SCRIPTS: Record<string, EpisodeScript> = {
     intro: {
       stageId: 'moji-1-1',
       lines: [
-        { bg: 'gendai_city', text: 'でんしゃが、うえの まちに つきました。', en: 'The train arrives in the upper town.' },
+        { bg: 'gendai_city', text: 'でんしゃが、ナニワタウンに つきました。', en: 'The train arrives in Naniwa Town, the town on the hill.' },
         { speaker: 'nexmax', sprite: 'nexmax:hello', text: 'ここは えきです。', en: 'This is the station.' },
         { glyph: '📅 ❓', text: 'えきの カレンダーの じが、ありません。', en: 'The letters on the station calendar are gone.' },
         { text: '日(にち)、月(げつ)、火(か)、水(すい)、木(もく)……おとだけ、のこって います。', en: 'Only the sounds are left: nichi, getsu, ka, sui, moku.' },
