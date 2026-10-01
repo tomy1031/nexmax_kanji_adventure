@@ -48,11 +48,11 @@ export const KANA_SCRIPTS: Record<string, KanaScript> = Object.fromEntries([
       { text: "It's trying to talk, but its words come out full of holes." },
       { speaker: 'nexmax', text: '🙅 だめだ……' },
       { text: 'Five empty signboards hang over the path. On each one, the ghost of a letter shows through the dark glass.' },
-      { speaker: 'nexmax', sprite: 'nexmax:guide', text: '🗣️ → 🐛 → ⬛' },
+      { speaker: 'nexmax', sprite: 'nexmax:guide', text: '🗣️ → 🐛 → 🪧' },
       { text: 'Words… eaten, and the signs went dark? The words it lost left these blank signs behind?' },
-      { speaker: 'nexmax', sprite: 'nexmax:determined', text: '✍️ → ⬛💡 → 🗣️' },
+      { speaker: 'nexmax', sprite: 'nexmax:determined', text: '✍️ → 💡🪧 → 🗣️' },
       { text: 'Write — the sign lights up — it can speak again. If I write the letter on the sign, it comes back on.' },
-      { speaker: 'nexmax', sprite: 'nexmax:guide', text: '👉⬛ 🙏' },
+      { speaker: 'nexmax', sprite: 'nexmax:guide', text: '👉🪧 🙏' },
       { text: 'Okay. Let me try.' },
     ],
     [
@@ -81,7 +81,7 @@ export const KANA_SCRIPTS: Record<string, KanaScript> = Object.fromEntries([
       { speaker: 'nexmax', text: 'き！ かお！' },
       { text: '「□！ □お！」 …o? I can\'t make it out.' },
       { text: 'Dark signs hang from the branches — the pieces of its face, eaten blank.' },
-      { speaker: 'nexmax', sprite: 'nexmax:guide', text: '⬛ 💡 かいて！' },
+      { speaker: 'nexmax', sprite: 'nexmax:guide', text: '✍️💡🪧 かいて！' },
       { text: 'Same as before: write, cut, and the words come back.' },
     ],
     [
@@ -103,7 +103,7 @@ export const KANA_SCRIPTS: Record<string, KanaScript> = Object.fromEntries([
       { text: 'Her words are full of holes too.' },
       { speaker: 'nexmax', sprite: 'nexmax:think', text: '……😢' },
       { text: 'Blank nameplates hang at the village gate, each one missing a name.' },
-      { speaker: 'nexmax', sprite: 'nexmax:guide', text: '⬛ 💡 かく！' },
+      { speaker: 'nexmax', sprite: 'nexmax:guide', text: '✍️💡🪧 かく！' },
       { text: 'かく kaku — write. Now that he has か and く back, he says it the short way.' },
     ],
     [
@@ -126,7 +126,7 @@ export const KANA_SCRIPTS: Record<string, KanaScript> = Object.fromEntries([
       { speaker: 'nexmax', sprite: 'nexmax:think', text: 'みちが……！' },
       { text: '「□ちが」 …chi ga? Something about the markers.' },
       { text: 'The trail markers are blank signs now — dark where the letters used to glow.' },
-      { speaker: 'nexmax', sprite: 'nexmax:determined', text: '⬛ 💡 かく！' },
+      { speaker: 'nexmax', sprite: 'nexmax:determined', text: '✍️💡🪧 かく！' },
     ],
     [
       { fx: [], speaker: 'nexmax', sprite: 'nexmax:smile', text: 'みち！ 🙆‍♂️' },
@@ -148,7 +148,7 @@ export const KANA_SCRIPTS: Record<string, KanaScript> = Object.fromEntries([
       { speaker: 'nexmax', text: 'みちが みえない。よるは こわい。' },
       { text: 'みちが みえない michi ga mienai — we can\'t see the path. The rest is eaten, but I can tell he is scared.' },
       { text: 'Dark signs lie where the stars fell. They glow faintly, like coals.' },
-      { speaker: 'nexmax', sprite: 'nexmax:guide', text: '⬛ 💡 かきます！' },
+      { speaker: 'nexmax', sprite: 'nexmax:guide', text: '✍️💡🪧 かきます！' },
       { text: 'かきます kakimasu — the polite way to say "write". That is how they say it in class.' },
     ],
     [
@@ -172,7 +172,7 @@ export const KANA_SCRIPTS: Record<string, KanaScript> = Object.fromEntries([
       { speaker: 'nexmax', sprite: 'nexmax:think', text: 'ぼくの なまえも、カタカナ だった。' },
       { text: 'ぼくの なまえも boku no namae mo… his name was written in these letters. That is why he can\'t say it.' },
       { text: 'In the station hall, every sign is blank.' },
-      { speaker: 'nexmax', sprite: 'nexmax:guide', text: '⬛ 💡 かきます！' },
+      { speaker: 'nexmax', sprite: 'nexmax:guide', text: '✍️💡🪧 かきます！' },
     ],
     [
       { text: 'A kiosk sign fills back in: ココア.' },
@@ -190,7 +190,7 @@ export const KANA_SCRIPTS: Record<string, KanaScript> = Object.fromEntries([
       { speaker: 'nexmax', sprite: 'nexmax:think', text: 'キップを かいたい。どこを おす？ 🤔' },
       { text: 'かいたい kaitai — he wants to buy something. どこを おす doko o osu — where do I press?' },
       { text: "The ticket machine's buttons are blank — one dark square after another." },
-      { speaker: 'nexmax', sprite: 'nexmax:guide', text: '⬛ 💡 かきます！' },
+      { speaker: 'nexmax', sprite: 'nexmax:guide', text: '✍️💡🪧 かきます！' },
     ],
     [
       { text: 'Letters appear on the screen: スタート.' },
@@ -207,7 +207,7 @@ export const KANA_SCRIPTS: Record<string, KanaScript> = Object.fromEntries([
       { speaker: 'nexmax', sprite: 'nexmax:determined', text: 'キップが ないと、のれない！' },
       { text: 'のれない norenai — without a ticket we can\'t get on!' },
       { text: 'The sign over the platform gate has gone dark.' },
-      { speaker: 'nexmax', sprite: 'nexmax:guide', text: '⬛ 💡 かきます！' },
+      { speaker: 'nexmax', sprite: 'nexmax:guide', text: '✍️💡🪧 かきます！' },
     ],
     [
       { text: 'A ticket slides out: キップ kippu! The little ○ on フ makes プ.' },
@@ -226,7 +226,7 @@ export const KANA_SCRIPTS: Record<string, KanaScript> = Object.fromEntries([
       { speaker: 'nexmax', sprite: 'nexmax:think', text: 'なまえが ないと、ちからが でない。' },
       { text: 'なまえが ないと namae ga nai to… ちからが でない chikara ga denai. Without his name, he has no strength.' },
       { text: 'Dark, blank signs hang all along the aisle to the last car.' },
-      { speaker: 'nexmax', sprite: 'nexmax:guide', text: '⬛ 💡 かきます！' },
+      { speaker: 'nexmax', sprite: 'nexmax:guide', text: '✍️💡🪧 かきます！' },
     ],
     [
       { glyph: 'ネクマックス', text: 'The last hole on the badge fills in.' },
@@ -245,7 +245,7 @@ export const KANA_SCRIPTS: Record<string, KanaScript> = Object.fromEntries([
       { speaker: 'nexmax', sprite: 'nexmax:determined', text: 'かえして！ ぜんぶ かえして！' },
       { text: 'かえして kaeshite — give them back!' },
       { text: 'The last blank signs spin in the whirlpool.' },
-      { speaker: 'nexmax', sprite: 'nexmax:guide', text: '⬛ 💡 かきます！ さいごの カタカナ！' },
+      { speaker: 'nexmax', sprite: 'nexmax:guide', text: '✍️💡🪧 かきます！ さいごの カタカナ！' },
     ],
     [
       { fx: ['heal'], text: 'The Mojikui chokes, and kana burst out of it like confetti.' },
