@@ -100,3 +100,20 @@ describe('1章 scripts', () => {
     expect(bad).toEqual([]);
   });
 });
+
+describe('なかまを くれる 話 (09 §3 A)', () => {
+  it('gives an individual that exists and is one the story hands out', async () => {
+    const { INDIVIDUALS, Rank } = await import('./individuals');
+    const { MOJI_EPISODES } = await import('./mojiEpisodes');
+    for (const ep of MOJI_EPISODES.filter((e) => e.grants)) {
+      const who = INDIVIDUALS.find((i) => i.id === ep.grants);
+      expect(who, ep.id).toBeDefined();
+      expect(who?.rank, ep.id).toBe(Rank.STORY);
+    }
+  });
+
+  it('brings a なかま on 1章 4話, where the gacha opens', async () => {
+    const { getMojiEpisode } = await import('./mojiEpisodes');
+    expect(getMojiEpisode('moji-1-4')?.grants).toBe('ISTJ');
+  });
+});
