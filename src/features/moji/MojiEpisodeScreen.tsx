@@ -386,7 +386,7 @@ const EpisodePlayer = ({ id }: { id: string }) => {
         return (
           <BattleScene
             key={battleKey}
-            stage={{ id: ep.id, bg: ep.bg, boss: ep.boss, reward: EPISODE_REWARD }}
+            stage={{ id: ep.id, bg: ep.bg, boss: ep.boss, reward: EPISODE_REWARD, grants: ep.grants }}
             kanjiPool={kanji}
             patience={basePatience(ep.order)}
             mastery

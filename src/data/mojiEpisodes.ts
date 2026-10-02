@@ -35,6 +35,8 @@ export interface MojiEpisode {
   /** Picture-book scene behind the fight. */
   bg: string;
   boss: MojiBoss;
+  /** The なかま (data/individuals.ts) this episode's first clear brings (09 §3 A). */
+  grants?: string;
 }
 
 export const MOJI_EPISODES: MojiEpisode[] = [
@@ -78,6 +80,8 @@ export const MOJI_EPISODES: MojiEpisode[] = [
     kanji: [...'六七八九十'],
     bg: 'naniwa_factory',
     boss: { name: 'はぐるまの モジクイ', img: 'img/battle/mojikui_gear.webp', hp: 96, attack: 34, element: Element.AN, icon: 'GiShadowFollower' },
+    // 七ばん, the factory robot who wakes up: まじめの ネクマックス (09 §1.2).
+    grants: 'ISTJ',
   },
   {
     id: 'moji-1-5',

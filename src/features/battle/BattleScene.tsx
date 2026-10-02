@@ -27,7 +27,8 @@ import {
 } from '../../lib/battle';
 import { assetPath } from '../../lib/assetPath';
 import { GameIcon } from '../../components/ui/GameIcon';
-import { featuresUnlockedBy, FEATURE_INTRO } from '../../data/unlocks';
+import { Feature, featuresUnlockedBy, FEATURE_INTRO, isFeatureUnlocked } from '../../data/unlocks';
+import { PERFECT_BONUS_GEMS } from '../../data/clearRewards';
 import PictureBook from '../picturebook/PictureBook';
 import EnemyArt from './EnemyArt';
 import { MASTERY_REPS, comboMultiplier, masteryMultiplier, pickWeakest, starsOf, type Stars } from '../../lib/mastery';
@@ -249,7 +250,8 @@ export const BattleScene = ({
   // Set at the first reading turn, so where the answer sits differs fight to fight.
   const fightSeedRef = useRef(0);
   const [outcome, setOutcome] = useState<Outcome>(null);
-  const [rewards, setRewards] = useState<{ gems: number; individual: string | null }>({ gems: 0, individual: null });
+  const [rewards, setRewards] = useState<{ gems: number; individual: string | null; perfect: boolean }>({ gems: 0, individual: null, perfect: false });
+  const markPerfect = useGameStore((s) => s.markPerfect);
 
   const settledRef = useRef(false);
   // The boss is down and the win is on its way (settleTimer). Nothing the
@@ -314,10 +316,13 @@ export const BattleScene = ({
         granted = grantIndividual(stage.grants) ? stage.grants : null;
       }
       if (gems) addGems(gems);
+      // かんぺき (★3, no mistake): once per stage, a little more (09 §3 B).
+      const perfect = mastery && stars === 3 && markPerfect(stage.id);
+      if (perfect) addGems(PERFECT_BONUS_GEMS);
       clearStage(stage.id);
-      setRewards({ gems, individual: granted });
+      setRewards({ gems: gems + (perfect ? PERFECT_BONUS_GEMS : 0), individual: granted, perfect });
     },
-    [tutorial, alreadyCleared, stage, addGems, clearStage, grantIndividual, stats.maxHp, mastery, gainExp],
+    [tutorial, alreadyCleared, stage, addGems, clearStage, grantIndividual, stats.maxHp, mastery, gainExp, markPerfect],
   );
 
   /**
@@ -606,6 +611,9 @@ export const BattleScene = ({
               bossName={stage.boss.name}
               mistakes={totalMistakes}
               gems={rewards.gems}
+              perfect={rewards.perfect}
+              // Gems show on the new route once the gacha gives them a use (1章 4話).
+              showGems={!mastery || isFeatureUnlocked(Feature.GACHA, useGameStore.getState().clearedStages)}
               newFriend={!!rewards.individual}
               opened={outcome.kind === 'win' ? opened : []}
               tutorial={tutorial}

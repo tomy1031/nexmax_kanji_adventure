@@ -73,6 +73,8 @@ export interface GameState {
   progress: Record<string, KanjiProgress>;
   /** Stage ids the learner has cleared. */
   clearedStages: string[];
+  /** Stages cleared once with no mistake (★3): the かんぺき bonus is paid once (data/clearRewards.ts). */
+  perfectStages: string[];
   /** Nexmax individuals owned, by id. */
   individuals: string[];
   /** The individual currently deployed. */
@@ -136,6 +138,8 @@ export interface GameActions {
    */
   gainExp: (n: number, source?: { bossRepeat?: boolean }) => number;
   clearStage: (stageId: string) => void;
+  /** Records a かんぺき clear. True only the first time for that stage. */
+  markPerfect: (stageId: string) => boolean;
   addGems: (n: number) => void;
   spendGems: (n: number) => boolean;
   grantIndividual: (id: string) => boolean;
@@ -182,6 +186,7 @@ const blankProgress = (): KanjiProgress => ({
 const initialState: GameState = {
   progress: {},
   clearedStages: [],
+  perfectStages: [],
   individuals: [],
   activeIndividual: null,
   weapons: [],
@@ -301,6 +306,12 @@ export const useGameStore = create<GameState & GameActions>()(
           daily: source?.bossRepeat ? { ...s.daily, bossExpToday: (s.daily.bossExpToday ?? 0) + gained } : s.daily,
         }));
         return gained;
+      },
+
+      markPerfect: (stageId) => {
+        if (get().perfectStages.includes(stageId)) return false;
+        set((s) => ({ perfectStages: [...s.perfectStages, stageId] }));
+        return true;
       },
 
       clearStage: (stageId) => {
