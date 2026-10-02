@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { RubyText } from '../../components/ui/Ruby';
 import { STAR_PERKS, STAR_PERKS_HOW } from '../../data/starPerks';
 import { FIGHT_RULES } from '../../data/fightRules';
+import { useEscapeToClose } from '../../hooks/useEscapeToClose';
 
 type Page = 'stars' | 'fight';
 
@@ -17,6 +18,7 @@ const PAGE_TITLE: Record<Page, string> = { stars: '★の ひみつ', fight: '�
 export const StarSecrets = ({ showFurigana, onClose }: { showFurigana: boolean; onClose: () => void }) => {
   const [page, setPage] = useState<Page>('stars');
   const [en, setEn] = useState(false);
+  const firstRef = useEscapeToClose(onClose);
   const enLine = (line: string) =>
     en && (
       <span lang="en" className="block text-[11px] leading-snug" style={{ color: 'var(--ink-2)' }}>
@@ -96,7 +98,7 @@ export const StarSecrets = ({ showFurigana, onClose }: { showFurigana: boolean; 
               ✎ <RubyText showFurigana={showFurigana}>{STAR_PERKS_HOW.text}</RubyText>
               {enLine(STAR_PERKS_HOW.en)}
             </p>
-            <button type="button" data-tap className="g-btn g-btn-primary mt-3 w-full" onClick={() => setPage('fight')}>
+            <button ref={firstRef} type="button" data-tap className="g-btn g-btn-primary mt-3 w-full" onClick={() => setPage('fight')}>
               つぎへ ▶
             </button>
           </>
