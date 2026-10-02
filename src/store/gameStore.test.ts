@@ -1,0 +1,97 @@
+import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
+import { BOSS_REPEAT_EXP_PER_DAY, KANJI_EXP_PER_DAY } from '../lib/level';
+
+// The store persists to localStorage; vitest runs in node, so give it one.
+const memory = new Map<string, string>();
+vi.stubGlobal('localStorage', {
+  getItem: (k: string) => memory.get(k) ?? null,
+  setItem: (k: string, v: string) => void memory.set(k, v),
+  removeItem: (k: string) => void memory.delete(k),
+  clear: () => memory.clear(),
+  key: (i: number) => [...memory.keys()][i] ?? null,
+  get length() {
+    return memory.size;
+  },
+});
+
+let useGameStore: (typeof import('./gameStore'))['useGameStore'];
+beforeAll(async () => {
+  ({ useGameStore } = await import('./gameStore'));
+});
+afterEach(() => {
+  vi.useRealTimers();
+  useGameStore.getState().resetSave();
+});
+
+const exp = () => useGameStore.getState().exp;
+
+describe('ネクマックスの 経験値 (store)', () => {
+  it('starts at 0', () => {
+    expect(exp()).toBe(0);
+  });
+
+  it('pays 2 for a clean write and 1 with a slip, without changing what recordRep returns', () => {
+    const s = useGameStore.getState();
+    expect(s.recordRep('n5_day_hi', 0)).toBe(false);
+    expect(exp()).toBe(2);
+    s.recordRep('n5_day_hi', 1);
+    expect(exp()).toBe(3);
+    s.recordRep('n5_day_hi', 3);
+    expect(exp()).toBe(3);
+  });
+
+  it('stops one kanji at its daily allowance, but not the next kanji', () => {
+    const s = useGameStore.getState();
+    for (let i = 0; i < 15; i++) s.recordRep('n5_day_hi', 0);
+    expect(exp()).toBe(KANJI_EXP_PER_DAY);
+    s.recordRep('n5_month_tsuki', 0);
+    expect(exp()).toBe(KANJI_EXP_PER_DAY + 2);
+  });
+
+  it('gives the allowance back on a new day', () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date(2026, 9, 3, 10));
+    const s = useGameStore.getState();
+    for (let i = 0; i < 15; i++) s.recordRep('n5_day_hi', 0);
+    expect(exp()).toBe(KANJI_EXP_PER_DAY);
+    vi.setSystemTime(new Date(2026, 9, 4, 10));
+    s.recordRep('n5_day_hi', 0);
+    expect(exp()).toBe(KANJI_EXP_PER_DAY + 2);
+  });
+
+  it('pays 3 for a review whose time has come, then as a write', () => {
+    const s = useGameStore.getState();
+    for (let i = 0; i < 10; i++) s.recordRep('n5_fire_hi', 1); // owned at 10, +1 each
+    const before = exp();
+    // Its first review is due: move the clock past it.
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date((useGameStore.getState().progress.n5_fire_hi.nextReview ?? 0) + 60_000));
+    s.recordReview('n5_fire_hi', 0);
+    expect(exp()).toBe(before + 3);
+    // The schedule moved on: the same kanji again is only a write.
+    s.recordReview('n5_fire_hi', 0);
+    expect(exp()).toBe(before + 5);
+  });
+
+  it('adds fight experience, a replayed opponent only up to its daily cap', () => {
+    const s = useGameStore.getState();
+    expect(s.gainExp(10)).toBe(10);
+    let total = 0;
+    for (let i = 0; i < 10; i++) total += s.gainExp(3, { bossRepeat: true });
+    expect(total).toBe(BOSS_REPEAT_EXP_PER_DAY);
+    expect(exp()).toBe(10 + BOSS_REPEAT_EXP_PER_DAY);
+    expect(s.gainExp(0)).toBe(0);
+    expect(s.gainExp(-4)).toBe(0);
+  });
+
+  it('reads a save from before the level as experience 0', () => {
+    const merge = useGameStore.persist.getOptions().merge!;
+    const current = useGameStore.getState();
+    const old = { clearedStages: ['moji-1-1'], daily: { date: '2026-10-01', repsToday: 3, obtainedToday: 0, stagesToday: 0, reviewsToday: 0, claimed: [] } };
+    const merged = merge(old, current) as typeof current;
+    expect(merged.exp).toBe(0);
+    expect(merged.daily.expByKanji).toEqual({});
+    expect(merged.daily.bossExpToday).toBe(0);
+    expect(merged.clearedStages).toEqual(['moji-1-1']);
+  });
+});

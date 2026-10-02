@@ -3,6 +3,14 @@ import { persist, createJSONStorage } from 'zustand/middleware';
 import type { KanjiProgress } from '../types/kanji';
 import { REPS_TO_OBTAIN } from '../types/kanji';
 import { calculateNextReview, qualityFromMistakes } from '../lib/srs';
+import {
+  BOSS_REPEAT_EXP_PER_DAY,
+  KANJI_EXP_PER_DAY,
+  cappedGain,
+  expForReview,
+  expForWrite,
+  isReviewDue,
+} from '../lib/level';
 import { DEFAULT_VERSUS_STATS, type VersusStats } from '../features/versus/types';
 import { FoundVia, HINT_COST, MAX_HINT, TRY_COST_2, TRY_COST_3 } from '../lib/forge/discovery';
 import { getGear, type GearSlot } from '../data/equipment';
@@ -40,6 +48,10 @@ export interface DailyState {
   reviewsToday: number;
   /** Task ids already claimed today. */
   claimed: string[];
+  /** Experience each kanji has given today (lib/level.ts KANJI_EXP_PER_DAY). */
+  expByKanji: Record<string, number>;
+  /** Experience from replaying beaten opponents today (BOSS_REPEAT_EXP_PER_DAY). */
+  bossExpToday: number;
 }
 
 export const todayKey = (d: Date = new Date()): string =>
@@ -52,6 +64,8 @@ const freshDaily = (): DailyState => ({
   stagesToday: 0,
   reviewsToday: 0,
   claimed: [],
+  expByKanji: {},
+  bossExpToday: 0,
 });
 
 export interface GameState {
@@ -98,6 +112,8 @@ export interface GameState {
    * trying every pair costs the same effort as learning the characters.
    */
   sumi: number;
+  /** ネクマックスの 経験値, all of it (lib/level.ts turns it into a level, up to the kanji owned). */
+  exp: number;
   /** Words discovered, and how. */
   foundWords: Record<string, FoundVia>;
   /** Hint tier opened per word. */
@@ -113,6 +129,12 @@ export interface GameActions {
   recordRep: (kanjiId: string, mistakes: number) => boolean;
   /** Record a review rep on an already-obtained kanji. */
   recordReview: (kanjiId: string, mistakes: number) => void;
+  /**
+   * Experience from a fight (a reading turn, a beaten opponent). Writes and
+   * reviews add theirs in recordRep / recordReview. Returns what was added
+   * (a replayed opponent's share stops at its daily cap).
+   */
+  gainExp: (n: number, source?: { bossRepeat?: boolean }) => number;
   clearStage: (stageId: string) => void;
   addGems: (n: number) => void;
   spendGems: (n: number) => boolean;
@@ -177,6 +199,7 @@ const initialState: GameState = {
   startPath: null,
   versus: DEFAULT_VERSUS_STATS,
   sumi: 0,
+  exp: 0,
   foundWords: {},
   hints: {},
   misses: {},
@@ -211,16 +234,23 @@ export const useGameStore = create<GameState & GameActions>()(
           next.streak = outcome.streak;
         }
 
-        set((s) => ({
-          progress: { ...s.progress, [kanjiId]: next },
-          // Writing is the only source of ink.
-          sumi: s.sumi + 1,
-          daily: {
-            ...s.daily,
-            repsToday: s.daily.repsToday + 1,
-            obtainedToday: s.daily.obtainedToday + (justObtained ? 1 : 0),
-          },
-        }));
+        set((s) => {
+          // Writing is also Nexmax's experience, up to a day's worth per kanji.
+          const used = s.daily.expByKanji?.[kanjiId] ?? 0;
+          const gained = cappedGain(expForWrite(mistakes), used, KANJI_EXP_PER_DAY);
+          return {
+            progress: { ...s.progress, [kanjiId]: next },
+            // Writing is the only source of ink.
+            sumi: s.sumi + 1,
+            exp: s.exp + gained,
+            daily: {
+              ...s.daily,
+              repsToday: s.daily.repsToday + 1,
+              obtainedToday: s.daily.obtainedToday + (justObtained ? 1 : 0),
+              expByKanji: { ...(s.daily.expByKanji ?? {}), [kanjiId]: used + gained },
+            },
+          };
+        });
         return justObtained;
       },
 
@@ -228,25 +258,49 @@ export const useGameStore = create<GameState & GameActions>()(
         get().rollDailyIfNeeded();
         const prev = get().progress[kanjiId];
         if (!prev) return;
+        // Read before the schedule moves on: was this review's time up?
+        const due = isReviewDue(prev, Date.now());
         const outcome = calculateNextReview(
           qualityFromMistakes(mistakes),
           prev.intervalDays,
           prev.streak,
         );
-        set((s) => ({
-          progress: {
-            ...s.progress,
-            [kanjiId]: {
-              ...prev,
-              mistakes: prev.mistakes + mistakes,
-              intervalDays: outcome.intervalDays,
-              nextReview: outcome.nextReview,
-              streak: outcome.streak,
+        set((s) => {
+          const used = s.daily.expByKanji?.[kanjiId] ?? 0;
+          const gained = cappedGain(expForReview(mistakes, due), used, KANJI_EXP_PER_DAY);
+          return {
+            progress: {
+              ...s.progress,
+              [kanjiId]: {
+                ...prev,
+                mistakes: prev.mistakes + mistakes,
+                intervalDays: outcome.intervalDays,
+                nextReview: outcome.nextReview,
+                streak: outcome.streak,
+              },
             },
-          },
-          sumi: s.sumi + 1,
-          daily: { ...s.daily, reviewsToday: s.daily.reviewsToday + 1 },
+            sumi: s.sumi + 1,
+            exp: s.exp + gained,
+            daily: {
+              ...s.daily,
+              reviewsToday: s.daily.reviewsToday + 1,
+              expByKanji: { ...(s.daily.expByKanji ?? {}), [kanjiId]: used + gained },
+            },
+          };
+        });
+      },
+
+      gainExp: (n, source) => {
+        if (!(n > 0)) return 0;
+        get().rollDailyIfNeeded();
+        const { daily } = get();
+        const gained = source?.bossRepeat ? cappedGain(n, daily.bossExpToday ?? 0, BOSS_REPEAT_EXP_PER_DAY) : n;
+        if (gained <= 0) return 0;
+        set((s) => ({
+          exp: s.exp + gained,
+          daily: source?.bossRepeat ? { ...s.daily, bossExpToday: (s.daily.bossExpToday ?? 0) + gained } : s.daily,
         }));
+        return gained;
       },
 
       clearStage: (stageId) => {
@@ -425,6 +479,8 @@ export const useGameStore = create<GameState & GameActions>()(
           misses: { ...current.misses, ...(p.misses ?? {}) },
           kana: { ...current.kana, ...(p.kana ?? {}) },
           daily: { ...current.daily, ...(p.daily ?? {}) },
+          // Saves from before the level (2026-10-03) start at 0.
+          exp: typeof p.exp === 'number' ? p.exp : current.exp,
           streak: { ...current.streak, ...(p.streak ?? {}) },
           equippedGear: { ...current.equippedGear, ...(p.equippedGear ?? {}) },
         };

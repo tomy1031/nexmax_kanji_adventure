@@ -369,10 +369,11 @@ export const NaniwaBattleView = ({
             >
               {Math.max(0, bossHp)} / {bossMaxHp}
             </span>
-            {/* がまん: the slips left before it strikes */}
+            {/* がまん: the slips left before it strikes. Five fit the example's
+                plate; the level and a charm can add more, so it grows to the left. */}
             <div
               className="absolute flex items-center justify-end gap-[0.6cqw] rounded-full border border-[#b8863f]/70 bg-[#140c06]/80 px-[1.2cqw]"
-              style={onTop(735, 134, 170, 30)}
+              style={onTop(735 - Math.max(0, patience - 5) * 22, 134, 170 + Math.max(0, patience - 5) * 22, 30)}
               aria-label={`ミス ${rage} / ${patience}`}
             >
               <span className="leading-none font-black" style={{ fontSize: cq(18) }}>

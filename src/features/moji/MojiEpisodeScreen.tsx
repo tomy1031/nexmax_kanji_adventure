@@ -24,6 +24,7 @@ import { PhaseDoors } from '../../components/ui/Doors';
 import KanjiBackText from './KanjiBackText';
 import ToBeContinued from './ToBeContinued';
 import StarSecrets from './StarSecrets';
+import NexmaxLevelPlate from './NexmaxLevel';
 import { useOwnedKanji } from './useOwnedKanji';
 
 /**
@@ -148,6 +149,9 @@ const ReadyScreen = ({
           </button>
           <NexmaxSays text={weakest >= 2 ? 'いける！' : 'もっと 書(か)く？'} pose={weakest >= 2 ? 'cheer' : 'guide'} size={64} />
         </div>
+
+        {/* ネクマックスの レベル: there from the start (09 §2). */}
+        <NexmaxLevelPlate showFurigana={showFurigana} />
 
         <ul className="grid grid-cols-2 gap-2">
           {kanji.map((k, i) => {

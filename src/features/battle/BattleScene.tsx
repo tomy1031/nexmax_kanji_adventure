@@ -37,6 +37,7 @@ import NaniwaBattleView from './NaniwaBattleView';
 import { useBgm } from '../../lib/bgm';
 import { isReadTurn, readDamage, readQuestion } from '../../lib/readTurn';
 import { nextStarGoal } from '../../data/starPerks';
+import { EXP_BOSS_FIRST, EXP_BOSS_REPEAT, EXP_READ, applyLevel, levelInfo, levelOf, ownedCount } from '../../lib/level';
 
 /**
  * The fight.
@@ -175,19 +176,27 @@ export const BattleScene = ({
   const [clearedAtStart] = useState(alreadyCleared);
   const [clearsAtStart] = useState(() => useGameStore.getState().clearedStages);
   const equippedGear = useGameStore((s) => s.equippedGear);
+  const gainExp = useGameStore((s) => s.gainExp);
+  const expNow = useGameStore((s) => s.exp);
+  // ネクマックスの レベル (lib/level.ts), as it stood when the fight began: a
+  // level gained mid-fight counts from the next one, so the HP bar does not
+  // jump and a full-HP win still reads as full HP.
+  const [startExp] = useState(() => useGameStore.getState().exp);
+  const [startOwned] = useState(() => ownedCount(useGameStore.getState().progress));
+  const level = mastery && !tutorial ? levelOf(startExp, startOwned) : 1;
 
-  // Worn gear: shield, armour, charm. The tutorial fight is gear-less.
-  const stats = useMemo(
-    () =>
-      statsFromGear(
-        tutorial
-          ? []
-          : Object.values(equippedGear)
-              .map((id) => getGear(id))
-              .filter((g) => g != null),
-      ),
-    [equippedGear, tutorial],
-  );
+  // Worn gear: shield, armour, charm. The tutorial fight is gear-less. The
+  // level adds HP and patience on the new route.
+  const stats = useMemo(() => {
+    const gear = statsFromGear(
+      tutorial
+        ? []
+        : Object.values(equippedGear)
+            .map((id) => getGear(id))
+            .filter((g) => g != null),
+    );
+    return mastery ? applyLevel(gear, level) : gear;
+  }, [equippedGear, tutorial, mastery, level]);
   const patience = basePatienceValue + stats.patience;
 
   const weapon = useMemo(() => {
@@ -294,6 +303,8 @@ export const BattleScene = ({
       const stars = starsFor(mistakes, hpLeft, stats.maxHp);
       setOutcome({ kind: 'win', stars });
       if (tutorial) return;
+      // Beating the opponent is experience: more the first time; a replay's share stops at its daily cap.
+      if (mastery) gainExp(alreadyCleared ? EXP_BOSS_REPEAT : EXP_BOSS_FIRST, { bossRepeat: alreadyCleared });
 
       // First clear pays; a replay does not, so grinding a cleared stage for
       // gems is not a strategy.
@@ -306,7 +317,7 @@ export const BattleScene = ({
       clearStage(stage.id);
       setRewards({ gems, individual: granted });
     },
-    [tutorial, alreadyCleared, stage, addGems, clearStage, grantIndividual, stats.maxHp],
+    [tutorial, alreadyCleared, stage, addGems, clearStage, grantIndividual, stats.maxHp, mastery, gainExp],
   );
 
   /**
@@ -500,6 +511,7 @@ export const BattleScene = ({
         addSlip();
         return;
       }
+      gainExp(EXP_READ);
       const clean = computeDamage({
         weapon,
         individual,
@@ -527,7 +539,7 @@ export const BattleScene = ({
       }
       atImpact(finishRead, IMPACT_MS + 600);
     },
-    [mastery, readQ, readPicked, say, addSlip, weapon, individual, stage.boss.element, rust, stats.attackPct, heroCtl, enemyCtl, turn, bossHp, settle, totalMistakes, playerHp, finishRead],
+    [mastery, readQ, readPicked, say, addSlip, gainExp, weapon, individual, stage.boss.element, rust, stats.attackPct, heroCtl, enemyCtl, turn, bossHp, settle, totalMistakes, playerHp, finishRead],
   );
 
   // What this clear opens. One per stage at most, announced with a line of
@@ -618,6 +630,11 @@ export const BattleScene = ({
                       }),
                       read: { right: growth.readRight, total: growth.readTotal },
                       goal: nextStarGoal(kanjiPool, (id) => progress[id]?.reps ?? 0),
+                      exp: (() => {
+                        // What the fight added, read off the store (nothing is counted twice).
+                        const after = levelInfo(expNow, ownedCount(progress));
+                        return { gained: expNow - startExp, before: level, after: after.level, atCap: after.atCap, kanjiToRaiseCap: after.kanjiToRaiseCap };
+                      })(),
                     }
                   : undefined
               }
