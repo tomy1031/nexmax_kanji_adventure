@@ -642,6 +642,8 @@ export const BattleScene = ({
               tutorial={tutorial}
               hasNext={!!onNext}
               nextLabel={difficulty === 'hard' ? 'じゅんびに もどる' : undefined}
+              // Hard grows with the player: writing more does not shrink it, fewer slips do.
+              loseHint={difficulty === 'hard' ? 'ハードは ミスを へらすと 勝(か)てる。ゆっくり 書(か)こう。' : undefined}
               onNext={() => onNext?.()}
               onStages={onFinish}
               onRetry={() => onRetry?.()}

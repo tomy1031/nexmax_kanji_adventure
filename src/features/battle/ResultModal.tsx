@@ -41,6 +41,7 @@ export const ResultModal = ({
   tutorial,
   hasNext,
   nextLabel,
+  loseHint,
   onNext,
   onStages,
   onRetry,
@@ -67,6 +68,8 @@ export const ResultModal = ({
   hasNext: boolean;
   /** The win's main button, when it does not lead on to the story (Hard goes back to じゅんび). */
   nextLabel?: string;
+  /** What to do about a loss, when writing more is not the answer (Hard: fewer slips). */
+  loseHint?: string;
   onNext: () => void;
   onStages: () => void;
   onRetry: () => void;
@@ -186,7 +189,9 @@ export const ResultModal = ({
           <RubyText showFurigana={showFurigana}>
             {win
               ? `まちがえた ところ ${mistakes}`
-              : moji
+              : loseHint
+                ? loseHint
+                : moji
                 ? '★が 少(すく)ない 字(じ)を もっと 書(か)くと、つよく なる。'
                 : 'まだ 持(も)って いない 字(じ)を れんしゅうすると、つよく なる。'}
           </RubyText>
