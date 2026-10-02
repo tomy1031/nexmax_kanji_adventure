@@ -1,4 +1,5 @@
 import type { TargetAndTransition, Transition } from 'framer-motion';
+import type { SceneSignSet } from './SceneSigns';
 import {
   PAGE_H,
   PAGE_W,
@@ -62,6 +63,8 @@ export interface SceneDef {
    * than torn paper (08 §3.7). Such a scene usually has no layers of its own.
    */
   photo?: string;
+  /** Signs in the painting that light with the letters the player writes (SceneSigns.tsx). */
+  signs?: SceneSignSet;
 }
 
 const loop = (duration: number, ease: Transition['ease'] = 'easeInOut'): Transition => ({
@@ -625,8 +628,9 @@ const meadow: SceneDef = {
  * effects are the paper scenes' own layers, reused as they are (so they are
  * already pre-rendered): sparkles, the shadow's smoke, the healing glow.
  */
-const photoScene = (photo: string): SceneDef => ({
+const photoScene = (photo: string, signs?: SceneSignSet): SceneDef => ({
   photo,
+  signs,
   layers: [],
   fx: {
     sparkle: village.fx.sparkle,
@@ -638,7 +642,12 @@ const photoScene = (photo: string): SceneDef => ({
 });
 
 export const PHOTO_SCENES: Record<string, SceneDef> = {
-  naniwa_airport: photoScene('img/stageselect/bg_tall.webp'),
+  // かな1話: five arrival signs over the deck, あ い う え お (none in the painting — hung there).
+  naniwa_airport: photoScene('img/stageselect/bg_tall.webp', {
+    image: [941, 1672],
+    style: 'hang',
+    spots: [...'あいうえお'].map((char, i) => ({ char, x: 170 + i * 140, y: 230, w: 96, h: 110 })),
+  }),
   naniwa_airport_night: photoScene('img/stageselect/bg_night.webp'),
   naniwa_sky_garden: photoScene('img/naniwa/naniwa_sky_garden.webp'),
   naniwa_lounge: photoScene('img/naniwa/naniwa_lounge.webp'),
@@ -649,8 +658,33 @@ export const PHOTO_SCENES: Record<string, SceneDef> = {
   naniwa_last_car: photoScene('img/naniwa/naniwa_last_car.webp'),
   // 1章: ナニワタウン
   naniwa_town: photoScene('img/title/bg.webp'),
-  naniwa_town_station: photoScene('img/naniwa/naniwa_town_station.webp'),
-  naniwa_station_square: photoScene('img/naniwa/naniwa_station_square.webp'),
+  // 1章1話: the station calendar's seven empty panels, 日 月 火 水 木 金 土 (measured on the picture).
+  naniwa_town_station: photoScene('img/naniwa/naniwa_town_station.webp', {
+    image: [800, 1440],
+    style: 'panel',
+    spots: [
+      { char: '日', x: 215, y: 455, w: 80, h: 72 },
+      { char: '月', x: 306, y: 455, w: 78, h: 72 },
+      { char: '火', x: 394, y: 455, w: 74, h: 72 },
+      { char: '水', x: 478, y: 455, w: 74, h: 72 },
+      { char: '木', x: 562, y: 455, w: 74, h: 72 },
+      { char: '金', x: 647, y: 455, w: 87, h: 72 },
+      { char: '土', x: 745, y: 455, w: 55, h: 72 },
+    ],
+  }),
+  // 1章2話: the town map's names — the mountain, the river, the rice fields — and 金・土 over the station.
+  naniwa_station_square: photoScene('img/naniwa/naniwa_station_square.webp', {
+    image: [800, 1440],
+    style: 'panel',
+    spots: [
+      { char: '山', x: 262, y: 640, w: 48, h: 48 },
+      { char: '川', x: 222, y: 700, w: 48, h: 48 },
+      { char: '田', x: 166, y: 730, w: 48, h: 48 },
+      // 金曜日・土曜日: two boards hung over the station entrance.
+      { char: '金', x: 520, y: 500, w: 70, h: 80, style: 'hang' },
+      { char: '土', x: 620, y: 500, w: 70, h: 80, style: 'hang' },
+    ],
+  }),
   naniwa_kanjiyasan: photoScene('img/kanjiyasan/bg_tall.webp'),
 };
 

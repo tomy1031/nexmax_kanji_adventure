@@ -6,6 +6,7 @@ import { SCENES, type Layer } from './scenes';
 import { layerId } from './layerId';
 import { RENDERED } from './rendered.generated';
 import { assetPath } from '../../lib/assetPath';
+import SceneSigns from './SceneSigns';
 
 /**
  * 動く 絵本 — the animated picture book.
@@ -137,6 +138,7 @@ export const PictureBook = ({ scene, fx = [], className, children, still: holdSt
           {def.layers.map((layer) => (
             <PaperLayer key={layer.key} layer={layer} still={still} isFx={false} />
           ))}
+          {def.signs && <SceneSigns signs={def.signs} w={size.w} h={size.h} />}
           <AnimatePresence>
             {fxLayers.map((layer) => (
               <PaperLayer key={layer.key} layer={layer} still={still} isFx />
