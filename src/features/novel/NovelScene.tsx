@@ -269,7 +269,7 @@ export const NovelScene = ({ script, cast, onFinish, chapter, renderText, speech
   return (
     <div className="relative h-dvh w-full overflow-hidden bg-[#cfe9f5]">
       {/* 絵本 ------------------------------------------------------------ */}
-      <PictureBook scene={bg} fx={fx} />
+      <PictureBook scene={bg} fx={fx} signsFaint={Boolean(line.glyph) && !glyphOnSigns} />
 
       {/* 大きな字（きざんだ字など） -------------------------------------- */}
       <AnimatePresence>
