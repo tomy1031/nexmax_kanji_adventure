@@ -7,6 +7,7 @@ import { layerId } from './layerId';
 import { RENDERED } from './rendered.generated';
 import { assetPath } from '../../lib/assetPath';
 import SceneSigns from './SceneSigns';
+import { signPageY } from './hasSign';
 
 /**
  * 動く 絵本 — the animated picture book.
@@ -43,7 +44,7 @@ const urlOf = (svg: string) => {
 /** Size of a page that covers the box, keeping the page's aspect ratio. */
 const useCoverSize = () => {
   const ref = useRef<HTMLDivElement>(null);
-  const [size, setSize] = useState({ w: PAGE_W, h: PAGE_H });
+  const [size, setSize] = useState({ w: PAGE_W, h: PAGE_H, boxH: PAGE_H });
 
   useEffect(() => {
     const el = ref.current;
@@ -51,7 +52,7 @@ const useCoverSize = () => {
     const measure = () => {
       const { width, height } = el.getBoundingClientRect();
       const k = Math.max(width / PAGE_W, height / PAGE_H);
-      setSize({ w: Math.ceil(PAGE_W * k), h: Math.ceil(PAGE_H * k) });
+      setSize({ w: Math.ceil(PAGE_W * k), h: Math.ceil(PAGE_H * k), boxH: height });
     };
     measure();
     const ro = new ResizeObserver(measure);
@@ -107,15 +108,24 @@ interface PictureBookProps {
   still?: boolean;
   /** A letter whose sign stays dark for now (SceneSigns). */
   signHold?: string;
+  /** Keep the signs faint (a big letter is shown over them). */
+  signsFaint?: boolean;
 }
 
-export const PictureBook = ({ scene, fx = [], className, children, still: holdStill = false, signHold }: PictureBookProps) => {
+export const PictureBook = ({ scene, fx = [], className, children, still: holdStill = false, signHold, signsFaint }: PictureBookProps) => {
   const prefersReduced = useReducedMotion();
   const settingReduced = useGameStore((s) => s.settings.reducedMotion);
   const still = Boolean(prefersReduced || settingReduced || holdStill);
   const { ref, size } = useCoverSize();
 
   const def = SCENES[scene] ?? SCENES.mukashi_village;
+
+  /**
+   * On a wide screen (a tablet held sideways, a PC) the tall page is cut top
+   * and bottom. A scene with signs is then slid so its signs sit in the upper
+   * part of the screen instead of off it — the signs are the story there.
+   */
+  const pageY = useMemo(() => signPageY(def.signs, size.h, size.boxH), [def, size]);
 
   const fxLayers = useMemo(
     () => fx.flatMap((name) => def.fx[name] ?? []),
@@ -127,8 +137,8 @@ export const PictureBook = ({ scene, fx = [], className, children, still: holdSt
       <AnimatePresence initial={false}>
         <motion.div
           key={scene}
-          className="absolute top-1/2 left-1/2"
-          style={{ width: size.w, height: size.h, x: '-50%', y: '-50%' }}
+          className={`absolute left-1/2 ${pageY == null ? 'top-1/2' : 'top-0'}`}
+          style={{ width: size.w, height: size.h, x: '-50%', y: pageY == null ? '-50%' : pageY }}
           initial={{ opacity: 0, scale: 1.03 }}
           animate={{ opacity: 1, scale: 1 }}
           exit={{ opacity: 0 }}
@@ -140,7 +150,7 @@ export const PictureBook = ({ scene, fx = [], className, children, still: holdSt
           {def.layers.map((layer) => (
             <PaperLayer key={layer.key} layer={layer} still={still} isFx={false} />
           ))}
-          {def.signs && <SceneSigns signs={def.signs} w={size.w} h={size.h} hold={signHold} />}
+          {def.signs && <SceneSigns signs={def.signs} w={size.w} h={size.h} hold={signHold} faint={signsFaint} />}
           <AnimatePresence>
             {fxLayers.map((layer) => (
               <PaperLayer key={layer.key} layer={layer} still={still} isFx />

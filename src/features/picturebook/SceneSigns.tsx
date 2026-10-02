@@ -92,7 +92,7 @@ const Spot = ({ spot, lit, style, k, ox, oy }: { spot: SignSpot; lit: boolean; s
  * covers). `hold` keeps one letter's sign dark a moment longer, so it can be
  * seen lighting up (the drill's town shot).
  */
-export const SceneSigns = ({ signs, w, h, hold }: { signs: SceneSignSet; w: number; h: number; hold?: string }) => {
+export const SceneSigns = ({ signs, w, h, hold, faint }: { signs: SceneSignSet; w: number; h: number; hold?: string; faint?: boolean }) => {
   const known = useKnownLetters();
   const [iw, ih] = signs.image;
   // object-cover, centred
@@ -112,9 +112,12 @@ export const SceneSigns = ({ signs, w, h, hold }: { signs: SceneSignSet; w: numb
         transition={{ duration: 1.2 }}
         style={{ willChange: 'opacity' }}
       />
-      {signs.spots.map((s) => (
-        <Spot key={s.char + s.x} spot={s} lit={known.has(s.char) && s.char !== hold} style={s.style ?? signs.style} k={k} ox={ox} oy={oy} />
-      ))}
+      {/* Faint while the story shows a big letter over them, so the two do not clash. */}
+      <motion.div className="absolute inset-0" initial={false} animate={{ opacity: faint ? 0.18 : 1 }} transition={{ duration: 0.3 }}>
+        {signs.spots.map((s) => (
+          <Spot key={s.char + s.x} spot={s} lit={known.has(s.char) && s.char !== hold} style={s.style ?? signs.style} k={k} ox={ox} oy={oy} />
+        ))}
+      </motion.div>
     </div>
   );
 };

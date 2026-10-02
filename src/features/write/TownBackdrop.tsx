@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import PictureBook from '../picturebook/PictureBook';
 import { SCENES } from '../picturebook/scenes';
+import { signPageY } from '../picturebook/hasSign';
 import { RubyText } from '../../components/ui/Ruby';
 import { getKanjiByChar } from '../../lib/kanjiDb';
 import { charRuby } from '../../lib/reading';
@@ -63,8 +64,10 @@ export const TownShot = ({ scene, char, onDone }: { scene: string; char: string;
     const w = window.innerWidth;
     const h = window.innerHeight;
     const k = Math.max(w / iw, h / ih);
+    // A wide screen slides the page so the signs show (PictureBook, signPageY).
+    const top = signPageY(signs, ih * k, h) ?? (h - ih * k) / 2;
     const x = (w - iw * k) / 2 + (spot.x + spot.w / 2) * k;
-    const y = (h - ih * k) / 2 + (spot.y + spot.h / 2) * k;
+    const y = top + (spot.y + spot.h / 2) * k;
     return `${((x / w) * 100).toFixed(1)}% ${((y / h) * 100).toFixed(1)}%`;
   });
   // Dark for a beat, then lit, so the change itself is seen.
