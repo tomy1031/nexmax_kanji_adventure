@@ -6,6 +6,7 @@ import { AnimatePresence } from 'framer-motion';
 import { DoorPanel } from './components/ui/Doors';
 import { useStillDoors } from './hooks/useStillDoors';
 import { preloadScreens } from './lib/preload';
+import { assetPath } from './lib/assetPath';
 import { Arc } from './types/kanji';
 import { useGameStore } from './store/gameStore';
 import TitleScreen from './features/title/TitleScreen';
@@ -51,6 +52,22 @@ const warmLater = () => {
   if ('requestIdleCallback' in window) window.requestIdleCallback(run, { timeout: 6000 });
   else setTimeout(run, 3000);
 };
+
+/** Shown only on a phone turned sideways (index.css .rotate-hint): the game is played upright. */
+const RotateHint = () => (
+  <div className="rotate-hint" role="alert">
+    <img src={assetPath('apple-touch-icon.png')} alt="" className="h-20 w-20 rounded-[20px]" />
+    <p className="rt-light text-lg leading-[2] font-black">
+      <ruby>
+        画面<rt>がめん</rt>
+      </ruby>
+      を たてに してね 📱
+    </p>
+    <p className="text-sm font-bold opacity-80" lang="en">
+      Please turn your phone upright.
+    </p>
+  </div>
+);
 
 /** /map/moji is the town's stage select (in the first load); the older arcs' maps come later. */
 const MapRoute = () => {
@@ -132,6 +149,7 @@ const App = () => {
   return (
     <HashRouter>
       <ArcTheme />
+      <RotateHint />
       <ScreenDoors>
         {(location) => (
           <Routes location={location}>
