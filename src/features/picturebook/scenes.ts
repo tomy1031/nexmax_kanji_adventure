@@ -670,7 +670,8 @@ export const PHOTO_SCENES: Record<string, SceneDef> = {
   naniwa_airport: photoScene('img/stageselect/bg_tall.webp', {
     image: [941, 1672],
     style: 'hang',
-    spots: [...'あいうえお'].map((char, i) => ({ char, x: 170 + i * 140, y: 230, w: 96, h: 110 })),
+    // Low enough to clear the top bar on a short phone (375×548), above where Nexmax stands.
+    spots: [...'あいうえお'].map((char, i) => ({ char, x: 170 + i * 140, y: 360, w: 96, h: 110 })),
   }),
   naniwa_airport_night: photoScene('img/stageselect/bg_night.webp'),
   naniwa_sky_garden: photoScene('img/naniwa/naniwa_sky_garden.webp', boardRows('かきくけこさしすせそ')),
