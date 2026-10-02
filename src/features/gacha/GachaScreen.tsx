@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useMapPath } from '../../lib/nav';
 import { Backdrop } from '../../components/ui/Backdrop';
+import { NightStreetBackdrop } from '../write/NightStreet';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useGameStore } from '../../store/gameStore';
@@ -30,6 +31,7 @@ import { DAILY_TOTAL } from '../../data/dailyTasks';
 
 export const GachaScreen = () => {
   const navigate = useNavigate();
+  const moji = useGameStore((st) => st.lastArc) === 'moji';
   const mapPath = useMapPath();
   const showFurigana = useGameStore((s) => s.settings.furigana);
   const gems = useGameStore((s) => s.gems);
@@ -95,14 +97,20 @@ export const GachaScreen = () => {
 
   return (
     <div className="g-stage min-h-dvh pb-8">
-      <Backdrop fixed />
+      {/* The world being played behind it: the night town on 文字が 消えた 町 (08 §3.8). */}
+      {moji ? <NightStreetBackdrop /> : <Backdrop fixed />}
       <header
-        className="g-header sticky top-0 z-20 flex items-center justify-between px-4 py-3"
+        className="g-header sticky top-0 z-20 flex items-center justify-between px-4 pt-[max(12px,env(safe-area-inset-top))] pb-3"
       >
         <button type="button" className="g-btn g-btn-accent !min-h-[38px] !gap-1 !px-3.5 text-sm" onClick={() => navigate(mapPath)}>
           <span aria-hidden>◀</span>もどる
         </button>
-        <h1 className="g-title text-base">ガチャ</h1>
+        <h1 className="g-title text-center text-base leading-tight">
+          ガチャ
+          <span lang="en" className="block text-[10px] font-bold opacity-80">
+            Friends
+          </span>
+        </h1>
         <span className="g-chip g-chip-gold text-xs tabular-nums">◆ {gems}</span>
       </header>
 

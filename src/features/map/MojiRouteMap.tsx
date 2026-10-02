@@ -20,6 +20,7 @@ import { continuePath, episodePath, nextUp } from '../../data/mojiFlow';
 import { useBgm } from '../../lib/bgm';
 import { preloadImages } from '../../lib/preload';
 import { episodeArt } from '../../data/episodeArt';
+import { Feature, isFeatureUnlocked } from '../../data/unlocks';
 
 /**
  * ステージせんたく — 文字が 消えた 町の 入口 (08 §3.7).
@@ -144,6 +145,48 @@ const TownSign = () => (
     </div>
   </div>
 );
+
+/**
+ * Ways into what the story has opened (1章 3話 まいにち, 4話 なかま): small
+ * brass tags under the town sign, shown once open (unlocks.ts). Picture and
+ * a word of English, so a player who cannot read yet still knows what it is.
+ */
+const FeatureTags = ({ cleared, showFurigana, onOpen }: { cleared: readonly string[]; showFurigana: boolean; onOpen: (path: string) => void }) => {
+  const tags = [
+    { feature: Feature.DAILY, icon: '📅', label: 'まいにち', en: 'Daily', path: '/daily' },
+    { feature: Feature.GACHA, icon: '🤖', label: 'なかま', en: 'Friends', path: '/gacha' },
+  ].filter((t) => isFeatureUnlocked(t.feature, cleared));
+  return (
+    <>
+      {tags.map((t, i) => (
+        <motion.button
+          key={t.feature}
+          type="button"
+          data-tap
+          onClick={() => onOpen(t.path)}
+          whileTap={{ scale: 0.95 }}
+          initial={{ opacity: 0, x: -8 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ delay: 0.6 + i * 0.1 }}
+          className="absolute flex items-center gap-[1.6cqw] rounded-[1.6cqw] border-[0.4cqw] border-[#c9a052] bg-[#1b1640]/90 text-left text-[#ffe7b8]"
+          style={{ ...fromTop(26, 480 + i * 92, 196, 78), padding: `0 ${cq(14)}`, boxShadow: '0 1cqw 2.4cqw rgba(0,0,0,0.5)' }}
+        >
+          <span aria-hidden style={{ fontSize: cq(36) }}>
+            {t.icon}
+          </span>
+          <span className="flex flex-col leading-[1.2]">
+            <span className="font-black whitespace-nowrap" style={{ fontSize: cq(24) }}>
+              <RubyText showFurigana={showFurigana}>{t.label}</RubyText>
+            </span>
+            <span lang="en" className="font-bold opacity-75" style={{ fontSize: cq(15) }}>
+              {t.en}
+            </span>
+          </span>
+        </motion.button>
+      ))}
+    </>
+  );
+};
 
 /** One episode of 0章 on a sheet. */
 const KanaEpisodeButton = ({ ep, known, cleared, fresh, onOpen }: { ep: KanaEpisode; known: ReadonlySet<string>; cleared: readonly string[]; fresh: string | null; onOpen: () => void }) => {
@@ -298,6 +341,7 @@ export const MojiRouteMap = () => {
             animate={still ? undefined : { y: ['0%', '-1.5%', '0%'] }}
             transition={{ duration: 1.4, repeat: Infinity, ease: 'easeInOut' }}
           />
+          {!sheet && <FeatureTags cleared={cleared} showFurigana={showFurigana} onOpen={(path) => navigate(path)} />}
           {/* つづき — Nexmax says where we go next; a tap plays it (08 §3.8) */}
           {!sheet && (
             <motion.button
