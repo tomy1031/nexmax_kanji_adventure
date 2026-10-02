@@ -151,7 +151,25 @@ const TownSign = () => (
  * brass tags under the town sign, shown once open (unlocks.ts). Picture and
  * a word of English, so a player who cannot read yet still knows what it is.
  */
+const SEEN_KEY = 'nexmax-features-opened';
+const readSeen = (): string[] => {
+  try {
+    return JSON.parse(localStorage.getItem(SEEN_KEY) ?? '[]') as string[];
+  } catch {
+    return [];
+  }
+};
+const markSeen = (feature: string) => {
+  try {
+    localStorage.setItem(SEEN_KEY, JSON.stringify([...new Set([...readSeen(), feature])]));
+  } catch {
+    // Private mode or blocked storage: the NEW mark simply stays.
+  }
+};
+
 const FeatureTags = ({ cleared, showFurigana, onOpen }: { cleared: readonly string[]; showFurigana: boolean; onOpen: (path: string) => void }) => {
+  // A tag just opened by the story wears NEW and glows until it is first tapped.
+  const [seen] = useState(readSeen);
   const tags = [
     { feature: Feature.DAILY, icon: '📅', label: 'まいにち', en: 'Daily', path: '/daily' },
     { feature: Feature.GACHA, icon: '🤖', label: 'なかま', en: 'Friends', path: '/gacha' },
@@ -163,7 +181,10 @@ const FeatureTags = ({ cleared, showFurigana, onOpen }: { cleared: readonly stri
           key={t.feature}
           type="button"
           data-tap
-          onClick={() => onOpen(t.path)}
+          onClick={() => {
+            markSeen(t.feature);
+            onOpen(t.path);
+          }}
           whileTap={{ scale: 0.95 }}
           initial={{ opacity: 0, x: -8 }}
           animate={{ opacity: 1, x: 0 }}
@@ -171,6 +192,20 @@ const FeatureTags = ({ cleared, showFurigana, onOpen }: { cleared: readonly stri
           className="absolute flex items-center gap-[1.6cqw] rounded-[1.6cqw] border-[0.4cqw] border-[#c9a052] bg-[#1b1640]/90 text-left text-[#ffe7b8]"
           style={{ ...fromTop(26, 480 + i * 92, 196, 78), padding: `0 ${cq(14)}`, boxShadow: '0 1cqw 2.4cqw rgba(0,0,0,0.5)' }}
         >
+          {!seen.includes(t.feature) && (
+            <>
+              <motion.span
+                aria-hidden
+                className="pointer-events-none absolute -inset-[0.6cqw] rounded-[2cqw] border-[0.5cqw] border-[#ffd36a]"
+                style={{ willChange: 'opacity' }}
+                animate={{ opacity: [0.2, 1, 0.2] }}
+                transition={{ duration: 1.6, repeat: Infinity }}
+              />
+              <span className="absolute -top-[1.6cqw] -right-[1.6cqw] rounded bg-[#e2453c] px-[1cqw] font-black text-white" style={{ fontSize: cq(15) }}>
+                NEW
+              </span>
+            </>
+          )}
           <span aria-hidden style={{ fontSize: cq(36) }}>
             {t.icon}
           </span>
@@ -453,7 +488,7 @@ export const MojiRouteMap = () => {
                 style={{ ...fromBottom(24, 780, 893, 700), boxShadow: '0 1cqw 4cqw rgba(0,0,0,0.6)' }}
               >
                 <div className="flex shrink-0 items-center justify-between gap-2">
-                  <h2 className="text-xl leading-[2] font-black" style={{ color: 'var(--accent-2)' }}>
+                  <h2 className="min-w-0 leading-[2] font-black" style={{ color: 'var(--accent-2)', fontSize: 'clamp(15px, 5.2cqw, 20px)' }}>
                     {sheet === 'n5' ? null : <RubyText showFurigana={showFurigana}>0章(しょう) はじまりの 空港(くうこう)</RubyText>} {sheetTitle[sheet]}
                   </h2>
                   <button type="button" data-tap onClick={() => setSheet(null)} className="g-btn g-btn-ghost !min-h-[36px] shrink-0 !px-3 text-sm">
