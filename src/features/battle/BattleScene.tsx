@@ -36,6 +36,7 @@ import LightFlow, { type Flow } from './LightFlow';
 import NaniwaBattleView from './NaniwaBattleView';
 import { useBgm } from '../../lib/bgm';
 import { isReadTurn, readDamage, readQuestion } from '../../lib/readTurn';
+import { nextStarGoal } from '../../data/starPerks';
 
 /**
  * The fight.
@@ -616,6 +617,7 @@ export const BattleScene = ({
                         return kanji ? [{ kanji, stars }] : [];
                       }),
                       read: { right: growth.readRight, total: growth.readTotal },
+                      goal: nextStarGoal(kanjiPool, (id) => progress[id]?.reps ?? 0),
                     }
                   : undefined
               }
