@@ -112,7 +112,8 @@ export const ResultModal = ({
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
-      className="fixed inset-0 z-50 flex items-center justify-center px-5"
+      // Scrolls when the card is taller than a short screen (a level-up adds lines).
+      className="fixed inset-0 z-50 overflow-y-auto px-5"
       style={{ background: win ? 'radial-gradient(circle at 50% 40%, rgba(255,220,120,0.35), rgba(0,0,0,0.7) 70%)' : 'rgba(10,15,30,0.72)' }}
     >
       {win && !still && (
@@ -130,6 +131,7 @@ export const ResultModal = ({
         </div>
       )}
 
+      <div className="relative flex min-h-full items-center justify-center pt-10 pb-4">
       <motion.div
         initial={{ scale: 0.7, y: 30, opacity: 0 }}
         animate={{ scale: 1, y: 0, opacity: 1 }}
@@ -196,17 +198,17 @@ export const ResultModal = ({
                     Lv UP! Lv{growth.exp.before} → Lv{growth.exp.after}
                   </motion.span>
                 )}
-              </p>
-            )}
-            {growth.exp && growth.exp.after > growth.exp.before && (
-              <p className="text-xs font-black" style={{ color: '#2f8fe0' }}>
-                ❤ HP ＋{hpBonus(growth.exp.after) - hpBonus(growth.exp.before)}
-                {patienceBonus(growth.exp.after) > patienceBonus(growth.exp.before) && <RubyText showFurigana={showFurigana}>・✋ がまん ＋1</RubyText>}
+                {growth.exp.after > growth.exp.before && (
+                  <span className="text-xs" style={{ color: '#2f8fe0' }}>
+                    ❤＋{hpBonus(growth.exp.after) - hpBonus(growth.exp.before)}
+                    {patienceBonus(growth.exp.after) > patienceBonus(growth.exp.before) && ' ✋＋1'}
+                  </span>
+                )}
               </p>
             )}
             {growth.exp?.atCap && (
               <p className="text-xs font-black" style={{ color: 'var(--ink-2)' }}>
-                <RubyText showFurigana={showFurigana}>{`Lv の 上限(じょうげん)。新(あたら)しい 字(じ)を あと ${growth.exp.kanjiToRaiseCap}字(じ) おぼえよう`}</RubyText>
+                <RubyText showFurigana={showFurigana}>{`Lv 上限(じょうげん)：新(あたら)しい 字(じ) あと ${growth.exp.kanjiToRaiseCap}つで アップ`}</RubyText>
               </p>
             )}
             {growth.starUps.length > 0 && (
@@ -326,6 +328,7 @@ export const ResultModal = ({
           </>
         )}
       </motion.div>
+      </div>
     </motion.div>
   );
 };
