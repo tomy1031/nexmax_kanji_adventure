@@ -365,7 +365,8 @@ export const NaniwaBattleView = ({
             <Bar value={bossHp} max={bossMaxHp} delay={hpDelay} style={onTop(377, 98, 385, 21)} />
             <span
               className="absolute flex items-center justify-center leading-none font-bold tabular-nums"
-              style={{ ...onTop(768, 94, 137, 28), ...MINCHO, fontSize: cq(26) }}
+              // Hard's HP runs to four and five digits: smaller, so it stays on the plate.
+              style={{ ...onTop(768, 94, 137, 28), ...MINCHO, fontSize: cq(bossMaxHp >= 10000 ? 16 : bossMaxHp >= 1000 ? 20 : 26) }}
             >
               {Math.max(0, bossHp)} / {bossMaxHp}
             </span>
