@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { RubyText } from '../../components/ui/Ruby';
 import { KanjiWord } from '../../components/ui/Readings';
 import { TopBar } from '../../components/ui/Chrome';
@@ -12,6 +12,9 @@ import { useKnownKana } from '../kana/useKnownKana';
 import { getKanjiByChar } from '../../lib/kanjiDb';
 import { kanjiRuby } from '../../lib/reading';
 import { starsOf } from '../../lib/mastery';
+import { canSpeak, speak } from '../../lib/speech';
+import type { KanjiData } from '../../types/kanji';
+import KanjiCard from './KanjiCard';
 
 /**
  * ずかん — what the player has written back into the town (08 §3.8).
@@ -22,6 +25,9 @@ import { starsOf } from '../../lib/mastery';
  * its sound, as it does in the story (KanjiBackText); a written one shows
  * itself and its ★. Once 漢字やさん is open, ことば図鑑 (the words found by
  * forging) is one tap away.
+ *
+ * A kanji opens its card (KanjiCard: sound, readings, words, EN, ✎); a kana
+ * says itself. `?tab=kanji` comes back to the kanji, from ✎.
  */
 
 type Tab = 'kana' | 'kanji';
@@ -39,12 +45,15 @@ export const ZukanScreen = () => {
   const progress = useGameStore((s) => s.progress);
   const cleared = useGameStore((s) => s.clearedStages);
   const known = useKnownKana();
-  const [tab, setTab] = useState<Tab>('kana');
+  const [params] = useSearchParams();
+  const [tab, setTab] = useState<Tab>(params.get('tab') === 'kanji' ? 'kanji' : 'kana');
+  const [card, setCard] = useState<KanjiData | null>(null);
   const kanaDone = [...HIRAGANA, ...KATAKANA].filter((k) => known.has(k)).length;
 
   return (
     <div className="isolate relative min-h-dvh pb-8">
       <NightStreetBackdrop />
+      {card && <KanjiCard kanji={card} onClose={() => setCard(null)} />}
       <TopBar title="ずかん" />
       <div className="mx-auto flex max-w-md flex-col gap-3 px-3 pt-3">
         <div role="tablist" className="flex gap-2">
@@ -82,9 +91,12 @@ export const ZukanScreen = () => {
                 {set.map((k) => {
                   const on = known.has(k);
                   return (
-                    <span
+                    <button
+                      type="button"
                       key={k}
-                      className="flex aspect-square flex-col items-center justify-center rounded-md border text-[17px] leading-none font-black"
+                      aria-label={ROMAJI[k]}
+                      onClick={() => canSpeak() && speak(k)}
+                      className="flex aspect-square flex-col items-center justify-center rounded-md border text-[17px] leading-none font-black active:scale-90"
                       style={{
                         background: on ? 'linear-gradient(160deg,#fffbe8,#ffe7a3)' : 'rgba(255,255,255,0.45)',
                         borderColor: on ? '#f2b53a' : 'rgba(122,82,38,0.25)',
@@ -93,7 +105,7 @@ export const ZukanScreen = () => {
                     >
                       {k}
                       {!on && <span className="text-[8px] font-bold">{ROMAJI[k]}</span>}
-                    </span>
+                    </button>
                   );
                 })}
               </div>
@@ -117,9 +129,11 @@ export const ZukanScreen = () => {
                     const stars = starsOf(reps);
                     const on = stars > 0;
                     return (
-                      <span
+                      <button
+                        type="button"
                         key={k.id}
-                        className="flex aspect-[4/5] flex-col items-center justify-center gap-0.5 rounded-md border text-[19px] leading-[1.5] font-black"
+                        onClick={() => setCard(k)}
+                        className="flex aspect-[4/5] flex-col items-center justify-center gap-0.5 rounded-md border text-[19px] leading-[1.5] font-black active:scale-95"
                         style={{
                           background: on ? 'linear-gradient(160deg,#fffbe8,#ffe7a3)' : 'rgba(255,255,255,0.4)',
                           borderColor: on ? '#f2b53a' : 'rgba(122,82,38,0.25)',
@@ -135,7 +149,7 @@ export const ZukanScreen = () => {
                           </span>
                         )}
                         <Stars n={stars} />
-                      </span>
+                      </button>
                     );
                   })}
                 </div>
