@@ -38,29 +38,29 @@ export const UNLOCKED_BY: Record<Feature, string> = {
 };
 
 /**
- * The same features on 文字が 消えた 町: one episode, one system, in the same
- * order. The picture-book arcs are closing (constraints 2026-09-30), and a
- * player who only plays this route must still reach them, so either clear
- * opens a feature. Versus waits for chapter 1 to be over.
+ * The same features on 文字が 消えた 町, in the same order. The picture-book
+ * arcs are closing (constraints 2026-09-30), and a player who only plays this
+ * route must still reach them, so either clear opens a feature.
  *
- * Episodes, not かな編: the kana prologue is optional (constraints
- * 2026-09-26) and owns no kanji, so the forge and the word book would open
- * empty there. An episode not written yet opens its feature once it is.
+ * - 漢字やさん opens at the end of 1章 2話, where 山田さん shows the way in
+ *   the story (08 §3.8), and the word book comes with it, through its door
+ *   and ずかん's. After that, one system per episode; versus waits for
+ *   chapter 1 to be over. An episode not written yet opens its feature once
+ *   it is.
+ * - The story says what opened, not the result screen: featuresUnlockedBy
+ *   answers for the picture-book arcs only.
+ * - Episodes, not かな編: the kana prologue is optional (constraints
+ *   2026-09-26) and owns no kanji, so the forge and the word book would open
+ *   empty there.
  */
-export const UNLOCKED_ON_MOJI: Record<Feature, string> = {
-  forge: 'moji-1-1',
+export const UNLOCKED_ON_MOJI = {
+  forge: 'moji-1-2',
   words: 'moji-1-2',
   daily: 'moji-1-3',
   gacha: 'moji-1-4',
   collection: 'moji-1-5',
   versus: 'moji-2-1',
-};
-
-/** Where a feature opens on 文字が 消えた 町, for a locked button. */
-export const opensOnMoji = (feature: Feature): { chapter: number; episode: number } => {
-  const [, chapter, episode] = UNLOCKED_ON_MOJI[feature].split('-').map(Number);
-  return { chapter, episode };
-};
+} as const satisfies Record<Feature, string>;
 
 /** Label and one line of why, shown when the feature opens. */
 export const FEATURE_INTRO: Record<Feature, { label: string; line: string; to: string }> = {
@@ -100,14 +100,12 @@ export const isFeatureUnlocked = (feature: Feature, cleared: readonly string[]):
   cleared.includes(UNLOCKED_BY[feature]) || cleared.includes(UNLOCKED_ON_MOJI[feature]);
 
 /**
- * Features this stage's clear opens (usually zero or one). Given the clears
- * before it, leaves out what the other route has already opened, so nothing
- * is announced twice.
+ * Features this picture-book stage's clear opens (usually zero or one), for
+ * the result screen. Given the clears before it, leaves out what the new
+ * route has already opened, so nothing is announced twice.
  */
 export const featuresUnlockedBy = (stageId: string, clearedBefore: readonly string[] = []): Feature[] =>
-  (Object.keys(UNLOCKED_BY) as Feature[]).filter(
-    (f) => (UNLOCKED_BY[f] === stageId || UNLOCKED_ON_MOJI[f] === stageId) && !isFeatureUnlocked(f, clearedBefore),
-  );
+  (Object.keys(UNLOCKED_BY) as Feature[]).filter((f) => UNLOCKED_BY[f] === stageId && !isFeatureUnlocked(f, clearedBefore));
 
 /**
  * How many of a stage's characters must be owned before the fight opens.

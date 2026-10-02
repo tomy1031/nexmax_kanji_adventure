@@ -3,7 +3,6 @@ import {
   Feature,
   UNLOCKED_BY,
   UNLOCKED_ON_MOJI,
-  opensOnMoji,
   FEATURE_INTRO,
   isFeatureUnlocked,
   featuresUnlockedBy,
@@ -16,6 +15,7 @@ import { REPS_TO_OBTAIN } from '../types/kanji';
 import { MOJI_EPISODES } from './mojiEpisodes';
 import { MOJI_CHAPTERS } from './mojiRoute';
 import { KANA_EPISODES } from './kana';
+import { isForgeOpen } from './mojiFlow';
 
 const stageIds = MUKASHI_STAGES.map((s) => s.id);
 
@@ -104,7 +104,7 @@ describe('文字が 消えた 町 opens the same systems', () => {
   const MOJI_ID = /^moji-(\d+)-(\d+)$/;
   const place = (f: Feature) => {
     const [, chapter, episode] = MOJI_ID.exec(UNLOCKED_ON_MOJI[f]) ?? [];
-    return Number(chapter) * 1000 + Number(episode);
+    return { chapter: Number(chapter), at: Number(chapter) * 1000 + Number(episode) };
   };
 
   it('opens every feature on either route', () => {
@@ -114,8 +114,11 @@ describe('文字が 消えた 町 opens the same systems', () => {
     }
   });
 
-  it('opens one system per episode here too', () => {
-    const ids = Object.values(UNLOCKED_ON_MOJI);
+  it('opens one system per episode here too — the word book comes with 漢字やさん', () => {
+    expect(UNLOCKED_ON_MOJI[Feature.WORDS]).toBe(UNLOCKED_ON_MOJI[Feature.FORGE]);
+    const ids = Object.entries(UNLOCKED_ON_MOJI)
+      .filter(([f]) => f !== Feature.WORDS)
+      .map(([, id]) => id);
     expect(new Set(ids).size).toBe(ids.length);
   });
 
@@ -128,53 +131,45 @@ describe('文字が 消えた 町 opens the same systems', () => {
     }
   });
 
-  it('ties a written episode to its own chapter and order', () => {
-    // Episodes not written yet open their feature once they are.
-    for (const f of Object.values(Feature)) {
-      const ep = MOJI_EPISODES.find((e) => e.id === UNLOCKED_ON_MOJI[f]);
-      if (!ep) continue;
-      expect(opensOnMoji(f), f).toEqual({ chapter: Number(ep.chapter.replace('moji-', '')), episode: ep.order });
-    }
+  it('opens 漢字やさん where the story shows the way in: the end of 1章 2話', () => {
+    // 08 §3.8: 山田さん takes the player there, so it must not open sooner.
+    expect(UNLOCKED_ON_MOJI[Feature.FORGE]).toBe('moji-1-2');
+    expect(MOJI_EPISODES.map((e) => e.id)).toContain('moji-1-2');
+    expect(isFeatureUnlocked(Feature.FORGE, ['moji-1-1'])).toBe(false);
+    expect(isFeatureUnlocked(Feature.WORDS, ['moji-1-1'])).toBe(false);
   });
 
-  it('opens the forge and the word book on the episodes that exist now', () => {
-    expect(UNLOCKED_ON_MOJI[Feature.FORGE]).toBe('moji-1-1');
-    expect(UNLOCKED_ON_MOJI[Feature.WORDS]).toBe('moji-1-2');
-    const written = MOJI_EPISODES.map((e) => e.id);
-    expect(written).toContain('moji-1-1');
-    expect(written).toContain('moji-1-2');
-    expect(featuresUnlockedBy('moji-1-1')).toEqual([Feature.FORGE]);
-    expect(featuresUnlockedBy('moji-1-2')).toEqual([Feature.WORDS]);
+  it('agrees with the door the town screens ask (isForgeOpen)', () => {
+    for (const cleared of [[], ['moji-1-1'], ['moji-1-1', 'moji-1-2'], ['mukashi-1'], ['kana-1']]) {
+      expect(isForgeOpen(cleared), cleared.join(',')).toBe(isFeatureUnlocked(Feature.FORGE, cleared));
+    }
   });
 
   it('keeps the order the systems depend on', () => {
-    expect(place(Feature.WORDS)).toBeGreaterThan(place(Feature.FORGE));
-    expect(place(Feature.DAILY)).toBeGreaterThan(place(Feature.WORDS));
-    expect(place(Feature.GACHA)).toBeGreaterThan(place(Feature.DAILY));
-    expect(place(Feature.COLLECTION)).toBeGreaterThan(place(Feature.GACHA));
+    expect(place(Feature.DAILY).at).toBeGreaterThan(place(Feature.FORGE).at);
+    expect(place(Feature.GACHA).at).toBeGreaterThan(place(Feature.DAILY).at);
+    expect(place(Feature.COLLECTION).at).toBeGreaterThan(place(Feature.GACHA).at);
     // Versus waits for chapter 1 to be over.
-    expect(opensOnMoji(Feature.VERSUS).chapter).toBeGreaterThanOrEqual(2);
-  });
-
-  it('opens nothing an episode early', () => {
-    expect(isFeatureUnlocked(Feature.WORDS, ['moji-1-1'])).toBe(false);
-    expect(isFeatureUnlocked(Feature.FORGE, ['kana-1', 'kana-2'])).toBe(false);
+    expect(place(Feature.VERSUS).chapter).toBeGreaterThanOrEqual(2);
   });
 
   it('opens nothing on the kana prologue — it is optional and owns no kanji', () => {
-    for (const ep of KANA_EPISODES) {
-      expect(featuresUnlockedBy(ep.id), ep.id).toEqual([]);
-    }
     const allKana = KANA_EPISODES.map((e) => e.id);
     for (const f of Object.values(Feature)) {
       expect(isFeatureUnlocked(f, allKana), f).toBe(false);
     }
   });
 
-  it('does not announce what the other route has already opened', () => {
-    expect(featuresUnlockedBy('moji-1-1', ['mukashi-1'])).toEqual([]);
+  it('leaves the news to the story, not the result screen', () => {
+    for (const id of new Set(Object.values(UNLOCKED_ON_MOJI))) {
+      expect(featuresUnlockedBy(id), id).toEqual([]);
+    }
+  });
+
+  it('does not announce on the picture-book arcs what the new route has already opened', () => {
+    expect(featuresUnlockedBy('mukashi-1', ['moji-1-2'])).toEqual([]);
     expect(featuresUnlockedBy('mukashi-2', ['moji-1-2'])).toEqual([]);
     // Something else being open does not hide this clear's news.
-    expect(featuresUnlockedBy('moji-1-2', ['mukashi-1'])).toEqual([Feature.WORDS]);
+    expect(featuresUnlockedBy('mukashi-3', ['moji-1-2'])).toEqual([Feature.DAILY]);
   });
 });
