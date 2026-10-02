@@ -39,9 +39,10 @@ export const ToBeContinued = ({
         initial={{ opacity: 0, y: 16, scale: 0.96 }}
         animate={{ opacity: 1, y: 0, scale: 1 }}
         transition={{ type: 'spring', stiffness: 300, damping: 24 }}
-        className="g-parchment w-full max-w-sm px-5 py-5 text-center"
+        // The town's night panel, like the story's dialogue box (NovelScene look="night").
+        className="g-novel-box g-novel-night w-full max-w-sm px-5 py-5 text-center"
       >
-        <p className="text-3xl leading-[1.6] font-black tracking-[0.2em]" style={{ color: 'var(--accent-2)' }}>
+        <p className="text-3xl leading-[1.6] font-black tracking-[0.2em]" style={{ color: '#ffd36a' }}>
           つづく
         </p>
         <p className="mt-1 text-sm leading-[2] font-bold">
