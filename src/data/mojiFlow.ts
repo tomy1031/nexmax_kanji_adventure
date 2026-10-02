@@ -1,7 +1,7 @@
 import { KANA_EPISODES } from './kana';
 import { MOJI_EPISODES, isMojiEpisodeUnlocked } from './mojiEpisodes';
 import { MOJI_CHAPTERS } from './mojiRoute';
-import { Feature, isFeatureUnlocked } from './unlocks';
+import { Feature, isFeatureUnlocked, UNLOCKED_ON_MOJI } from './unlocks';
 import { MASTERY_REPS } from '../lib/mastery';
 import { getKanjiByChar } from '../lib/kanjiDb';
 
@@ -57,12 +57,11 @@ export const nextUp = (cleared: readonly string[], startPath: StartPath): string
   return ROUTE_ORDER.filter(isMoji).find((id) => !cleared.includes(id)) ?? null;
 };
 
-/** The town episode whose clear opens each feature on this route (the picture-book arcs keep theirs, unlocks.ts). */
-export const MOJI_UNLOCKED_BY = { forge: 'moji-1-2' } as const;
+/** The town episode whose clear opens each feature on this route (unlocks.ts, beside the picture-book arcs'). */
+export const MOJI_UNLOCKED_BY = UNLOCKED_ON_MOJI;
 
 /** 漢字やさん is open: introduced in the story at the end of 1章 2話, or opened on the old route. */
-export const isForgeOpen = (cleared: readonly string[]): boolean =>
-  cleared.includes(MOJI_UNLOCKED_BY.forge) || isFeatureUnlocked(Feature.FORGE, cleared);
+export const isForgeOpen = (cleared: readonly string[]): boolean => isFeatureUnlocked(Feature.FORGE, cleared);
 
 type Progress = Record<string, { reps?: number } | undefined>;
 
