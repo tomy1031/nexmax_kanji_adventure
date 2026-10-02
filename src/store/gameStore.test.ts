@@ -95,3 +95,19 @@ describe('ネクマックスの 経験値 (store)', () => {
     expect(merged.clearedStages).toEqual(['moji-1-1']);
   });
 });
+
+describe('ステージクリアの 得 (store)', () => {
+  it('records a かんぺき clear once per stage', () => {
+    const s = useGameStore.getState();
+    expect(s.markPerfect('moji-1-1')).toBe(true);
+    expect(s.markPerfect('moji-1-1')).toBe(false);
+    expect(s.markPerfect('moji-1-2')).toBe(true);
+    expect(useGameStore.getState().perfectStages).toEqual(['moji-1-1', 'moji-1-2']);
+  });
+
+  it('reads a save from before it with no かんぺき yet', () => {
+    const merge = useGameStore.persist.getOptions().merge!;
+    const merged = merge({ clearedStages: ['moji-1-1'] }, useGameStore.getState()) as ReturnType<typeof useGameStore.getState>;
+    expect(merged.perfectStages).toEqual([]);
+  });
+});

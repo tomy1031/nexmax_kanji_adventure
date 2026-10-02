@@ -33,6 +33,8 @@ export const ResultModal = ({
   bossName,
   mistakes,
   gems,
+  perfect = false,
+  showGems = true,
   newFriend,
   opened,
   tutorial,
@@ -51,6 +53,10 @@ export const ResultModal = ({
   bossName: string;
   mistakes: number;
   gems: number;
+  /** The first かんぺき (★3) clear of this stage: a 👑 and a little more (data/clearRewards.ts). */
+  perfect?: boolean;
+  /** Whether gems are worth showing yet (the new route shows them once the gacha is open). */
+  showGems?: boolean;
   newFriend: boolean;
   opened: Feature[];
   tutorial: boolean;
@@ -247,7 +253,12 @@ export const ResultModal = ({
           </div>
         )}
 
-        {gems > 0 && !moji && (
+        {perfect && (
+          <p className="mt-2 text-sm font-black" style={{ color: '#b0741a' }}>
+            <RubyText showFurigana={showFurigana}>👑 かんぺき！ はじめて まちがえずに 勝(か)った</RubyText>
+          </p>
+        )}
+        {gems > 0 && showGems && (
           <motion.p
             className="g-chip g-chip-gold mt-3 !text-base tabular-nums"
             initial={still ? false : { scale: 0 }}
