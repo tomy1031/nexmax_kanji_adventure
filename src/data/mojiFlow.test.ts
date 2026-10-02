@@ -1,5 +1,16 @@
 import { describe, expect, it } from 'vitest';
-import { MOJI_UNLOCKED_BY, ROUTE_ORDER, afterEpisode, canForge, isForgeOpen, mastersOf, nextUp, practiceTarget } from './mojiFlow';
+import {
+  MOJI_UNLOCKED_BY,
+  ROUTE_ORDER,
+  afterEpisode,
+  canForge,
+  continuePath,
+  episodePath,
+  isForgeOpen,
+  mastersOf,
+  nextUp,
+  practiceTarget,
+} from './mojiFlow';
 import { KANA_EPISODES } from './kana';
 import { MOJI_EPISODES, getMojiEpisode } from './mojiEpisodes';
 import { getKanjiByChar } from '../lib/kanjiDb';
@@ -58,5 +69,33 @@ describe('mojiFlow — where the player goes next (08 §3.8)', () => {
     // 山 is in 1-2, not open yet
     expect(practiceTarget(progress, [])).toEqual({ episode: 'moji-1-1', char: '月', left: 2 });
     expect(practiceTarget(progress, ['moji-1-1'])).toEqual({ episode: 'moji-1-2', char: '山', left: 1 });
+  });
+});
+
+describe('coming back to an episode', () => {
+  const town = MOJI_EPISODES.map((e) => e.id);
+  const reps = (n: number) =>
+    Object.fromEntries(MOJI_EPISODES.flatMap((e) => e.kanji).map((ch) => [getKanjiByChar(ch)!.id, { reps: n }]));
+
+  it('opens an episode on its story the first time, on じゅんび once cleared', () => {
+    expect(episodePath('moji-1-1', [])).toBe('/moji/moji-1-1');
+    expect(episodePath('moji-1-1', ['moji-1-1'])).toBe('/moji/moji-1-1?at=ready');
+    // 0章 has no じゅんび: a kana episode always plays.
+    expect(episodePath('kana-1', ['kana-1'])).toBe('/kana/kana-1');
+  });
+
+  it('sends つづき to the next episode while there is one', () => {
+    expect(continuePath([], 'kana', {})).toBe('/kana/kana-1');
+    expect(continuePath([...kana(10)], 'kana', {})).toBe('/moji/moji-1-1');
+  });
+
+  it('sends つづき, with nothing new to play, to the じゅんび where writing counts most', () => {
+    const all = [...kana(10), ...town];
+    const progress = { ...reps(10), [getKanjiByChar('山')!.id]: { reps: 6 } };
+    expect(continuePath(all, 'kana', progress)).toBe(`/moji/${MOJI_EPISODES.find((e) => e.kanji.includes('山'))!.id}?at=ready`);
+  });
+
+  it('has nowhere to send つづき once every kanji is ★3', () => {
+    expect(continuePath([...kana(10), ...town], 'kana', reps(10))).toBeNull();
   });
 });

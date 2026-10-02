@@ -34,7 +34,8 @@ import { useOwnedKanji } from './useOwnedKanji';
  * 出会い (encounter): the letters just lit draw the opponent in, so the fight
  * is with someone the story has introduced (2026-10-02「いきなり 敵が 出てくる
  * のは 意味不明」). The parts change behind the doors (PhaseDoors).
- * `?at=ready` opens on じゅんび — the way back from 漢字やさん.
+ * `?at=ready` opens on じゅんび — the way back from 漢字やさん, and the way in
+ * to an episode already cleared (more ★, a rematch; the story is a tap away).
  *
  * じゅんび is where writing more pays: each kanji shows its stars and what
  * the next one needs, and a tap goes back to writing it. The fight is
@@ -72,6 +73,7 @@ const ReadyScreen = ({
   onFight,
   onExit,
   onForge,
+  onStory,
 }: {
   ep: MojiEpisode;
   kanji: KanjiData[];
@@ -80,6 +82,8 @@ const ReadyScreen = ({
   onExit: () => void;
   /** 漢字やさん, offered only when it is open and something can be made. */
   onForge?: () => void;
+  /** The story again, for an episode already cleared (it opens here, not on the story). */
+  onStory?: () => void;
 }) => {
   const showFurigana = useGameStore((s) => s.settings.furigana);
   const progress = useGameStore((s) => s.progress);
@@ -163,6 +167,15 @@ const ReadyScreen = ({
         <p className="rt-light mx-auto rounded-full bg-[#1b1430]/75 px-4 text-center text-xs leading-[2.2] font-black text-[#ffe9c2]">
           <RubyText showFurigana={showFurigana}>{`★ ${total} / ${kanji.length * 3} ・ 字(じ)を タップすると もっと 書(か)ける`}</RubyText>
         </p>
+        {onStory && (
+          <button
+            type="button"
+            onClick={onStory}
+            className="rt-light mx-auto -mt-1 rounded-full bg-[#1b1430]/75 px-4 text-xs leading-[2.2] font-black text-[#ffe9c2] underline underline-offset-2"
+          >
+            📖 <RubyText showFurigana={showFurigana}>おはなしを もう一度(いちど)</RubyText>
+          </button>
+        )}
 
         {onForge && (
           <button type="button" className="g-btn g-btn-accent w-full" onClick={onForge}>
@@ -311,6 +324,7 @@ const EpisodePlayer = ({ id }: { id: string }) => {
               setPhase('practice');
             }}
             onForge={isForgeOpen(cleared) && canForge(progress) ? () => navigate(forgeHere) : undefined}
+            onStory={cleared.includes(ep.id) ? () => setPhase('intro') : undefined}
           />
         );
       case 'practice':
