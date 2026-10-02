@@ -11,6 +11,7 @@ import PictureBook from '../picturebook/PictureBook';
 import { SCENES } from '../picturebook/scenes';
 import { TypeReveal } from '../../components/ui/TypeReveal';
 import { NamePlate } from './NamePlate';
+import { useKnownLetters } from '../picturebook/useKnownLetters';
 import { nameRevealed } from '../../lib/nameReveal';
 import { useKnownKana } from '../kana/useKnownKana';
 import { useOwnedKanji } from '../moji/useOwnedKanji';
@@ -70,7 +71,10 @@ const TONE = {
 
 /** One carved letter is huge; a row of them (日 月 火 水 木) has to fit the screen. */
 const glyphSize = (glyph: string): string => {
-  const n = [...stripRuby(glyph).replace(/\s/g, '')].length;
+  // A kanji not written yet shows as its sound (やま for 山), which is longer:
+  // size for whichever is longer, the letters or their readings.
+  const readings = glyph.replace(/([^\s(（]+)[(（]([^)）]+)[)）]/g, '$2');
+  const n = Math.max([...stripRuby(glyph).replace(/\s/g, '')].length, [...readings.replace(/\s/g, '')].length);
   return n <= 2 ? '88px' : n <= 4 ? '64px' : 'min(48px, 11vw)';
 };
 
@@ -172,6 +176,19 @@ export const NovelScene = ({ script, cast, onFinish, chapter, renderText, speech
 
   const speaker = line?.speaker ? castById.get(line.speaker) : undefined;
   const plain = renderPlain ?? renderText;
+  /**
+   * The letters of the big glyph are lit signs in this very scene: the town
+   * already shows them, so the glyph is not drawn a second time over it.
+   * (Letters still missing keep their glyph — that is how the gap is shown.)
+   */
+  const knownLetters = useKnownLetters();
+  const glyph = line?.glyph;
+  const glyphOnSigns = useMemo(() => {
+    const spots = SCENES[bg]?.signs?.spots;
+    if (!glyph || !spots) return false;
+    const chars = [...stripRuby(glyph).replace(/\s/g, '')];
+    return chars.length > 0 && chars.every((c) => knownLetters.has(c) && spots.some((s) => s.char === c));
+  }, [bg, glyph, knownLetters]);
 
   const [spriteId, spriteExpr] = sprite?.split(':') ?? [];
   const spriteMember = spriteId ? castById.get(spriteId) : undefined;
@@ -256,20 +273,28 @@ export const NovelScene = ({ script, cast, onFinish, chapter, renderText, speech
 
       {/* 大きな字（きざんだ字など） -------------------------------------- */}
       <AnimatePresence>
-        {line.glyph && (
+        {line.glyph && !glyphOnSigns && (
           <motion.div
             key={line.glyph}
             initial={{ opacity: 0, scale: 1.6 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0 }}
             transition={{ type: 'spring', stiffness: 220, damping: 18 }}
-            className="pointer-events-none absolute top-[16dvh] left-1/2 z-10 w-[92vw] max-w-md -translate-x-1/2 text-center leading-[1.15] font-black"
+            className={`pointer-events-none absolute top-[16dvh] left-1/2 z-10 w-max max-w-[92vw] -translate-x-1/2 text-center leading-[1.15] ${
+              night ? 'rt-light rounded-2xl border-2 border-[#c9a052] bg-[#1b1640]/80 px-5 py-1 font-bold' : 'font-black'
+            }`}
             // One carved letter is huge; a row of them (日 月 火 水 木) has to fit the screen.
-            style={{
-              fontSize: glyphSize(line.glyph),
-              color: '#fff3c2',
-              textShadow: '0 0 18px rgba(255,210,90,0.95), 0 0 42px rgba(255,190,60,0.7), 0 4px 0 #7a4a26',
-            }}
+            // On 文字が 消えた 町 the letters sit plain on a dark plate — not glowing
+            // and swollen (2026-10-02「漢字 自体が 光で 太字に 表示されるのは よくない」).
+            style={
+              night
+                ? { fontSize: glyphSize(line.glyph), color: '#fff3dc' }
+                : {
+                    fontSize: glyphSize(line.glyph),
+                    color: '#fff3c2',
+                    textShadow: '0 0 18px rgba(255,210,90,0.95), 0 0 42px rgba(255,190,60,0.7), 0 4px 0 #7a4a26',
+                  }
+            }
           >
             {renderText ? renderText(line.glyph) : <RubyText showFurigana>{line.glyph}</RubyText>}
           </motion.div>
