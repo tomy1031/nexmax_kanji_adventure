@@ -17,8 +17,11 @@ import { assetPath } from './assetPath';
  * background and when せってい turns sound or BGM off.
  */
 
-/** town: title・地図 / story: お話と 書き取り（同じ 曲で つなぐ）/ battle: たたかい / shop: 漢字やさん */
-export type BgmTrack = 'town' | 'story' | 'battle' | 'shop';
+/**
+ * town: title・地図 / story: お話と 書き取り（同じ 曲で つなぐ）/ battle: たたかい / shop: 漢字やさん /
+ * sad: 字が 消えて 困って いる お話の 始め / tension: モジクイが 出る（出会い・プロローグの 影）
+ */
+export type BgmTrack = 'town' | 'story' | 'battle' | 'shop' | 'sad' | 'tension';
 
 /**
  * The file for each track, once it is in public/audio/bgm. A track without
@@ -29,6 +32,8 @@ const FILES: Partial<Record<BgmTrack, string>> = {
   story: 'audio/bgm/story.mp3',
   battle: 'audio/bgm/battle.mp3',
   shop: 'audio/bgm/shop.mp3',
+  sad: 'audio/bgm/sad.mp3',
+  tension: 'audio/bgm/tension.mp3',
 };
 
 /** Under the sound effects, so a stroke or a hit is always heard. */

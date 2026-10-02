@@ -157,7 +157,7 @@ const Overlay = ({ visual, still }: { visual: PrologueVisual; still: boolean }) 
 };
 
 export const PrologueScreen = () => {
-  useBgm('story');
+
   const navigate = useNavigate();
   const markSeen = useGameStore((s) => s.markTutorialSeen);
   const setLastArc = useGameStore((s) => s.setLastArc);
@@ -172,6 +172,8 @@ export const PrologueScreen = () => {
   const [beat, setBeat] = useState(0);
   const done = beat >= PROLOGUE.length;
   const current = PROLOGUE[Math.min(beat, PROLOGUE.length - 1)];
+  // The shadow's beats get the uneasy waltz; the rest, the story's music.
+  useBgm(!done && ['wake', 'eaten', 'guard', 'fall'].includes(current.visual) ? 'tension' : 'story');
 
   useEffect(preloadPictures, []);
   // Both answers to the question at the end lead straight into an episode.

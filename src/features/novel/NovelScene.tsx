@@ -15,7 +15,7 @@ import { useKnownLetters } from '../picturebook/useKnownLetters';
 import { nameRevealed } from '../../lib/nameReveal';
 import { useKnownKana } from '../kana/useKnownKana';
 import { useOwnedKanji } from '../moji/useOwnedKanji';
-import { useBgm } from '../../lib/bgm';
+import { useBgm, type BgmTrack } from '../../lib/bgm';
 
 /**
  * The novel scene, set in a moving picture book.
@@ -61,6 +61,8 @@ interface NovelSceneProps {
    * indigo-and-brass box, with the speaker's face on the name plate.
    */
   look?: 'paper' | 'night';
+  /** The music of this scene (lib/bgm.ts): the story's mood. */
+  bgm?: BgmTrack;
 }
 
 /** The colours that differ between the two boxes. */
@@ -94,12 +96,12 @@ const lineWords = (text: string): { word: string; gloss: string }[] => {
 /** Reading time for auto mode: a base plus a little per character. */
 const autoDelay = (text: string) => 1600 + stripRuby(text).length * 85;
 
-export const NovelScene = ({ script, cast, onFinish, chapter, renderText, speechFor, narrator, renderPlain, look = 'paper' }: NovelSceneProps) => {
+export const NovelScene = ({ script, cast, onFinish, chapter, renderText, speechFor, narrator, renderPlain, look = 'paper', bgm = 'story' }: NovelSceneProps) => {
   const night = look === 'night';
   const tone = TONE[look];
   const knownKana = useKnownKana();
   const owned = useOwnedKanji();
-  useBgm('story');
+  useBgm(bgm);
   const showFurigana = useGameStore((s) => s.settings.furigana);
   const [index, setIndex] = useState(0);
   const [showLog, setShowLog] = useState(false);
