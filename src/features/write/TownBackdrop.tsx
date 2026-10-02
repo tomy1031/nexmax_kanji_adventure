@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import PictureBook from '../picturebook/PictureBook';
+import { SCENES } from '../picturebook/scenes';
 import { RubyText } from '../../components/ui/Ruby';
 import { getKanjiByChar } from '../../lib/kanjiDb';
 import { charRuby } from '../../lib/reading';
@@ -50,11 +51,26 @@ export const TownBackdrop = ({ scene, letters, pulse }: { scene: string; letters
  */
 export const TownShot = ({ scene, char, onDone }: { scene: string; char: string; onDone: () => void }) => {
   const furigana = useGameStore((s) => s.settings.furigana);
+  const reduced = useGameStore((s) => s.settings.reducedMotion);
+  // The camera moves in on the sign (transform only): where it sits on screen,
+  // with the picture's object-cover.
+  const [origin] = useState(() => {
+    const signs = SCENES[scene]?.signs;
+    const spot = signs?.spots.find((s) => s.char === char);
+    if (!signs || !spot) return '50% 40%';
+    const [iw, ih] = signs.image;
+    const w = window.innerWidth;
+    const h = window.innerHeight;
+    const k = Math.max(w / iw, h / ih);
+    const x = (w - iw * k) / 2 + (spot.x + spot.w / 2) * k;
+    const y = (h - ih * k) / 2 + (spot.y + spot.h / 2) * k;
+    return `${((x / w) * 100).toFixed(1)}% ${((y / h) * 100).toFixed(1)}%`;
+  });
   // Dark for a beat, then lit, so the change itself is seen.
   const [held, setHeld] = useState(true);
   useEffect(() => {
-    const light = setTimeout(() => setHeld(false), 450);
-    const done = setTimeout(onDone, 2100);
+    const light = setTimeout(() => setHeld(false), 900);
+    const done = setTimeout(onDone, 2500);
     return () => {
       clearTimeout(light);
       clearTimeout(done);
@@ -71,7 +87,15 @@ export const TownShot = ({ scene, char, onDone }: { scene: string; char: string;
       exit={{ opacity: 0 }}
       onClick={onDone}
     >
-      <PictureBook scene={scene} still signHold={held ? char : undefined} />
+      <motion.div
+        className="absolute inset-0"
+        style={{ transformOrigin: origin, willChange: 'transform' }}
+        initial={{ scale: 1 }}
+        animate={{ scale: reduced ? 1 : 1.55 }}
+        transition={{ duration: 1.1, ease: 'easeOut' }}
+      >
+        <PictureBook scene={scene} still signHold={held ? char : undefined} />
+      </motion.div>
       <motion.span
         className="rt-light absolute inset-x-0 bottom-[14dvh] mx-auto w-max rounded-full border-2 border-[#c9a052] bg-[#1b1640]/85 px-5 text-xl leading-[2.2] font-black text-[#ffe7b8]"
         initial={{ opacity: 0, y: 10 }}
