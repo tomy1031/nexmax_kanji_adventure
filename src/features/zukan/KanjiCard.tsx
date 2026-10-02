@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { RubyText } from '../../components/ui/Ruby';
@@ -8,6 +8,8 @@ import type { KanjiData } from '../../types/kanji';
 import { kanjiRuby, kunWords, onReadings } from '../../lib/reading';
 import { repsToNextStar, starsOf } from '../../lib/mastery';
 import { canSpeak, speak } from '../../lib/speech';
+import { preloadCharData } from '../../lib/strokeLoader';
+import KanjiWriterCanvas, { type KanjiWriterHandle } from '../../components/KanjiWriterCanvas';
 import { cardWords, episodeOfKanji } from '../../data/kanjiCard';
 import { episodePath } from '../../data/mojiFlow';
 import { isMojiEpisodeUnlocked } from '../../data/mojiEpisodes';
@@ -20,7 +22,9 @@ import { useOwnedKanji } from '../moji/useOwnedKanji';
  * Its sound (🔊), its readings, a few real words with it — a kanji not
  * written yet stays a sound, as in the story (KanjiBackText) — and its
  * meaning behind EN (docs/design/07 §3: a word's meaning, never a sentence).
- * ✎ goes back to write it where it is taught, and comes back here.
+ * 書きじゅん plays the stroke order over the model, for a kanji already
+ * written (one not written yet stays a sound). ✎ goes back to write it
+ * where it is taught, and comes back here.
  */
 export const KanjiCard = ({ kanji, onClose }: { kanji: KanjiData; onClose: () => void }) => {
   const navigate = useNavigate();
@@ -29,6 +33,22 @@ export const KanjiCard = ({ kanji, onClose }: { kanji: KanjiData; onClose: () =>
   const cleared = useGameStore((s) => s.clearedStages);
   const owned = useOwnedKanji();
   const [en, setEn] = useState(false);
+  const [strokes, setStrokes] = useState(false);
+  const writerRef = useRef<KanjiWriterHandle>(null);
+  const playTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // Fetched as the card opens, so 書きじゅん starts at once.
+  useEffect(() => {
+    void preloadCharData([kanji.char]);
+    return () => {
+      if (playTimer.current) clearTimeout(playTimer.current);
+    };
+  }, [kanji.char]);
+  const playStrokes = () => {
+    setStrokes(true);
+    if (playTimer.current) clearTimeout(playTimer.current);
+    // The writer builds itself once mounted; play when it is there.
+    playTimer.current = setTimeout(() => writerRef.current?.animateStroke(), strokes ? 0 : 450);
+  };
   const stars = starsOf(reps);
   const have = stars > 0;
   const left = repsToNextStar(reps);
@@ -104,6 +124,24 @@ export const KanjiCard = ({ kanji, onClose }: { kanji: KanjiData; onClose: () =>
             )}
           </div>
         </div>
+
+        {have && (
+          <div className="mt-2 flex items-center justify-center gap-3">
+            {strokes && (
+              <div className="overflow-hidden rounded-xl border-2 border-[#caa468] bg-white" style={{ width: 132, height: 132 }}>
+                <KanjiWriterCanvas ref={writerRef} char={kanji.char} size={128} showSample />
+              </div>
+            )}
+            <button
+              type="button"
+              data-tap
+              className="rounded-full border-2 border-[#caa468] bg-white/80 px-3 py-1 text-[13px] font-black whitespace-nowrap"
+              onClick={playStrokes}
+            >
+              <RubyText showFurigana={showFurigana}>{strokes ? '▶ もう一度(いちど)' : '✎ 書(か)きじゅん'}</RubyText>
+            </button>
+          </div>
+        )}
 
         {words.length > 0 && (
           <ul className="mt-2 flex flex-col gap-1">
