@@ -6,6 +6,7 @@ import { KanjiWord, Readings } from '../../components/ui/Readings';
 import { NexmaxSays, TopBar } from '../../components/ui/Chrome';
 import { useCanvasSize } from '../../hooks/useCanvasSize';
 import { useCompactHeight } from '../../hooks/useCompactHeight';
+import { StarBurst } from '../../components/ui/StarBurst';
 import { useGameStore } from '../../store/gameStore';
 import { kanjiRuby } from '../../lib/reading';
 import { REPS_TO_OBTAIN, type KanjiData } from '../../types/kanji';
@@ -87,26 +88,6 @@ const COPY: Record<'rock' | 'sign', { verdict: Record<VerdictKind, { head: strin
   },
 };
 
-/** Eight stars flying out from the centre: a star was gained. */
-const StarBurst = () => (
-  <div aria-hidden className="pointer-events-none absolute top-1/2 left-1/2">
-    {Array.from({ length: 8 }, (_, i) => {
-      const a = (i / 8) * Math.PI * 2;
-      return (
-        <motion.span
-          key={i}
-          className="absolute -mt-3 -ml-3 text-2xl"
-          style={{ color: '#ffd23a', willChange: 'transform, opacity' }}
-          initial={{ x: 0, y: 0, scale: 0.4, opacity: 1 }}
-          animate={{ x: Math.cos(a) * 110, y: Math.sin(a) * 110, scale: 1.2, opacity: 0, rotate: 180 }}
-          transition={{ duration: 0.9, ease: 'easeOut' }}
-        >
-          ★
-        </motion.span>
-      );
-    })}
-  </div>
-);
 
 export const KanjiDrill = ({ kanji, onObtained, onExit, onDone, nextLabel = 'つぎへ', extra, goal, look = 'rock' }: KanjiDrillProps) => {
   useBgm('write');

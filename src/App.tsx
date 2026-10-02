@@ -25,7 +25,23 @@ import ZukanScreen from './features/zukan/ZukanScreen';
  * meets first. They are fetched quietly once the title is up (warmLater), so
  * opening one later does not wait.
  */
-const later = {
+/**
+ * A new version published while this page is open replaces those files, and
+ * the old page then asks for ones that are gone. Load the new version once
+ * (sessionStorage stops a loop) instead of showing an empty screen.
+ */
+const RELOADED = 'nexmax-reloaded-for-update';
+const orReload =
+  <T,>(load: () => Promise<T>) =>
+  (): Promise<T> =>
+    load().catch((err) => {
+      if (sessionStorage.getItem(RELOADED)) throw err;
+      sessionStorage.setItem(RELOADED, '1');
+      window.location.reload();
+      return new Promise<T>(() => {});
+    });
+
+const chunks = {
   arcSelect: () => import('./features/map/ArcSelect'),
   stageSelect: () => import('./features/map/StageSelect'),
   stagePlayer: () => import('./features/stage/StagePlayer'),
@@ -37,18 +53,22 @@ const later = {
   words: () => import('./features/words/WordBook'),
   tutorial: () => import('./features/tutorial/TutorialStage'),
 };
-const ArcSelect = lazy(later.arcSelect);
-const StageSelect = lazy(later.stageSelect);
-const StagePlayer = lazy(later.stagePlayer);
-const GachaScreen = lazy(later.gacha);
-const CollectionScreen = lazy(later.collection);
-const DailyScreen = lazy(later.daily);
-const VersusScreen = lazy(later.versus);
-const WordBook = lazy(later.words);
-const TutorialStage = lazy(later.tutorial);
+const ArcSelect = lazy(orReload(chunks.arcSelect));
+const StageSelect = lazy(orReload(chunks.stageSelect));
+const StagePlayer = lazy(orReload(chunks.stagePlayer));
+const GachaScreen = lazy(orReload(chunks.gacha));
+const CollectionScreen = lazy(orReload(chunks.collection));
+const DailyScreen = lazy(orReload(chunks.daily));
+const VersusScreen = lazy(orReload(chunks.versus));
+const WordBook = lazy(orReload(chunks.words));
+const TutorialStage = lazy(orReload(chunks.tutorial));
 
 const warmLater = () => {
-  const run = () => Object.values(later).forEach((load) => void load().catch(() => {}));
+  const run = () => {
+    // Fetched quietly (a failure here never reloads — that is only for a screen
+    // being opened). Once all are in, a later update may reload once again.
+    void Promise.all(Object.values(chunks).map((load) => load())).then(() => sessionStorage.removeItem(RELOADED), () => {});
+  };
   if ('requestIdleCallback' in window) window.requestIdleCallback(run, { timeout: 6000 });
   else setTimeout(run, 3000);
 };

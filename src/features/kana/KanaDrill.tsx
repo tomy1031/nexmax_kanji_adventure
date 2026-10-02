@@ -3,6 +3,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { NexmaxSays, TopBar } from '../../components/ui/Chrome';
 import { useCanvasSize } from '../../hooks/useCanvasSize';
 import { useCompactHeight } from '../../hooks/useCompactHeight';
+import { StarBurst } from '../../components/ui/StarBurst';
+import * as sfx from '../../lib/sfx';
 import { useGameStore } from '../../store/gameStore';
 import { KANA_LENIENCY, KANA_REPS, KANA_SAMPLE_REPS, ROMAJI } from '../../data/kana';
 import SignLight, { type SignLightHandle } from '../write/SignLight';
@@ -72,6 +74,7 @@ export const KanaDrill = ({ kana, onDone, onExit }: KanaDrillProps) => {
     setSampleOverride(null);
     setVerdict(null);
     if ((useGameStore.getState().kana[current] ?? 0) >= KANA_REPS) {
+      sfx.star(0);
       setReturned(current);
       return;
     }
@@ -233,6 +236,10 @@ export const KanaDrill = ({ kana, onDone, onExit }: KanaDrillProps) => {
               animate={{ scale: 1, y: 0 }}
               className="g-parchment w-full max-w-sm px-6 py-6 text-center"
             >
+              {/* The letter came back: the same burst of stars as a kanji's ★. */}
+              <div className="relative">
+                <StarBurst />
+              </div>
               <motion.div
                 initial={{ rotate: -8, scale: 0.6 }}
                 animate={{ rotate: 0, scale: 1 }}
