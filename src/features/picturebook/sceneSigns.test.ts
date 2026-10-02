@@ -26,9 +26,22 @@ describe('scene signs (2026-10-02「書く ことで 町の 景色が 変わる�
     }
   });
 
-  it('light kana-1’s letters at the airport where it opens', () => {
-    const scene = KANA_SCRIPTS['kana-1'].intro.lines[0].bg!;
-    const chars = SCENES[scene].signs?.spots.map((s) => s.char) ?? [];
-    expect(chars).toEqual(KANA_EPISODES[0].kana);
+  it('light every kana episode’s letters in the scene it opens in', () => {
+    for (const ep of KANA_EPISODES) {
+      const scene = KANA_SCRIPTS[ep.id].intro.lines[0].bg!;
+      const chars = SCENES[scene].signs?.spots.map((s) => s.char) ?? [];
+      expect(chars, ep.id).toEqual(ep.kana);
+    }
+  });
+
+  it('keep hung boards inside the middle of the picture, above the characters', () => {
+    for (const [id, def] of withSigns.filter(([, d]) => d.signs!.style === 'hang')) {
+      const [w, h] = def.signs!.image;
+      for (const s of def.signs!.spots) {
+        expect(s.x, `${id} ${s.char}`).toBeGreaterThanOrEqual(w * 0.08);
+        expect(s.x + s.w, `${id} ${s.char}`).toBeLessThanOrEqual(w * 0.92);
+        expect(s.y + s.h, `${id} ${s.char}`).toBeLessThanOrEqual(h * 0.4);
+      }
+    }
   });
 });
