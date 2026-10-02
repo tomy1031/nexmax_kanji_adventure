@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import { useMapPath } from '../../lib/nav';
 import { Backdrop } from '../../components/ui/Backdrop';
+import { NightStreetBackdrop } from '../write/NightStreet';
 import { useNavigate } from 'react-router-dom';
 import { useGameStore } from '../../store/gameStore';
 import { getKanjiById } from '../../lib/kanjiDb';
@@ -19,6 +20,7 @@ type Tab = 'weapons' | 'individuals';
 export const CollectionScreen = () => {
   const navigate = useNavigate();
   const mapPath = useMapPath();
+  const moji = useGameStore((st) => st.lastArc) === 'moji';
   const showFurigana = useGameStore((s) => s.settings.furigana);
   const weapons = useGameStore((s) => s.weapons);
   const equipped = useGameStore((s) => s.equippedWeapon);
@@ -48,16 +50,20 @@ export const CollectionScreen = () => {
 
   return (
     <div className="g-stage min-h-dvh pb-8">
-      <Backdrop fixed />
+      {/* The world being played behind it: the night town on 文字が 消えた 町 (08 §3.8). */}
+      {moji ? <NightStreetBackdrop /> : <Backdrop fixed />}
       <header
-        className="g-header sticky top-0 z-20 px-4 py-3"
+        className="g-header sticky top-0 z-20 px-4 pt-[max(12px,env(safe-area-inset-top))] pb-3"
       >
         <div className="flex items-center justify-between">
           <button type="button" className="g-btn g-btn-accent !min-h-[38px] !gap-1 !px-3.5 text-sm" onClick={() => navigate(mapPath)}>
             <span aria-hidden>◀</span>もどる
           </button>
-          <h1 className="g-title text-base">
+          <h1 className="g-title text-center text-base leading-tight">
             <RubyText showFurigana={showFurigana}>図鑑(ずかん)</RubyText>
+            <span lang="en" className="block text-[10px] font-bold opacity-80">
+              Collection
+            </span>
           </h1>
           <span className="w-16" />
         </div>
@@ -94,7 +100,14 @@ export const CollectionScreen = () => {
                 まだ 武器(ぶき)が ありません。漢字(かんじ)を 2(ふた)つ あわせて 作(つく)りましょう。
               </RubyText>
               <button type="button" className="g-btn g-btn-primary mt-4 w-full" onClick={() => navigate('/forge')}>
-                <RubyText showFurigana={showFurigana}>合成(ごうせい)へ</RubyText>
+                {/* On 文字が 消えた 町 the forge is 漢字やさん, as the story calls it. */}
+                {moji ? (
+                  <>
+                    🔨 <RubyText showFurigana={showFurigana}>漢字(かんじ)やさんへ</RubyText>
+                  </>
+                ) : (
+                  <RubyText showFurigana={showFurigana}>合成(ごうせい)へ</RubyText>
+                )}
               </button>
             </div>
           ) : (
