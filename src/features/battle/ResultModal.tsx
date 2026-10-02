@@ -9,6 +9,7 @@ import { KanjiWord } from '../../components/ui/Readings';
 import type { KanjiData } from '../../types/kanji';
 import type { Stars } from '../../lib/mastery';
 import { NEXT_STAR_GAIN } from '../../data/starPerks';
+import { hpBonus, patienceBonus } from '../../lib/level';
 import * as sfx from '../../lib/sfx';
 
 /**
@@ -78,6 +79,8 @@ export const ResultModal = ({
     starUps: { kanji: KanjiData; stars: Stars }[];
     read: { right: number; total: number };
     goal?: { kanji: KanjiData; left: number; next: 2 | 3 } | null;
+    /** ネクマックスの 経験値 (lib/level.ts): what this fight added, the level before and after, and the ceiling. */
+    exp?: { gained: number; before: number; after: number; atCap: boolean; kanjiToRaiseCap: number };
   };
 }) => {
   const moji = route === 'moji';
@@ -175,11 +178,37 @@ export const ResultModal = ({
           </RubyText>
         </p>
 
-        {growth && (growth.starUps.length > 0 || growth.read.total > 0 || growth.goal) && (
+        {growth && (growth.starUps.length > 0 || growth.read.total > 0 || growth.goal || (growth.exp && growth.exp.gained > 0)) && (
           <div className="mt-3 rounded-xl px-3 py-2 text-left" style={{ background: 'rgba(255,255,255,0.55)', border: '2px solid #e0c48a' }}>
             <p className="text-xs font-black" style={{ color: 'var(--ink-2)' }}>
               この たたかいで
             </p>
+            {growth.exp && growth.exp.gained > 0 && (
+              <p className="flex flex-wrap items-baseline gap-x-2 text-sm leading-[1.9] font-black">
+                <span>✨ EXP ＋{growth.exp.gained}</span>
+                {growth.exp.after > growth.exp.before && (
+                  <motion.span
+                    className="rounded-full bg-[#2f8fe0] px-2 text-xs leading-[1.9] text-white"
+                    initial={still ? false : { scale: 0 }}
+                    animate={{ scale: 1 }}
+                    transition={{ delay: 0.9, type: 'spring', stiffness: 380, damping: 14 }}
+                  >
+                    Lv UP! Lv{growth.exp.before} → Lv{growth.exp.after}
+                  </motion.span>
+                )}
+              </p>
+            )}
+            {growth.exp && growth.exp.after > growth.exp.before && (
+              <p className="text-xs font-black" style={{ color: '#2f8fe0' }}>
+                ❤ HP ＋{hpBonus(growth.exp.after) - hpBonus(growth.exp.before)}
+                {patienceBonus(growth.exp.after) > patienceBonus(growth.exp.before) && <RubyText showFurigana={showFurigana}>・✋ がまん ＋1</RubyText>}
+              </p>
+            )}
+            {growth.exp?.atCap && (
+              <p className="text-xs font-black" style={{ color: 'var(--ink-2)' }}>
+                <RubyText showFurigana={showFurigana}>{`Lv の 上限(じょうげん)。新(あたら)しい 字(じ)を あと ${growth.exp.kanjiToRaiseCap}字(じ) おぼえよう`}</RubyText>
+              </p>
+            )}
             {growth.starUps.length > 0 && (
               <div className="mt-0.5 flex flex-wrap items-center gap-1">
                 {growth.starUps.map(({ kanji, stars: s }) => (
