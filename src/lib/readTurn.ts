@@ -19,9 +19,11 @@ export const WRITES_PER_READ = 2;
 /**
  * Whether the n-th turn of a fight (0-based) is a reading turn: write,
  * write, read, write, write, read… The first is always a write, and two
- * reading turns never follow each other.
+ * reading turns never follow each other. Hard reads after every write
+ * (lib/difficulty.ts).
  */
-export const isReadTurn = (turn: number): boolean => turn > 0 && (turn + 1) % (WRITES_PER_READ + 1) === 0;
+export const isReadTurn = (turn: number, writesPerRead = WRITES_PER_READ): boolean =>
+  turn > 0 && (turn + 1) % (writesPerRead + 1) === 0;
 
 /** Every reading of a kanji as a bare hiragana stem — the word lists' and the table's: 日 → ひ, にち, じつ, か. */
 const stemsOf = (k: KanjiData): Set<string> =>
