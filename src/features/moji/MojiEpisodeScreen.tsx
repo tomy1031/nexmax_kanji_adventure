@@ -23,6 +23,7 @@ import { assetPath } from '../../lib/assetPath';
 import { PhaseDoors } from '../../components/ui/Doors';
 import KanjiBackText from './KanjiBackText';
 import ToBeContinued from './ToBeContinued';
+import StarSecrets from './StarSecrets';
 import { useOwnedKanji } from './useOwnedKanji';
 
 /**
@@ -90,10 +91,18 @@ const ReadyScreen = ({
   const repsOf = (k: KanjiData) => progress[k.id]?.reps ?? 0;
   const total = kanji.reduce((n, k) => n + starsOf(repsOf(k)), 0);
   const weakest = Math.min(...kanji.map((k) => starsOf(repsOf(k))));
+  // What the stars are for: shown by itself on the first じゅんび, then a tap away.
+  const markTutorialSeen = useGameStore((s) => s.markTutorialSeen);
+  const [secrets, setSecrets] = useState(() => !useGameStore.getState().tutorials.stars);
+  const closeSecrets = () => {
+    setSecrets(false);
+    markTutorialSeen('stars');
+  };
 
   return (
     <div className="isolate relative flex min-h-dvh flex-col items-center pb-6">
       <PictureBook scene={ep.bg} className="!fixed -z-10" still />
+      {secrets && <StarSecrets showFurigana={showFurigana} onClose={closeSecrets} />}
       <TopBar onBack={onExit} />
       <div className="flex w-full max-w-md flex-1 flex-col gap-3 px-3 pt-3">
         {/* The opponent, so the writing has a reason. */}
@@ -119,13 +128,20 @@ const ReadyScreen = ({
         </div>
 
         <div className="flex items-end justify-between gap-2">
-          <div className="g-parchment flex-1 px-3 py-2 text-[13px] leading-[1.9] font-bold">
+          <button
+            type="button"
+            onClick={() => setSecrets(true)}
+            className="g-parchment flex-1 px-3 py-2 text-left text-[13px] leading-[1.9] font-bold active:scale-[0.98]"
+          >
             <RubyText showFurigana={showFurigana}>
               {weakest >= 2
                 ? 'じゅんび ばっちり！ たたかおう。'
                 : '★が 多(おお)いほど こうげきが 強(つよ)い。書(か)けば 書(か)くほど 勝(か)ちやすく なる。'}
             </RubyText>
-          </div>
+            <span className="block text-xs font-black" style={{ color: 'var(--accent-2)' }}>
+              ★の ひみつ ▸
+            </span>
+          </button>
           <NexmaxSays text={weakest >= 2 ? 'いける！' : 'もっと 書(か)く？'} pose={weakest >= 2 ? 'cheer' : 'guide'} size={64} />
         </div>
 
