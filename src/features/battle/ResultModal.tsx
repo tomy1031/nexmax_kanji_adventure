@@ -181,11 +181,11 @@ export const ResultModal = ({
               この たたかいで
             </p>
             {growth.starUps.length > 0 && (
-              <div className="mt-0.5 flex flex-wrap items-center gap-1.5">
+              <div className="mt-0.5 flex flex-wrap items-center gap-1">
                 {growth.starUps.map(({ kanji, stars: s }) => (
                   <span
                     key={kanji.id}
-                    className="inline-flex items-center gap-1 rounded-lg bg-[#fff6dd] px-2 text-lg leading-[1.9] font-black"
+                    className="inline-flex items-center gap-1 rounded-lg bg-[#fff6dd] px-1.5 text-base leading-[1.75] font-black"
                     style={{ border: '1.5px solid #f2b53a' }}
                   >
                     <KanjiWord kanji={kanji} showFurigana={showFurigana} />
