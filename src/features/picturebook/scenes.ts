@@ -628,6 +628,30 @@ const meadow: SceneDef = {
  * effects are the paper scenes' own layers, reused as they are (so they are
  * already pre-rendered): sparkles, the shadow's smoke, the healing glow.
  */
+/**
+ * Boards hung across the upper part of a painting, one per letter, in up to
+ * two even rows inside the central 80% — for the scenes whose painting has no
+ * empty sign of its own (かな編). Placed above where the characters stand.
+ */
+const boardRows = (chars: string, image: readonly [number, number] = [800, 1440], top = 260): SceneSignSet => {
+  const list = [...chars];
+  const rows = Math.ceil(list.length / 6);
+  const per = Math.ceil(list.length / rows);
+  const step = per <= 5 ? 120 : 105;
+  const w = per <= 5 ? 84 : 76;
+  const h = Math.round(w * 1.15);
+  return {
+    image,
+    style: 'hang',
+    spots: list.map((char, i) => {
+      const r = Math.floor(i / per);
+      const n = Math.min(per, list.length - r * per);
+      const x = image[0] / 2 - (n * step) / 2 + (i % per) * step + (step - w) / 2;
+      return { char, x: Math.round(x), y: top + r * (h + 34), w, h };
+    }),
+  };
+};
+
 const photoScene = (photo: string, signs?: SceneSignSet): SceneDef => ({
   photo,
   signs,
@@ -649,13 +673,17 @@ export const PHOTO_SCENES: Record<string, SceneDef> = {
     spots: [...'あいうえお'].map((char, i) => ({ char, x: 170 + i * 140, y: 230, w: 96, h: 110 })),
   }),
   naniwa_airport_night: photoScene('img/stageselect/bg_night.webp'),
-  naniwa_sky_garden: photoScene('img/naniwa/naniwa_sky_garden.webp'),
-  naniwa_lounge: photoScene('img/naniwa/naniwa_lounge.webp'),
-  naniwa_walkway: photoScene('img/naniwa/naniwa_walkway.webp'),
-  naniwa_runway_night: photoScene('img/naniwa/naniwa_runway_night.webp'),
-  naniwa_station: photoScene('img/naniwa/naniwa_station.webp'),
-  naniwa_train: photoScene('img/naniwa/naniwa_train.webp'),
-  naniwa_last_car: photoScene('img/naniwa/naniwa_last_car.webp'),
+  naniwa_sky_garden: photoScene('img/naniwa/naniwa_sky_garden.webp', boardRows('かきくけこさしすせそ')),
+  naniwa_lounge: photoScene('img/naniwa/naniwa_lounge.webp', boardRows('たちつてとなにぬねの')),
+  naniwa_walkway: photoScene('img/naniwa/naniwa_walkway.webp', boardRows('はひふへほまみむめも')),
+  naniwa_runway_night: photoScene('img/naniwa/naniwa_runway_night.webp', boardRows('やゆよらりるれろわをん')),
+  // The airport station, one corner per episode, each with its own signs: the hall (kiosk),
+  // the ticket gates, the platform.
+  naniwa_station: photoScene('img/naniwa/naniwa_station.webp', boardRows('アイウエオカキクケコ')),
+  naniwa_station_gate: photoScene('img/naniwa/naniwa_station.webp', boardRows('サシスセソタチツテト')),
+  naniwa_station_platform: photoScene('img/naniwa/naniwa_station.webp', boardRows('ナニヌネノハヒフヘホ')),
+  naniwa_train: photoScene('img/naniwa/naniwa_train.webp', boardRows('マミムメモヤユヨ')),
+  naniwa_last_car: photoScene('img/naniwa/naniwa_last_car.webp', boardRows('ラリルレロワヲン')),
   // 1章: ナニワタウン
   naniwa_town: photoScene('img/title/bg.webp'),
   // 1章1話: the station calendar's seven empty panels, 日 月 火 水 木 金 土 (measured on the picture).

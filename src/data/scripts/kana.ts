@@ -200,7 +200,7 @@ export const KANA_SCRIPTS: Record<string, KanaScript> = Object.fromEntries([
   script(
     'kana-7',
     [
-      { bg: 'naniwa_station', text: 'A ticket machine. Its screen is blank.', ja: 'きっぷの きかい。がめんは からっぽだ。' },
+      { bg: 'naniwa_station_gate', text: 'A ticket machine. Its screen is blank.', ja: 'きっぷの きかい。がめんは からっぽだ。' },
       { speaker: 'nexmax', sprite: 'nexmax:think', text: 'キップを かいたい。どこを おす？ 🤔' },
       { text: 'かいたい kaitai — he wants to buy something. どこを おす doko o osu — where do I press?', ja: 'かいたい。なにかを かいたいんだ。どこを おす？ どこを おせば いいの？' },
       { text: "The ticket machine's buttons are blank — one dark square after another.", ja: 'きかいの ボタンは からっぽ。くらい しかくが ならんで いる だけ。' },
@@ -218,7 +218,7 @@ export const KANA_SCRIPTS: Record<string, KanaScript> = Object.fromEntries([
   script(
     'kana-8',
     [
-      { bg: 'naniwa_station', text: 'A train is coming. I can hear it on the tracks.', ja: 'でんしゃが くる。せんろの おとが きこえる。' },
+      { bg: 'naniwa_station_platform', text: 'A train is coming. I can hear it on the tracks.', ja: 'でんしゃが くる。せんろの おとが きこえる。' },
       { speaker: 'nexmax', sprite: 'nexmax:determined', text: 'キップが ないと、のれない！' },
       { text: 'のれない norenai — without a ticket we can\'t get on!', ja: 'のれない。キップが ないと のれない！' },
       { text: 'The sign over the platform gate has gone dark.', ja: 'ホームの ゲートの うえの かんばんが、くらく なって いる。' },
