@@ -33,7 +33,7 @@ export const ToBeContinued = ({
 
   return (
     <div className="isolate relative flex min-h-dvh flex-col items-center justify-center px-5 pb-6">
-      <PictureBook scene={scene} className="!fixed -z-10" still />
+      <PictureBook scene={scene} className="!fixed -z-10" still signsFaint />
       <div aria-hidden className="fixed inset-0 -z-10 bg-[#0e0b22]/55" />
       <motion.div
         initial={{ opacity: 0, y: 16, scale: 0.96 }}

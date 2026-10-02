@@ -122,7 +122,8 @@ const ReadyScreen = ({
 
   return (
     <div className="isolate relative flex min-h-dvh flex-col items-center pb-6">
-      <PictureBook scene={ep.bg} className="!fixed -z-10" still />
+      {/* The town behind, its signs faint: the cards sit over them (they peeked out and cluttered it). */}
+      <PictureBook scene={ep.bg} className="!fixed -z-10" still signsFaint />
       {secrets && <StarSecrets showFurigana={showFurigana} onClose={closeSecrets} />}
       <TopBar onBack={onExit} />
       <div className="flex w-full max-w-md flex-1 flex-col gap-3 px-3 pt-3">
