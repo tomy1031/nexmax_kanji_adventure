@@ -5,6 +5,9 @@ import { RubyText } from '../../components/ui/Ruby';
 import { LogoText } from '../../components/ui/LogoText';
 import { useGameStore } from '../../store/gameStore';
 import { FEATURE_INTRO, type Feature } from '../../data/unlocks';
+import { KanjiWord } from '../../components/ui/Readings';
+import type { KanjiData } from '../../types/kanji';
+import type { Stars } from '../../lib/mastery';
 import * as sfx from '../../lib/sfx';
 
 /**
@@ -40,6 +43,7 @@ export const ResultModal = ({
   onFeature,
   onTutorialDone,
   route,
+  growth,
 }: {
   outcome: Outcome;
   bossName: string;
@@ -63,6 +67,12 @@ export const ResultModal = ({
    * no use on this route yet, are not announced.
    */
   route?: 'moji';
+  /**
+   * What this fight did for the learner (文字が 消えた 町): the kanji whose ★
+   * went up, and the reading turns got right. Shown win or lose — the
+   * writing counted either way.
+   */
+  growth?: { starUps: { kanji: KanjiData; stars: Stars }[]; read: { right: number; total: number } };
 }) => {
   const moji = route === 'moji';
   const showFurigana = useGameStore((s) => s.settings.furigana);
@@ -158,6 +168,36 @@ export const ResultModal = ({
                 : 'まだ 持(も)って いない 字(じ)を れんしゅうすると、つよく なる。'}
           </RubyText>
         </p>
+
+        {growth && (growth.starUps.length > 0 || growth.read.total > 0) && (
+          <div className="mt-3 rounded-xl px-3 py-2 text-left" style={{ background: 'rgba(255,255,255,0.55)', border: '2px solid #e0c48a' }}>
+            <p className="text-xs font-black" style={{ color: 'var(--ink-2)' }}>
+              この たたかいで
+            </p>
+            {growth.starUps.length > 0 && (
+              <div className="mt-0.5 flex flex-wrap items-center gap-1.5">
+                {growth.starUps.map(({ kanji, stars: s }) => (
+                  <span
+                    key={kanji.id}
+                    className="inline-flex items-center gap-1 rounded-lg bg-[#fff6dd] px-2 text-lg leading-[1.9] font-black"
+                    style={{ border: '1.5px solid #f2b53a' }}
+                  >
+                    <KanjiWord kanji={kanji} showFurigana={showFurigana} />
+                    <span className="text-xs" style={{ color: '#e8a317' }} aria-label={`★${s}`}>
+                      {'★'.repeat(s)}
+                    </span>
+                  </span>
+                ))}
+                <span className="text-xs font-black">に なった！</span>
+              </div>
+            )}
+            {growth.read.total > 0 && (
+              <p className="mt-0.5 text-sm font-black">
+                📖 <RubyText showFurigana={showFurigana}>{`読(よ)めた ${growth.read.right} / ${growth.read.total}`}</RubyText>
+              </p>
+            )}
+          </div>
+        )}
 
         {gems > 0 && !moji && (
           <motion.p
