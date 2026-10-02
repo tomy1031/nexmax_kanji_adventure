@@ -91,7 +91,7 @@ const ReadyScreen = ({
   const repsOf = (k: KanjiData) => progress[k.id]?.reps ?? 0;
   const total = kanji.reduce((n, k) => n + starsOf(repsOf(k)), 0);
   const weakest = Math.min(...kanji.map((k) => starsOf(repsOf(k))));
-  // What the stars are for: shown by itself on the first じゅんび, then a tap away.
+  // What the stars are for and how the fight goes: shown by itself on the first じゅんび, then a tap away.
   const markTutorialSeen = useGameStore((s) => s.markTutorialSeen);
   const [secrets, setSecrets] = useState(() => !useGameStore.getState().tutorials.stars);
   const closeSecrets = () => {
@@ -139,7 +139,7 @@ const ReadyScreen = ({
                 : '★が 多(おお)いほど こうげきが 強(つよ)い。書(か)けば 書(か)くほど 勝(か)ちやすく なる。'}
             </RubyText>
             <span className="block text-xs font-black" style={{ color: 'var(--accent-2)' }}>
-              ★の ひみつ ▸
+              ★・たたかいの ひみつ ▸
             </span>
           </button>
           <NexmaxSays text={weakest >= 2 ? 'いける！' : 'もっと 書(か)く？'} pose={weakest >= 2 ? 'cheer' : 'guide'} size={64} />
