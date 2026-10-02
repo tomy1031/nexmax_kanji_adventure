@@ -79,4 +79,11 @@ export interface CastMember {
    * never a named, visible person.
    */
   silhouette?: boolean;
+  /**
+   * The letters the name is written with, in furigana notation (山(やま)田(だ)).
+   * Until the player has written all
+   * of them the name plate says ？？？ — the name is one of the things the
+   * Mojikui ate (2026-10-02「表示前は 極端に 名前が 出ないのが 困る 演出」).
+   */
+  nameChars?: string;
 }

@@ -23,10 +23,11 @@ import { NANIWA_FOLK, NANIWA_NEXMAX } from './naniwaCast';
  * kana.test.ts が「ネクマックスの 台詞は かなと 絵文字だけ」「地の文は 英語」を 確かめる。
  */
 
-export const KANA_CAST: CastMember[] = [NANIWA_NEXMAX, ...NANIWA_FOLK];
-
-/** Before his name comes back (kana-9), Nexmax's name plate can only say what he is. */
-export const KANA_CAST_NAMELESS: CastMember[] = KANA_CAST.map((c) => (c.id === 'nexmax' ? { ...c, name: 'ロボット' } : c));
+/**
+ * Nexmax's name was eaten: his plate says ？？？ (with his face) until every
+ * letter of ネクマックス is written — at the end of kana-9.
+ */
+export const KANA_CAST: CastMember[] = [{ ...NANIWA_NEXMAX, nameChars: 'ネクマックス' }, ...NANIWA_FOLK];
 
 type Line = NovelLine;
 

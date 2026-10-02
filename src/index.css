@@ -476,6 +476,104 @@
     color: #3e2a18;
   }
 
+  /* 文字が 消えた 町の 会話枠: 夜の 藍色の ガラスに 真鍮の ふち（町の 絵・たたかいの 枠に 合わせる）。
+     ふりがな・ローマ字・穴・戻った 漢字の 色も 暗い 地に 合わせて 明るく する。 */
+  .g-novel-night {
+    background:
+      radial-gradient(ellipse at 25% 0%, rgba(255, 214, 140, 0.14), transparent 55%),
+      linear-gradient(180deg, rgba(34, 30, 80, 0.94) 0%, rgba(16, 13, 42, 0.96) 100%);
+    border: 3px solid #c9a052;
+    border-radius: 18px;
+    box-shadow:
+      inset 0 0 0 2px rgba(255, 226, 160, 0.22),
+      inset 0 2px 0 rgba(255, 236, 190, 0.18),
+      0 14px 30px rgba(0, 0, 0, 0.45);
+    color: #fff3dc;
+  }
+  .g-novel-night rt {
+    color: #ffe2a8;
+  }
+  .g-novel-night ruby.kana-unread {
+    color: rgba(255, 243, 220, 0.62);
+  }
+  .g-novel-night ruby.kana-unread rt {
+    color: #8fd0ff;
+  }
+  .g-novel-night .kanji-lost {
+    text-decoration-color: rgba(255, 226, 168, 0.6);
+  }
+  .g-novel-night ruby.kanji-back {
+    color: #ffc95c;
+    text-shadow: none;
+  }
+  .g-novel-night .kana-hole {
+    border-color: rgba(255, 226, 168, 0.55);
+    background: rgba(255, 255, 255, 0.06);
+  }
+  .g-pill-night {
+    background: rgba(201, 160, 82, 0.15);
+    border-color: #c9a052;
+    color: #ffe7b8;
+  }
+
+  /* 名札: 真鍮の 板と、話して いる 人の 顔。名前が まだ ない ときは 暗い 板に 欠けた ふち。 */
+  .g-plate-brass {
+    background: linear-gradient(180deg, #f3d382 0%, #d9a54a 55%, #8a5d1a 100%);
+    border: 2px solid #5a3a10;
+    border-radius: 12px;
+    color: #2a1606;
+    box-shadow:
+      inset 0 2px 0 rgba(255, 245, 210, 0.6),
+      0 4px 10px rgba(0, 0, 0, 0.35);
+  }
+  .g-plate-brass rt {
+    color: #4a2a08;
+  }
+  .g-plate-brass ruby.kana-unread {
+    color: rgba(42, 22, 6, 0.6);
+  }
+  .g-plate-brass ruby.kana-unread rt {
+    color: #123a6b;
+  }
+  .g-plate-missing {
+    background: linear-gradient(180deg, #2a2560 0%, #15123a 100%);
+    border: 2px dashed rgba(201, 160, 82, 0.8);
+    border-radius: 12px;
+    color: #ffe7b8;
+    letter-spacing: 0.15em;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.35);
+  }
+  .g-plate-face {
+    display: block;
+    width: 34px;
+    height: 34px;
+    flex: none;
+    overflow: hidden;
+    border-radius: 9999px;
+    border: 2px solid #f6d488;
+    background: #2c2a6b;
+  }
+  /* The portrait's head fills the round frame. */
+  .g-plate-face > span[style] {
+    background-size: 230% auto;
+    background-position: 50% 4%;
+    background-repeat: no-repeat;
+  }
+
+  /* 会話の 上の ボタン（オート・ログ・スキップ）: 藍色に 真鍮の ふち。 */
+  .g-btn-night {
+    background: linear-gradient(180deg, #34307a 0%, #221e58 100%);
+    color: #ffe7b8;
+    border: 2px solid #c9a052;
+    box-shadow:
+      0 3px 0 #120f2b,
+      inset 0 1px 0 rgba(255, 236, 190, 0.25);
+  }
+  .g-btn-night[aria-pressed='true'] {
+    background: linear-gradient(180deg, #f0b443 0%, #c9781a 100%) !important;
+    color: #2a1606;
+  }
+
   /* ロゴ文字（<LogoText>）: 同じ 文字を 2枚 重ねる。
      後ろの 1枚は こげ茶の 太い ふちと 厚みの 影、前の 1枚は 金から 橙への
      グラデーション。1枚で ふちと グラデーションを 両方 かけると、太い ふちが
