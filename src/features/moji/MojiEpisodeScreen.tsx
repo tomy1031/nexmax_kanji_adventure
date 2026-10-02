@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Navigate, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import NovelScene from '../novel/NovelScene';
@@ -19,6 +19,7 @@ import { getMojiEpisode, type MojiEpisode } from '../../data/mojiEpisodes';
 import { MOJI_CHAPTERS } from '../../data/mojiRoute';
 import { MOJI1_CAST, MOJI1_PRELUDE, MOJI1_SCRIPTS } from '../../data/scripts/moji1';
 import { afterEpisode, canForge, isForgeOpen } from '../../data/mojiFlow';
+import { hardFight, isHardOpen, type Difficulty, type HardFight } from '../../lib/difficulty';
 import { assetPath } from '../../lib/assetPath';
 import { PhaseDoors } from '../../components/ui/Doors';
 import KanjiBackText from './KanjiBackText';
@@ -76,6 +77,9 @@ const ReadyScreen = ({
   onExit,
   onForge,
   onStory,
+  difficulty = 'normal',
+  onDifficulty,
+  hard,
 }: {
   ep: MojiEpisode;
   kanji: KanjiData[];
@@ -86,6 +90,11 @@ const ReadyScreen = ({
   onForge?: () => void;
   /** The story again, for an episode already cleared (it opens here, not on the story). */
   onStory?: () => void;
+  difficulty?: Difficulty;
+  /** ふつう ⇄ 👹 ハード, offered once the episode is cleared (lib/difficulty.ts). */
+  onDifficulty?: (d: Difficulty) => void;
+  /** Hard's opponent as it stands now — it grows with the player. */
+  hard?: HardFight;
 }) => {
   const showFurigana = useGameStore((s) => s.settings.furigana);
   const progress = useGameStore((s) => s.progress);
@@ -95,7 +104,14 @@ const ReadyScreen = ({
   // The kanji the opponent goes for first (BattleScene asks with the same rule):
   // marked, so たたかいの ひみつ's 👾 is right there on the card. Writing it
   // more moves the mark on.
-  const hunted = weakest < 3 ? pickWeakest(kanji, (id) => progress[id]?.reps ?? 0, {}, null)?.id : undefined;
+  const isHard = difficulty === 'hard' && hard != null;
+  // Hard asks from a wider pool (the chapter's earlier kanji too): the mark follows it.
+  const hunted = isHard
+    ? pickWeakest(hard.pool, (id) => progress[id]?.reps ?? 0, {}, null)?.id
+    : weakest < 3
+      ? pickWeakest(kanji, (id) => progress[id]?.reps ?? 0, {}, null)?.id
+      : undefined;
+  const hardWon = useGameStore((s) => s.hardStages.includes(ep.id));
   // What the stars are for and how the fight goes: shown by itself on the first じゅんび, then a tap away.
   const markTutorialSeen = useGameStore((s) => s.markTutorialSeen);
   const [secrets, setSecrets] = useState(() => !useGameStore.getState().tutorials.stars);
@@ -111,7 +127,10 @@ const ReadyScreen = ({
       <TopBar onBack={onExit} />
       <div className="flex w-full max-w-md flex-1 flex-col gap-3 px-3 pt-3">
         {/* The opponent, so the writing has a reason. */}
-        <div className="g-parchment flex items-center gap-3 px-3 py-2">
+        <div
+          className="g-parchment flex items-center gap-3 px-3 py-2"
+          style={isHard ? { borderColor: 'var(--color-danger)', boxShadow: '0 0 0 2px rgba(220,60,60,0.45)' } : undefined}
+        >
           <span className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-[#2a1840] text-[#c9a4ff]">
             {ep.boss.img ? (
               <img src={assetPath(ep.boss.img)} alt="" aria-hidden className="h-full w-full object-contain" />
@@ -120,14 +139,43 @@ const ReadyScreen = ({
             )}
           </span>
           <div className="min-w-0 flex-1">
-            <p className="text-xs font-black" style={{ color: 'var(--color-danger)' }}>
-              <RubyText showFurigana={showFurigana}>つぎの あいて</RubyText>
-            </p>
+            <div className="flex items-center justify-between gap-1">
+              <p className="text-xs font-black" style={{ color: 'var(--color-danger)' }}>
+                <RubyText showFurigana={showFurigana}>つぎの あいて</RubyText>
+              </p>
+              {onDifficulty && (
+                <div className="flex shrink-0 overflow-hidden rounded-full border-2 border-[#caa468] text-[11px] font-black" role="group" aria-label="むずかしさ">
+                  {(['normal', 'hard'] as const).map((d) => (
+                    <button
+                      key={d}
+                      type="button"
+                      aria-pressed={difficulty === d}
+                      onClick={() => onDifficulty(d)}
+                      className="px-2 leading-[1.9]"
+                      style={
+                        difficulty === d
+                          ? { background: d === 'hard' ? 'var(--color-danger)' : '#caa468', color: '#fff' }
+                          : { background: 'rgba(255,255,255,0.7)', color: 'var(--ink-2)' }
+                      }
+                    >
+                      {d === 'hard' ? `👹 ハード${hardWon ? ' ✓' : ''}` : 'ふつう'}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
             <p className="text-lg font-black">
               <RubyText showFurigana={showFurigana}>{ep.boss.name}</RubyText>
             </p>
             <p className="text-[11px] font-bold" style={{ color: 'var(--ink-2)' }}>
-              HP {ep.boss.hp} ・ <RubyText showFurigana={showFurigana}>手本(てほん)なしで 書(か)く</RubyText>
+              HP {isHard ? hard.boss.hp : ep.boss.hp} ・{' '}
+              <RubyText showFurigana={showFurigana}>
+                {isHard
+                  ? hard.pool.length > kanji.length
+                    ? '前(まえ)の 話(はなし)の 字(じ)も 出(で)る'
+                    : '書(か)く たびに 読(よ)む ターン'
+                  : '手本(てほん)なしで 書(か)く'}
+              </RubyText>
             </p>
           </div>
         </div>
@@ -139,9 +187,11 @@ const ReadyScreen = ({
             className="g-parchment flex-1 px-3 py-2 text-left text-[13px] leading-[1.9] font-bold active:scale-[0.98]"
           >
             <RubyText showFurigana={showFurigana}>
-              {weakest >= 2
-                ? 'じゅんび ばっちり！ たたかおう。'
-                : '★が 多(おお)いほど こうげきが 強(つよ)い。書(か)けば 書(か)くほど 勝(か)ちやすく なる。'}
+              {isHard
+                ? '👹 ハードの あいては 今(いま)の 強(つよ)さに あわせて 強(つよ)く なる。ミスを へらして 勝(か)とう！'
+                : weakest >= 2
+                  ? 'じゅんび ばっちり！ たたかおう。'
+                  : '★が 多(おお)いほど こうげきが 強(つよ)い。書(か)けば 書(か)くほど 勝(か)ちやすく なる。'}
             </RubyText>
             <span className="block text-xs font-black" style={{ color: 'var(--accent-2)' }}>
               ★・たたかいの ひみつ ▸
@@ -256,8 +306,8 @@ const ReadyScreen = ({
           transition={{ duration: 1.6, repeat: Infinity }}
           style={{ willChange: 'transform' }}
         >
-          <span aria-hidden>⚔ </span>
-          <RubyText showFurigana={showFurigana}>たたかう！</RubyText>
+          <span aria-hidden>{isHard ? '👹 ' : '⚔ '}</span>
+          <RubyText showFurigana={showFurigana}>{isHard ? 'ハードで たたかう！' : 'たたかう！'}</RubyText>
         </motion.button>
       </div>
     </div>
@@ -291,10 +341,36 @@ const EpisodePlayer = ({ id }: { id: string }) => {
   const [idx, setIdx] = useState(0);
   const [practice, setPractice] = useState<KanjiData | null>(null);
   const [battleKey, setBattleKey] = useState(0);
+  // ふつう or 👹 ハード (lib/difficulty.ts): Hard once the episode is cleared.
+  // ?mode=hard keeps it across a trip to 漢字やさん.
+  const hardOpen = isHardOpen(ep.id, cleared);
+  const [difficulty, setDifficulty] = useState<Difficulty>(() =>
+    params.get('mode') === 'hard' && isHardOpen(ep.id, useGameStore.getState().clearedStages) ? 'hard' : 'normal',
+  );
+  const hard = hardOpen && difficulty === 'hard';
+  // Hard's opponent as it stands — じゅんび shows it, and it grows as the player does.
+  const weapons = useGameStore((s) => s.weapons);
+  const equippedWeapon = useGameStore((s) => s.equippedWeapon);
+  const activeIndividual = useGameStore((s) => s.activeIndividual);
+  const equippedGear = useGameStore((s) => s.equippedGear);
+  const exp = useGameStore((s) => s.exp);
+  const hardNow = useMemo(
+    () => (hard ? hardFight(ep, { weapons, equippedWeapon, activeIndividual, equippedGear, exp, progress }) : undefined),
+    [hard, ep, weapons, equippedWeapon, activeIndividual, equippedGear, exp, progress],
+  );
+  // …and fixed as the fight starts: writing mid-fight must not move it.
+  const [fight, setFight] = useState<HardFight | null>(null);
+  const startFight = () => {
+    setFight(hard ? hardFight(ep, useGameStore.getState()) : null);
+    setBattleKey((n) => n + 1);
+  };
 
   useEffect(() => {
     void preloadCharData(ep.kanji);
   }, [ep]);
+  useEffect(() => {
+    if (hardNow) void preloadCharData(hardNow.pool.map((k) => k.char));
+  }, [hardNow]);
 
   const renderText = useCallback((text: string) => <KanjiBackText owned={owned}>{text}</KanjiBackText>, [owned]);
   const label = { label: `${chapter.order}章(しょう) ${ep.order}`, title: ep.title };
@@ -302,7 +378,7 @@ const EpisodePlayer = ({ id }: { id: string }) => {
   const back = params.get('back');
   const leave = () => navigate(back?.startsWith('/') ? back : '/map/moji');
   const toReady = () => setPhase('ready');
-  const forgeHere = `/forge?back=${encodeURIComponent(`/moji/${ep.id}?at=ready`)}`;
+  const forgeHere = `/forge?back=${encodeURIComponent(`/moji/${ep.id}?at=ready${hard ? '&mode=hard' : ''}`)}`;
 
   // The win records the clear (BattleScene); the story's end moves on.
   const finish = () => {
@@ -352,7 +428,7 @@ const EpisodePlayer = ({ id }: { id: string }) => {
             kanji={kanji}
             onExit={leave}
             onFight={() => {
-              setBattleKey((n) => n + 1);
+              startFight();
               setPhase('battle');
             }}
             onPractice={(k) => {
@@ -361,6 +437,9 @@ const EpisodePlayer = ({ id }: { id: string }) => {
             }}
             onForge={isForgeOpen(cleared) && canForge(progress) ? () => navigate(forgeHere) : undefined}
             onStory={cleared.includes(ep.id) ? () => setPhase('intro') : undefined}
+            difficulty={hard ? 'hard' : 'normal'}
+            onDifficulty={hardOpen ? setDifficulty : undefined}
+            hard={hardNow}
           />
         );
       case 'practice':
@@ -386,14 +465,22 @@ const EpisodePlayer = ({ id }: { id: string }) => {
         return (
           <BattleScene
             key={battleKey}
-            stage={{ id: ep.id, bg: ep.bg, boss: ep.boss, reward: EPISODE_REWARD, grants: ep.grants }}
-            kanjiPool={kanji}
-            patience={basePatience(ep.order)}
+            stage={{
+              id: ep.id,
+              bg: ep.bg,
+              boss: fight ? { ...ep.boss, hp: fight.boss.hp, attack: fight.boss.attack } : ep.boss,
+              reward: EPISODE_REWARD,
+              grants: ep.grants,
+            }}
+            kanjiPool={fight ? fight.pool : kanji}
+            patience={fight ? fight.patience : basePatience(ep.order)}
+            difficulty={fight ? 'hard' : 'normal'}
             mastery
             onFinish={leave}
             onFlee={toReady}
-            onNext={() => setPhase('outro')}
-            onRetry={() => setBattleKey((n) => n + 1)}
+            // Hard is a rematch: back to じゅんび, not through the story again.
+            onNext={fight ? toReady : () => setPhase('outro')}
+            onRetry={startFight}
             onPractice={toReady}
             onForge={() => navigate(forgeHere)}
           />
