@@ -292,7 +292,8 @@ export const NaniwaBattleView = ({
       <div
         aria-hidden
         className="absolute inset-0 hidden bg-cover bg-center [@media(min-aspect-ratio:3/5)]:block"
-        style={{ backgroundImage: `url(${art('bg_wide')})` }}
+        // The episode's place on a wide screen too (the tall painting, its middle band).
+        style={{ backgroundImage: `url(${fieldPhoto ? assetPath(fieldPhoto) : art('bg_wide')})`, backgroundPosition: fieldPhoto ? '50% 45%' : undefined }}
       />
 
       {/* Inside the safe area: on a notched iPhone played from the home screen the
