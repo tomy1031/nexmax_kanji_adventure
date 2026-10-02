@@ -25,9 +25,24 @@ import { useEscapeToClose } from '../../hooks/useEscapeToClose';
  * meaning behind EN (docs/design/07 §3: a word's meaning, never a sentence).
  * 書きじゅん plays the stroke order over the model, for a kanji already
  * written (one not written yet stays a sound). ✎ goes back to write it
- * where it is taught, and comes back here.
+ * where it is taught, and comes back here. ◀ ▶ (and ← →) turn to the
+ * kanji beside it in ずかん's order, so a chapter can be reviewed card by card.
  */
-export const KanjiCard = ({ kanji, onClose }: { kanji: KanjiData; onClose: () => void }) => {
+export const KanjiCard = ({
+  kanji,
+  onClose,
+  onPrev,
+  onNext,
+  position,
+}: {
+  kanji: KanjiData;
+  onClose: () => void;
+  /** The kanji before and after it in ずかん, when there is one. */
+  onPrev?: () => void;
+  onNext?: () => void;
+  /** Where it sits, e.g. "3 / 60". */
+  position?: string;
+}) => {
   const navigate = useNavigate();
   const showFurigana = useGameStore((s) => s.settings.furigana);
   const reps = useGameStore((s) => s.progress[kanji.id]?.reps ?? 0);
@@ -35,7 +50,17 @@ export const KanjiCard = ({ kanji, onClose }: { kanji: KanjiData; onClose: () =>
   const owned = useOwnedKanji();
   const [en, setEn] = useState(false);
   const closeRef = useEscapeToClose(onClose);
-  const [strokes, setStrokes] = useState(false);
+  // Which kanji the stroke order is open for: turning the card starts it over.
+  const [strokesFor, setStrokesFor] = useState<string | null>(null);
+  const strokes = strokesFor === kanji.id;
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'ArrowLeft') onPrev?.();
+      if (e.key === 'ArrowRight') onNext?.();
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [onPrev, onNext]);
   const writerRef = useRef<KanjiWriterHandle>(null);
   const playTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   // Fetched as the card opens, so 書きじゅん starts at once.
@@ -46,7 +71,7 @@ export const KanjiCard = ({ kanji, onClose }: { kanji: KanjiData; onClose: () =>
     };
   }, [kanji.char]);
   const playStrokes = () => {
-    setStrokes(true);
+    setStrokesFor(kanji.id);
     if (playTimer.current) clearTimeout(playTimer.current);
     // The writer builds itself once mounted; play when it is there.
     playTimer.current = setTimeout(() => writerRef.current?.animateStroke(), strokes ? 0 : 450);
@@ -130,7 +155,7 @@ export const KanjiCard = ({ kanji, onClose }: { kanji: KanjiData; onClose: () =>
         {have && (
           <div className="mt-2 flex items-center justify-center gap-3">
             {strokes && (
-              <div className="overflow-hidden rounded-xl border-2 border-[#caa468] bg-white" style={{ width: 132, height: 132 }}>
+              <div key={kanji.id} className="overflow-hidden rounded-xl border-2 border-[#caa468] bg-white" style={{ width: 132, height: 132 }}>
                 <KanjiWriterCanvas ref={writerRef} char={kanji.char} size={128} showSample />
               </div>
             )}
@@ -176,9 +201,32 @@ export const KanjiCard = ({ kanji, onClose }: { kanji: KanjiData; onClose: () =>
             </p>
           )
         )}
-        <button ref={closeRef} type="button" data-tap className="g-btn g-btn-ghost mt-2 w-full" onClick={onClose}>
-          とじる
-        </button>
+        <div className="mt-2 flex items-center gap-2">
+          <button
+            type="button"
+            data-tap
+            aria-label="まえの 字"
+            disabled={!onPrev}
+            className="g-btn g-btn-ghost !min-h-[44px] !px-3 disabled:opacity-30"
+            onClick={onPrev}
+          >
+            ◀
+          </button>
+          <button ref={closeRef} type="button" data-tap className="g-btn g-btn-ghost flex-1 !flex-col !gap-0 leading-tight" onClick={onClose}>
+            とじる
+            {position && <span className="text-[10px] font-bold tabular-nums opacity-70">{position}</span>}
+          </button>
+          <button
+            type="button"
+            data-tap
+            aria-label="つぎの 字"
+            disabled={!onNext}
+            className="g-btn g-btn-ghost !min-h-[44px] !px-3 disabled:opacity-30"
+            onClick={onNext}
+          >
+            ▶
+          </button>
+        </div>
       </motion.div>
     </motion.div>
   );
