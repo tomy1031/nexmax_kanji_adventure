@@ -12,7 +12,7 @@ import { GameIcon } from '../../components/ui/GameIcon';
 import { getKanjiByChar } from '../../lib/kanjiDb';
 import { preloadCharData } from '../../lib/strokeLoader';
 import { basePatience } from '../../lib/battle';
-import { MOJI_OWN_REPS, repsToNextStar, starsOf } from '../../lib/mastery';
+import { MOJI_OWN_REPS, pickWeakest, repsToNextStar, starsOf } from '../../lib/mastery';
 import { useGameStore } from '../../store/gameStore';
 import type { KanjiData } from '../../types/kanji';
 import { getMojiEpisode, type MojiEpisode } from '../../data/mojiEpisodes';
@@ -91,6 +91,10 @@ const ReadyScreen = ({
   const repsOf = (k: KanjiData) => progress[k.id]?.reps ?? 0;
   const total = kanji.reduce((n, k) => n + starsOf(repsOf(k)), 0);
   const weakest = Math.min(...kanji.map((k) => starsOf(repsOf(k))));
+  // The kanji the opponent goes for first (BattleScene asks with the same rule):
+  // marked, so たたかいの ひみつ's 👾 is right there on the card. Writing it
+  // more moves the mark on.
+  const hunted = weakest < 3 ? pickWeakest(kanji, (id) => progress[id]?.reps ?? 0, {}, null)?.id : undefined;
   // What the stars are for and how the fight goes: shown by itself on the first じゅんび, then a tap away.
   const markTutorialSeen = useGameStore((s) => s.markTutorialSeen);
   const [secrets, setSecrets] = useState(() => !useGameStore.getState().tutorials.stars);
@@ -159,9 +163,17 @@ const ReadyScreen = ({
                 <button
                   type="button"
                   onClick={() => onPractice(k)}
-                  className="g-parchment flex w-full items-center gap-2 !rounded-2xl px-2 py-1.5 text-left active:scale-[0.97]"
+                  className="g-parchment relative flex w-full items-center gap-2 !rounded-2xl px-2 py-1.5 text-left active:scale-[0.97]"
                   style={starsOf(reps) === 3 ? { borderColor: '#e8a317', boxShadow: '0 0 0 2px rgba(255,210,90,0.6)' } : undefined}
                 >
+                  {k.id === hunted && (
+                    <span
+                      className="absolute -top-2 -right-1 rounded-full bg-[#2a1840] px-1.5 text-[10px] leading-[1.8] font-black text-[#e9d6ff] shadow"
+                      aria-label="ねらわれる"
+                    >
+                      👾 ねらわれる
+                    </span>
+                  )}
                   <span className="text-[34px] leading-[1.5] font-black">
                     <KanjiWord kanji={k} showFurigana={showFurigana} />
                   </span>
