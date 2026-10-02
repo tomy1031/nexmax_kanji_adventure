@@ -34,11 +34,13 @@ export const ResultModal = ({
   mistakes,
   gems,
   perfect = false,
+  hard = false,
   showGems = true,
   newFriend,
   opened,
   tutorial,
   hasNext,
+  nextLabel,
   onNext,
   onStages,
   onRetry,
@@ -55,12 +57,16 @@ export const ResultModal = ({
   gems: number;
   /** The first かんぺき (★3) clear of this stage: a 👑 and a little more (data/clearRewards.ts). */
   perfect?: boolean;
+  /** The first Hard win of this stage: a 👹 and a bonus (lib/difficulty.ts). */
+  hard?: boolean;
   /** Whether gems are worth showing yet (the new route shows them once the gacha is open). */
   showGems?: boolean;
   newFriend: boolean;
   opened: Feature[];
   tutorial: boolean;
   hasNext: boolean;
+  /** The win's main button, when it does not lead on to the story (Hard goes back to じゅんび). */
+  nextLabel?: string;
   onNext: () => void;
   onStages: () => void;
   onRetry: () => void;
@@ -258,6 +264,11 @@ export const ResultModal = ({
             <RubyText showFurigana={showFurigana}>👑 かんぺき！ はじめて まちがえずに 勝(か)った</RubyText>
           </p>
         )}
+        {hard && (
+          <p className="mt-2 text-sm font-black" style={{ color: 'var(--color-danger)' }}>
+            <RubyText showFurigana={showFurigana}>👹 ハードに はじめて 勝(か)った！</RubyText>
+          </p>
+        )}
         {gems > 0 && showGems && (
           <motion.p
             className="g-chip g-chip-gold mt-3 !text-base tabular-nums"
@@ -297,7 +308,7 @@ export const ResultModal = ({
             <button type="button" className="g-btn g-btn-primary g-shine mt-5 w-full !min-h-[56px] text-lg" onClick={hasNext ? onNext : onStages}>
               <span className="relative z-10 flex items-center gap-2">
                 <GiPathDistance aria-hidden size={22} />
-                <RubyText showFurigana={showFurigana}>{moji ? 'つづきへ' : hasNext ? 'つぎの 話(はなし)へ' : 'ステージへ'}</RubyText>
+                <RubyText showFurigana={showFurigana}>{nextLabel ?? (moji ? 'つづきへ' : hasNext ? 'つぎの 話(はなし)へ' : 'ステージへ')}</RubyText>
               </span>
             </button>
             <div className="mt-2.5 flex gap-2">

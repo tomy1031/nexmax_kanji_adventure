@@ -28,7 +28,8 @@ import {
 import { assetPath } from '../../lib/assetPath';
 import { GameIcon } from '../../components/ui/GameIcon';
 import { Feature, featuresUnlockedBy, FEATURE_INTRO, isFeatureUnlocked } from '../../data/unlocks';
-import { PERFECT_BONUS_GEMS } from '../../data/clearRewards';
+import { HARD_BONUS_GEMS, PERFECT_BONUS_GEMS } from '../../data/clearRewards';
+import { writesPerReadFor, type Difficulty } from '../../lib/difficulty';
 import PictureBook from '../picturebook/PictureBook';
 import EnemyArt from './EnemyArt';
 import { MASTERY_REPS, comboMultiplier, masteryMultiplier, pickWeakest, starsOf, type Stars } from '../../lib/mastery';
@@ -94,6 +95,12 @@ interface BattleSceneProps {
    * look at the stroke order) counts toward its stars.
    */
   mastery?: boolean;
+  /**
+   * Hard (lib/difficulty.ts): the caller sizes the opponent, its patience
+   * and the kanji; here it reads after every write, and the first Hard win
+   * pays its bonus. New route only.
+   */
+  difficulty?: Difficulty;
 }
 
 type Outcome = { kind: 'win'; stars: 1 | 2 | 3 } | { kind: 'lose' } | null;
@@ -103,7 +110,7 @@ type Outcome = { kind: 'win'; stars: 1 | 2 | 3 } | { kind: 'lose' } | null;
  * fight: a band sweeps across with the opponent's name, a drum and a sweep.
  * It never blocks input for long (1.6 s) and taps go straight through.
  */
-const BattleIntro = ({ bossName, showFurigana }: { bossName: string; showFurigana: boolean }) => {
+const BattleIntro = ({ bossName, hard = false, showFurigana }: { bossName: string; hard?: boolean; showFurigana: boolean }) => {
   const [on, setOn] = useState(true);
   useEffect(() => {
     sfx.battleStart();
@@ -132,7 +139,7 @@ const BattleIntro = ({ bossName, showFurigana }: { bossName: string; showFurigan
               たたかい 開始(かいし)！
             </LogoText>
             <p className="g-onbg text-sm font-black">
-              <RubyText showFurigana={showFurigana}>{`あいて：${bossName}`}</RubyText>
+              <RubyText showFurigana={showFurigana}>{`${hard ? '👹 ハード ・ ' : ''}あいて：${bossName}`}</RubyText>
             </p>
           </motion.div>
         </motion.div>
@@ -154,6 +161,7 @@ export const BattleScene = ({
   weaponOverride,
   patience: basePatienceValue,
   mastery = false,
+  difficulty = 'normal',
 }: BattleSceneProps) => {
   useBgm('battle');
   const navigate = useNavigate();
@@ -250,8 +258,14 @@ export const BattleScene = ({
   // Set at the first reading turn, so where the answer sits differs fight to fight.
   const fightSeedRef = useRef(0);
   const [outcome, setOutcome] = useState<Outcome>(null);
-  const [rewards, setRewards] = useState<{ gems: number; individual: string | null; perfect: boolean }>({ gems: 0, individual: null, perfect: false });
+  const [rewards, setRewards] = useState<{ gems: number; individual: string | null; perfect: boolean; hard: boolean }>({
+    gems: 0,
+    individual: null,
+    perfect: false,
+    hard: false,
+  });
   const markPerfect = useGameStore((s) => s.markPerfect);
+  const markHard = useGameStore((s) => s.markHard);
 
   const settledRef = useRef(false);
   // The boss is down and the win is on its way (settleTimer). Nothing the
@@ -319,10 +333,18 @@ export const BattleScene = ({
       // かんぺき (★3, no mistake): once per stage, a little more (09 §3 B).
       const perfect = mastery && stars === 3 && markPerfect(stage.id);
       if (perfect) addGems(PERFECT_BONUS_GEMS);
+      // The first Hard win: once per stage (09 §3 D).
+      const hard = mastery && difficulty === 'hard' && markHard(stage.id);
+      if (hard) addGems(HARD_BONUS_GEMS);
       clearStage(stage.id);
-      setRewards({ gems: gems + (perfect ? PERFECT_BONUS_GEMS : 0), individual: granted, perfect });
+      setRewards({
+        gems: gems + (perfect ? PERFECT_BONUS_GEMS : 0) + (hard ? HARD_BONUS_GEMS : 0),
+        individual: granted,
+        perfect,
+        hard,
+      });
     },
-    [tutorial, alreadyCleared, stage, addGems, clearStage, grantIndividual, stats.maxHp, mastery, gainExp, markPerfect],
+    [tutorial, alreadyCleared, stage, addGems, clearStage, grantIndividual, stats.maxHp, mastery, gainExp, markPerfect, difficulty, markHard],
   );
 
   /**
@@ -469,7 +491,7 @@ export const BattleScene = ({
         askedRef.current[target.id] = (askedRef.current[target.id] ?? 0) + 1;
         setWeakestId(pickWeakest(kanjiPool, repsNow, askedRef.current, target.id)?.id ?? null);
         // The next turn may be a reading one: the opponent throws a kanji.
-        if (isReadTurn(turn + 1)) {
+        if (isReadTurn(turn + 1, writesPerReadFor(difficulty))) {
           if (!fightSeedRef.current) fightSeedRef.current = Math.floor(Math.random() * 100000) + 1;
           const q = readQuestion(kanjiPool, repsNow, lastThrownRef.current, fightSeedRef.current + turn + 1);
           if (q) {
@@ -484,7 +506,7 @@ export const BattleScene = ({
     [
       tutorial, totalMistakes, target, progress, recordReview, recordRep, weapon, individual, stage.boss,
       rust, bossHp, playerHp, settle, heroCtl, enemyCtl, turn, stats.attackPct, ownsTarget, hinted,
-      mastery, targetStars, kanjiPool, combo, say,
+      mastery, targetStars, kanjiPool, combo, say, difficulty,
     ],
   );
 
@@ -612,12 +634,14 @@ export const BattleScene = ({
               mistakes={totalMistakes}
               gems={rewards.gems}
               perfect={rewards.perfect}
+              hard={rewards.hard}
               // Gems show on the new route once the gacha gives them a use (1章 4話).
               showGems={!mastery || isFeatureUnlocked(Feature.GACHA, useGameStore.getState().clearedStages)}
               newFriend={!!rewards.individual}
               opened={outcome.kind === 'win' ? opened : []}
               tutorial={tutorial}
               hasNext={!!onNext}
+              nextLabel={difficulty === 'hard' ? 'じゅんびに もどる' : undefined}
               onNext={() => onNext?.()}
               onStages={onFinish}
               onRetry={() => onRetry?.()}
@@ -656,7 +680,7 @@ export const BattleScene = ({
   if (mastery) {
     return (
       <>
-        <BattleIntro bossName={stage.boss.name} showFurigana={showFurigana} />
+        <BattleIntro bossName={stage.boss.name} hard={difficulty === 'hard'} showFurigana={showFurigana} />
         <NaniwaBattleView
           bossName={stage.boss.name}
           bossImg={stage.boss.img}
