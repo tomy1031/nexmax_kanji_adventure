@@ -117,10 +117,11 @@ const TONE = {
  * 読む ターン (08 §6.4): the opponent throws a kanji; it lands on the panel
  * and four readings wait under it. The reading stays hidden until one is
  * picked — then it shows above the kanji, and a wrong pick gets the right
- * one read aloud and a つぎへ. The buttons wake when the kanji has landed,
- * so nothing is pressed unseen.
+ * one read aloud and a つぎへ. A reading turn follows a write, so the kanji
+ * waits for that write's light to land (`enter`) before it is thrown; the
+ * buttons stay faint and asleep until it lands, so nothing is pressed unseen.
  */
-const ReadPanel = ({ read, showFurigana, still }: { read: ReadTurnView; showFurigana: boolean; still: boolean }) => {
+const ReadPanel = ({ read, showFurigana, still, enter }: { read: ReadTurnView; showFurigana: boolean; still: boolean; enter: number }) => {
   const [landed, setLanded] = useState(still);
   const wrong = read.picked != null && read.picked !== read.answer;
   const chip = 'rounded-full border-[0.35cqw] border-[#b8863f] px-[3cqw] font-black';
@@ -137,12 +138,15 @@ const ReadPanel = ({ read, showFurigana, still }: { read: ReadTurnView; showFuri
         style={{ fontSize: cq(140), willChange: 'transform' }}
         initial={still ? false : { x: '60%', y: '-70%', scale: 0.4, rotate: -25, opacity: 0 }}
         animate={{ x: 0, y: 0, scale: 1, rotate: 0, opacity: 1 }}
-        transition={{ type: 'spring', stiffness: 260, damping: 18, delay: 0.15 }}
+        transition={{ type: 'spring', stiffness: 260, damping: 18, delay: still ? 0 : enter }}
         onAnimationComplete={() => setLanded(true)}
       >
         <RubyText showFurigana={showFurigana && read.picked != null}>{`${read.kanji.char}(${read.answer})`}</RubyText>
       </motion.p>
-      <div className="grid w-[86%] grid-cols-2 gap-[2.4cqw]" style={{ pointerEvents: landed && read.picked == null ? 'auto' : 'none' }}>
+      <div
+        className="grid w-[86%] grid-cols-2 gap-[2.4cqw] transition-opacity duration-200"
+        style={{ pointerEvents: landed && read.picked == null ? 'auto' : 'none', opacity: landed ? 1 : 0.45 }}
+      >
         {read.choices.map((c) => {
           const tone = read.picked == null ? 'idle' : c === read.answer ? 'right' : c === read.picked ? 'wrong' : 'dim';
           return (
@@ -423,7 +427,7 @@ export const NaniwaBattleView = ({
             {Math.max(0, playerHp)} / {playerMaxHp}
           </span>
 
-          {read && <ReadPanel key={read.n} read={read} showFurigana={showFurigana} still={still} />}
+          {read && <ReadPanel key={read.n} read={read} showFurigana={showFurigana} still={still} enter={hpDelay + 0.15} />}
           {!read && (
           <>
           {/* よみ・意味 */}
