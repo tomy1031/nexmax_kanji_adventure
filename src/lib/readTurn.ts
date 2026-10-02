@@ -1,4 +1,6 @@
 import type { KanjiData } from '../types/kanji';
+import { ALL_KANJI } from '../data/kanji.generated';
+import { MOJI_OWN_REPS } from './mastery';
 import { kataToHira, kunForm, primaryStem, usedReadings } from './reading';
 
 /**
@@ -21,9 +23,9 @@ export const WRITES_PER_READ = 2;
  */
 export const isReadTurn = (turn: number): boolean => turn > 0 && (turn + 1) % (WRITES_PER_READ + 1) === 0;
 
-/** Every reading of a kanji as a bare hiragana stem: 日 → ひ, にち, じつ, か. */
+/** Every reading of a kanji as a bare hiragana stem — the word lists' and the table's: 日 → ひ, にち, じつ, か. */
 const stemsOf = (k: KanjiData): Set<string> =>
-  new Set(usedReadings(k).map((r) => kataToHira(kunForm(r).stem)));
+  new Set([...usedReadings(k), ...k.on, ...k.kun].map((r) => kataToHira(kunForm(r).stem)));
 
 /** A small seeded shuffle, so the same seed puts the answer in the same place. */
 const shuffle = <T>(items: readonly T[], seed: number): T[] => {
@@ -43,8 +45,8 @@ export const readAnswer = (k: KanjiData): string => primaryStem(k);
 /**
  * Four readings for a thrown kanji, shuffled: its answer and three others,
  * taken from the fight's kanji first and then from `fallback`. A distractor
- * is never another reading of the thrown kanji (火 is ひ too, but so is 日 —
- * ひ cannot be a wrong answer for 日), and no two choices are the same.
+ * is never another reading of the thrown kanji (火 is か, but so is 日 in
+ * 十日 — か cannot be a wrong answer for 日), and no two choices are the same.
  */
 export const readChoices = (
   thrown: KanjiData,
@@ -55,7 +57,7 @@ export const readChoices = (
   const answer = readAnswer(thrown);
   const taken = stemsOf(thrown);
   const wrong: string[] = [];
-  for (const k of shuffle([...pool, ...fallback], seed)) {
+  for (const k of [...shuffle(pool, seed), ...shuffle(fallback, seed + 2)]) {
     if (k.id === thrown.id || wrong.length === 3) continue;
     const r = readAnswer(k);
     if (!r || taken.has(r) || wrong.includes(r)) continue;
@@ -73,10 +75,36 @@ export const pickThrown = (
   repsOf: (id: string) => number,
   lastId: string | null,
   seed: number,
-  ownReps = 3,
 ): KanjiData | undefined => {
-  const owned = pool.filter((k) => repsOf(k.id) >= ownReps);
+  const owned = pool.filter((k) => repsOf(k.id) >= MOJI_OWN_REPS);
   const from = owned.length ? owned : pool;
   const candidates = from.length > 1 ? from.filter((k) => k.id !== lastId) : from;
   return shuffle(candidates, seed)[0];
 };
+
+/** The N5 kanji: where wrong choices come from when the fight's own run out. */
+const N5_KANJI = ALL_KANJI.filter((k) => k.level === 'N5');
+
+/**
+ * A reading turn's question: the kanji thrown, the four choices and the
+ * answer. Null when the fight has no kanji.
+ */
+export const readQuestion = (
+  pool: readonly KanjiData[],
+  repsOf: (id: string) => number,
+  lastId: string | null,
+  seed: number,
+  fallback: readonly KanjiData[] = N5_KANJI,
+): { kanji: KanjiData; choices: string[]; answer: string } | null => {
+  const kanji = pickThrown(pool, repsOf, lastId, seed);
+  if (!kanji) return null;
+  return { kanji, choices: readChoices(kanji, pool, fallback, seed), answer: readAnswer(kanji) };
+};
+
+/**
+ * A right reading turns the kanji back at the opponent: a share of a clean
+ * write's hit, so reading helps but writing is still how a fight is won.
+ */
+export const READ_HIT_SHARE = 0.4;
+
+export const readDamage = (cleanHit: number): number => Math.max(1, Math.round(cleanHit * READ_HIT_SHARE));

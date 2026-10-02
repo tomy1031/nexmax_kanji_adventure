@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { isReadTurn, pickThrown, readAnswer, readChoices } from './readTurn';
+import { READ_HIT_SHARE, isReadTurn, pickThrown, readAnswer, readChoices, readDamage, readQuestion } from './readTurn';
+import { MOJI_EPISODES } from '../data/mojiEpisodes';
 import { getKanjiByChar } from './kanjiDb';
 import { ALL_KANJI } from '../data/kanji.generated';
 import type { KanjiData } from '../types/kanji';
@@ -29,12 +30,12 @@ describe('読む ターン', () => {
   });
 
   it('never offers another reading of the thrown kanji as a wrong answer', () => {
-    // 日 is ひ, にち, じつ … and 火 is also ひ: ひ must not be a wrong choice for 日.
+    // 日 is にち, ひ, か (十日) … and 火's own reading is か: か must not be a wrong choice for 日.
     for (let seed = 1; seed < 30; seed++) {
       const choices = readChoices(k('日'), pool, n5, seed);
       const wrong = choices.filter((c) => c !== readAnswer(k('日')));
+      expect(wrong).not.toContain('か');
       expect(wrong).not.toContain('ひ');
-      expect(wrong).not.toContain('にち');
     }
   });
 
@@ -52,5 +53,48 @@ describe('読む ターン', () => {
 
   it('throws from the whole fight when nothing is owned yet', () => {
     expect(pool).toContainEqual(pickThrown(pool, () => 0, null, 3));
+  });
+
+  it('takes the wrong choices from the fight first', () => {
+    const fight = new Set(pool.filter((x) => x.char !== '火').map(readAnswer));
+    for (let seed = 1; seed < 30; seed++) {
+      const wrong = readChoices(k('火'), pool, n5, seed).filter((c) => c !== readAnswer(k('火')));
+      for (const w of wrong) expect(fight, `seed ${seed}`).toContain(w);
+    }
+  });
+
+  it('works for every kanji of every town episode', () => {
+    for (const ep of MOJI_EPISODES) {
+      const fight = ep.kanji.map(k);
+      for (const t of fight) {
+        const choices = readChoices(t, fight, n5, 11);
+        expect(new Set(choices).size, `${ep.id} ${t.char}`).toBe(4);
+        expect(choices, `${ep.id} ${t.char}`).toContain(readAnswer(t));
+      }
+    }
+  });
+
+  it('has a reading to ask for every N5 kanji', () => {
+    expect(n5.filter((x) => !readAnswer(x)).map((x) => x.char)).toEqual([]);
+  });
+
+  it('moves the answer around between questions', () => {
+    const places = new Set(Array.from({ length: 40 }, (_, i) => readChoices(k('山'), pool, n5, i + 1).indexOf('やま')));
+    expect(places.size).toBeGreaterThanOrEqual(3);
+  });
+
+  it('hits for a share of a clean write: at least 1, at most half', () => {
+    expect(READ_HIT_SHARE).toBeLessThanOrEqual(0.5);
+    for (let x = 2; x <= 100; x++) {
+      expect(readDamage(x)).toBeGreaterThanOrEqual(1);
+      expect(readDamage(x)).toBeLessThanOrEqual(x / 2);
+    }
+  });
+
+  it('builds a question from the fight, or none without kanji', () => {
+    const q = readQuestion(pool, () => 3, null, 5);
+    expect(pool).toContainEqual(q?.kanji);
+    expect(q?.choices).toContain(q?.answer);
+    expect(readQuestion([], () => 0, null, 5)).toBeNull();
   });
 });

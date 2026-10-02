@@ -94,6 +94,87 @@ const RoundKey = ({ icon: Icon, label, onClick, style }: { icon: typeof GiCog; l
   </motion.button>
 );
 
+/** A reading turn as the view needs it (BattleScene, lib/readTurn.ts). */
+export interface ReadTurnView {
+  kanji: KanjiData;
+  choices: string[];
+  answer: string;
+  /** The turn, so each question starts fresh. */
+  n: number;
+  picked: string | null;
+  onPick: (choice: string) => void;
+  onNext: () => void;
+}
+
+const TONE = {
+  idle: { background: 'linear-gradient(180deg, #fffaf0 0%, #f1e2bf 100%)', borderColor: '#b8863f', color: '#24180d' },
+  right: { background: 'linear-gradient(180deg, #fff2b8 0%, #f2c45a 100%)', borderColor: '#d4a04a', color: '#3b2208' },
+  wrong: { background: 'linear-gradient(180deg, #f2a596 0%, #d2392f 100%)', borderColor: '#8f1f17', color: '#fff' },
+  dim: { background: 'rgba(255,255,255,0.35)', borderColor: 'rgba(184,134,63,0.4)', color: 'rgba(36,24,13,0.4)' },
+} as const;
+
+/**
+ * 読む ターン (08 §6.4): the opponent throws a kanji; it lands on the panel
+ * and four readings wait under it. The reading stays hidden until one is
+ * picked — then it shows above the kanji, and a wrong pick gets the right
+ * one read aloud and a つぎへ. The buttons wake when the kanji has landed,
+ * so nothing is pressed unseen.
+ */
+const ReadPanel = ({ read, showFurigana, still }: { read: ReadTurnView; showFurigana: boolean; still: boolean }) => {
+  const [landed, setLanded] = useState(still);
+  const wrong = read.picked != null && read.picked !== read.answer;
+  const chip = 'rounded-full border-[0.35cqw] border-[#b8863f] px-[3cqw] font-black';
+  return (
+    <div
+      className="absolute flex flex-col items-center justify-evenly rounded-[2cqw] border-[0.4cqw] border-[#c9973f] text-[#24180d]"
+      style={{ ...onBottom(134, 905, 672, 620), background: 'linear-gradient(180deg, #f6ead0 0%, #ead7ae 100%)', boxShadow: 'inset 0 0 0 0.4cqw #fff6dd', ...MINCHO }}
+    >
+      <p className="rounded-full bg-[#2c1d10] px-[3cqw] leading-[2] font-black text-[#fff1cf]" style={{ fontSize: cq(30) }}>
+        <RubyText showFurigana={showFurigana}>読(よ)みは どれ？</RubyText>
+      </p>
+      <motion.p
+        className="leading-[1.45] font-extrabold"
+        style={{ fontSize: cq(140), willChange: 'transform' }}
+        initial={still ? false : { x: '60%', y: '-70%', scale: 0.4, rotate: -25, opacity: 0 }}
+        animate={{ x: 0, y: 0, scale: 1, rotate: 0, opacity: 1 }}
+        transition={{ type: 'spring', stiffness: 260, damping: 18, delay: 0.15 }}
+        onAnimationComplete={() => setLanded(true)}
+      >
+        <RubyText showFurigana={showFurigana && read.picked != null}>{`${read.kanji.char}(${read.answer})`}</RubyText>
+      </motion.p>
+      <div className="grid w-[86%] grid-cols-2 gap-[2.4cqw]" style={{ pointerEvents: landed && read.picked == null ? 'auto' : 'none' }}>
+        {read.choices.map((c) => {
+          const tone = read.picked == null ? 'idle' : c === read.answer ? 'right' : c === read.picked ? 'wrong' : 'dim';
+          return (
+            <motion.button
+              key={c}
+              type="button"
+              data-tap
+              whileTap={{ scale: 0.95 }}
+              disabled={read.picked != null}
+              onClick={() => read.onPick(c)}
+              className="rounded-[1.6cqw] border-[0.4cqw] font-extrabold"
+              style={{ minHeight: cq(100), fontSize: cq(46), ...TONE[tone] }}
+            >
+              {c}
+            </motion.button>
+          );
+        })}
+      </div>
+      {wrong && (
+        <div className="flex gap-[2.4cqw]">
+          <button type="button" data-tap onClick={() => speak(read.answer)} className={chip} style={{ fontSize: cq(30), lineHeight: 2, background: '#fffaf0' }}>
+            🔊 {read.answer}
+          </button>
+          <button type="button" data-tap onClick={read.onNext} className={chip} style={{ fontSize: cq(30), lineHeight: 2, background: '#f2c45a' }}>
+            つぎへ ▶
+          </button>
+        </div>
+      )}
+    </div>
+  );
+};
+
 export interface NaniwaBattleViewProps {
   bossName: string;
   /** The opponent's picture; the grown Mojikui when not given. */
@@ -129,6 +210,8 @@ export interface NaniwaBattleViewProps {
   enemyRef: RefObject<HTMLDivElement | null>;
   onStrokeOrder: () => void;
   onFlee: () => void;
+  /** 読む ターン: a thrown kanji to read, in place of the reading panel and the board. */
+  read?: ReadTurnView | null;
 }
 
 export const NaniwaBattleView = ({
@@ -159,6 +242,7 @@ export const NaniwaBattleView = ({
   enemyRef,
   onStrokeOrder,
   onFlee,
+  read = null,
 }: NaniwaBattleViewProps) => {
   const colRef = useRef<HTMLDivElement>(null);
   const [colW, setColW] = useState(0);
@@ -339,6 +423,9 @@ export const NaniwaBattleView = ({
             {Math.max(0, playerHp)} / {playerMaxHp}
           </span>
 
+          {read && <ReadPanel key={read.n} read={read} showFurigana={showFurigana} still={still} />}
+          {!read && (
+          <>
           {/* よみ・意味 */}
           <div className="absolute text-[#24180d]" style={{ ...onBottom(134, 912, 672, 165), ...MINCHO }}>
             <p className="absolute flex items-center gap-[1.2cqw] leading-none" style={{ left: pct(66 / 672), top: pct(28 / 165), height: pct(56 / 165) }}>
@@ -400,6 +487,8 @@ export const NaniwaBattleView = ({
           <div ref={boardRef} className="absolute flex items-center justify-center" style={onBottom(PAPER.x, PAPER.y, PAPER.w, PAPER.h)}>
             {writeSize > 0 && renderWriter(writeSize)}
           </div>
+          </>
+          )}
 
           {/* もどる（にげる） */}
           <motion.button type="button" data-tap whileTap={{ scale: 0.95 }} onClick={onFlee} className="absolute" style={{ ...onBottom(30, 1533, 228, 85), height: 'auto' }}>
@@ -412,7 +501,7 @@ export const NaniwaBattleView = ({
             className="absolute rounded-[1.4cqw] border-[0.35cqw] border-[#b8863f]"
             style={{ ...onBottom(826, 1458, 86, 167), background: 'linear-gradient(180deg, #2a1b0e 0%, #0f0803 100%)' }}
           />
-          <RoundKey icon={GiLightBulb} label="かきじゅん（ミス＋1）" onClick={onStrokeOrder} style={onBottom(833, 1464, 72, 72)} />
+          {!read && <RoundKey icon={GiLightBulb} label="かきじゅん（ミス＋1）" onClick={onStrokeOrder} style={onBottom(833, 1464, 72, 72)} />}
           <RoundKey icon={GiCog} label="せってい" onClick={() => setMenu((m) => !m)} style={onBottom(833, 1549, 72, 72)} />
           <AnimatePresence>
             {menu && (

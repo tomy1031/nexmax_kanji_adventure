@@ -35,6 +35,7 @@ import { FLOW_MS, IMPACT_MS, WIN_DELAY_MASTERY_MS, lightOf } from '../../lib/lig
 import LightFlow, { type Flow } from './LightFlow';
 import NaniwaBattleView from './NaniwaBattleView';
 import { useBgm } from '../../lib/bgm';
+import { isReadTurn, readDamage, readQuestion } from '../../lib/readTurn';
 
 /**
  * The fight.
@@ -51,7 +52,8 @@ import { useBgm } from '../../lib/bgm';
  * 文字が 消えた 町 (`mastery`, 08 §3.6): writing gives Nexmax his power. The
  * written character's light rises from the board into him and he fires it
  * (LightFlow); the hit, its number and the win wait for the beam to land.
- * The picture-book arcs keep the blade.
+ * Every third turn the opponent throws a kanji to read instead (読む ターン,
+ * lib/readTurn.ts, 08 §6.4). The picture-book arcs keep the blade.
  */
 
 interface BattleSceneProps {
@@ -224,6 +226,12 @@ export const BattleScene = ({
   const [hit, setHit] = useState<{ n: number; damage: number; critical?: boolean } | null>(null);
   /** Clean writes in a row (新ルート). */
   const [combo, setCombo] = useState(0);
+  /** 読む ターン (新ルート): the kanji thrown with its four readings, and the one picked. */
+  const [readQ, setReadQ] = useState<{ kanji: KanjiData; choices: string[]; answer: string } | null>(null);
+  const [readPicked, setReadPicked] = useState<string | null>(null);
+  const lastThrownRef = useRef<string | null>(null);
+  // Set at the first reading turn, so where the answer sits differs fight to fight.
+  const fightSeedRef = useRef(0);
   const [outcome, setOutcome] = useState<Outcome>(null);
   const [rewards, setRewards] = useState<{ gems: number; individual: string | null }>({ gems: 0, individual: null });
 
@@ -325,7 +333,7 @@ export const BattleScene = ({
   }, [addSlip]);
 
   const showStrokeOrder = () => {
-    if (settledRef.current || bossDownRef.current) return;
+    if (settledRef.current || bossDownRef.current || readQ) return;
     // Looking is allowed, and costs: one slip, and this write hits for half.
     if (!hinted) addSlip();
     setHinted(true);
@@ -432,6 +440,16 @@ export const BattleScene = ({
       if (mastery && target) {
         askedRef.current[target.id] = (askedRef.current[target.id] ?? 0) + 1;
         setWeakestId(pickWeakest(kanjiPool, repsNow, askedRef.current, target.id)?.id ?? null);
+        // The next turn may be a reading one: the opponent throws a kanji.
+        if (isReadTurn(turn + 1)) {
+          if (!fightSeedRef.current) fightSeedRef.current = Math.floor(Math.random() * 100000) + 1;
+          const q = readQuestion(kanjiPool, repsNow, lastThrownRef.current, fightSeedRef.current + turn + 1);
+          if (q) {
+            lastThrownRef.current = q.kanji.id;
+            setReadPicked(null);
+            setReadQ(q);
+          }
+        }
       }
       setTurn((t) => t + 1);
     },
@@ -440,6 +458,62 @@ export const BattleScene = ({
       rust, bossHp, playerHp, settle, heroCtl, enemyCtl, turn, stats.attackPct, ownsTarget, hinted,
       mastery, targetStars, kanjiPool, combo, say,
     ],
+  );
+
+  /** The reading turn is over: back to writing. */
+  const finishRead = useCallback(() => {
+    if (settledRef.current || bossDownRef.current) return;
+    setReadQ(null);
+    setReadPicked(null);
+    setTurn((t) => t + 1);
+  }, []);
+
+  /**
+   * A reading picked (読む ターン). Right: Nexmax turns the kanji back at the
+   * opponent for a share of a clean hit, and the COMBO holds. Wrong: one slip,
+   * as in writing, and the right reading is shown. Neither is a write — the
+   * ★ do not move.
+   */
+  const handleReadPick = useCallback(
+    (choice: string) => {
+      if (!mastery || !readQ || readPicked || settledRef.current || bossDownRef.current) return;
+      setReadPicked(choice);
+      if (choice !== readQ.answer) {
+        sfx.clang();
+        setTotalMistakes((n) => n + 1);
+        setCombo(0);
+        say(`「${readQ.answer}」と よむ`);
+        addSlip();
+        return;
+      }
+      const clean = computeDamage({
+        weapon,
+        individual,
+        defenderElement: stage.boss.element,
+        mistakes: 0,
+        rust,
+        attackPct: stats.attackPct,
+        owned: false,
+        hinted: false,
+        mastery: masteryMultiplier(starsOf(repsNow(readQ.kanji.id)), false),
+      });
+      const damage = readDamage(clean.damage);
+      void heroCtl.start({ x: [0, -12, 0], rotate: [0, -6, 0], transition: { duration: 0.4 } });
+      void enemyCtl.start({ x: [0, 14, -8, 0], transition: { duration: 0.45, delay: IMPACT_MS / 1000 } });
+      atImpact(() => sfx.hit(), IMPACT_MS - 120);
+      atImpact(() => setHit({ n: turn, damage }));
+      // The bar follows hpDelay, so it drops with the number.
+      const nextBossHp = Math.max(0, bossHp - damage);
+      setBossHp(nextBossHp);
+      say(`はね返(かえ)した！ ${damage} ダメージ`);
+      if (nextBossHp <= 0) {
+        bossDownRef.current = true;
+        settleTimer.current = setTimeout(() => settle('win', totalMistakes, playerHp), WIN_DELAY_MASTERY_MS);
+        return;
+      }
+      atImpact(finishRead, IMPACT_MS + 600);
+    },
+    [mastery, readQ, readPicked, say, addSlip, weapon, individual, stage.boss.element, rust, stats.attackPct, heroCtl, enemyCtl, turn, bossHp, settle, totalMistakes, playerHp, finishRead],
   );
 
   // What this clear opens. One per stage at most, announced with a line of
@@ -572,6 +646,7 @@ export const BattleScene = ({
           enemyRef={enemyRef}
           onStrokeOrder={showStrokeOrder}
           onFlee={onFlee}
+          read={readQ ? { ...readQ, n: turn, picked: readPicked, onPick: handleReadPick, onNext: finishRead } : null}
         />
         {overlays}
       </>
