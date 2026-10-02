@@ -230,6 +230,12 @@ export const BattleScene = ({
   const [readQ, setReadQ] = useState<{ kanji: KanjiData; choices: string[]; answer: string } | null>(null);
   const [readPicked, setReadPicked] = useState<string | null>(null);
   const lastThrownRef = useRef<string | null>(null);
+  /** What this fight did for the learner (新ルート, the result shows it): ★ gained by kanji id, reading turns. */
+  const [growth, setGrowth] = useState<{ starUps: Record<string, Stars>; readRight: number; readTotal: number }>({
+    starUps: {},
+    readRight: 0,
+    readTotal: 0,
+  });
   // Set at the first reading turn, so where the answer sits differs fight to fight.
   const fightSeedRef = useRef(0);
   const [outcome, setOutcome] = useState<Outcome>(null);
@@ -361,6 +367,11 @@ export const BattleScene = ({
         recordRep(target.id, 0);
         if (starsOf(before + 1) > starsOf(before)) starUp = starsOf(before + 1);
       }
+      if (starUp && target) {
+        const id = target.id;
+        const up = starUp;
+        setGrowth((g) => ({ ...g, starUps: { ...g.starUps, [id]: up } }));
+      }
       const clean = mistakes === 0 && !hinted;
       const critical = mastery && targetStars === 3 && clean;
       const nextCombo = mastery && clean ? combo + 1 : 0;
@@ -478,7 +489,9 @@ export const BattleScene = ({
     (choice: string) => {
       if (!mastery || !readQ || readPicked || settledRef.current || bossDownRef.current) return;
       setReadPicked(choice);
-      if (choice !== readQ.answer) {
+      const right = choice === readQ.answer;
+      setGrowth((g) => ({ ...g, readTotal: g.readTotal + 1, readRight: g.readRight + (right ? 1 : 0) }));
+      if (!right) {
         sfx.clang();
         setTotalMistakes((n) => n + 1);
         setCombo(0);
@@ -595,6 +608,17 @@ export const BattleScene = ({
               }}
               onTutorialDone={onFinish}
               route={mastery ? 'moji' : undefined}
+              growth={
+                mastery
+                  ? {
+                      starUps: Object.entries(growth.starUps).flatMap(([id, stars]) => {
+                        const kanji = getKanjiById(id);
+                        return kanji ? [{ kanji, stars }] : [];
+                      }),
+                      read: { right: growth.readRight, total: growth.readTotal },
+                    }
+                  : undefined
+              }
             />
           )}
         </AnimatePresence>
