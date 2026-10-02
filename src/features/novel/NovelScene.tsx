@@ -10,6 +10,10 @@ import { useGameStore } from '../../store/gameStore';
 import PictureBook from '../picturebook/PictureBook';
 import { SCENES } from '../picturebook/scenes';
 import { TypeReveal } from '../../components/ui/TypeReveal';
+import { NamePlate } from './NamePlate';
+import { nameRevealed } from '../../lib/nameReveal';
+import { useKnownKana } from '../kana/useKnownKana';
+import { useOwnedKanji } from '../moji/useOwnedKanji';
 import { useBgm } from '../../lib/bgm';
 
 /**
@@ -51,7 +55,18 @@ interface NovelSceneProps {
    * Defaults to renderText.
    */
   renderPlain?: (text: string) => ReactNode;
+  /**
+   * paper: the picture-book box (むかし編・現代編). night: 文字が 消えた 町's
+   * indigo-and-brass box, with the speaker's face on the name plate.
+   */
+  look?: 'paper' | 'night';
 }
+
+/** The colours that differ between the two boxes. */
+const TONE = {
+  paper: { ja: '#7a5a3a', en: '#1b63b0', foot: '#8a6a44', pill: 'rounded-full border-2 border-[#caa468] bg-white/80 px-2.5 py-0.5 text-[12px] whitespace-nowrap', button: 'g-btn g-btn-accent' },
+  night: { ja: '#e9cfa4', en: '#9fd4ff', foot: '#d9bf8a', pill: 'g-pill-night rounded-full border-2 px-2.5 py-0.5 text-[12px] whitespace-nowrap', button: 'g-btn g-btn-night' },
+} as const;
 
 /** One carved letter is huge; a row of them (日 月 火 水 木) has to fit the screen. */
 const glyphSize = (glyph: string): string => {
@@ -75,7 +90,11 @@ const lineWords = (text: string): { word: string; gloss: string }[] => {
 /** Reading time for auto mode: a base plus a little per character. */
 const autoDelay = (text: string) => 1600 + stripRuby(text).length * 85;
 
-export const NovelScene = ({ script, cast, onFinish, chapter, renderText, speechFor, narrator, renderPlain }: NovelSceneProps) => {
+export const NovelScene = ({ script, cast, onFinish, chapter, renderText, speechFor, narrator, renderPlain, look = 'paper' }: NovelSceneProps) => {
+  const night = look === 'night';
+  const tone = TONE[look];
+  const knownKana = useKnownKana();
+  const owned = useOwnedKanji();
   useBgm('story');
   const showFurigana = useGameStore((s) => s.settings.furigana);
   const [index, setIndex] = useState(0);
@@ -152,8 +171,6 @@ export const NovelScene = ({ script, cast, onFinish, chapter, renderText, speech
   }, [script, index]);
 
   const speaker = line?.speaker ? castById.get(line.speaker) : undefined;
-  /** The name on the plate: the speaker, or the narrator for narration. */
-  const plateName = speaker?.name ?? (line && !line.speaker ? narrator : undefined);
   const plain = renderPlain ?? renderText;
 
   const [spriteId, spriteExpr] = sprite?.split(':') ?? [];
@@ -222,7 +239,7 @@ export const NovelScene = ({ script, cast, onFinish, chapter, renderText, speech
 
   if (!line) return null;
 
-  const topButton = 'g-btn g-btn-accent !min-h-[36px] !px-3 !gap-1 text-xs';
+  const topButton = `${tone.button} !min-h-[36px] !px-3 !gap-1 text-xs`;
 
   return (
     <div className="relative h-dvh w-full overflow-hidden bg-[#cfe9f5]">
@@ -344,12 +361,12 @@ export const NovelScene = ({ script, cast, onFinish, chapter, renderText, speech
 
       {/* 会話ボックス（巻物） ------------------------------------------- */}
       <div className="absolute right-0 bottom-0 left-0 z-20 p-3 pb-[max(12px,env(safe-area-inset-bottom))]">
-        {plateName && (
-          <div className="g-wood relative z-10 mb-[-10px] ml-3 inline-flex items-center gap-1 px-4 py-1 text-base leading-[1.9] font-black">
-            {!speaker && <span aria-hidden>💭</span>}
-            {plain ? plain(plateName) : <RubyText showFurigana={showFurigana}>{plateName}</RubyText>}
-          </div>
-        )}
+        <NamePlate
+          member={speaker}
+          narrator={line && !line.speaker ? narrator : undefined}
+          night={night}
+          render={(t) => (plain ? plain(t) : <RubyText showFurigana={showFurigana}>{t}</RubyText>)}
+        />
 
         <AnimatePresence mode="wait">
           <motion.div
@@ -357,7 +374,7 @@ export const NovelScene = ({ script, cast, onFinish, chapter, renderText, speech
             initial={{ opacity: 0.6, y: 4 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.22 }}
-            className="g-novel-box min-h-[23dvh] px-5 pt-5 pb-3"
+            className={`g-novel-box min-h-[23dvh] px-5 pt-5 pb-3 ${night ? 'g-novel-night' : ''}`}
             onClick={tap}
           >
             <TypeReveal
@@ -373,7 +390,7 @@ export const NovelScene = ({ script, cast, onFinish, chapter, renderText, speech
             {line.ja && (
               <p
                 className={`mt-0.5 text-[14px] leading-[2.2] font-bold transition-opacity duration-300 ${shown === index ? 'opacity-100' : 'opacity-0'}`}
-                style={{ color: '#7a5a3a' }}
+                style={{ color: tone.ja }}
                 lang="ja"
               >
                 {plain ? plain(line.ja) : <RubyText showFurigana={showFurigana}>{line.ja}</RubyText>}
@@ -381,7 +398,7 @@ export const NovelScene = ({ script, cast, onFinish, chapter, renderText, speech
             )}
 
             {enFor === index && line.en && (
-              <p className="mt-1 text-[13px] leading-snug font-bold" style={{ color: '#1b63b0' }} lang="en">
+              <p className="mt-1 text-[13px] leading-snug font-bold" style={{ color: tone.en }} lang="en">
                 {line.en}
               </p>
             )}
@@ -391,7 +408,7 @@ export const NovelScene = ({ script, cast, onFinish, chapter, renderText, speech
                 {lineWords(line.text).map(({ word, gloss }) => (
                   <span key={word} className="rounded-lg border border-[#caa468] bg-white/80 px-2 text-[12px] leading-[2]">
                     <RubyText showFurigana>{word}</RubyText>
-                    <span className="ml-1 font-bold" style={{ color: '#1b63b0' }}>
+                    <span className="ml-1 font-bold" style={{ color: tone.en }}>
                       {gloss}
                     </span>
                   </span>
@@ -416,13 +433,13 @@ export const NovelScene = ({ script, cast, onFinish, chapter, renderText, speech
                 ))}
               </div>
             ) : (
-              <div className="mt-1 flex items-center justify-end gap-1 text-xs font-bold" style={{ color: '#8a6a44' }}>
+              <div className="mt-1 flex items-center justify-end gap-1 text-xs font-bold" style={{ color: tone.foot }}>
                 <div className="mr-auto flex min-w-0 flex-wrap gap-1.5">
                   {canSpeak() && (speechFor ? speechFor(line.text) : line.text) && (
                     <button
                       type="button"
                       aria-label="よみあげ"
-                      className="rounded-full border-2 border-[#caa468] bg-white/80 px-2.5 py-0.5 text-[12px] whitespace-nowrap"
+                      className={tone.pill}
                       onClick={(e) => {
                         e.stopPropagation();
                         speak((speechFor ? speechFor(line.text) : line.text) ?? '');
@@ -435,7 +452,7 @@ export const NovelScene = ({ script, cast, onFinish, chapter, renderText, speech
                     <button
                       type="button"
                       aria-pressed={enFor === index}
-                      className="rounded-full border-2 border-[#caa468] bg-white/80 px-2.5 py-0.5 text-[12px] whitespace-nowrap"
+                      className={tone.pill}
                       onClick={(e) => {
                         e.stopPropagation();
                         setEnFor(enFor === index ? null : index);
@@ -448,7 +465,7 @@ export const NovelScene = ({ script, cast, onFinish, chapter, renderText, speech
                     <button
                       type="button"
                       aria-pressed={wordsFor === index}
-                      className="rounded-full border-2 border-[#caa468] bg-white/80 px-2.5 py-0.5 text-[12px] whitespace-nowrap"
+                      className={tone.pill}
                       onClick={(e) => {
                         e.stopPropagation();
                         setWordsFor(wordsFor === index ? null : index);
@@ -498,7 +515,7 @@ export const NovelScene = ({ script, cast, onFinish, chapter, renderText, speech
                 .map((i) => {
                   const l = script.lines[i];
                   const who = l.speaker ? castById.get(l.speaker) : undefined;
-                  const name = who?.name ?? (l.speaker ? undefined : narrator);
+                  const name = who?.nameChars && !nameRevealed(who.nameChars, knownKana, owned) ? '？？？' : (who?.name ?? (l.speaker ? undefined : narrator));
                   return (
                     <div key={i} className="text-sm">
                       {name && (

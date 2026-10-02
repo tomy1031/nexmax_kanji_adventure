@@ -53,7 +53,8 @@ export const MOJI_EPISODES: MojiEpisode[] = [
     id: 'moji-1-2',
     chapter: 'moji-1',
     order: 2,
-    title: '山(やま)田(だ)さん',
+    // Not her name: it is gone until the player writes it (2026-10-02「表示前は 名前が 出ない」).
+    title: 'きえた なまえ',
     kanji: [...'金土山川田'],
     bg: 'naniwa_station_square',
     boss: { name: 'モジクイ', img: 'img/battle/mojikui.webp', hp: 80, attack: 30, element: Element.AN, icon: 'GiShadowFollower' },

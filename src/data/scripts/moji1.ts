@@ -26,6 +26,8 @@ export const MOJI1_CAST: CastMember[] = [
   {
     id: 'yamada',
     name: '山(やま)田(だ)さん',
+    // Her name was eaten: ？？？ until 山 and 田 are written (1章2話).
+    nameChars: '山(やま)田(だ)',
     color: '#e2799a',
     sprites: { normal: 'img/chara/cut/ESFJ_f.webp', sad: 'img/chara/naniwa/folk_yamada_sad.webp', happy: 'img/chara/naniwa/folk_yamada_happy.webp' },
   },

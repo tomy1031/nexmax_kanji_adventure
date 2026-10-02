@@ -6,7 +6,7 @@ import { useGameStore } from '../../store/gameStore';
 import { getKanaEpisode } from '../../data/kana';
 import { afterEpisode } from '../../data/mojiFlow';
 import { PhaseDoors } from '../../components/ui/Doors';
-import { KANA_CAST, KANA_CAST_NAMELESS, KANA_SCRIPTS } from '../../data/scripts/kana';
+import { KANA_CAST, KANA_SCRIPTS } from '../../data/scripts/kana';
 import KanaDrill from './KanaDrill';
 import KanaText from './KanaText';
 import { useKnownKana } from './useKnownKana';
@@ -66,9 +66,6 @@ const EpisodePlayer = ({ id }: { id: string }) => {
     [known],
   );
   const chapter = { label: `かな ${ep.order}`, title: ep.en };
-  // Nexmax gets his name back at the end of kana-9; until then he is ロボット.
-  const namedFrom = (p: Phase) => ep.order > 9 || (ep.order === 9 && p === 'outro');
-  const castFor = (p: Phase) => (namedFrom(p) ? KANA_CAST : KANA_CAST_NAMELESS);
   const leave = () => navigate(`/map/moji`);
 
   const finish = () => {
@@ -87,11 +84,12 @@ const EpisodePlayer = ({ id }: { id: string }) => {
           <NovelScene
             key="intro"
             script={lines.intro}
-            cast={castFor('intro')}
+            cast={KANA_CAST}
             chapter={chapter}
             renderText={renderText}
             renderPlain={renderPlain}
             narrator={NARRATOR}
+            look="night"
             speechFor={speechFor}
             onFinish={() => setPhase(allKnown ? 'outro' : 'write')}
           />
@@ -103,11 +101,12 @@ const EpisodePlayer = ({ id }: { id: string }) => {
           <NovelScene
             key="outro"
             script={lines.outro}
-            cast={castFor('outro')}
+            cast={KANA_CAST}
             chapter={chapter}
             renderText={renderText}
             renderPlain={renderPlain}
             narrator={NARRATOR}
+            look="night"
             speechFor={speechFor}
             onFinish={finish}
           />
