@@ -394,7 +394,7 @@ const EpisodePlayer = ({ id }: { id: string }) => {
         return <NovelScene look="night" bgm="sad" key="prelude" script={MOJI1_PRELUDE} cast={CAST} chapter={label} renderText={renderText} onFinish={() => setPhase('intro')} />;
       case 'intro':
         return (
-          <NovelScene look="night" bgm="sad"
+          <NovelScene look="night" bgm="sad" holdLetters={ep.kanji}
             key="intro"
             script={lines.intro}
             cast={CAST}
