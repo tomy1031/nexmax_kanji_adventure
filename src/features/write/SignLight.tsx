@@ -3,25 +3,27 @@ import { AnimatePresence, motion, useAnimationControls } from 'framer-motion';
 import KanjiWriterCanvas, { type KanjiWriterHandle } from '../../components/KanjiWriterCanvas';
 import { RubyText } from '../../components/ui/Ruby';
 import { toDataUrl } from '../picturebook/paper';
-import { getCachedCharData } from '../../lib/strokeLoader';
-import { medianPath, pathFromPoints, pointsOfPath } from '../../lib/strokeGeometry';
+import { pointsOfPath } from '../../lib/strokeGeometry';
 import * as sfx from '../../lib/sfx';
 
 /**
  * 看板に 字を 灯す — writing a character onto an empty signboard (08 §3.6).
  *
- * モジクイ ate the letters off ナニワタウン's signs and left them blank. Each
- * stroke the learner writes comes on as a neon tube; when the whole character
- * is written the sign lights up, its reading hangs underneath, and it goes
- * down to join the street below the drill (NightStreet.tsx). Same contract as
- * RockSlash, so a drill can use either — the old arcs keep their rocks.
+ * モジクイ ate the letters off ナニワタウン's signs and left them blank. The
+ * strokes the learner writes stay crisp, at the glyph's own width — no glow
+ * on the character itself, which made it fat and hard to read (2026-10-02
+ * 「書いている 漢字に あかりが 灯る 演出は 漢字を 読みにくく させます。各演出は
+ * 単純に 光るだけに」「漢字 自体が 光で 太字に 表示されるのは よくない」).
+ * When the whole character is written only the sign around it lights — a
+ * plain glow — its reading hangs underneath, and it goes down to the street
+ * below the drill (NightStreet.tsx). Same contract as RockSlash, so a drill
+ * can use either — the old arcs keep their rocks.
  *
- * No CSS or SVG filter anywhere (iPhone / WebKit, 2026-09-26): a tube's glow
- * is two wide translucent strokes under hanzi-writer's white-hot stroke, and
- * the lit sign's halo is a gradient that fades in. Nothing blinks.
+ * No CSS or SVG filter anywhere (iPhone / WebKit, 2026-09-26): the lit sign's
+ * halo is a gradient that fades in. Nothing blinks.
  *
- * A write with three or more slips is not a pass (the drill's rule): the
- * tubes go dim with a sputter and the same sign waits for another try.
+ * A write with three or more slips is not a pass (the drill's rule): the sign
+ * sputters and shakes, and the same sign waits for another try.
  */
 
 export interface SignLightHandle {
@@ -46,11 +48,6 @@ interface SignLightProps {
   onLit?: () => void;
   /** Stroke-matching strictness, passed to the writer (kana are looser). */
   leniency?: number;
-}
-
-interface Tube {
-  id: number;
-  d: string;
 }
 
 /**
@@ -96,12 +93,9 @@ export const SignLight = forwardRef<SignLightHandle, SignLightProps>(
   ({ char, material, size, showSample, seed, onMistake, onWritten, onLit, leniency }, ref) => {
     const writerRef = useRef<KanjiWriterHandle>(null);
     const shake = useAnimationControls();
-    const [tubes, setTubes] = useState<Tube[]>([]);
-    const [dim, setDim] = useState(false);
     const [lit, setLit] = useState(false);
     /** Remounts the writer after a failed write so the same sign can be retried. */
     const [attempt, setAttempt] = useState(0);
-    const nextId = useRef(0);
     /**
      * Slips made on this sign before the learner asked to see the stroke
      * order. hanzi-writer restarts its own count when the order is shown, so
@@ -116,33 +110,25 @@ export const SignLight = forwardRef<SignLightHandle, SignLightProps>(
     useEffect(() => () => timers.current.forEach(clearTimeout), []);
 
     const url = useMemo(() => boardUrl(seed), [seed]);
-    /** Tube glow widths, in step with hanzi-writer's stroke at this size. */
-    const glow = size * 0.085;
 
     useImperativeHandle(ref, () => ({
       animateStroke: () => {
-        // The quiz starts over from the first stroke, so the tubes go out too.
         carried.current = slips.current;
-        setTubes([]);
         writerRef.current?.animateStroke();
       },
     }));
 
     const handleStroke = useCallback(
       (data: Record<string, unknown>) => {
-        const strokeNum = typeof data.strokeNum === 'number' ? data.strokeNum : -1;
-        // The tube follows the stroke's centre line from the stroke data;
-        // without it (no data cached), the finger's own path.
-        const median = getCachedCharData(char)?.medians?.[strokeNum];
+        // A soft electric hum per stroke, louder for a longer stroke. The
+        // stroke itself stays as written.
         const drawn = data.drawnPath as { pathString?: string } | undefined;
         const pts = drawn?.pathString ? pointsOfPath(drawn.pathString) : [];
-        const d = median ? medianPath(median, size) : pts.length >= 2 ? pathFromPoints(pts) : null;
         const [x0, y0] = pts[0] ?? [0, 0];
         const [x1, y1] = pts[pts.length - 1] ?? [0, 0];
         sfx.neon(Math.min(1, 0.3 + Math.hypot(x1 - x0, y1 - y0) / size));
-        if (d) setTubes((t) => [...t, { id: nextId.current++, d }]);
       },
-      [char, size],
+      [size],
     );
 
     const handleMistake = useCallback(() => {
@@ -165,15 +151,10 @@ export const SignLight = forwardRef<SignLightHandle, SignLightProps>(
           later(() => sfx.chime(), 560);
           later(() => onLit?.(), 1500);
         } else {
-          // Not a pass — the tubes will not hold. Let them go dark, then retry.
+          // Not a pass — the sign will not light. A sputter, then the same sign again.
           sfx.fizz();
-          setDim(true);
           void shake.start({ x: [0, 6, -6, 4, -4, 0], transition: { duration: 0.4 } });
-          later(() => {
-            setTubes([]);
-            setDim(false);
-            setAttempt((a) => a + 1);
-          }, 900);
+          later(() => setAttempt((a) => a + 1), 900);
         }
       },
       [onWritten, onLit, shake],
@@ -210,24 +191,6 @@ export const SignLight = forwardRef<SignLightHandle, SignLightProps>(
             animate={{ opacity: lit ? 1 : 0 }}
             transition={{ duration: 0.35 }}
           />
-
-          {/* ネオン管 — two soft strokes under hanzi-writer's white core */}
-          <svg className="pointer-events-none absolute inset-0" width={size} height={size} aria-hidden>
-            <AnimatePresence>
-              {tubes.map((t) => (
-                <motion.g
-                  key={t.id}
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: dim ? 0.22 : 1 }}
-                  exit={{ opacity: 0 }}
-                  transition={{ duration: dim ? 0.3 : 0.16 }}
-                >
-                  <path d={t.d} stroke="rgba(255,140,40,0.22)" strokeWidth={glow * 2.4} strokeLinecap="round" strokeLinejoin="round" fill="none" />
-                  <path d={t.d} stroke="rgba(255,196,96,0.55)" strokeWidth={glow * 1.3} strokeLinecap="round" strokeLinejoin="round" fill="none" />
-                </motion.g>
-              ))}
-            </AnimatePresence>
-          </svg>
 
           {/* 書く面（透明） */}
           <div className="absolute inset-0 z-10 flex items-center justify-center">
