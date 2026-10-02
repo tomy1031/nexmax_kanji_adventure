@@ -317,6 +317,8 @@ const EpisodePlayer = ({ id }: { id: string }) => {
             kanji={k}
             goal={MOJI_OWN_REPS}
             look="sign"
+            scene={ep.bg}
+            letters={ep.kanji}
             onExit={leave}
             onDone={nextKanji}
             nextLabel={idx + 1 < queue.length ? `つぎの 字(じ)（${idx + 2}/${queue.length}）` : 'つぎへ'}
@@ -350,6 +352,8 @@ const EpisodePlayer = ({ id }: { id: string }) => {
             kanji={practice!}
             goal={MOJI_OWN_REPS}
             look="sign"
+            scene={ep.bg}
+            letters={ep.kanji}
             onExit={toReady}
             onDone={toReady}
             nextLabel="じゅんびに もどる"
