@@ -29,8 +29,9 @@ export const TownBackdrop = ({ scene, letters, pulse }: { scene: string; letters
   return (
     <div aria-hidden className="pointer-events-none fixed inset-0 -z-10 bg-[#0e0b28]">
       <PictureBook scene={scene} still />
-      {/* The night over the town lifts as the letters come back. */}
-      <motion.div className="absolute inset-0 bg-[#0e0b28]" initial={false} animate={{ opacity: 0.72 - 0.42 * back }} transition={{ duration: 0.9 }} />
+      {/* The night over the town lifts as the letters come back (the scene's
+          own signs veil it too, SceneSigns); dim enough for the drill to read. */}
+      <motion.div className="absolute inset-0 bg-[#0e0b28]" initial={false} animate={{ opacity: 0.5 - 0.25 * back }} transition={{ duration: 0.9 }} />
       {pulse > 0 && (
         <motion.div
           key={pulse}
