@@ -5,6 +5,7 @@ import type { KanjiData } from '../../types/kanji';
 import { RubyText } from '../../components/ui/Ruby';
 import { FillIn } from '../../components/ui/Readings';
 import { assetPath } from '../../lib/assetPath';
+import { SCENES } from '../picturebook/scenes';
 import { exampleWord, kanjiRuby } from '../../lib/reading';
 import { parseRuby } from '../../lib/ruby';
 import { speak } from '../../lib/speech';
@@ -183,6 +184,12 @@ export interface NaniwaBattleViewProps {
   bossName: string;
   /** The opponent's picture; the grown Mojikui when not given. */
   bossImg?: string;
+  /**
+   * Where the fight happens (a scene id): its painting fills the sky above the
+   * deck, so the fight is in the place the story is. The river terrace when
+   * the scene has no painting.
+   */
+  field?: string;
   bossHp: number;
   bossMaxHp: number;
   playerHp: number;
@@ -221,6 +228,7 @@ export interface NaniwaBattleViewProps {
 export const NaniwaBattleView = ({
   bossName,
   bossImg,
+  field,
   bossHp,
   bossMaxHp,
   playerHp,
@@ -248,6 +256,7 @@ export const NaniwaBattleView = ({
   onFlee,
   read = null,
 }: NaniwaBattleViewProps) => {
+  const fieldPhoto = field ? SCENES[field]?.photo : undefined;
   const colRef = useRef<HTMLDivElement>(null);
   const [colW, setColW] = useState(0);
   useLayoutEffect(() => {
@@ -293,10 +302,10 @@ export const NaniwaBattleView = ({
         <motion.div className="relative min-h-0 flex-1" animate={fieldCtl}>
           {/* たて画面: the sky, the city and the river down to the deck line */}
           <img
-            src={art('bg_tall')}
+            src={fieldPhoto ? assetPath(fieldPhoto) : art('bg_tall')}
             alt=""
             aria-hidden
-            className="absolute inset-x-0 top-0 h-[calc(100%+16cqw)] w-full object-cover object-[30%_100%] [@media(min-aspect-ratio:3/5)]:hidden"
+            className={`absolute inset-x-0 top-0 h-[calc(100%+16cqw)] w-full object-cover ${fieldPhoto ? 'object-[50%_45%]' : 'object-[30%_100%]'} [@media(min-aspect-ratio:3/5)]:hidden`}
           />
 
           {/* モジクイ — under the top frame, so its bar sits over it */}

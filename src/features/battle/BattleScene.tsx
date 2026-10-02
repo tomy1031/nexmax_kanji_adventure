@@ -686,6 +686,7 @@ export const BattleScene = ({
         <NaniwaBattleView
           bossName={stage.boss.name}
           bossImg={stage.boss.img}
+          field={stage.bg}
           bossHp={bossHp}
           bossMaxHp={stage.boss.hp}
           playerHp={playerHp}
