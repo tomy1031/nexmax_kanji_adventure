@@ -89,10 +89,11 @@ const Spot = ({ spot, lit, style, k, ox, oy }: { spot: SignSpot; lit: boolean; s
 
 /**
  * Draws one scene's signs inside the picture box (w × h, the box the picture
- * covers). `hold` keeps one letter's sign dark a moment longer, so it can be
+ * covers). `hold` keeps letters' signs dark for now — one a moment longer, so it can be
  * seen lighting up (the drill's town shot).
  */
-export const SceneSigns = ({ signs, w, h, hold, faint }: { signs: SceneSignSet; w: number; h: number; hold?: string; faint?: boolean }) => {
+export const SceneSigns = ({ signs, w, h, hold, faint }: { signs: SceneSignSet; w: number; h: number; hold?: string | readonly string[]; faint?: boolean }) => {
+  const held = (c: string) => (typeof hold === 'string' ? c === hold : (hold?.includes(c) ?? false));
   const known = useKnownLetters();
   const [iw, ih] = signs.image;
   // object-cover, centred
@@ -101,7 +102,7 @@ export const SceneSigns = ({ signs, w, h, hold, faint }: { signs: SceneSignSet; 
   const oy = (h - ih * k) / 2;
   // The town is gloomy while its letters are missing and warms as they come
   // back: a cool night veil over the picture, thinner with every lit sign.
-  const lit = signs.spots.filter((s) => known.has(s.char) && s.char !== hold).length;
+  const lit = signs.spots.filter((s) => known.has(s.char) && !held(s.char)).length;
   const gloom = 0.5 * (1 - lit / signs.spots.length);
   return (
     <div aria-hidden className="pointer-events-none absolute inset-0">
@@ -115,7 +116,7 @@ export const SceneSigns = ({ signs, w, h, hold, faint }: { signs: SceneSignSet; 
       {/* Faint while the story shows a big letter over them, so the two do not clash. */}
       <motion.div className="absolute inset-0" initial={false} animate={{ opacity: faint ? 0.18 : 1 }} transition={{ duration: 0.3 }}>
         {signs.spots.map((s) => (
-          <Spot key={s.char + s.x} spot={s} lit={known.has(s.char) && s.char !== hold} style={s.style ?? signs.style} k={k} ox={ox} oy={oy} />
+          <Spot key={s.char + s.x} spot={s} lit={known.has(s.char) && !held(s.char)} style={s.style ?? signs.style} k={k} ox={ox} oy={oy} />
         ))}
       </motion.div>
     </div>

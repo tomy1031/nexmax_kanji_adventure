@@ -107,7 +107,7 @@ interface PictureBookProps {
    */
   still?: boolean;
   /** A letter whose sign stays dark for now (SceneSigns). */
-  signHold?: string;
+  signHold?: string | readonly string[];
   /** Keep the signs faint (a big letter is shown over them). */
   signsFaint?: boolean;
 }

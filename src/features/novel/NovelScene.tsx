@@ -63,6 +63,11 @@ interface NovelSceneProps {
   look?: 'paper' | 'night';
   /** The music of this scene (lib/bgm.ts): the story's mood. */
   bgm?: BgmTrack;
+  /**
+   * Letters whose signs stay dark in this scene — the episode's own, in its
+   * opening: the story is the town before they were written, even on a replay.
+   */
+  holdLetters?: readonly string[];
 }
 
 /** The colours that differ between the two boxes. */
@@ -96,7 +101,7 @@ const lineWords = (text: string): { word: string; gloss: string }[] => {
 /** Reading time for auto mode: a base plus a little per character. */
 const autoDelay = (text: string) => 1600 + stripRuby(text).length * 85;
 
-export const NovelScene = ({ script, cast, onFinish, chapter, renderText, speechFor, narrator, renderPlain, look = 'paper', bgm = 'story' }: NovelSceneProps) => {
+export const NovelScene = ({ script, cast, onFinish, chapter, renderText, speechFor, narrator, renderPlain, look = 'paper', bgm = 'story', holdLetters }: NovelSceneProps) => {
   const night = look === 'night';
   const tone = TONE[look];
   const knownKana = useKnownKana();
@@ -189,8 +194,8 @@ export const NovelScene = ({ script, cast, onFinish, chapter, renderText, speech
     const spots = SCENES[bg]?.signs?.spots;
     if (!glyph || !spots) return false;
     const chars = [...stripRuby(glyph).replace(/\s/g, '')];
-    return chars.length > 0 && chars.every((c) => knownLetters.has(c) && spots.some((s) => s.char === c));
-  }, [bg, glyph, knownLetters]);
+    return chars.length > 0 && chars.every((c) => knownLetters.has(c) && !holdLetters?.includes(c) && spots.some((s) => s.char === c));
+  }, [bg, glyph, knownLetters, holdLetters]);
 
   const [spriteId, spriteExpr] = sprite?.split(':') ?? [];
   const spriteMember = spriteId ? castById.get(spriteId) : undefined;
@@ -271,7 +276,7 @@ export const NovelScene = ({ script, cast, onFinish, chapter, renderText, speech
   return (
     <div className="relative h-dvh w-full overflow-hidden bg-[#cfe9f5]">
       {/* 絵本 ------------------------------------------------------------ */}
-      <PictureBook scene={bg} fx={fx} signsFaint={Boolean(line.glyph) && !glyphOnSigns} />
+      <PictureBook scene={bg} fx={fx} signsFaint={Boolean(line.glyph) && !glyphOnSigns} signHold={holdLetters} />
 
       {/* 大きな字（きざんだ字など） -------------------------------------- */}
       <AnimatePresence>
