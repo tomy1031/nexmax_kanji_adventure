@@ -5,8 +5,8 @@ import { motion } from 'framer-motion';
 import { RubyText } from './Ruby';
 import { LogoText } from './LogoText';
 import { assetPath } from '../../lib/assetPath';
-import { useGameStore, type GameState } from '../../store/gameStore';
-import { Feature, isFeatureUnlocked, opensOnMoji, UNLOCKED_BY } from '../../data/unlocks';
+import { useGameStore } from '../../store/gameStore';
+import { Feature, isFeatureUnlocked, UNLOCKED_BY } from '../../data/unlocks';
 import { GiBackpack, GiCog, GiOpenBook, GiPadlock, GiTreasureMap } from 'react-icons/gi';
 import type { IconType } from 'react-icons';
 
@@ -35,6 +35,9 @@ export const PillButton = ({
 export const TopBar = ({ onBack, title }: { onBack?: () => void; title?: string }) => {
   const navigate = useNavigate();
   const safeBack = useSafeBack();
+  // ホーム is the map of the world being played (08 §3.8), not the title —
+  // the title is the game's front door, reached again from せってい.
+  const mapPath = useMapPath();
   const showFurigana = useGameStore((s) => s.settings.furigana);
   return (
     <header className="relative z-20 flex w-full items-center justify-between gap-2 px-3 pt-[max(10px,env(safe-area-inset-top))]">
@@ -46,7 +49,7 @@ export const TopBar = ({ onBack, title }: { onBack?: () => void; title?: string 
           <RubyText showFurigana={showFurigana}>{title}</RubyText>
         </div>
       )}
-      <PillButton icon="♛" onClick={() => navigate('/')}>
+      <PillButton icon="♛" onClick={() => navigate(mapPath)}>
         ホーム
       </PillButton>
     </header>
@@ -70,7 +73,10 @@ export const LogoTitle = ({ children, sub, size = 34 }: { children: string; sub?
   );
 };
 
-/** Nexmax with a speech bubble. The bubble text is furigana notation. */
+/** The same poses in the new route's glossy art (data/scripts/naniwaCast.ts). */
+const NANIWA_POSE = { guide: 'guide', cheer: 'smile', hello: 'hello', nexmax: 'normal', book: 'think', build: 'determined' } as const;
+
+/** Nexmax with a speech bubble (none when `text` is empty). The bubble text is furigana notation. */
 export const NexmaxSays = ({
   text,
   pose = 'guide',
@@ -83,39 +89,33 @@ export const NexmaxSays = ({
   flip?: boolean;
 }) => {
   const showFurigana = useGameStore((s) => s.settings.furigana);
+  const naniwa = useGameStore((s) => s.lastArc === 'moji');
+  const src = naniwa ? `img/chara/naniwa/nexmax_${NANIWA_POSE[pose]}.webp` : `img/chara/cut/${pose}.webp`;
   return (
     <div className={`flex shrink-0 items-end gap-1 ${flip ? 'flex-row-reverse' : ''}`}>
+      {text && (
+        <motion.div
+          key={text}
+          initial={{ scale: 0.8, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          className="relative mb-8 w-max max-w-[128px] rounded-2xl border-2 border-[#2f8fe0] bg-white px-3 py-1.5 text-center text-[13px] leading-snug font-black text-[#1b4f8a] shadow-md"
+        >
+          <RubyText showFurigana={showFurigana}>{text}</RubyText>
+        </motion.div>
+      )}
+      {/* The bob moves the wrapper; the shadowed picture stays still (iPhone). */}
       <motion.div
-        key={text}
-        initial={{ scale: 0.8, opacity: 0 }}
-        animate={{ scale: 1, opacity: 1 }}
-        className="relative mb-8 w-max max-w-[128px] rounded-2xl border-2 border-[#2f8fe0] bg-white px-3 py-1.5 text-center text-[13px] leading-snug font-black text-[#1b4f8a] shadow-md"
-      >
-        <RubyText showFurigana={showFurigana}>{text}</RubyText>
-      </motion.div>
-      <motion.img
-        src={assetPath(`img/chara/cut/${pose}.webp`)}
-        alt=""
-        aria-hidden
-        style={{ width: size, filter: 'drop-shadow(0 4px 6px rgba(0,40,90,0.3))', willChange: 'transform' }}
+        style={{ width: size, willChange: 'transform' }}
         animate={{ y: [0, -4, 0] }}
         transition={{ duration: 2.4, repeat: Infinity, ease: 'easeInOut' }}
-      />
+      >
+        <img src={assetPath(src)} alt="" aria-hidden className="w-full" style={{ filter: 'drop-shadow(0 4px 6px rgba(0,40,90,0.3))' }} />
+      </motion.div>
     </div>
   );
 };
 
 export type TabId = 'story' | 'kanji' | 'items' | 'settings';
-
-/** Where a locked tab opens, on the road the player is on: shown (furigana) and spoken. */
-const opensAtOf = (feature: Feature, arc: GameState['lastArc']): { text: string; spoken: string } => {
-  if (arc === 'moji') {
-    const { chapter, episode } = opensOnMoji(feature);
-    return { text: `${chapter}章(しょう)${episode}話(わ)`, spoken: `${chapter}しょう ${episode}わ` };
-  }
-  const n = UNLOCKED_BY[feature].replace('mukashi-', '');
-  return { text: `${n}話(わ)`, spoken: `${n}わ` };
-};
 
 /** The four tabs of the reference screens: ストーリー / 漢字ずかん / もちもの / せってい. */
 export const BottomTabs = ({ current }: { current: TabId }) => {
@@ -123,10 +123,10 @@ export const BottomTabs = ({ current }: { current: TabId }) => {
   const mapPath = useMapPath();
   const showFurigana = useGameStore((s) => s.settings.furigana);
   const cleared = useGameStore((s) => s.clearedStages);
-  const arc = useGameStore((s) => s.lastArc);
   const tabs: { id: TabId; label: string; icon: IconType; to: string; feature?: Feature }[] = [
     { id: 'story', label: 'ストーリー', icon: GiTreasureMap, to: mapPath },
-    { id: 'kanji', label: '漢字(かんじ)ずかん', icon: GiOpenBook, to: '/words', feature: Feature.WORDS },
+    // ずかん is open from the start (08 §3.8): no lock the new route cannot open.
+    { id: 'kanji', label: '漢字(かんじ)ずかん', icon: GiOpenBook, to: '/zukan' },
     // そうび opens from the start: 0話 already hands over the first blade.
     { id: 'items', label: 'そうび', icon: GiBackpack, to: '/equip' },
     { id: 'settings', label: 'せってい', icon: GiCog, to: '/settings' },
@@ -147,7 +147,7 @@ export const BottomTabs = ({ current }: { current: TabId }) => {
           // One system opens per stage (docs/design/06 §4). A tab that is not
           // open yet stays visible, says when it opens, and does nothing.
           const locked = t.feature ? !isFeatureUnlocked(t.feature, cleared) : false;
-          const opensAt = t.feature ? opensAtOf(t.feature, arc) : { text: '', spoken: '' };
+          const opensAt = t.feature ? UNLOCKED_BY[t.feature].replace('mukashi-', '') : '';
           const Icon = locked ? GiPadlock : t.icon;
           return (
             <motion.button
@@ -155,7 +155,7 @@ export const BottomTabs = ({ current }: { current: TabId }) => {
               type="button"
               disabled={locked}
               whileTap={locked ? undefined : { scale: 0.94 }}
-              aria-label={locked ? `${opensAt.spoken}で ひらく` : undefined}
+              aria-label={locked ? `${opensAt}わで ひらく` : undefined}
               onClick={() => navigate(t.to)}
               aria-current={on ? 'page' : undefined}
               className="relative flex min-h-[60px] flex-1 flex-col items-center justify-center gap-0.5 rounded-xl border-2 text-[11px] leading-tight font-black"
@@ -172,15 +172,7 @@ export const BottomTabs = ({ current }: { current: TabId }) => {
               }}
             >
               <Icon aria-hidden size={24} style={{ filter: on ? 'drop-shadow(0 1px 0 #9a4f00)' : undefined }} />
-              {locked ? (
-                // Two lines, broken where the words break: "1章2話で / ひらく".
-                <>
-                  <RubyText showFurigana={showFurigana}>{`${opensAt.text}で`}</RubyText>
-                  <span>ひらく</span>
-                </>
-              ) : (
-                <RubyText showFurigana={showFurigana}>{t.label}</RubyText>
-              )}
+              <RubyText showFurigana={showFurigana}>{locked ? `${opensAt}話(わ)で ひらく` : t.label}</RubyText>
             </motion.button>
           );
         })}

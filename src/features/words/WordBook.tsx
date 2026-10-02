@@ -1,7 +1,6 @@
 import { useMemo, useState } from 'react';
-import { useMapPath } from '../../lib/nav';
+import { useSafeBack } from '../../lib/nav';
 import { Backdrop } from '../../components/ui/Backdrop';
-import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useGameStore } from '../../store/gameStore';
 import { ALL_KANJI } from '../../lib/kanjiDb';
@@ -36,8 +35,8 @@ import { RubyText } from '../../components/ui/Ruby';
 type Tab = 'cards' | 'chars';
 
 export const WordBook = () => {
-  const navigate = useNavigate();
-  const mapPath = useMapPath();
+  // もどる returns where the player came from (漢字やさん, ずかん…), the map only on a direct load.
+  const safeBack = useSafeBack();
   const showFurigana = useGameStore((s) => s.settings.furigana);
   const progress = useGameStore((s) => s.progress);
   const foundWords = useGameStore((s) => s.foundWords);
@@ -74,9 +73,9 @@ export const WordBook = () => {
   return (
     <div className="g-stage min-h-dvh pb-8">
       <Backdrop fixed />
-      <header className="g-header sticky top-0 z-20 px-4 py-3">
+      <header className="g-header sticky top-0 z-20 px-4 pt-[max(12px,env(safe-area-inset-top))] pb-3">
         <div className="flex items-center justify-between">
-          <button type="button" className="g-btn g-btn-accent !min-h-[38px] !gap-1 !px-3.5 text-sm" onClick={() => navigate(mapPath)}>
+          <button type="button" className="g-btn g-btn-accent !min-h-[38px] !gap-1 !px-3.5 text-sm" onClick={safeBack}>
             <span aria-hidden>◀</span>もどる
           </button>
           <h1 className="g-title text-base">

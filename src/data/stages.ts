@@ -41,6 +41,8 @@ export interface StageDef {
     icon: string;
     /** A torn-paper cut-out to draw instead of the icon, when there is one. */
     art?: EnemyArtId;
+    /** A painted picture (a path under public/) — 文字が 消えた 町's fight (NaniwaBattleView). */
+    img?: string;
   };
   /** Gems awarded for the first clear. */
   reward: number;

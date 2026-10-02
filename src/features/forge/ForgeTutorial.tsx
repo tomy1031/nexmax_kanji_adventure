@@ -15,7 +15,7 @@ import { useGameStore } from '../../store/gameStore';
 const CARDS: { title: string; body: string }[] = [
   {
     title: '漢字(かんじ)を あわせて 武器(ぶき)を 作(つく)る',
-    body: '手(て)に 入(い)れた 漢字(かんじ)を 2(ふた)つ えらぶと、武器(ぶき)に なります。',
+    body: '10回(かい) 書(か)いた 漢字(かんじ)（★3）を 2(ふた)つ えらぶと、武器(ぶき)に なります。',
   },
   {
     title: '本当(ほんとう)に ある 言葉(ことば)は 強(つよ)い',
@@ -58,7 +58,7 @@ export const ForgeTutorial = () => {
           className="g-panel-solid w-full max-w-sm p-6"
         >
           <p className="g-eyebrow">
-            <RubyText showFurigana={showFurigana}>合成(ごうせい)の やりかた</RubyText>
+            <RubyText showFurigana={showFurigana}>漢字(かんじ)やさんの つかいかた</RubyText>
             <span className="ml-2 tabular-nums">
               {index + 1} / {CARDS.length}
             </span>

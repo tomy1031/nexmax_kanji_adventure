@@ -56,6 +56,12 @@ export interface Layer {
 export interface SceneDef {
   layers: Layer[];
   fx: Record<string, Layer[]>;
+  /**
+   * A painted picture under the layers (a path under public/), for the
+   * scenes of 文字が 消えた 町 drawn in the delivered art's style rather
+   * than torn paper (08 §3.7). Such a scene usually has no layers of its own.
+   */
+  photo?: string;
 }
 
 const loop = (duration: number, ease: Transition['ease'] = 'easeInOut'): Transition => ({
@@ -614,8 +620,43 @@ const meadow: SceneDef = {
   },
 };
 
+/**
+ * 0章「はじまりの 空港」 (08 §3.7): painted pictures, no paper layers. Their
+ * effects are the paper scenes' own layers, reused as they are (so they are
+ * already pre-rendered): sparkles, the shadow's smoke, the healing glow.
+ */
+const photoScene = (photo: string): SceneDef => ({
+  photo,
+  layers: [],
+  fx: {
+    sparkle: village.fx.sparkle,
+    darkclouds: mountain.fx.darkclouds,
+    heal: wildpath.fx.heal,
+    // Falling petals only — the paper cherry trees of 現代編's street would sit oddly on a painting.
+    spring: GENDAI_SCENES.gendai_city.fx.spring.slice(1),
+  },
+});
+
+export const PHOTO_SCENES: Record<string, SceneDef> = {
+  naniwa_airport: photoScene('img/stageselect/bg_tall.webp'),
+  naniwa_airport_night: photoScene('img/stageselect/bg_night.webp'),
+  naniwa_sky_garden: photoScene('img/naniwa/naniwa_sky_garden.webp'),
+  naniwa_lounge: photoScene('img/naniwa/naniwa_lounge.webp'),
+  naniwa_walkway: photoScene('img/naniwa/naniwa_walkway.webp'),
+  naniwa_runway_night: photoScene('img/naniwa/naniwa_runway_night.webp'),
+  naniwa_station: photoScene('img/naniwa/naniwa_station.webp'),
+  naniwa_train: photoScene('img/naniwa/naniwa_train.webp'),
+  naniwa_last_car: photoScene('img/naniwa/naniwa_last_car.webp'),
+  // 1章: ナニワタウン
+  naniwa_town: photoScene('img/title/bg.webp'),
+  naniwa_town_station: photoScene('img/naniwa/naniwa_town_station.webp'),
+  naniwa_station_square: photoScene('img/naniwa/naniwa_station_square.webp'),
+  naniwa_kanjiyasan: photoScene('img/kanjiyasan/bg_tall.webp'),
+};
+
 export const SCENES: Record<string, SceneDef> = {
   ...GENDAI_SCENES,
+  ...PHOTO_SCENES,
   mukashi_meadow: meadow,
   mukashi_village: village,
   mukashi_mountain: mountain,

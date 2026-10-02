@@ -1,16 +1,18 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
-import PictureBook from '../picturebook/PictureBook';
 import { RubyText } from '../../components/ui/Ruby';
 import { assetPath } from '../../lib/assetPath';
 import { useGameStore } from '../../store/gameStore';
 import * as sfx from '../../lib/sfx';
-import { PROLOGUE, PROLOGUE_ASK, PROLOGUE_EXITS, type PrologueVisual } from '../../data/scripts/prologue';
+import { PROLOGUE, PROLOGUE_ASK, PROLOGUE_EXITS, PROLOGUE_PICTURE, type PrologueVisual } from '../../data/scripts/prologue';
+import { useBgm } from '../../lib/bgm';
+import { preloadImages } from '../../lib/preload';
+import { episodeArt } from '../../data/episodeArt';
 
 /**
  * プロローグ (08 §10.2): the world, the shadow, the fallen robot, and you —
- * told in English over moving pictures, before the kana forest.
+ * told in English over moving pictures, before 0章「はじまりの 空港」.
  *
  * Only transforms and opacity move (constraints: iPhone/iPad). Glows are
  * static text-shadows and gradients on layers that are rasterised once and
@@ -35,14 +37,17 @@ const LETTERS: { ch: string; x: number; y: number; d: number; s: number }[] = [
   { ch: 'ク', x: 16, y: 34, d: 1.5, s: 20 },
 ];
 
-/** Where the shadow sits, in % of the screen; eaten letters fly to it. */
-const SHADOW = { x: 50, y: 30 };
+/**
+ * Where the shadow's mouth is in the painted town (prologue_eaten), in % of
+ * the screen; eaten letters fly to it.
+ */
+const SHADOW = { x: 50, y: 22 };
 
 const GLOW = '0 0 6px #fff3b0, 0 0 18px rgba(255,210,90,0.9)';
 
-const Letters = ({ eaten, still }: { eaten: boolean; still: boolean }) => (
+const Letters = ({ eaten, still, few }: { eaten: boolean; still: boolean; few?: boolean }) => (
   <div className="rt-light pointer-events-none absolute inset-0" aria-hidden>
-    {LETTERS.map((l, i) => (
+    {(few ? LETTERS.filter((_, i) => i % 2 === 0) : LETTERS).map((l, i) => (
       <motion.span
         key={l.ch}
         className="absolute font-black"
@@ -57,7 +62,7 @@ const Letters = ({ eaten, still }: { eaten: boolean; still: boolean }) => (
         }
         transition={
           eaten
-            ? { duration: 1.4, delay: i * 0.05, ease: 'easeIn' }
+            ? { duration: 1.4, delay: 0.5 + i * 0.05, ease: 'easeIn' }
             : { duration: 6, delay: l.d, repeat: Infinity, repeatType: 'mirror', ease: 'easeInOut' }
         }
       >
@@ -67,103 +72,49 @@ const Letters = ({ eaten, still }: { eaten: boolean; still: boolean }) => (
   </div>
 );
 
-/** The town's signs: lit, or eaten to holes. */
-const SIGNS: { lit: string; x: number; y: number }[] = [
-  { lit: '駅(えき)', x: 14, y: 30 },
-  { lit: 'やまだ', x: 62, y: 38 },
-  { lit: '12:00', x: 38, y: 18 },
-];
+/** Fetch every picture up front, so no beat waits for its own. */
+const preloadPictures = () => preloadImages([...new Set(Object.values(PROLOGUE_PICTURE))]);
 
-const Town = ({ eaten }: { eaten: boolean }) => (
-  <div className="absolute inset-0" aria-hidden>
-    <PictureBook scene="gendai_city" still />
-    <div className="absolute inset-0" style={{ background: 'linear-gradient(180deg, rgba(8,12,40,0.82) 0%, rgba(20,24,70,0.55) 60%, rgba(10,10,30,0.8) 100%)' }} />
-    {SIGNS.map((s, i) => (
-      <motion.div
-        key={s.lit}
-        className="absolute rounded-lg border-2 px-3 py-1 text-2xl leading-[1.5] font-black"
-        style={{
-          left: `${s.x}%`,
-          top: `${s.y}%`,
-          background: eaten ? 'rgba(20,20,30,0.85)' : 'rgba(255,248,214,0.95)',
-          borderColor: eaten ? '#444' : '#ffd86a',
-          color: eaten ? '#666' : '#3a2a10',
-          boxShadow: eaten ? 'none' : '0 0 22px rgba(255,210,90,0.8)',
-        }}
-        initial={{ opacity: 0, scale: 0.8 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{ delay: 0.2 + i * 0.2 }}
-      >
-        {eaten ? '□□' : <RubyText showFurigana>{s.lit}</RubyText>}
-      </motion.div>
-    ))}
-  </div>
-);
-
-const Shadow = ({ big, still }: { big: boolean; still: boolean }) => (
+const Picture = ({ src, still, dim }: { src: string; still: boolean; dim: number }) => (
   <motion.div
-    aria-hidden
-    className="pointer-events-none absolute aspect-square w-[80vw] max-w-[420px] -translate-x-1/2 -translate-y-1/2"
-    style={{ left: `${SHADOW.x}%`, top: `${SHADOW.y}%` }}
-    initial={{ scale: 0.2, opacity: 0 }}
-    animate={{ scale: big ? 1 : 0.6, opacity: 1 }}
-    transition={{ type: 'spring', stiffness: 60, damping: 12 }}
+    className="absolute inset-0"
+    initial={{ opacity: 0 }}
+    animate={{ opacity: 1 }}
+    exit={{ opacity: 0 }}
+    transition={{ duration: 0.9 }}
   >
-    <motion.div
-      className="absolute inset-0 rounded-full"
-      style={{ background: 'radial-gradient(circle, #000 0%, #07051a 38%, rgba(30,10,60,0.6) 58%, transparent 72%)', willChange: 'transform' }}
-      animate={still ? undefined : { scale: [1, 1.06, 1] }}
-      transition={{ duration: 2.4, repeat: Infinity, ease: 'easeInOut' }}
+    <motion.img
+      src={assetPath(src)}
+      alt=""
+      aria-hidden
+      draggable={false}
+      className="absolute inset-0 h-full w-full object-cover"
+      style={{ willChange: 'transform' }}
+      initial={{ scale: still ? 1 : 1.1 }}
+      animate={{ scale: 1 }}
+      transition={{ duration: 9, ease: 'easeOut' }}
     />
-    {/* Eyes: they open, then blink. */}
-    {[38, 62].map((x) => (
-      <motion.span
-        key={x}
-        className="absolute top-[42%] h-[9%] w-[12%] -translate-x-1/2 rounded-[50%]"
-        style={{ left: `${x}%`, background: 'radial-gradient(ellipse, #fff7c0 0%, #ffcf3a 55%, #ff7a1a 100%)', willChange: 'transform' }}
-        initial={{ scaleY: 0 }}
-        animate={still ? { scaleY: 1 } : { scaleY: [0, 1, 1, 0.1, 1] }}
-        transition={{ duration: 3.2, times: [0, 0.15, 0.8, 0.85, 0.9], repeat: Infinity, delay: 0.4 }}
-      />
-    ))}
+    <motion.div className="absolute inset-0 bg-[#05061a]" initial={false} animate={{ opacity: dim }} transition={{ duration: 0.8 }} />
   </motion.div>
 );
 
-const Nexmax = ({ falling, still }: { falling: boolean; still: boolean }) => (
-  <>
-    <motion.img
-      src={assetPath(falling ? 'img/chara/cut/book.webp' : 'img/chara/cut/build.webp')}
-      alt=""
-      aria-hidden
-      className="absolute bottom-[26%] left-[8%] h-[30dvh] w-auto"
-      style={{ willChange: 'transform' }}
-      initial={{ x: -120, opacity: 0 }}
-      animate={
-        falling
-          ? { x: ['0vw', '20vw', '70vw'], y: ['0vh', '-30vh', '60vh'], rotate: [0, 200, 720], scale: [1, 0.6, 0.1], opacity: [1, 1, 0] }
-          : { x: 0, opacity: 1, y: still ? 0 : [0, -6, 0] }
-      }
-      transition={falling ? { duration: 1.6, ease: 'easeIn' } : { x: { type: 'spring', stiffness: 120, damping: 14 }, y: { duration: 2, repeat: Infinity } }}
-    />
-    {falling && (
-      // The falling star: a bright head and a tail, crossing once to the forest.
-      <motion.div
-        aria-hidden
-        className="absolute top-0 left-0 h-2 w-40 origin-right rounded-full"
-        style={{ background: 'linear-gradient(90deg, transparent, rgba(255,240,180,0.8), #fff)', rotate: 35, willChange: 'transform' }}
-        initial={{ x: '70vw', y: '-10vh', opacity: 0 }}
-        animate={{ x: ['70vw', '10vw'], y: ['-10vh', '85vh'], opacity: [0, 1, 1, 0] }}
-        transition={{ duration: 1.5, delay: 1.3, ease: 'easeIn' }}
-      />
-    )}
-  </>
+/** Nexmax thrown across the bay: a bright streak that runs down the painted star's path. */
+const Streak = () => (
+  <motion.div
+    aria-hidden
+    className="absolute top-0 left-0 h-2 w-44 origin-right rounded-full"
+    style={{ background: 'linear-gradient(90deg, transparent, rgba(255,240,180,0.8), #fff)', rotate: 28, willChange: 'transform, opacity' }}
+    initial={{ x: '-30vw', y: '4vh', opacity: 0 }}
+    animate={{ x: ['-30vw', '70vw'], y: ['4vh', '22vh'], opacity: [0, 1, 1, 0] }}
+    transition={{ duration: 1.4, delay: 0.4, ease: 'easeIn' }}
+  />
 );
 
 /** A hand of light writes あ: the lit letter is uncovered left to right. */
 const Write = () => (
-  <div className="absolute inset-0 flex items-center justify-center" aria-hidden>
+  <div className="absolute inset-0 flex items-center justify-center pb-[22dvh]" aria-hidden>
     <div className="relative text-[42vw] leading-none font-black sm:text-[200px]">
-      <span style={{ color: 'rgba(255,255,255,0.08)' }}>あ</span>
+      <span style={{ color: 'rgba(255,255,255,0.1)' }}>あ</span>
       <motion.span
         className="absolute inset-0"
         style={{ color: '#fff8d6', textShadow: GLOW }}
@@ -186,63 +137,56 @@ const Write = () => (
   </div>
 );
 
-const Stage = ({ visual, still }: { visual: PrologueVisual; still: boolean }) => {
+/** What moves over the picture on each beat. */
+const Overlay = ({ visual, still }: { visual: PrologueVisual; still: boolean }) => {
   switch (visual) {
     case 'letters':
       return <Letters eaten={false} still={still} />;
     case 'town':
-      return (
-        <>
-          <Town eaten={false} />
-          <Letters eaten={false} still={still} />
-        </>
-      );
+      return <Letters eaten={false} still={still} few />;
     case 'wake':
-      return (
-        <>
-          <Town eaten={false} />
-          <Letters eaten still={still} />
-          <Shadow big={false} still={still} />
-        </>
-      );
-    case 'eaten':
-      return (
-        <>
-          <Town eaten />
-          <Shadow big still={still} />
-        </>
-      );
-    case 'guard':
+      // The town's letters are pulled up into the shadow's mouth.
+      return <Letters eaten still={still} />;
     case 'fall':
-      return (
-        <>
-          <Shadow big still={still} />
-          <Nexmax falling={visual === 'fall'} still={still} />
-        </>
-      );
+      return still ? null : <Streak />;
     case 'write':
       return <Write />;
+    default:
+      return null;
   }
 };
 
 export const PrologueScreen = () => {
+  useBgm('story');
   const navigate = useNavigate();
   const markSeen = useGameStore((s) => s.markTutorialSeen);
   const setLastArc = useGameStore((s) => s.setLastArc);
+  const setStartPath = useGameStore((s) => s.setStartPath);
+  // Watched again from はじめから or the map: carrying on is the main way out (08 §3.8).
+  const [returning] = useState(() => {
+    const st = useGameStore.getState();
+    return st.tutorials.prologue || st.clearedStages.length > 0;
+  });
   const reduced = useGameStore((s) => s.settings.reducedMotion);
   const still = Boolean(useReducedMotion() || reduced);
   const [beat, setBeat] = useState(0);
   const done = beat >= PROLOGUE.length;
   const current = PROLOGUE[Math.min(beat, PROLOGUE.length - 1)];
 
+  useEffect(preloadPictures, []);
+  // Both answers to the question at the end lead straight into an episode.
+  useEffect(() => preloadImages([...episodeArt('kana-1'), ...episodeArt('moji-1-1')]), []);
+
   useEffect(() => {
     if (current.visual === 'wake' || current.visual === 'fall') sfx.hurt();
     else if (current.visual === 'write') sfx.chime();
   }, [current.visual]);
 
-  const go = (to: string) => {
+  const go = (to: string, path?: 'kana' | 'town') => {
     markSeen('prologue');
     setLastArc('moji');
+    // つづきから follows the choice (data/mojiFlow.ts nextUp); watching again changes nothing.
+    if (path) setStartPath(path);
     navigate(to);
   };
 
@@ -252,17 +196,23 @@ export const PrologueScreen = () => {
       style={{ background: 'radial-gradient(ellipse at 50% 20%, #26306e 0%, #111536 55%, #05060f 100%)' }}
       onClick={() => !done && setBeat((b) => b + 1)}
     >
+      {/* The painted picture, then what moves over it. */}
       <AnimatePresence mode="sync">
-        <motion.div
-          key={current.visual}
-          className="absolute inset-0"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: done ? 0.35 : 1 }}
-          exit={{ opacity: 0 }}
-          transition={{ duration: 0.8 }}
-        >
-          <Stage visual={current.visual} still={still} />
-        </motion.div>
+        <Picture key={PROLOGUE_PICTURE[current.visual]} src={PROLOGUE_PICTURE[current.visual]} still={still} dim={done ? 0.45 : current.visual === 'write' ? 0.35 : 0} />
+      </AnimatePresence>
+      <AnimatePresence mode="sync">
+        {!done && (
+          <motion.div
+            key={current.visual}
+            className="absolute inset-0"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.8 }}
+          >
+            <Overlay visual={current.visual} still={still} />
+          </motion.div>
+        )}
       </AnimatePresence>
 
       {!done && (
@@ -332,17 +282,33 @@ export const PrologueScreen = () => {
               <p className="text-center text-3xl font-black tracking-[0.3em] text-[#fff8d6]" style={{ textShadow: GLOW }} aria-hidden>
                 あいう アイウ
               </p>
-              <button type="button" className="g-btn g-btn-primary w-full !flex-col !gap-0 text-lg leading-tight" onClick={() => go(PROLOGUE_EXITS.kana)}>
+              {returning && (
+                <button type="button" className="g-btn g-btn-primary w-full text-lg" onClick={() => go('/map/moji')}>
+                  <RubyText showFurigana>つづきから あそぶ</RubyText>
+                </button>
+              )}
+              <button
+                type="button"
+                className={`g-btn ${returning ? 'g-btn-ghost' : 'g-btn-primary text-lg'} w-full !flex-col !gap-0 leading-tight`}
+                onClick={() => go(PROLOGUE_EXITS.kana, 'kana')}
+              >
                 <RubyText showFurigana>{PROLOGUE_ASK.kana.ja}</RubyText>
                 <span className="text-xs font-bold opacity-90">{PROLOGUE_ASK.kana.en}</span>
               </button>
-              <button type="button" className="g-btn g-btn-accent w-full !flex-col !gap-0 text-base leading-tight" onClick={() => go(PROLOGUE_EXITS.town)}>
+              <button
+                type="button"
+                className={`g-btn ${returning ? 'g-btn-ghost' : 'g-btn-accent text-base'} w-full !flex-col !gap-0 leading-tight`}
+                onClick={() => go(PROLOGUE_EXITS.town, 'town')}
+              >
                 <RubyText showFurigana>{PROLOGUE_ASK.town.ja}</RubyText>
                 <span className="text-xs font-bold opacity-90">{PROLOGUE_ASK.town.en}</span>
               </button>
-              <button type="button" className="mx-auto text-sm font-bold text-white/70 underline" onClick={() => go('/map/moji')}>
-                See the chapter map
-              </button>
+              {!returning && (
+                <button type="button" className="rt-light mx-auto text-sm leading-[2] font-bold text-white/75 underline" onClick={() => go('/map/moji')}>
+                  <RubyText showFurigana>ステージせんたくを 見(み)る</RubyText>
+                  <span className="ml-2 text-xs" lang="en">See the stages</span>
+                </button>
+              )}
             </motion.div>
           )}
         </AnimatePresence>

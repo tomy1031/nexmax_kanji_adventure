@@ -34,6 +34,7 @@ import { MASTERY_REPS, comboMultiplier, masteryMultiplier, pickWeakest, starsOf,
 import { FLOW_MS, IMPACT_MS, WIN_DELAY_MASTERY_MS, lightOf } from '../../lib/lightFlow';
 import LightFlow, { type Flow } from './LightFlow';
 import NaniwaBattleView from './NaniwaBattleView';
+import { useBgm } from '../../lib/bgm';
 
 /**
  * The fight.
@@ -149,6 +150,7 @@ export const BattleScene = ({
   patience: basePatienceValue,
   mastery = false,
 }: BattleSceneProps) => {
+  useBgm('battle');
   const navigate = useNavigate();
   const size = useCanvasSize(210, 0.25, 96);
   const tutorial = mode === 'tutorial';
@@ -518,6 +520,7 @@ export const BattleScene = ({
                 navigate(FEATURE_INTRO[f].to);
               }}
               onTutorialDone={onFinish}
+              route={mastery ? 'moji' : undefined}
             />
           )}
         </AnimatePresence>
@@ -531,6 +534,7 @@ export const BattleScene = ({
         <BattleIntro bossName={stage.boss.name} showFurigana={showFurigana} />
         <NaniwaBattleView
           bossName={stage.boss.name}
+          bossImg={stage.boss.img}
           bossHp={bossHp}
           bossMaxHp={stage.boss.hp}
           playerHp={playerHp}

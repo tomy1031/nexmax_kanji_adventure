@@ -96,6 +96,8 @@ const RoundKey = ({ icon: Icon, label, onClick, style }: { icon: typeof GiCog; l
 
 export interface NaniwaBattleViewProps {
   bossName: string;
+  /** The opponent's picture; the grown Mojikui when not given. */
+  bossImg?: string;
   bossHp: number;
   bossMaxHp: number;
   playerHp: number;
@@ -131,6 +133,7 @@ export interface NaniwaBattleViewProps {
 
 export const NaniwaBattleView = ({
   bossName,
+  bossImg,
   bossHp,
   bossMaxHp,
   playerHp,
@@ -195,7 +198,9 @@ export const NaniwaBattleView = ({
         style={{ backgroundImage: `url(${art('bg_wide')})` }}
       />
 
-      <div ref={colRef} className="relative mx-auto flex h-full w-[min(100%,56dvh)] flex-col [container-type:inline-size]">
+      {/* Inside the safe area: on a notched iPhone played from the home screen the
+          status bar and the home bar would otherwise cover the HP bar and もどる. */}
+      <div ref={colRef} className="relative mx-auto flex h-full w-[min(100%,56dvh)] flex-col pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)] [container-type:inline-size]">
         {/* 上: 空・あいて ------------------------------------------------- */}
         <motion.div className="relative min-h-0 flex-1" animate={fieldCtl}>
           {/* たて画面: the sky, the city and the river down to the deck line */}
@@ -210,11 +215,11 @@ export const NaniwaBattleView = ({
           <div className="absolute" style={{ ...onTop(390, 38, 489, 652), height: 'auto', aspectRatio: '3 / 4' }}>
             <motion.div className="relative h-full w-full" animate={enemyCtl}>
               <motion.img
-                src={art('mojikui')}
+                src={bossImg ? assetPath(bossImg) : art('mojikui')}
                 alt=""
                 aria-hidden
                 draggable={false}
-                className="h-full w-full select-none"
+                className="h-full w-full object-contain select-none"
                 style={{ willChange: 'transform' }}
                 animate={still ? undefined : { y: ['0%', '-1.5%', '0%'] }}
                 transition={{ duration: 2.2, repeat: Infinity, ease: 'easeInOut' }}

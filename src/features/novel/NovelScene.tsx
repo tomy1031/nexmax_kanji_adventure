@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import type { CastMember, NovelScript } from '../../types/novel';
 import { RubyText } from '../../components/ui/Ruby';
 import { assetPath } from '../../lib/assetPath';
@@ -8,6 +8,9 @@ import { glossFor } from '../../data/glossary';
 import { canSpeak, speak, stopSpeaking } from '../../lib/speech';
 import { useGameStore } from '../../store/gameStore';
 import PictureBook from '../picturebook/PictureBook';
+import { SCENES } from '../picturebook/scenes';
+import { TypeReveal } from '../../components/ui/TypeReveal';
+import { useBgm } from '../../lib/bgm';
 
 /**
  * The novel scene, set in a moving picture book.
@@ -36,6 +39,18 @@ interface NovelSceneProps {
    * the letters that have come back, and not the English lines.
    */
   speechFor?: (text: string) => string | null;
+  /**
+   * Who says the narration (lines with no speaker) — かな編's lines are the
+   * player's own thoughts, so their plate says わたし (2026-10-02「誰の
+   * セリフか 表示 必要」). Without it narration has no plate.
+   */
+  narrator?: string;
+  /**
+   * Draws names and translations: plain readable text. かな編 uses it so a
+   * name plate is never eaten to holes the way Nexmax's speech is.
+   * Defaults to renderText.
+   */
+  renderPlain?: (text: string) => ReactNode;
 }
 
 /** One carved letter is huge; a row of them (日 月 火 水 木) has to fit the screen. */
@@ -60,7 +75,8 @@ const lineWords = (text: string): { word: string; gloss: string }[] => {
 /** Reading time for auto mode: a base plus a little per character. */
 const autoDelay = (text: string) => 1600 + stripRuby(text).length * 85;
 
-export const NovelScene = ({ script, cast, onFinish, chapter, renderText, speechFor }: NovelSceneProps) => {
+export const NovelScene = ({ script, cast, onFinish, chapter, renderText, speechFor, narrator, renderPlain }: NovelSceneProps) => {
+  useBgm('story');
   const showFurigana = useGameStore((s) => s.settings.furigana);
   const [index, setIndex] = useState(0);
   const [showLog, setShowLog] = useState(false);
@@ -74,10 +90,29 @@ export const NovelScene = ({ script, cast, onFinish, chapter, renderText, speech
   const [wordsFor, setWordsFor] = useState<number | null>(null);
   /** The line whose English is open. */
   const [enFor, setEnFor] = useState<number | null>(null);
+  /** The line whose text has finished appearing (a tap while it appears shows it all). */
+  const [shown, setShown] = useState(-1);
+  const reducedSetting = useGameStore((s) => s.settings.reducedMotion);
+  const still = Boolean(useReducedMotion() || reducedSetting);
   useEffect(() => stopSpeaking, []);
 
   const castById = useMemo(() => new Map(cast.map((c) => [c.id, c])), [cast]);
   const line = script.lines[index];
+
+  // Fetch every portrait this script will show, so a change of expression
+  // never leaves an empty gap while the picture loads.
+  useEffect(() => {
+    const srcs = new Set<string>();
+    for (const l of script.lines) {
+      const [id, expr] = (l.sprite && l.sprite !== 'none' ? l.sprite : l.speaker ? `${l.speaker}:normal` : '').split(':');
+      const src = id ? (castById.get(id)?.sprites[expr ?? 'normal'] ?? castById.get(id)?.sprites.normal) : undefined;
+      if (src) srcs.add(src);
+    }
+    for (const src of srcs) {
+      const img = new Image();
+      img.src = assetPath(src);
+    }
+  }, [script, castById]);
 
   /**
    * Scene, effects and sprite carry over from earlier lines, so the current
@@ -117,10 +152,18 @@ export const NovelScene = ({ script, cast, onFinish, chapter, renderText, speech
   }, [script, index]);
 
   const speaker = line?.speaker ? castById.get(line.speaker) : undefined;
+  /** The name on the plate: the speaker, or the narrator for narration. */
+  const plateName = speaker?.name ?? (line && !line.speaker ? narrator : undefined);
+  const plain = renderPlain ?? renderText;
 
   const [spriteId, spriteExpr] = sprite?.split(':') ?? [];
   const spriteMember = spriteId ? castById.get(spriteId) : undefined;
   const spriteSrc = spriteMember?.sprites[spriteExpr ?? 'normal'] ?? spriteMember?.sprites.normal;
+  /**
+   * The standing character is not the one saying this line. A line that sets
+   * the picture itself is showing that character's reaction, so it stays bright.
+   */
+  const listening = Boolean(spriteId) && line?.speaker !== spriteId && !line?.sprite;
 
   const goTo = useCallback(
     (nextIndex: number) => {
@@ -147,6 +190,12 @@ export const NovelScene = ({ script, cast, onFinish, chapter, renderText, speech
     goTo(index + 1);
   }, [line, script.lines, index, goTo]);
 
+  /** A tap while the line is still appearing shows the rest of it; the next tap turns the page. */
+  const tap = useCallback(() => {
+    if (shown !== index) setShown(index);
+    else advance();
+  }, [shown, index, advance]);
+
   const choose = (label: string) => {
     const target = script.lines.findIndex((l) => l.label === label);
     goTo(target === -1 ? index + 1 : target);
@@ -157,12 +206,12 @@ export const NovelScene = ({ script, cast, onFinish, chapter, renderText, speech
     const onKey = (e: KeyboardEvent) => {
       if (e.key === ' ' || e.key === 'Enter') {
         e.preventDefault();
-        advance();
+        tap();
       }
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [advance]);
+  }, [tap]);
 
   // オート: turn the page after a reading pause. Choices always wait.
   useEffect(() => {
@@ -213,23 +262,39 @@ export const NovelScene = ({ script, cast, onFinish, chapter, renderText, speech
             transition={{ duration: 0.35 }}
             // Anchored above the dialogue box so the character is never cut
             // off by it.
-            className="pointer-events-none absolute bottom-[33dvh] left-1/2 z-10 h-[34dvh] -translate-x-1/2"
+            className="pointer-events-none absolute bottom-[27dvh] left-1/2 z-10 h-[38dvh] -translate-x-1/2"
           >
-            <motion.img
-              src={assetPath(spriteSrc)}
-              alt=""
-              aria-hidden
-              className="h-full w-auto object-contain"
-              // A paper cut-out: white rim, soft shadow — the same finish as
-              // the scene, without redrawing the character.
-              style={{
-                filter: spriteMember?.silhouette
-                  ? 'brightness(0.08) drop-shadow(0 0 14px rgba(130,70,210,0.85))'
-                  : 'drop-shadow(2px 0 0 #fffaf0) drop-shadow(-2px 0 0 #fffaf0) drop-shadow(0 2px 0 #fffaf0) drop-shadow(0 -2px 0 #fffaf0) drop-shadow(0 8px 10px rgba(40,25,5,0.35))',
-              }}
+            {/* The breathing moves this wrapper; the filtered picture inside
+                stays still, so the phone draws its outline once instead of
+                every frame. */}
+            <motion.div
+              className="h-full"
+              style={{ willChange: 'transform' }}
               animate={{ y: [0, -5, 0] }}
               transition={{ duration: 2.6, repeat: Infinity, ease: 'easeInOut' }}
-            />
+            >
+              <img
+                src={assetPath(spriteSrc)}
+                alt=""
+                aria-hidden
+                className="h-full w-auto object-contain"
+                // On the paper picture book: a paper cut-out, white rim and soft
+                // shadow — the same finish as the scene. On a painted scene the
+                // character stands in it: only a soft shadow, no sticker rim.
+                // Not the one talking (narration, or someone else): a little
+                // darker, so it is clear who says the line (2026-10-02「誰の セリフか」).
+                style={{
+                  filter: spriteMember?.silhouette
+                    ? 'brightness(0.08) drop-shadow(0 0 14px rgba(130,70,210,0.85))'
+                    : `${listening ? 'brightness(0.7) ' : ''}${
+                        SCENES[bg]?.photo
+                          ? 'drop-shadow(0 10px 14px rgba(10,6,30,0.45))'
+                          : 'drop-shadow(2px 0 0 #fffaf0) drop-shadow(-2px 0 0 #fffaf0) drop-shadow(0 2px 0 #fffaf0) drop-shadow(0 -2px 0 #fffaf0) drop-shadow(0 8px 10px rgba(40,25,5,0.35))'
+                      }`,
+                  transition: 'filter 200ms',
+                }}
+              />
+            </motion.div>
           </motion.div>
         )}
       </AnimatePresence>
@@ -271,7 +336,7 @@ export const NovelScene = ({ script, cast, onFinish, chapter, renderText, speech
       {/* 画面ぜんたいで ページを めくる --------------------------------- */}
       <button
         type="button"
-        onClick={advance}
+        onClick={tap}
         aria-label="つぎへ"
         className="absolute inset-0 z-10 cursor-pointer"
         disabled={Boolean(line.choices?.length)}
@@ -279,9 +344,10 @@ export const NovelScene = ({ script, cast, onFinish, chapter, renderText, speech
 
       {/* 会話ボックス（巻物） ------------------------------------------- */}
       <div className="absolute right-0 bottom-0 left-0 z-20 p-3 pb-[max(12px,env(safe-area-inset-bottom))]">
-        {speaker && (
-          <div className="g-wood relative z-10 mb-[-10px] ml-3 inline-flex items-center px-4 py-1 text-base font-black">
-            {renderText ? renderText(speaker.name) : <RubyText showFurigana={showFurigana}>{speaker.name}</RubyText>}
+        {plateName && (
+          <div className="g-wood relative z-10 mb-[-10px] ml-3 inline-flex items-center gap-1 px-4 py-1 text-base leading-[1.9] font-black">
+            {!speaker && <span aria-hidden>💭</span>}
+            {plain ? plain(plateName) : <RubyText showFurigana={showFurigana}>{plateName}</RubyText>}
           </div>
         )}
 
@@ -291,12 +357,28 @@ export const NovelScene = ({ script, cast, onFinish, chapter, renderText, speech
             initial={{ opacity: 0.6, y: 4 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.22 }}
-            className="g-novel-box min-h-[29dvh] px-5 pt-5 pb-3"
-            onClick={advance}
+            className="g-novel-box min-h-[23dvh] px-5 pt-5 pb-3"
+            onClick={tap}
           >
-            <p className="text-[16px] leading-[2.15] font-bold whitespace-pre-line">
+            <TypeReveal
+              revealKey={index}
+              full={still || shown === index}
+              onDone={() => setShown(index)}
+              className="text-[16px] leading-[2.15] font-bold whitespace-pre-line"
+            >
               {renderText ? renderText(line.text) : <RubyText showFurigana={showFurigana}>{line.text}</RubyText>}
-            </p>
+            </TypeReveal>
+
+            {/* The Japanese of an English line, once the line has appeared. */}
+            {line.ja && (
+              <p
+                className={`mt-0.5 text-[14px] leading-[2.2] font-bold transition-opacity duration-300 ${shown === index ? 'opacity-100' : 'opacity-0'}`}
+                style={{ color: '#7a5a3a' }}
+                lang="ja"
+              >
+                {plain ? plain(line.ja) : <RubyText showFurigana={showFurigana}>{line.ja}</RubyText>}
+              </p>
+            )}
 
             {enFor === index && line.en && (
               <p className="mt-1 text-[13px] leading-snug font-bold" style={{ color: '#1b63b0' }} lang="en">
@@ -335,12 +417,12 @@ export const NovelScene = ({ script, cast, onFinish, chapter, renderText, speech
               </div>
             ) : (
               <div className="mt-1 flex items-center justify-end gap-1 text-xs font-bold" style={{ color: '#8a6a44' }}>
-                <div className="mr-auto flex gap-1.5">
+                <div className="mr-auto flex min-w-0 flex-wrap gap-1.5">
                   {canSpeak() && (speechFor ? speechFor(line.text) : line.text) && (
                     <button
                       type="button"
                       aria-label="よみあげ"
-                      className="rounded-full border-2 border-[#caa468] bg-white/80 px-2.5 py-0.5 text-[12px]"
+                      className="rounded-full border-2 border-[#caa468] bg-white/80 px-2.5 py-0.5 text-[12px] whitespace-nowrap"
                       onClick={(e) => {
                         e.stopPropagation();
                         speak((speechFor ? speechFor(line.text) : line.text) ?? '');
@@ -353,7 +435,7 @@ export const NovelScene = ({ script, cast, onFinish, chapter, renderText, speech
                     <button
                       type="button"
                       aria-pressed={enFor === index}
-                      className="rounded-full border-2 border-[#caa468] bg-white/80 px-2.5 py-0.5 text-[12px]"
+                      className="rounded-full border-2 border-[#caa468] bg-white/80 px-2.5 py-0.5 text-[12px] whitespace-nowrap"
                       onClick={(e) => {
                         e.stopPropagation();
                         setEnFor(enFor === index ? null : index);
@@ -366,7 +448,7 @@ export const NovelScene = ({ script, cast, onFinish, chapter, renderText, speech
                     <button
                       type="button"
                       aria-pressed={wordsFor === index}
-                      className="rounded-full border-2 border-[#caa468] bg-white/80 px-2.5 py-0.5 text-[12px]"
+                      className="rounded-full border-2 border-[#caa468] bg-white/80 px-2.5 py-0.5 text-[12px] whitespace-nowrap"
                       onClick={(e) => {
                         e.stopPropagation();
                         setWordsFor(wordsFor === index ? null : index);
@@ -376,15 +458,18 @@ export const NovelScene = ({ script, cast, onFinish, chapter, renderText, speech
                     </button>
                   )}
                 </div>
-                タップで つづく
-                <motion.span
-                  aria-hidden
-                  animate={{ y: [0, 3, 0] }}
-                  transition={{ repeat: Infinity, duration: 1.2 }}
-                  className="text-base"
-                >
-                  ▼
-                </motion.span>
+                {/* The page-turn mark appears once the line has finished appearing. */}
+                <span className={`flex shrink-0 items-center gap-1 whitespace-nowrap transition-opacity duration-200 ${shown === index ? 'opacity-100' : 'opacity-0'}`}>
+                  タップで つづく
+                  <motion.span
+                    aria-hidden
+                    animate={{ y: [0, 3, 0] }}
+                    transition={{ repeat: Infinity, duration: 1.2 }}
+                    className="text-base"
+                  >
+                    ▼
+                  </motion.span>
+                </span>
               </div>
             )}
           </motion.div>
@@ -413,14 +498,16 @@ export const NovelScene = ({ script, cast, onFinish, chapter, renderText, speech
                 .map((i) => {
                   const l = script.lines[i];
                   const who = l.speaker ? castById.get(l.speaker) : undefined;
+                  const name = who?.name ?? (l.speaker ? undefined : narrator);
                   return (
                     <div key={i} className="text-sm">
-                      {who && (
-                        <span className="mr-2 font-black" style={{ color: who.color }}>
-                          {renderText ? renderText(who.name) : <RubyText showFurigana={showFurigana}>{who.name}</RubyText>}
+                      {name && (
+                        <span className="mr-2 font-black" style={{ color: who?.color ?? '#7a5a3a' }}>
+                          {plain ? plain(name) : <RubyText showFurigana={showFurigana}>{name}</RubyText>}
                         </span>
                       )}
                       {renderText ? renderText(l.text) : <RubyText showFurigana={showFurigana}>{l.text}</RubyText>}
+                      {l.ja && <span className="block text-xs" style={{ color: '#7a5a3a' }}>{plain ? plain(l.ja) : l.ja}</span>}
                     </div>
                   );
                 })}

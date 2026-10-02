@@ -100,6 +100,8 @@
     -webkit-text-size-adjust: 100%;
     /* 指ではじいたときに画面全体が動かないようにする（なぞり書きの邪魔） */
     overscroll-behavior: none;
+    /* お話を すばやく タップしても 画面が 拡大されない（ダブルタップの ズームを 止める）。 */
+    touch-action: manipulation;
   }
 
   body {
@@ -110,6 +112,17 @@
     /* ふりがなが乗る前提の行間。詰めると ruby が上の行に噛む。 */
     line-height: 2;
     -webkit-font-smoothing: antialiased;
+    /* ゲームの 画面: 指で なぞっても 長押ししても 字が 選ばれたり メニューが 出たり しない。
+       タップの 灰色の 光も 出さない（押した 感じは ボタン自身が 出す）。 */
+    -webkit-user-select: none;
+    user-select: none;
+    -webkit-touch-callout: none;
+    -webkit-tap-highlight-color: transparent;
+    /* 文は 分かち書き（語の あいだに 空白）。改行は 空白で だけ して、「たたかお／う。」の
+       ように 語の 途中で 折らない。収まらない 長い 語だけは どこでも 折る。 */
+    word-break: keep-all;
+    overflow-wrap: break-word;
+    line-break: strict;
   }
 
   /* ふりがな --------------------------------------------------------------- */
@@ -415,6 +428,20 @@
       inset 0 2px 0 rgba(255, 255, 255, 0.8);
   }
 
+  /* 色の ついた ボタンの 中の ふりがな・ローマ字: ボタンの 白い 字に そろえ、太い ふち取りは 外す
+     （まだ 書いて いない かなの うすい 色・青い ローマ字の ままだと 濁って 読めない）。 */
+  :is(.g-btn-primary, .g-btn-accent, .g-btn-green, .g-btn-red, .g-btn-slate) :is(ruby.kana-unread, ruby.kanji-back) {
+    color: inherit;
+  }
+  :is(.g-btn-primary, .g-btn-accent, .g-btn-green, .g-btn-red, .g-btn-slate) rt {
+    color: rgba(255, 255, 255, 0.95);
+    font-family: inherit;
+    text-shadow: 0 1px 1px rgba(60, 30, 0, 0.55);
+  }
+  .g-btn-ghost rt {
+    text-shadow: none;
+  }
+
   .g-chip {
     display: inline-flex;
     align-items: center;
@@ -646,5 +673,28 @@
     animation-duration: 0.001ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.001ms !important;
+  }
+}
+
+/* -----------------------------------------------------------------------------
+   スマホを 横に した とき — 縦画面の ゲームなので「たてに して」と 出す。
+   タブレット・PC（横でも 高さが ある）は 横長の 画面で そのまま 遊べる。
+   --------------------------------------------------------------------------- */
+.rotate-hint {
+  display: none;
+}
+@media (orientation: landscape) and (max-height: 500px) {
+  .rotate-hint {
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 14px;
+    background: radial-gradient(ellipse at 50% 40%, #2c2a6b 0%, #141235 60%, #07061a 100%);
+    color: #ffe9c2;
+    text-align: center;
   }
 }

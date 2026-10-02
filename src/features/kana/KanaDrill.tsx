@@ -2,6 +2,9 @@ import { useCallback, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { NexmaxSays, TopBar } from '../../components/ui/Chrome';
 import { useCanvasSize } from '../../hooks/useCanvasSize';
+import { useCompactHeight } from '../../hooks/useCompactHeight';
+import { StarBurst } from '../../components/ui/StarBurst';
+import * as sfx from '../../lib/sfx';
 import { useGameStore } from '../../store/gameStore';
 import { KANA_LENIENCY, KANA_REPS, KANA_SAMPLE_REPS, ROMAJI } from '../../data/kana';
 import SignLight, { type SignLightHandle } from '../write/SignLight';
@@ -9,6 +12,7 @@ import { NightStreetBackdrop, SignStreet } from '../write/NightStreet';
 import { streetOf } from '../../lib/signStreet';
 import KanaText from './KanaText';
 import { useKnownKana } from './useKnownKana';
+import { useBgm } from '../../lib/bgm';
 
 /**
  * かな編の 書き取り (08 §3.4). Written on the empty signboards of ナニワタウン
@@ -31,7 +35,11 @@ interface KanaDrillProps {
 type Verdict = { pass: boolean; mistakes: number } | null;
 
 export const KanaDrill = ({ kana, onDone, onExit }: KanaDrillProps) => {
-  const size = useCanvasSize(300, 0.4, 72);
+  useBgm('write');
+  // A short screen (a phone browser's bars): the signs move up beside the
+  // kana and the page packs tighter, so nothing scrolls (see KanjiDrill).
+  const compact = useCompactHeight();
+  const size = useCanvasSize(300, compact ? 1 : 0.4, 88, compact ? 290 : 0);
   const slashRef = useRef<SignLightHandle>(null);
   const known = useKnownKana();
   const recordKanaRep = useGameStore((s) => s.recordKanaRep);
@@ -66,6 +74,7 @@ export const KanaDrill = ({ kana, onDone, onExit }: KanaDrillProps) => {
     setSampleOverride(null);
     setVerdict(null);
     if ((useGameStore.getState().kana[current] ?? 0) >= KANA_REPS) {
+      sfx.star(0);
       setReturned(current);
       return;
     }
@@ -97,14 +106,14 @@ export const KanaDrill = ({ kana, onDone, onExit }: KanaDrillProps) => {
   }
 
   return (
-    <div className="isolate relative flex min-h-dvh flex-col items-center pb-5">
+    <div className="isolate relative flex min-h-dvh flex-col items-center pb-[max(20px,env(safe-area-inset-bottom))]">
       <NightStreetBackdrop />
       <TopBar onBack={onExit} />
 
-      <div className="flex w-full max-w-md flex-1 flex-col gap-3 px-3 pt-3">
+      <div className={`flex w-full max-w-md flex-1 flex-col px-3 ${compact ? 'gap-2 pt-2' : 'gap-3 pt-3'}`}>
         <div className="flex items-end justify-between gap-2">
-          <div className="g-parchment flex flex-1 items-center gap-4 px-4 py-2.5">
-            <span className="text-[52px] leading-[1.2] font-black">{current}</span>
+          <div className={`g-parchment flex flex-1 items-center gap-4 px-4 ${compact ? 'py-1' : 'py-2.5'}`}>
+            <span className={`leading-[1.2] font-black ${compact ? 'text-[42px]' : 'text-[52px]'}`}>{current}</span>
             <div className="text-sm leading-relaxed">
               <p className="text-2xl font-black" style={{ color: '#1b63b0' }} lang="en">
                 {ROMAJI[current]}
@@ -114,11 +123,18 @@ export const KanaDrill = ({ kana, onDone, onExit }: KanaDrillProps) => {
               </p>
             </div>
           </div>
-          <NexmaxSays text="かくと ひかる！" size={70} />
+          {compact ? (
+            <div className="g-parchment flex shrink-0 items-center px-2 py-1.5">
+              <SignStreet small street={streetOf(reps, [KANA_REPS])} glyph={current} label={`${KANA_REPS} signs, ${Math.min(reps, KANA_REPS)} lit`} />
+            </div>
+          ) : (
+            <NexmaxSays text="かくと ひかる！" size={70} />
+          )}
         </div>
 
+        {/* Shifted left by half the side buttons' overhang (see KanjiDrill). */}
         <div
-          className="relative mx-auto flex items-center justify-center rounded-[22px] p-3"
+          className="relative -left-4 mx-auto flex items-center justify-center rounded-[22px] p-3"
           style={{
             background: 'linear-gradient(180deg, #c7964a 0%, #7a5220 100%)',
             border: '3px solid #4a3210',
@@ -171,7 +187,7 @@ export const KanaDrill = ({ kana, onDone, onExit }: KanaDrillProps) => {
 
         {/* One box that stays put (see KanjiDrill): no swap between two boxes. */}
         <div
-          className="g-parchment flex h-[64px] flex-col items-center justify-center px-4 text-center"
+          className={`g-parchment flex flex-col items-center justify-center px-4 text-center ${compact ? 'h-[56px]' : 'h-[64px]'}`}
           style={{ borderColor: verdict ? (verdict.pass ? 'var(--color-success)' : 'var(--color-danger)') : undefined }}
           aria-live="polite"
         >
@@ -196,13 +212,15 @@ export const KanaDrill = ({ kana, onDone, onExit }: KanaDrillProps) => {
           )}
         </div>
 
-        <div className="g-parchment mt-auto px-3 py-2.5">
-          <SignStreet
-            street={streetOf(reps, [KANA_REPS])}
-            glyph={current}
-            label={`${KANA_REPS} signs, ${Math.min(reps, KANA_REPS)} lit`}
-          />
-        </div>
+        {!compact && (
+          <div className="g-parchment mt-auto px-3 py-2.5">
+            <SignStreet
+              street={streetOf(reps, [KANA_REPS])}
+              glyph={current}
+              label={`${KANA_REPS} signs, ${Math.min(reps, KANA_REPS)} lit`}
+            />
+          </div>
+        )}
       </div>
 
       <AnimatePresence>
@@ -218,6 +236,10 @@ export const KanaDrill = ({ kana, onDone, onExit }: KanaDrillProps) => {
               animate={{ scale: 1, y: 0 }}
               className="g-parchment w-full max-w-sm px-6 py-6 text-center"
             >
+              {/* The letter came back: the same burst of stars as a kanji's ★. */}
+              <div className="relative">
+                <StarBurst />
+              </div>
               <motion.div
                 initial={{ rotate: -8, scale: 0.6 }}
                 animate={{ rotate: 0, scale: 1 }}

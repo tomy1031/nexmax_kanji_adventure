@@ -90,6 +90,23 @@ Rural pre-modern Japanese countryside. Match the look of the reference picture-b
 colored pencil on paper grain), but the setting is present-day Japan. Gentle, slightly nostalgic palette.
 Modern objects drawn simply and softly, never photo-real. No brand names, no readable screens.`,
 
+  // 文字が 消えた 町（ナニワタウン）: the look of the delivered title / battle / stage-select art.
+  // Reference works are never named here (constraints 2026-09-30).
+  BG_NANIWA: `Style: polished Japanese anime background art in exactly the look of the reference image:
+richly detailed, painterly, warm cinematic lighting with soft glow. Setting: Naniwa Town — a fictional
+riverside port town inspired by Osaka, with a gentle steampunk touch: brass fittings, pipes, gears and
+rivets, wood and leather details, glass-paned lanterns. Palette: deep indigo-violet sky and blue shadows
+against warm amber and orange lamplight. Every signboard, screen, board and tag is BLANK — an empty dark
+panel or frame — with no letters, numbers, symbols or logos anywhere. No real place names, no brands.`,
+
+  // The town's creatures, drawn like the delivered Mojikui (art-src/battle/04_敵_モジクイ.png).
+  CREATURE_NANIWA: `Output: 1024x1536 portrait PNG, one creature, full body, centered with a wide margin on every
+side, plain pure white (#FFFFFF) background, no ground, no shadow on the ground, no text, no logo.
+Style: polished Japanese anime game art in exactly the look of the reference creature: inky black-violet body
+with soft purple highlights, glowing amber eyes, scraps of cream-colored paper talismans with brush strokes on
+them (abstract strokes only — no real readable characters), curling wisps of black ink smoke. Mischievous and
+"cute-spooky", never gory, nothing that would scare a young child. Facing LEFT in three-quarter view.`,
+
   FG_LAYER: `Output: 1024x1536 portrait PNG with a FULLY TRANSPARENT background (alpha).
 Draw ONLY the foreground framing elements described below, hugging the bottom edge and the left and right edges,
 leaving the middle and the whole upper half completely empty and transparent.
@@ -101,6 +118,22 @@ upward through; the other half continues it seamlessly. Bird's-eye three-quarter
 Do NOT draw any road, path, trail, bridge line or route markers — the game draws its own winding road and
 stage stones on top. Leave a clear open strip down the middle third of the width for that road.
 No text, no labels, no people.`,
+
+  // ナニワタウンの ネクマックス: タイトル・ステージせんたくで 渡された つやの ある 絵と 同じ 姿。
+  NEXMAX_PAINTED: `Character: the small robot from the reference image, drawn exactly as there — polished Japanese anime
+game art with soft glossy shading and a clean dark outline. Anatomy (must match the reference): a rounded light
+sky-blue helmet head wider than tall with two round ear pods, a big white face-screen with two large black oval
+eyes with white highlights, small curved eyebrow marks, a small mouth; a sky-blue body with the navy double-peak
+"M" mark on the chest; segmented ball-joint arms with round mitten hands; short legs with rounded boots; a small
+brown leather satchel on a strap across his body. Cute, about 2 heads tall. Kid-friendly and warm.
+The navy chest mark must always be visible and unobstructed — never covered by the arms, the strap or the bag.
+Never: realistic rendering, extra fingers, readable letters, angry or scary face.`,
+
+  // ナニワタウンの 町の 人: public/img/chara/types の ロボットを そのまま、表情と しぐさだけ 変える。
+  FOLK_PAINTED: `Character: exactly the robot in the reference image — the same body shape, colors, antenna,
+accessories and outfit, the same glossy 3D-like Japanese anime game rendering with soft shading. Only the pose and
+the expression on the face-screen change, as described below. Kid-friendly, expressive and easy to read at a small
+size. No readable letters or numbers anywhere (any paper, card or tag is blank).`,
 
   ICON: `Output: 1024x1024 PNG. App icon for a kids' kanji learning game. Keep all important shapes inside the
 central 80% circle (the edges are cropped into a circle or rounded square on phones). Bold, simple, readable at 48px.
@@ -343,6 +376,143 @@ const BG = [
 ];
 
 // ---------------------------------------------------------------------------
+// 0章「はじまりの 空港」（08 §3.7）— ナニワタウンへ 向かう 前の 空港。
+// 1話の 展望デッキは 渡された 素材（public/img/stageselect/bg_tall.webp）を そのまま 使う。
+// ---------------------------------------------------------------------------
+
+const naniwa = (id, desc, used) => ({
+  id,
+  group: 'bg_naniwa',
+  prio: 'A',
+  out: `img/naniwa/${id}.webp`,
+  kind: 'bg',
+  bgmode: 'none',
+  refs: ['public/img/stageselect/bg_tall.webp'],
+  style: ['BG_COMMON', 'BG_NANIWA'],
+  diff: `Scene: ${desc}`,
+  used,
+  note: '絵本の 場面（scenes.ts の photo）として 使う',
+});
+
+const CREATURES = [
+  {
+    id: 'mojikui_kid',
+    group: 'enemy',
+    prio: 'A',
+    out: 'img/battle/mojikui_kid.webp',
+    kind: 'chara',
+    bgmode: 'white',
+    refs: ['art-src/battle/04_敵_モジクイ.png'],
+    style: ['CREATURE_NANIWA'],
+    diff: 'Creature: a YOUNG Mojikui, the letter-eater\'s little one — a small round blob of ink shadow about the size of a cat, big round glowing amber eyes and a cheeky grin, one crumpled paper talisman worn like a tiny hat, two or three small paper slips stuck to its body, short stubby ink tendrils, a few ink droplets floating around it. Clearly smaller, rounder and sillier than the reference, but obviously the same kind of creature.',
+    used: '1章 1話の あいて「モジクイの こども」（出会いの お話・たたかい）',
+    note: '白い 背景を import.mjs が 切り抜く',
+  },
+];
+
+const NANIWA = [
+  naniwa('naniwa_sky_garden', 'the rooftop garden of a grand airport terminal at sunset: in the middle an old cherry tree with bare branches (no blossoms, no leaves) in a round brass-edged planter, stone paving, brass railings and glass-paned lanterns, planters with small shrubs; a few small BLANK wooden signboards hang from the branches; beyond the railing the airport apron with parked jets and, far across the bay, a town skyline with a red Ferris wheel.', 'かな編 2話（屋上の 庭・顔の ない 桜の 木）'),
+  naniwa('naniwa_lounge', 'inside a quiet airport departure lounge at dusk: rows of brass-and-leather waiting seats, a huge arched window wall showing a jet at the gate under an orange sunset sky, warm hanging lanterns, on the left wall a board covered in small BLANK name tags (lost and found), a polished floor reflecting the light. Empty and slightly melancholic.', 'かな編 3話（待合・名前の ない 犬）'),
+  naniwa('naniwa_walkway', 'a long glass-roofed connecting walkway from the airport terminal toward the train station, at dusk, seen looking down its length: a moving walkway, simple arrow shapes on the floor (no letters), brass ribs holding the glass, hanging lanterns; through the glass on the right, the sea, a long bridge, and a town on a high hill across the bay with warm lights.', 'かな編 4話（駅への 連絡通路・黒い 煙）'),
+  naniwa('naniwa_runway_night', 'the airport apron and runway at night after every light has gone out: deep indigo sky with NO stars at all, dark silhouettes of parked jets and a control tower, rows of unlit runway lamps, only a faint warm glow from a few distant windows; calm dark ground in the foreground.', 'かな編 5話（灯りの 消えた 夜の 滑走路。星は お話で 戻る）'),
+  naniwa('naniwa_station', 'the airport train station platform in the early morning: a brass-and-glass steampunk station roof with gears and pipes, a sleek BLUE train waiting on one side and a RED train on the other, ticket machines and gates in the background whose screens and signs are all blank, soft dawn light from the open end of the platform, hanging lanterns.', 'かな編 6〜8話（空港の 駅・切符・青い 電車と 赤い 電車）'),
+  naniwa('naniwa_town_station', 'inside the main station of Naniwa Town on the morning the train arrives: a grand steampunk concourse with brass pillars, a glass roof and hanging lanterns; on the wall a huge station calendar board with a row of seven EMPTY dark panels, and above it a big round clock with no numerals (dots only); a blue train at a platform on one side. No people.', '1章 1話「きえた カレンダー」（町の 駅・空っぽの カレンダー）'),
+  naniwa('naniwa_station_square', 'the square in front of Naniwa Town station in the morning: a large town-map board in a brass frame showing only simple drawn shapes (a mountain, a river, rice fields — no letters at all), shopfronts with BLANK signboards, lanterns and a few street trees, and beyond the rooftops a green mountain rising behind the town. No people.', '1章 2話「山田さん」（駅前の 広場・町の 地図）'),
+  naniwa('naniwa_train', 'inside a blue commuter train crossing a long bridge over the bay at sunrise: rows of seats on both sides, brass handrails and hanging straps, big windows showing the sea and, straight ahead, a town on a high hill with a red Ferris wheel catching the morning light.', 'かな編 9話（海を わたる 青い 電車）'),
+  {
+    ...naniwa('naniwa_last_car', 'the last car of the blue commuter train on the bridge over the bay at sunset, the connecting door thrown open: inside, the whole car has become a swirling whirlpool of tiny glowing golden motes of light and blank cream paper slips spinning in a vortex between the brass handrails and hanging straps; at the center of the whirlpool the ink-shadow creature from the second reference image (black-violet ink smoke, glowing amber eyes, paper talismans) slurps a long ribbon of golden motes into its mouth like noodles; the windows on both sides show the sea glowing orange. Exciting but kid-friendly.', 'かな編 10話（最後の 車両・字の 渦）'),
+    refs: ['art-src/naniwa_train.png', 'art-src/battle/04_敵_モジクイ.png'],
+  },
+];
+
+// ---------------------------------------------------------------------------
+// ナニワタウンの ネクマックス — 新ルート（かな編・1章〜）の 立ち絵。むかし編の 平たい 絵（img/chara/cut）は そのまま。
+// ---------------------------------------------------------------------------
+
+const NX_PAINTED = 'art-src/titlesozai/01_ネクマックス_キャラクター.png';
+const nxPainted = (pose, diff, used) => ({
+  id: `nexmax_naniwa_${pose}`,
+  group: 'nexmax_naniwa',
+  prio: 'A',
+  out: `img/chara/naniwa/nexmax_${pose}.webp`,
+  kind: 'chara',
+  bgmode: 'white',
+  refs: [NX_PAINTED],
+  style: ['NEXMAX_PAINTED', 'CHARA_OUT'],
+  diff: `Pose and expression: ${diff}`,
+  used,
+  note: '白い 背景を import.mjs が 切り抜く',
+});
+
+const NEXMAX_NANIWA = [
+  nxPainted('normal', 'standing relaxed and friendly, arms loosely at his sides, a gentle smile, looking at the viewer.', 'ふだん'),
+  nxPainted('smile', 'overjoyed, both arms raised high in a cheer, eyes happily curved, mouth open in a big smile, a little hop.', 'よろこぶ・ほめる'),
+  nxPainted('think', 'worried and puzzled: one mitten hand at his chin, the other arm hugging his body, eyebrows tilted up anxiously, a small wobbly mouth, head slightly tilted.', 'こまる・かなしい・ふしぎ（「たすけて」「……😢」）'),
+  nxPainted('determined', 'determined and ready: leaning forward, both fists clenched in front of his chest (not covering the chest mark), brows set, a confident grin; the chest mark glowing with a warm amber light.', 'いそぐ・がんばる（「かく！」「いそいで！」）'),
+  nxPainted('guide', 'guiding: one arm stretched out pointing up and to the side with his mitten hand, the other hand on his hip, a cheerful encouraging smile, looking toward where he points.', 'あんない（「うえ！👆」「かいて！」）'),
+  nxPainted('hello', 'greeting: waving one hand high above his head, the other hand at his side, a bright friendly smile.', 'あいさつ'),
+];
+
+// ---------------------------------------------------------------------------
+// 町の 人の 表情 — 字が 消えて 困る 顔と、戻って よろこぶ 顔（2026-10-02「もっと 文字が なくて
+// みんな 困って いる 表情に したり 工夫が 欲しい」）。元の 絵は public/img/chara/types。
+// ---------------------------------------------------------------------------
+
+const folk = (id, type, diff, used) => ({
+  id: `folk_${id}`,
+  group: 'folk_naniwa',
+  prio: 'A',
+  out: `img/chara/naniwa/folk_${id}.webp`,
+  kind: 'chara',
+  bgmode: 'white',
+  refs: [`public/img/chara/types/${type}.webp`],
+  style: ['FOLK_PAINTED', 'CHARA_OUT'],
+  diff: `Pose and expression: ${diff}`,
+  used,
+  note: '白い 背景を import.mjs が 切り抜く',
+});
+
+const FOLK = [
+  folk('yamada_sad', 'ESFJ_f', 'worried and sad: both mitten hands pressed to her cheeks, eyes looking down with a small tear, a wobbly little frown; the flower on her head stays.', '1章 2話 山田さん（名前の 漢字が 消えた）'),
+  folk('yamada_happy', 'ESFJ_f', 'overjoyed: both hands clasped beside her cheek, eyes closed in a big happy smile, a few small sparkles around her.', '1章 2話 山田さん（名前が 戻った）'),
+  folk('girl_sad', 'ISFP_f', 'sad and worried: holding an empty red dog collar with a small blank tag in both hands against her chest, teary eyes, looking down.', 'かな編 3話 犬を さがす 女の子'),
+  folk('girl_happy', 'ISFP_f', 'overjoyed: hugging a small fluffy white puppy (a cute real dog) in her arms, eyes closed in a big smile.', 'かな編 3話 犬が 戻った 女の子'),
+  folk('kiosk_trouble', 'ISFJ_f', 'puzzled and troubled: holding her tray with a cup in one hand, scratching her head with the other, staring at a blank menu card in confusion, a sweat drop by her head.', 'かな編 7話 売店の 人（品書きが 消えた）'),
+  folk('kiosk_happy', 'ISFJ_f', 'cheerful: holding out two steaming mugs of cocoa toward the viewer with a big smile.', 'かな編 7話 売店の 人（ココア）'),
+  folk('staff_trouble', 'ISTJ', 'a troubled station clerk: staring at his blank clipboard with a confused frown, his other hand on top of his head, a sweat drop.', 'かな編 7・8話 駅員（切符の 機械が 読めない）'),
+  folk('announcer_trouble', 'ESTJ', 'confused: the megaphone lowered at his side, the other hand raised palm-up in a shrug, eyebrows raised, mouth open as if saying "huh?".', '1章 1話 駅の 案内係（きょうは 何曜日？）'),
+  folk('traveler_happy', 'ESTP', 'relieved and happy: one hand on his rolling suitcase, the other giving a thumbs-up, a big grin, eyes bright.', 'かな編 4話 旅行者（道が わかった）'),
+  folk('staff_happy', 'ISTJ', 'a relieved station clerk: holding his clipboard to his chest, the other hand raised in a cheerful salute, a big smile.', 'かな編 7・8話 駅員（切符が 出た・ゲートが 開いた）'),
+  folk('traveler_trouble', 'ESTP', 'a lost traveler: pulling a small rolling suitcase, looking around anxiously with one hand shading his eyes, a worried frown.', 'かな編 1話 空港の 旅行者（行き先が 読めない）'),
+];
+
+// ---------------------------------------------------------------------------
+// プロローグ — タイトルの すぐ あと。字が 生きる 国・灯る 町・字を 食べる 影・投げられる ネクマックス
+// （data/scripts/prologue.ts の visual ごとに 1枚）。ナニワタウンの 絵と 同じ 画風。
+// ---------------------------------------------------------------------------
+
+
+const MOJIKUI_REF = 'art-src/battle/04_敵_モジクイ.png';
+const prologue = (id, desc, refs) => ({
+  ...naniwa(id, desc, `プロローグ（PrologueScreen.tsx の ${id.replace('prologue_', '')}）`),
+  group: 'bg_prologue',
+  out: `img/prologue/${id}.webp`,
+  refs: refs ?? ['public/img/stageselect/bg_tall.webp'],
+  note: 'プロローグの 1枚絵。下 35% に 語りの 文字が 乗る',
+});
+
+const PROLOGUE_ART = [
+  prologue('prologue_sky', 'a vast deep indigo-violet night sky high above a calm sea, filled with hundreds of tiny warm golden motes of light drifting upward like fireflies or embers (only soft dots and small glowing curls — never shapes of letters), a thin crescent moon, soft violet clouds lit from below; at the very bottom, far away, a port town on a hill by the sea glowing with warm amber lights along the coast. Keep the upper two-thirds open and calm.'),
+  prologue('prologue_town', 'Naniwa Town at night seen from slightly above: a port town climbing a hill by the sea, packed with warm-glowing signboards, lanterns and lit windows — every signboard is a softly glowing BLANK panel of amber light; a station with a big round clock that has no numerals, a red Ferris wheel, steampunk brass rooftops, chimneys and pipes, tiny golden motes of light floating up from the signs, the bay reflecting all the lights. Lively, warm and magical.'),
+  prologue('prologue_guard', 'on a brass rooftop of the town at night, seen from behind and slightly to the side: the small sky-blue robot from the first reference image (glossy rounded helmet head with ear pods, a small brown backpack) stands bravely with his arms spread, facing an enormous creature of black-violet ink smoke that fills the sky in front of him — two huge glowing amber eyes, torn cream paper talismans with abstract brush strokes swirling around it (from the second reference). A warm light glows from the robot\'s chest and spills around him. The town below has gone dark, its signboards empty black holes.', [NX_PAINTED, MOJIKUI_REF]),
+  prologue('prologue_fall', 'night over the wide bay: a bright falling star with a long glowing golden tail streaks across the sky from a dark town on a hill (upper left) down toward the lights of a big airport on the far shore (lower right); in the bright head of the star, small but clearly visible, the sky-blue robot from the reference image curled up and tumbling. Calm sea reflecting the streak, a distant control tower and rows of runway lights.', [NX_PAINTED, 'public/img/stageselect/bg_night.webp']),
+];
+
+const PROLOGUE_EATEN = [
+  prologue('prologue_eaten', 'the SAME port town on the hill at night as in the first reference image, the same composition, but its lights have been eaten: every signboard is a dark empty hole, windows black, lanterns out, only cold blue moonlight; above the town looms an enormous creature of black-violet ink smoke (like the second reference, but huge) filling the upper sky, two huge glowing amber eyes, torn cream paper talismans with abstract brush strokes swirling into it, thin streams of tiny golden motes of light being pulled up into its wide mouth. Ominous but not gory — suitable for children.', ['art-src/prologue_town.png', MOJIKUI_REF]),
+];
+
+// ---------------------------------------------------------------------------
 // 地図 — 1枚の 縦長を 上下 2枚に 分けて 撮り、import.mjs が つなぐ
 // ---------------------------------------------------------------------------
 
@@ -378,15 +548,21 @@ const ICONS = [
     out: 'icon-512x512.png',
     kind: 'icon',
     bgmode: 'none',
-    refs: NX_REFS,
-    style: ['NEXMAX', 'ICON'],
-    diff: 'Content: NexMax\'s head and shoulders, big and centered, cheerful smile, a short wooden sword raised beside him, on a round sky-blue background with a soft white glow and a thin golden ring. (Override: the background is NOT white here — it is the sky-blue disc filling the square.)',
-    used: 'ホーム画面の アイコン（PWA）。vite.config.ts が icon-192x192.png と icon-512x512.png を 指して いるが、いま ファイルが 無い',
-    note: 'import.mjs が 512 と 192 の 2つを 書き出す',
+    refs: ['art-src/titlesozai/01_ネクマックス_キャラクター.png'],
+    style: ['ICON'],
+    diff: `Content: the robot from the reference image — exactly his look: glossy rounded light sky-blue helmet head
+with ear pods, a big white face-screen with two black oval eyes and a small happy open smile, the navy double-peak
+"M" mark on the chest — shown from the chest up, big and centered, cheerful, one mitten hand raised in a little wave.
+Style: polished Japanese anime game art like the reference, soft glossy shading, clean dark outline so he reads at 48px.
+Background: fills the whole square edge to edge — a deep indigo-violet night (#1b1f4a to #2c2a6b) with a large warm
+amber-orange glowing round lantern light behind his head like a halo, a thin brass gear ring around that glow,
+a few tiny warm sparkles. High contrast: the sky-blue robot pops against the indigo and amber.`,
+    used: 'ホーム画面の アイコン（PWA）・favicon・apple-touch-icon。vite.config.ts と index.html が 指す',
+    note: 'import.mjs が 512・192・180（apple-touch-icon）・48（favicon）を 書き出す',
   },
 ];
 
-export const ASSETS = [...NEXMAX, ...GENDAI, ...MUKASHI_FOLK, ...ENEMIES, ...BG, ...MAPS, ...ICONS];
+export const ASSETS = [...NEXMAX, ...GENDAI, ...MUKASHI_FOLK, ...ENEMIES, ...CREATURES, ...BG, ...NANIWA, ...NEXMAX_NANIWA, ...FOLK, ...PROLOGUE_ART, ...PROLOGUE_EATEN, ...MAPS, ...ICONS];
 
 export const GROUPS = {
   nexmax: 'ネクマックス（表情・ポーズ）',
@@ -395,6 +571,10 @@ export const GROUPS = {
   enemy: '敵（ステージの ボス）',
   bg_mukashi: '背景 — むかし編（と タイトル・メニュー）',
   bg_gendai: '背景 — 現代編',
+  bg_naniwa: '背景 — 0章「はじまりの 空港」（ナニワタウン）',
+  bg_prologue: 'プロローグの 1枚絵',
+  nexmax_naniwa: 'ナニワタウンの ネクマックス（新ルートの 立ち絵）',
+  folk_naniwa: '町の 人の 表情（困る・よろこぶ）',
   map: 'ステージ選択の 地図',
   icon: 'アプリの アイコン',
 };

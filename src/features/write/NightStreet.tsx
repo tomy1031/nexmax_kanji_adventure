@@ -28,8 +28,8 @@ export const NightStreetBackdrop = () => (
  * One street: a sign for every passing write on it, lit or still blank.
  * `glyph` is what a lit sign shows (the kanji with its reading, or the kana).
  */
-export const SignStreet = ({ street, glyph, label }: { street: Street; glyph: ReactNode; label: string }) => (
-  <div className="flex flex-wrap items-end justify-center gap-2" role="img" aria-label={label}>
+export const SignStreet = ({ street, glyph, label, small = false }: { street: Street; glyph: ReactNode; label: string; small?: boolean }) => (
+  <div className={`flex flex-wrap items-end justify-center ${small ? 'gap-1' : 'gap-2'}`} role="img" aria-label={label}>
     {Array.from({ length: street.size }, (_, i) => {
       const on = i < street.lit;
       return (
@@ -38,12 +38,12 @@ export const SignStreet = ({ street, glyph, label }: { street: Street; glyph: Re
           key={`${street.index}-${i}`}
           initial={false}
           animate={on ? { scale: [1.25, 1] } : { scale: 1 }}
-          className="flex w-11 flex-col items-center"
+          className={`flex flex-col items-center ${small ? 'w-8' : 'w-11'}`}
           style={{ willChange: 'transform' }}
         >
-          <span aria-hidden className="h-2 w-6 border-x-2 border-[#8a6128]" />
+          <span aria-hidden className={`border-x-2 border-[#8a6128] ${small ? 'h-1.5 w-4' : 'h-2 w-6'}`} />
           <span
-            className="flex aspect-[4/5] w-full items-center justify-center rounded-md border-2 text-[18px] leading-[1.5] font-black"
+            className={`flex aspect-[4/5] w-full items-center justify-center rounded-md border-2 leading-[1.5] font-black ${small ? 'text-[13px]' : 'text-[18px]'}`}
             style={{
               background: on
                 ? 'radial-gradient(circle at 50% 45%, #fff3d0 0%, #ffcf78 58%, #e0922e 100%)'

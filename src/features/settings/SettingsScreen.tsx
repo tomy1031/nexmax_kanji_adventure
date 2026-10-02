@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useSafeBack } from '../../lib/nav';
 import { Backdrop } from '../../components/ui/Backdrop';
+import { NightStreetBackdrop } from '../write/NightStreet';
 import { useNavigate } from 'react-router-dom';
 import { useGameStore } from '../../store/gameStore';
 import { RubyText } from '../../components/ui/Ruby';
@@ -8,6 +9,7 @@ import { RubyText } from '../../components/ui/Ruby';
 /** Settings, and the credits the asset licences require. */
 export const SettingsScreen = () => {
   const navigate = useNavigate();
+  const moji = useGameStore((st) => st.lastArc) === 'moji';
   const safeBack = useSafeBack();
   const settings = useGameStore((s) => s.settings);
   const setSetting = useGameStore((s) => s.setSetting);
@@ -23,6 +25,7 @@ export const SettingsScreen = () => {
       note: '漢字(かんじ)の 上(うえ)に 読(よ)みかたを 出(だ)します。',
     },
     { key: 'muted' as const, label: '音(おと)を 消(け)す', note: '' },
+    { key: 'bgmOff' as const, label: 'BGM（音楽(おんがく)）を 消(け)す', note: '効果音(こうかおん)は 鳴(な)ります。' },
     {
       key: 'reducedMotion' as const,
       label: '動(うご)きを 少(すく)なく する',
@@ -32,15 +35,19 @@ export const SettingsScreen = () => {
 
   return (
     <div className="g-stage min-h-dvh pb-8">
-      <Backdrop fixed />
+      {/* The world being played behind it: the night town on 文字が 消えた 町 (08 §3.8). */}
+      {moji ? <NightStreetBackdrop /> : <Backdrop fixed />}
       <header
-        className="g-header sticky top-0 z-20 flex items-center justify-between px-4 py-3"
+        className="g-header sticky top-0 z-20 flex items-center justify-between px-4 pt-[max(12px,env(safe-area-inset-top))] pb-3"
       >
         <button type="button" className="g-btn g-btn-accent !min-h-[38px] !gap-1 !px-3.5 text-sm" onClick={safeBack}>
           <span aria-hidden>◀</span>もどる
         </button>
         <h1 className="g-title text-base">せってい</h1>
-        <span className="w-16" />
+        {/* The title is the game's front door; ホーム everywhere else leads to the map (08 §3.8). */}
+        <button type="button" className="g-btn g-btn-ghost !min-h-[38px] !px-3 text-xs" onClick={() => navigate('/')}>
+          <RubyText showFurigana={showFurigana}>タイトルへ</RubyText>
+        </button>
       </header>
 
       <div className="mx-auto max-w-md px-4 pt-4">

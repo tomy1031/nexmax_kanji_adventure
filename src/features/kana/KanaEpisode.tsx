@@ -3,7 +3,9 @@ import { Navigate, useNavigate, useParams } from 'react-router-dom';
 import NovelScene from '../novel/NovelScene';
 import { preloadCharData } from '../../lib/strokeLoader';
 import { useGameStore } from '../../store/gameStore';
-import { KANA_EPISODES, getKanaEpisode } from '../../data/kana';
+import { getKanaEpisode } from '../../data/kana';
+import { afterEpisode } from '../../data/mojiFlow';
+import { PhaseDoors } from '../../components/ui/Doors';
 import { KANA_CAST, KANA_CAST_NAMELESS, KANA_SCRIPTS } from '../../data/scripts/kana';
 import KanaDrill from './KanaDrill';
 import KanaText from './KanaText';
@@ -11,12 +13,15 @@ import { useKnownKana } from './useKnownKana';
 import { revealKana } from '../../lib/kanaReveal';
 
 /**
- * かな編 1話ぶん: お話 → その話の かなを 書く → お話 (08 §3.4).
+ * かな編 1話ぶん: お話 → その話の かなを 書く → お話 (08 §3.4)。部分の 切り替えは 扉の 向こう（PhaseDoors, 08 §3.8）。
  * The lines are drawn with KanaText, so the kana written in the middle of
  * the episode have already lost their romaji by the closing scene.
  */
 
 type Phase = 'intro' | 'write' | 'outro';
+
+/** The English lines are the player's own thoughts: their plate says わたし (I). */
+const NARRATOR = 'わたし';
 
 const EpisodePlayer = ({ id }: { id: string }) => {
   const navigate = useNavigate();
@@ -44,6 +49,9 @@ const EpisodePlayer = ({ id }: { id: string }) => {
       ),
     [known],
   );
+  // Names and the Japanese of the English lines: readable, with romaji over
+  // the kana not written yet (only Nexmax's own speech is eaten to holes).
+  const renderPlain = useCallback((text: string) => <KanaText known={known}>{text}</KanaText>, [known]);
   // よみあげ: the Japanese lines, as far as they can be read. The English
   // lines are the player's own thoughts and are not read out.
   const speechFor = useCallback(
@@ -65,30 +73,49 @@ const EpisodePlayer = ({ id }: { id: string }) => {
 
   const finish = () => {
     clearStage(id);
-    const next = KANA_EPISODES.find((e) => e.order === ep.order + 1);
-    navigate(next ? `/map/moji?new=${next.id}` : '/map/moji?new=moji-1');
+    // 0章 runs on into 1章: after kana-10 comes the town's first episode (data/mojiFlow.ts).
+    const next = afterEpisode(id);
+    navigate(next ? `/map/moji?new=${next}` : '/map/moji');
   };
+  // A replay with every kana here already written goes from the story straight on.
+  const allKnown = ep.kana.every((k) => known.has(k));
 
-  switch (phase) {
-    case 'intro':
-      return (
-        <NovelScene
-          key="intro"
-          script={lines.intro}
-          cast={castFor('intro')}
-          chapter={chapter}
-          renderText={renderText}
-          speechFor={speechFor}
-          onFinish={() => setPhase('write')}
-        />
-      );
-    case 'write':
-      return <KanaDrill kana={ep.kana} onDone={() => setPhase('outro')} onExit={leave} />;
-    case 'outro':
-      return (
-        <NovelScene key="outro" script={lines.outro} cast={castFor('outro')} chapter={chapter} renderText={renderText} speechFor={speechFor} onFinish={finish} />
-      );
-  }
+  const view = (() => {
+    switch (phase) {
+      case 'intro':
+        return (
+          <NovelScene
+            key="intro"
+            script={lines.intro}
+            cast={castFor('intro')}
+            chapter={chapter}
+            renderText={renderText}
+            renderPlain={renderPlain}
+            narrator={NARRATOR}
+            speechFor={speechFor}
+            onFinish={() => setPhase(allKnown ? 'outro' : 'write')}
+          />
+        );
+      case 'write':
+        return <KanaDrill kana={ep.kana} onDone={() => setPhase('outro')} onExit={leave} />;
+      case 'outro':
+        return (
+          <NovelScene
+            key="outro"
+            script={lines.outro}
+            cast={castFor('outro')}
+            chapter={chapter}
+            renderText={renderText}
+            renderPlain={renderPlain}
+            narrator={NARRATOR}
+            speechFor={speechFor}
+            onFinish={finish}
+          />
+        );
+    }
+  })();
+
+  return <PhaseDoors phase={phase}>{view}</PhaseDoors>;
 };
 
 export const KanaEpisode = () => {
