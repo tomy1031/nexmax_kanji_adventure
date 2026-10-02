@@ -27,4 +27,5 @@ export const FIGHT_RULES: FightRule[] = [
     en: `Clean writes in a row build a COMBO, up to +${COMBO_CAP_PERCENT}%.`,
   },
   { icons: '💢', text: 'ミスが たまると こうげきされる', en: 'Let the slips pile up, and it strikes back.' },
+  { icons: '📖', text: 'ときどき 字(じ)が とんでくる。読(よ)みを えらぶ', en: 'Now and then it throws a letter: pick its reading.' },
 ];
