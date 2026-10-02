@@ -111,3 +111,20 @@ describe('ステージクリアの 得 (store)', () => {
     expect(merged.perfectStages).toEqual([]);
   });
 });
+
+describe('Hard の 得 (store)', () => {
+  it('records a Hard win once per stage', () => {
+    const s = useGameStore.getState();
+    expect(s.markHard('moji-1-1')).toBe(true);
+    expect(s.markHard('moji-1-1')).toBe(false);
+    expect(useGameStore.getState().hardStages).toEqual(['moji-1-1']);
+    expect(useGameStore.getState().perfectStages).toEqual([]);
+  });
+
+  it('reads a save from before Hard with no Hard win yet', () => {
+    const merge = useGameStore.persist.getOptions().merge!;
+    const merged = merge({ clearedStages: ['moji-1-1'], perfectStages: ['moji-1-1'] }, useGameStore.getState()) as ReturnType<typeof useGameStore.getState>;
+    expect(merged.hardStages).toEqual([]);
+    expect(merged.perfectStages).toEqual(['moji-1-1']);
+  });
+});

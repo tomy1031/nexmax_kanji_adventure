@@ -6,7 +6,8 @@
  *   B かんぺき — the first clear with no mistake (★3) pays once more and puts
  *     a 👑 on the episode's card.
  *   C くりかえし — a replay's experience (EXP_BOSS_REPEAT, capped per day).
- *   D Hard — the first Hard win pays and puts a 🔥 on the card (with Hard).
+ *   D Hard — the first Hard win pays and puts a 👹 on the card (lib/difficulty.ts;
+ *     not 🔥, which is the COMBO's and 火's).
  *
  * Gems are shown on the new route only once they have a use — the gacha
  * opens at 1章 4話 (08 §3.8「ジェムの もらった は 使い道が ない うちは 出さない」);

@@ -75,6 +75,8 @@ export interface GameState {
   clearedStages: string[];
   /** Stages cleared once with no mistake (★3): the かんぺき bonus is paid once (data/clearRewards.ts). */
   perfectStages: string[];
+  /** Stages won once in Hard (lib/difficulty.ts): its bonus is paid once. */
+  hardStages: string[];
   /** Nexmax individuals owned, by id. */
   individuals: string[];
   /** The individual currently deployed. */
@@ -140,6 +142,8 @@ export interface GameActions {
   clearStage: (stageId: string) => void;
   /** Records a かんぺき clear. True only the first time for that stage. */
   markPerfect: (stageId: string) => boolean;
+  /** Records a Hard win. True only the first time for that stage. */
+  markHard: (stageId: string) => boolean;
   addGems: (n: number) => void;
   spendGems: (n: number) => boolean;
   grantIndividual: (id: string) => boolean;
@@ -187,6 +191,7 @@ const initialState: GameState = {
   progress: {},
   clearedStages: [],
   perfectStages: [],
+  hardStages: [],
   individuals: [],
   activeIndividual: null,
   weapons: [],
@@ -311,6 +316,12 @@ export const useGameStore = create<GameState & GameActions>()(
       markPerfect: (stageId) => {
         if (get().perfectStages.includes(stageId)) return false;
         set((s) => ({ perfectStages: [...s.perfectStages, stageId] }));
+        return true;
+      },
+
+      markHard: (stageId) => {
+        if (get().hardStages.includes(stageId)) return false;
+        set((s) => ({ hardStages: [...s.hardStages, stageId] }));
         return true;
       },
 
