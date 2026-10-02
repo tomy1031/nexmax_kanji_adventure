@@ -408,6 +408,24 @@ const CREATURES = [
     used: '1章 1話の あいて「モジクイの こども」（出会いの お話・たたかい）',
     note: '白い 背景を import.mjs が 切り抜く',
   },
+
+  ...[
+    ['mojikui_clock', 'the Mojikui gnawing on a big round brass clock face held in its inky claws, clock hands sticking out of its grinning mouth, a few loose brass numerals-free dial pieces and gear crumbs floating around; same size and shape as the reference.', '1章 3話の あいて（時計を かじる モジクイ）'],
+    ['mojikui_gear', 'the Mojikui tangled in brass gears and springs, several small gears stuck in its inky body like armour, chewing a small blank metal number plate, a wrench-shaped tendril; same size and shape as the reference.', '1章 4話の あいて（歯車の モジクイ）'],
+    ['mojikui_price', 'the Mojikui covered in blank paper price tags on strings and a few gold coins stuck to it, stuffing a stack of blank price tags into its mouth, coins spilling; same size and shape as the reference.', '1章 5話の あいて（値札の モジクイ）'],
+  ].map(([id, diff, used]) => ({
+    id,
+    group: 'enemy',
+    prio: 'A',
+    out: `img/battle/${id}.webp`,
+    kind: 'chara',
+    bgmode: 'white',
+    refs: ['art-src/battle/04_敵_モジクイ.png'],
+    style: ['CREATURE_NANIWA'],
+    diff: `Creature: ${diff}`,
+    used,
+    note: '白い 背景を import.mjs が 切り抜く',
+  })),
 ];
 
 const NANIWA = [
@@ -418,6 +436,9 @@ const NANIWA = [
   naniwa('naniwa_station', 'the airport train station platform in the early morning: a brass-and-glass steampunk station roof with gears and pipes, a sleek BLUE train waiting on one side and a RED train on the other, ticket machines and gates in the background whose screens and signs are all blank, soft dawn light from the open end of the platform, hanging lanterns.', 'かな編 6〜8話（空港の 駅・切符・青い 電車と 赤い 電車）'),
   naniwa('naniwa_town_station', 'inside the main station of Naniwa Town on the morning the train arrives: a grand steampunk concourse with brass pillars, a glass roof and hanging lanterns; on the wall a huge station calendar board with a row of seven EMPTY dark panels, and above it a big round clock with no numerals (dots only); a blue train at a platform on one side. No people.', '1章 1話「きえた カレンダー」（町の 駅・空っぽの カレンダー）'),
   naniwa('naniwa_station_square', 'the square in front of Naniwa Town station in the morning: a large town-map board in a brass frame showing only simple drawn shapes (a mountain, a river, rice fields — no letters at all), shopfronts with BLANK signboards, lanterns and a few street trees, and beyond the rooftops a green mountain rising behind the town. No people.', '1章 2話「山田さん」（駅前の 広場・町の 地図）'),
+  naniwa('naniwa_ropeway', 'a ropeway (aerial tramway) station at the foot of the green mountain behind the town, in the golden afternoon: a steampunk brass-and-glass station hall with a huge cable wheel and gears, a red gondola stopped on the cable at the platform, the cable climbing up the mountain behind; on the back wall a large timetable board with a single row of FIVE EMPTY dark rectangular panels side by side (their numbers eaten), a big round clock with no numerals above it; lanterns, a ticket window with a blank sign. No people.', '1章 3話「山の ロープウェー」（時刻表の 一〜五が 消えた）'),
+  naniwa('naniwa_factory', 'inside a robot workshop-factory on the mountain top at dusk: brass gears, pipes, chains and conveyor belts, warm lamps; a long workbench where a row of small round friendly robots sit slumped asleep with their eyes closed (no faces drawn on screens, just closed-eye lines), tools lying still, a big stopped gear wall; large windows showing the town far below and the sea. Quiet and still, as if everything has stopped.', '1章 4話「なかまの ロボット」（番号を 食べられて 眠った ロボット）'),
+  naniwa('naniwa_market', 'a covered market street at the foot of the mountain in the evening: rows of stalls under striped awnings with fruit, vegetables, fish, bread and small toys, steampunk brass lanterns and hanging bulbs, a big blank signboard over the street; every price tag and card on the goods is BLANK (small empty white cards). No people. Warm, lively colours but oddly quiet.', '1章 5話「いくらですか」（値札が 消えた 市場）'),
   naniwa('naniwa_train', 'inside a blue commuter train crossing a long bridge over the bay at sunrise: rows of seats on both sides, brass handrails and hanging straps, big windows showing the sea and, straight ahead, a town on a high hill with a red Ferris wheel catching the morning light.', 'かな編 9話（海を わたる 青い 電車）'),
   {
     ...naniwa('naniwa_last_car', 'the last car of the blue commuter train on the bridge over the bay at sunset, the connecting door thrown open: inside, the whole car has become a swirling whirlpool of tiny glowing golden motes of light and blank cream paper slips spinning in a vortex between the brass handrails and hanging straps; at the center of the whirlpool the ink-shadow creature from the second reference image (black-violet ink smoke, glowing amber eyes, paper talismans) slurps a long ribbon of golden motes into its mouth like noodles; the windows on both sides show the sea glowing orange. Exciting but kid-friendly.', 'かな編 10話（最後の 車両・字の 渦）'),
@@ -481,6 +502,12 @@ const FOLK = [
   folk('kiosk_happy', 'ISFJ_f', 'cheerful: holding out two steaming mugs of cocoa toward the viewer with a big smile.', 'かな編 7話 売店の 人（ココア）'),
   folk('staff_trouble', 'ISTJ', 'a troubled station clerk: staring at his blank clipboard with a confused frown, his other hand on top of his head, a sweat drop.', 'かな編 7・8話 駅員（切符の 機械が 読めない）'),
   folk('announcer_trouble', 'ESTJ', 'confused: the megaphone lowered at his side, the other hand raised palm-up in a shrug, eyebrows raised, mouth open as if saying "huh?".', '1章 1話 駅の 案内係（きょうは 何曜日？）'),
+  folk('ropeway_trouble', 'ISTP', 'a troubled ropeway mechanic: wrench in one hand, scratching his head with the other, looking at a blank timetable card with a worried frown, a sweat drop.', '1章 3話 ロープウェーの 係（時刻表が 読めない）'),
+  folk('ropeway_happy', 'ISTP', 'a happy ropeway mechanic: holding out a small stamp card (blank squares, no letters) toward the viewer with a big smile, wrench in the other hand raised.', '1章 3話 ロープウェーの 係（スタンプカードを くれる）'),
+  folk('worker_sleep', 'ISTJ', 'fast asleep sitting slumped: eyes closed as two curved lines, head drooping, clipboard slipping from his hands, a small "z" bubble shape (no letters, just a curl).', '1章 4話 眠った 工場の ロボット'),
+  folk('worker_awake', 'ISTJ', 'just woken up and delighted: standing straight, one hand saluting, clipboard under the other arm, bright eyes, a big smile, a few sparkles.', '1章 4話 起きた ロボット（なかまに なる）'),
+  folk('vendor_trouble', 'ESFP', 'a troubled market vendor: holding up a blank price tag in one hand and an apple in the other, puzzled, mouth open as if saying "how much?", a sweat drop.', '1章 5話 市場の 店の 人（値札が 読めない）'),
+  folk('vendor_happy', 'ESFP', 'a happy market vendor: holding a basket of fruit and a gold coin, winking with a big smile, confetti sparkles.', '1章 5話 市場の 店の 人（値札が 戻った）'),
   folk('traveler_happy', 'ESTP', 'relieved and happy: one hand on his rolling suitcase, the other giving a thumbs-up, a big grin, eyes bright.', 'かな編 4話 旅行者（道が わかった）'),
   folk('staff_happy', 'ISTJ', 'a relieved station clerk: holding his clipboard to his chest, the other hand raised in a cheerful salute, a big smile.', 'かな編 7・8話 駅員（切符が 出た・ゲートが 開いた）'),
   folk('traveler_trouble', 'ESTP', 'a lost traveler: pulling a small rolling suitcase, looking around anxiously with one hand shading his eyes, a worried frown.', 'かな編 1話 空港の 旅行者（行き先が 読めない）'),

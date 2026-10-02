@@ -33,6 +33,9 @@ export const MOJI1_CAST: CastMember[] = [
   },
   { id: 'mojikui_kid', name: 'モジクイの こども', color: '#7b4bb3', sprites: { normal: 'img/battle/mojikui_kid.webp' } },
   { id: 'mojikui', name: 'モジクイ', color: '#5a2d8c', sprites: { normal: 'img/battle/mojikui.webp' } },
+  { id: 'mojikui_clock', name: 'とけいの モジクイ', color: '#5a2d8c', sprites: { normal: 'img/battle/mojikui_clock.webp' } },
+  { id: 'mojikui_gear', name: 'はぐるまの モジクイ', color: '#5a2d8c', sprites: { normal: 'img/battle/mojikui_gear.webp' } },
+  { id: 'mojikui_price', name: 'ねふだの モジクイ', color: '#5a2d8c', sprites: { normal: 'img/battle/mojikui_price.webp' } },
   ...NANIWA_FOLK,
 ];
 
@@ -138,6 +141,117 @@ export const MOJI1_SCRIPTS: Record<string, EpisodeScript> = {
         { speaker: 'nexmax', glyph: '⭐⭐⭐ 🙅 😋', text: '⭐⭐⭐の 字(じ)は、モジクイも たべません。', en: 'Not even the Mojikui can eat a ★★★ letter — it is written too firmly.' },
         { speaker: 'nexmax', glyph: '火(ひ) ＋ 山(やま) → 🔨 → 🌋', text: '⭐⭐⭐の 字(じ)を ふたつ。🔨 ぶきです！', en: 'Two ★★★ letters, hammered together here, make a weapon.' },
         { speaker: 'nexmax', sprite: 'nexmax:determined', text: 'もっと かきましょう。それから、山(やま)へ いきましょう！ ⛰️', en: "Let's write more — then on to the mountain!" },
+      ],
+    },
+  },
+  // 1章 3〜5話（09 §1.2）: 数と お金。2話で モジクイは 山へ 逃げた → ロープウェーで 山の うえの 工場 → ふもとの 市場。
+  // 文型は 4〜5課（いま なんじですか・〜へ いきます・いくらですか）。開く もの（毎日の やること・なかま・図鑑）は お話で 知らせる。
+  'moji-1-3': {
+    intro: {
+      stageId: 'moji-1-3',
+      lines: [
+        { bg: 'naniwa_ropeway', text: '山(やま)の ふもとの ロープウェーの えきです。', en: 'The ropeway station at the foot of the mountain.' },
+        { speaker: 'nexmax', sprite: 'nexmax:guide', glyph: '🚡 ⛰️', text: 'これで 山(やま)へ いきます。', en: 'We take this up the mountain — after the Mojikui.' },
+        { glyph: '🕐 ❓', text: 'じこくひょうの すうじが、ありません。', en: 'The numbers on the timetable are gone.' },
+        { speaker: 'ropeway', sprite: 'ropeway:trouble', text: 'いま なんじですか？ ロープウェーが うごきません……😰', en: "What time is it now? The ropeway won't move…" },
+        { text: '一(いち)、二(に)、三(さん)、四(よん)、五(ご)……おとだけ、のこって います。', en: 'Only the sounds are left: ichi, ni, san, yon, go.' },
+        { glyph: '🕐 🦷', text: '……ガリガリ。なにかが とけいを かじって います。', en: 'Crunch, crunch. Something is gnawing on the clock.' },
+        { speaker: 'nexmax', sprite: 'nexmax:think', text: 'すうじが ない。🪧🪧🪧🪧🪧', en: 'No numbers. Five empty signs.' },
+        { speaker: 'nexmax', sprite: 'nexmax:guide', text: '✍️💡🪧 かきます！', en: "Let's write!" },
+      ],
+    },
+    encounter: {
+      stageId: 'moji-1-3',
+      lines: [
+        { bg: 'naniwa_ropeway', glyph: '一(いち) 二(に) 三(さん) 四(よん) 五(ご)', text: 'じこくひょうが ひかります。💡', en: 'The timetable lights up.' },
+        { fx: ['darkclouds'], speaker: 'mojikui_clock', sprite: 'mojikui_clock:normal', text: 'とけいの すうじ、おいしい！ もっと たべます！ 😋', en: 'Clock numbers are delicious! I want more!' },
+        { speaker: 'nexmax', sprite: 'nexmax:determined', text: 'とけいを かじる モジクイです！', en: 'The Mojikui that gnaws on clocks!' },
+        { speaker: 'ropeway', sprite: 'ropeway:trouble', text: 'とけいが……！ 😱', en: 'The clock…!' },
+        { speaker: 'nexmax', sprite: 'nexmax:guide', glyph: '✍️ → 💡 → 🤖', text: 'あなたは かきます。ぼくが たたかいます！', en: "You write. I'll fight!" },
+      ],
+    },
+    outro: {
+      stageId: 'moji-1-3',
+      lines: [
+        { bg: 'naniwa_ropeway', fx: ['darkclouds'], sprite: 'mojikui_clock:normal', glyph: '⛰️ 💨', text: 'モジクイは 山(やま)の うえへ にげました。', en: 'The Mojikui fled up the mountain.' },
+        { fx: ['spring'], glyph: '一(いち) 二(に) 三(さん) 四(よん) 五(ご)', text: 'じこくひょうに すうじが もどりました！', en: 'The numbers came back to the timetable!' },
+        { speaker: 'ropeway', sprite: 'ropeway:happy', glyph: '🕒 🚡', text: 'いま 三(さん)じです。ロープウェーが うごきます！', en: "It's three o'clock now. The ropeway runs again!" },
+        { speaker: 'nexmax', sprite: 'nexmax:smile', glyph: '1️⃣ 2️⃣ 3️⃣ 4️⃣ 5️⃣', text: '一(いち)、二(に)、三(さん)、四(よん)、五(ご)！', en: 'One, two, three, four, five!' },
+        { speaker: 'ropeway', sprite: 'ropeway:happy', glyph: '🎫 ✅⬜⬜⬜⬜', text: 'これを どうぞ。まいにち きて くださいね。', en: 'Here is a stamp card. Please come every day!' },
+        { speaker: 'nexmax', sprite: 'nexmax:guide', glyph: '📅 ✍️ → 🎫 → 💎', text: 'まいにち かくと、スタンプと ほうせきが もらえます。', en: 'Write every day and you get a stamp — and gems. Daily tasks are open!' },
+        { speaker: 'nexmax', sprite: 'nexmax:determined', glyph: '🚡 ⛰️', text: 'ロープウェーで 山(やま)の うえへ いきましょう！', en: "Let's ride the ropeway up the mountain!" },
+      ],
+    },
+  },
+  'moji-1-4': {
+    intro: {
+      stageId: 'moji-1-4',
+      lines: [
+        { bg: 'naniwa_factory', text: '山(やま)の うえの こうばです。', en: 'A workshop on the mountain top.' },
+        { glyph: '🤖💤 🤖💤 🤖💤', text: 'ロボットたちが ねむって います。', en: 'The robots are all asleep.' },
+        { speaker: 'worker', sprite: 'worker:sleep', text: '……ぼくの ばんごうが……ない……💤', en: "…My number… it's gone… (he talks in his sleep)" },
+        { text: '六(ろく)、七(なな)、八(はち)、九(きゅう)、十(じゅう)……おとだけ、のこって います。', en: 'Only the sounds are left: roku, nana, hachi, kyuu, juu.' },
+        { speaker: 'nexmax', sprite: 'nexmax:think', glyph: '🔢 ❌ → 🤖💤', text: 'ばんごうが ないと、ロボットは おきません。', en: "Without their numbers, robots don't wake up." },
+        { glyph: '⚙️ 👀', text: '……ギシ、ギシ。はぐるまの うしろに、かげが……。', en: 'Creak, creak. Behind the gears, a shadow…' },
+        { speaker: 'nexmax', sprite: 'nexmax:guide', text: '✍️💡🪧 かきます！', en: "Let's write!" },
+      ],
+    },
+    encounter: {
+      stageId: 'moji-1-4',
+      lines: [
+        { bg: 'naniwa_factory', glyph: '六(ろく) 七(なな) 八(はち) 九(きゅう) 十(じゅう)', text: 'ばんごうが ひかります。💡', en: 'The numbers light up.' },
+        { fx: ['darkclouds'], speaker: 'mojikui_gear', sprite: 'mojikui_gear:normal', text: 'ばんごうも はぐるまも、ぜんぶ わたしの もの！ 😈', en: 'Numbers and gears — all mine!' },
+        { speaker: 'nexmax', sprite: 'nexmax:determined', text: 'はぐるまの モジクイです！', en: 'The gear Mojikui!' },
+        { speaker: 'nexmax', sprite: 'nexmax:guide', glyph: '✍️ → 💡 → 🤖', text: 'あなたは かきます。ぼくが たたかいます！', en: "You write. I'll fight!" },
+      ],
+    },
+    outro: {
+      stageId: 'moji-1-4',
+      lines: [
+        { bg: 'naniwa_factory', fx: ['darkclouds'], sprite: 'mojikui_gear:normal', glyph: '⬇️ 💨', text: 'モジクイは 山(やま)の したへ にげました。', en: 'The Mojikui fled down the mountain.' },
+        { fx: ['spring'], glyph: '🤖✨ 🤖✨ 🤖✨', text: 'ロボットたちが おきました！', en: 'The robots woke up!' },
+        { speaker: 'worker', sprite: 'worker:awake', text: 'おはようございます！ ぼくは 七(なな)ばんです。', en: "Good morning! I'm Number Seven." },
+        { speaker: 'nexmax', sprite: 'nexmax:smile', text: 'ぼくは ネクマックスです。', en: "I'm Nexmax." },
+        { speaker: 'worker', sprite: 'worker:awake', glyph: '🤖 ＋ 🤖', text: 'いっしょに いきます！ まじめに はたらきます！', en: "I'll come with you! I'll work hard!" },
+        { glyph: '🤝 ✨', text: '七(なな)ばんが、なかまに なりました！', en: 'Number Seven joined you!' },
+        { speaker: 'nexmax', sprite: 'nexmax:guide', glyph: '💎 → 🤖❓', text: 'ほうせきで、ほかの なかまも よべます。', en: 'With gems, you can call other companions too.' },
+        { speaker: 'nexmax', sprite: 'nexmax:determined', glyph: '⬇️ 🏮', text: 'モジクイは ふもとの いちばへ。いきましょう！', en: "The Mojikui went to the market at the foot of the mountain. Let's go!" },
+      ],
+    },
+  },
+  'moji-1-5': {
+    intro: {
+      stageId: 'moji-1-5',
+      lines: [
+        { bg: 'naniwa_market', text: '山(やま)の ふもとの いちばです。', en: 'The market at the foot of the mountain.' },
+        { glyph: '🏷️ ❓', text: 'ねふだの じが、ありません。', en: 'The letters on the price tags are gone.' },
+        { speaker: 'vendor', sprite: 'vendor:trouble', text: 'いくらですか？ わたしも わかりません……💦', en: "How much is it? Even I don't know…" },
+        { speaker: 'nexmax', sprite: 'nexmax:think', glyph: '🍎 ❓ 🪙', text: 'これは いくらですか？', en: 'How much is this?' },
+        { text: '百(ひゃく)、千(せん)、万(まん)、円(えん)……おとだけ、のこって います。', en: 'Only the sounds are left: hyaku, sen, man, en.' },
+        { glyph: '🏷️ 👀', text: '……ムシャ、ムシャ。ねふだを たべる かげが……。', en: 'Munch, munch. A shadow is eating the price tags…' },
+        { speaker: 'nexmax', sprite: 'nexmax:guide', text: '✍️💡🪧 かきます！', en: "Let's write!" },
+      ],
+    },
+    encounter: {
+      stageId: 'moji-1-5',
+      lines: [
+        { bg: 'naniwa_market', glyph: '百(ひゃく) 千(せん) 万(まん) 円(えん)', text: 'ねふだが ひかります。💡', en: 'The price tags light up.' },
+        { fx: ['darkclouds'], speaker: 'mojikui_price', sprite: 'mojikui_price:normal', text: 'ねふだは ただ！ ぜんぶ たべます！ 😋', en: "Price tags are free! I'll eat them all!" },
+        { speaker: 'nexmax', sprite: 'nexmax:determined', text: 'ねふだの モジクイです！', en: 'The price-tag Mojikui!' },
+        { speaker: 'vendor', sprite: 'vendor:trouble', text: 'やめて ください！ 😱', en: 'Please stop!' },
+        { speaker: 'nexmax', sprite: 'nexmax:guide', glyph: '✍️ → 💡 → 🤖', text: 'あなたは かきます。ぼくが たたかいます！', en: "You write. I'll fight!" },
+      ],
+    },
+    outro: {
+      stageId: 'moji-1-5',
+      lines: [
+        { bg: 'naniwa_market', fx: ['darkclouds'], sprite: 'mojikui_price:normal', glyph: '🌉 💨', text: 'モジクイは つぎの まちへ にげました。', en: 'The Mojikui fled to the next district.' },
+        { fx: ['spring'], glyph: '百(ひゃく) 千(せん) 万(まん) 円(えん)', text: 'ねふだが もどりました！', en: 'The price tags came back!' },
+        { speaker: 'vendor', sprite: 'vendor:happy', glyph: '🍎 = 百(ひゃく)円(えん)', text: 'りんごは 百(ひゃく)円(えん)です！', en: 'Apples are 100 yen!' },
+        { speaker: 'nexmax', sprite: 'nexmax:smile', text: 'いくらですか？ ……百(ひゃく)円(えん)！ よめました！ 🙆‍♂️', en: 'How much? …100 yen! I can read it!' },
+        { speaker: 'vendor', sprite: 'vendor:happy', glyph: '📖 🔨 🤖', text: 'つくった ぶきと なかまは、ずかんに ならべて みられますよ。', en: 'You can line up the weapons you made and your companions in the picture book.' },
+        { speaker: 'nexmax', sprite: 'nexmax:guide', glyph: '📖 ✨', text: 'ずかんで、ぶきと なかまが みられます！', en: 'The collection is open: weapons and companions!' },
+        { speaker: 'nexmax', sprite: 'nexmax:determined', glyph: '🌉 👉', text: 'モジクイを おいかけましょう！', en: "Let's chase the Mojikui!" },
       ],
     },
   },

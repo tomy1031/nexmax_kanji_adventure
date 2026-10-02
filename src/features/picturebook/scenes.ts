@@ -633,7 +633,7 @@ const meadow: SceneDef = {
  * two even rows inside the central 80% — for the scenes whose painting has no
  * empty sign of its own (かな編). Placed above where the characters stand.
  */
-const boardRows = (chars: string, image: readonly [number, number] = [800, 1440], top = 260): SceneSignSet => {
+const boardRows = (chars: string | readonly string[], image: readonly [number, number] = [800, 1440], top = 260): SceneSignSet => {
   const list = [...chars];
   const rows = Math.ceil(list.length / 6);
   const per = Math.ceil(list.length / rows);
@@ -685,6 +685,10 @@ export const PHOTO_SCENES: Record<string, SceneDef> = {
   naniwa_station_platform: photoScene('img/naniwa/naniwa_station.webp', boardRows('ナニヌネノハヒフヘホ')),
   naniwa_train: photoScene('img/naniwa/naniwa_train.webp', boardRows('マミムメモヤユヨ')),
   naniwa_last_car: photoScene('img/naniwa/naniwa_last_car.webp', boardRows('ラリルレロワヲン')),
+  // 1章 3〜5話: ロープウェーの 時刻表・工場の ロボットの 番号・市場の 値札。
+  naniwa_ropeway: photoScene('img/naniwa/naniwa_ropeway.webp', boardRows([...'一二三四五'])),
+  naniwa_factory: photoScene('img/naniwa/naniwa_factory.webp', boardRows([...'六七八九十'])),
+  naniwa_market: photoScene('img/naniwa/naniwa_market.webp', boardRows([...'百千万円'], [800, 1440], 330)),
   // 1章: ナニワタウン
   naniwa_town: photoScene('img/title/bg.webp'),
   // 1章1話: the station calendar's seven empty panels, 日 月 火 水 木 金 土 (measured on the picture).
