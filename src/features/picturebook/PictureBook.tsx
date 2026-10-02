@@ -7,7 +7,7 @@ import { layerId } from './layerId';
 import { RENDERED } from './rendered.generated';
 import { assetPath } from '../../lib/assetPath';
 import SceneSigns from './SceneSigns';
-import { signPageY } from './hasSign';
+import { signPageX, signPageY } from './hasSign';
 
 /**
  * 動く 絵本 — the animated picture book.
@@ -44,7 +44,7 @@ const urlOf = (svg: string) => {
 /** Size of a page that covers the box, keeping the page's aspect ratio. */
 const useCoverSize = () => {
   const ref = useRef<HTMLDivElement>(null);
-  const [size, setSize] = useState({ w: PAGE_W, h: PAGE_H, boxH: PAGE_H });
+  const [size, setSize] = useState({ w: PAGE_W, h: PAGE_H, boxW: PAGE_W, boxH: PAGE_H });
 
   useEffect(() => {
     const el = ref.current;
@@ -52,7 +52,7 @@ const useCoverSize = () => {
     const measure = () => {
       const { width, height } = el.getBoundingClientRect();
       const k = Math.max(width / PAGE_W, height / PAGE_H);
-      setSize({ w: Math.ceil(PAGE_W * k), h: Math.ceil(PAGE_H * k), boxH: height });
+      setSize({ w: Math.ceil(PAGE_W * k), h: Math.ceil(PAGE_H * k), boxW: width, boxH: height });
     };
     measure();
     const ro = new ResizeObserver(measure);
@@ -126,6 +126,7 @@ export const PictureBook = ({ scene, fx = [], className, children, still: holdSt
    * part of the screen instead of off it — the signs are the story there.
    */
   const pageY = useMemo(() => signPageY(def.signs, size.h, size.boxH), [def, size]);
+  const pageX = useMemo(() => signPageX(def.signs, size.w, size.boxW), [def, size]);
 
   const fxLayers = useMemo(
     () => fx.flatMap((name) => def.fx[name] ?? []),
@@ -137,8 +138,8 @@ export const PictureBook = ({ scene, fx = [], className, children, still: holdSt
       <AnimatePresence initial={false}>
         <motion.div
           key={scene}
-          className={`absolute left-1/2 ${pageY == null ? 'top-1/2' : 'top-0'}`}
-          style={{ width: size.w, height: size.h, x: '-50%', y: pageY == null ? '-50%' : pageY }}
+          className={`absolute ${pageX == null ? 'left-1/2' : 'left-0'} ${pageY == null ? 'top-1/2' : 'top-0'}`}
+          style={{ width: size.w, height: size.h, x: pageX == null ? '-50%' : pageX, y: pageY == null ? '-50%' : pageY }}
           initial={{ opacity: 0, scale: 1.03 }}
           animate={{ opacity: 1, scale: 1 }}
           exit={{ opacity: 0 }}

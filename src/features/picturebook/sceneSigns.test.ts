@@ -45,3 +45,21 @@ describe('scene signs (2026-10-02「書く ことで 町の 景色が 変わる�
     }
   });
 });
+
+describe('signs stay on screen', () => {
+  it('slide a tall page sideways so every sign of the station calendar fits a narrow phone', async () => {
+    const { signPageX } = await import('./hasSign');
+    const signs = SCENES.naniwa_town_station.signs!;
+    // 390×844: the page covers the box at 1.172×, 469 px wide.
+    const pageW = 469;
+    const boxW = 390;
+    const x = signPageX(signs, pageW, boxW)!;
+    const k = pageW / signs.image[0];
+    for (const s of signs.spots) {
+      expect(x + s.x * k, s.char).toBeGreaterThanOrEqual(0);
+      expect(x + (s.x + s.w) * k, s.char).toBeLessThanOrEqual(boxW + 0.5);
+    }
+    // Not cut sideways: nothing to slide.
+    expect(signPageX(signs, 375, 375)).toBeNull();
+  });
+});
