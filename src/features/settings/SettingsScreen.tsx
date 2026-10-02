@@ -6,7 +6,14 @@ import { useNavigate } from 'react-router-dom';
 import { useGameStore } from '../../store/gameStore';
 import { RubyText } from '../../components/ui/Ruby';
 
-/** Settings, and the credits the asset licences require. */
+/**
+ * Settings, and the credits the asset licences require.
+ *
+ * Every row also carries a picture and a short English line: this is the
+ * screen a player who cannot read Japanese yet opens to make the game
+ * readable, and the one place where a wrong tap (データを 消す) cannot be
+ * taken back. The story keeps English behind EN; the controls do not.
+ */
 export const SettingsScreen = () => {
   const navigate = useNavigate();
   const moji = useGameStore((st) => st.lastArc) === 'moji';
@@ -21,17 +28,32 @@ export const SettingsScreen = () => {
   const toggles = [
     {
       key: 'furigana' as const,
+      icon: 'あ',
       label: 'ふりがなを 出(だ)す',
       note: '漢字(かんじ)の 上(うえ)に 読(よ)みかたを 出(だ)します。',
+      en: 'Show the reading above each kanji.',
     },
-    { key: 'muted' as const, label: '音(おと)を 消(け)す', note: '' },
-    { key: 'bgmOff' as const, label: 'BGM（音楽(おんがく)）を 消(け)す', note: '効果音(こうかおん)は 鳴(な)ります。' },
+    { key: 'muted' as const, icon: '🔇', label: '音(おと)を 消(け)す', note: '', en: 'Mute all sound.' },
+    {
+      key: 'bgmOff' as const,
+      icon: '🎵',
+      label: 'BGM（音楽(おんがく)）を 消(け)す',
+      note: '効果音(こうかおん)は 鳴(な)ります。',
+      en: 'Turn the music off (sound effects stay).',
+    },
     {
       key: 'reducedMotion' as const,
+      icon: '🌀',
       label: '動(うご)きを 少(すく)なく する',
       note: '画面(がめん)の 動(うご)きが 気(き)に なる ときに。',
+      en: 'Less movement on screen.',
     },
   ];
+  const en = (text: string) => (
+    <span lang="en" className="block text-[11px] leading-snug" style={{ color: 'var(--ink-2)' }}>
+      {text}
+    </span>
+  );
 
   return (
     <div className="g-stage min-h-dvh pb-8">
@@ -43,7 +65,12 @@ export const SettingsScreen = () => {
         <button type="button" className="g-btn g-btn-accent !min-h-[38px] !gap-1 !px-3.5 text-sm" onClick={safeBack}>
           <span aria-hidden>◀</span>もどる
         </button>
-        <h1 className="g-title text-base">せってい</h1>
+        <h1 className="g-title text-center text-base leading-tight">
+          せってい
+          <span lang="en" className="block text-[10px] font-bold opacity-80">
+            Settings
+          </span>
+        </h1>
         {/* The title is the game's front door; ホーム everywhere else leads to the map (08 §3.8). */}
         <button type="button" className="g-btn g-btn-ghost !min-h-[38px] !px-3 text-xs" onClick={() => navigate('/')}>
           <RubyText showFurigana={showFurigana}>タイトルへ</RubyText>
@@ -54,6 +81,9 @@ export const SettingsScreen = () => {
         <ul className="flex flex-col gap-2">
           {toggles.map((t) => (
             <li key={t.key} className="g-panel flex items-center gap-3 p-4">
+              <span aria-hidden className="w-7 shrink-0 text-center text-xl font-black">
+                {t.icon}
+              </span>
               <div className="min-w-0 flex-1">
                 <p className="text-sm">
                   <RubyText showFurigana={showFurigana}>{t.label}</RubyText>
@@ -63,6 +93,7 @@ export const SettingsScreen = () => {
                     <RubyText showFurigana={showFurigana}>{t.note}</RubyText>
                   </p>
                 )}
+                {en(t.en)}
               </div>
               <button
                 type="button"
@@ -112,20 +143,25 @@ export const SettingsScreen = () => {
         <div className="g-panel mt-4 p-4">
           <p className="text-sm">
             <RubyText showFurigana={showFurigana}>はじめから やりなおす</RubyText>
+            {en('Start over')}
           </p>
           <p className="mt-0.5 text-xs" style={{ color: 'var(--ink-2)' }}>
             <RubyText showFurigana={showFurigana}>
               おぼえた 漢字(かんじ)・武器(ぶき)・なかまが ぜんぶ 消(き)えます。もとには もどせません。
             </RubyText>
+            {en('Everything you have learned, made and met is deleted. This cannot be undone.')}
           </p>
           {confirmReset ? (
             <div className="mt-3 flex gap-2">
-              <button type="button" className="g-btn g-btn-ghost flex-1" onClick={() => setConfirmReset(false)}>
+              <button type="button" className="g-btn g-btn-ghost flex-1 !flex-col !gap-0 leading-tight" onClick={() => setConfirmReset(false)}>
                 やめる
+                <span lang="en" className="text-[10px] font-bold opacity-80">
+                  Cancel
+                </span>
               </button>
               <button
                 type="button"
-                className="g-btn flex-1"
+                className="g-btn flex-1 !flex-col !gap-0 leading-tight"
                 style={{ background: 'var(--color-danger)', color: '#fff' }}
                 onClick={() => {
                   resetSave();
@@ -134,11 +170,17 @@ export const SettingsScreen = () => {
                 }}
               >
                 <RubyText showFurigana={showFurigana}>本当(ほんとう)に 消(け)す</RubyText>
+                <span lang="en" className="text-[10px] font-bold opacity-90">
+                  Delete everything
+                </span>
               </button>
             </div>
           ) : (
             <button type="button" className="g-btn g-btn-ghost mt-3 w-full" onClick={() => setConfirmReset(true)}>
               <RubyText showFurigana={showFurigana}>データを 消(け)す</RubyText>
+              <span lang="en" className="ml-1 text-[11px] font-bold opacity-80">
+                · Delete data
+              </span>
             </button>
           )}
         </div>
