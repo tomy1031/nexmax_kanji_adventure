@@ -86,8 +86,12 @@ const Spot = ({ spot, lit, style, k, ox, oy }: { spot: SignSpot; lit: boolean; s
   );
 };
 
-/** Draws one scene's signs inside the picture box (w × h, the box the picture covers). */
-export const SceneSigns = ({ signs, w, h }: { signs: SceneSignSet; w: number; h: number }) => {
+/**
+ * Draws one scene's signs inside the picture box (w × h, the box the picture
+ * covers). `hold` keeps one letter's sign dark a moment longer, so it can be
+ * seen lighting up (the drill's town shot).
+ */
+export const SceneSigns = ({ signs, w, h, hold }: { signs: SceneSignSet; w: number; h: number; hold?: string }) => {
   const known = useKnownLetters();
   const [iw, ih] = signs.image;
   // object-cover, centred
@@ -97,7 +101,7 @@ export const SceneSigns = ({ signs, w, h }: { signs: SceneSignSet; w: number; h:
   return (
     <div aria-hidden className="pointer-events-none absolute inset-0">
       {signs.spots.map((s) => (
-        <Spot key={s.char + s.x} spot={s} lit={known.has(s.char)} style={s.style ?? signs.style} k={k} ox={ox} oy={oy} />
+        <Spot key={s.char + s.x} spot={s} lit={known.has(s.char) && s.char !== hold} style={s.style ?? signs.style} k={k} ox={ox} oy={oy} />
       ))}
     </div>
   );

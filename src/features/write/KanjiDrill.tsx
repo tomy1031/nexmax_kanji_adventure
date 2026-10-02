@@ -14,6 +14,8 @@ import { MASTERY_REPS, repsToNextStar, starsOf } from '../../lib/mastery';
 import RockSlash from './RockSlash';
 import SignLight from './SignLight';
 import { NightStreetBackdrop, SignStreet } from './NightStreet';
+import { TownBackdrop, TownShot } from './TownBackdrop';
+import { hasSign } from '../picturebook/hasSign';
 import { streetOf } from '../../lib/signStreet';
 import * as sfx from '../../lib/sfx';
 import { useBgm } from '../../lib/bgm';
@@ -55,6 +57,12 @@ interface KanjiDrillProps {
   goal?: number;
   /** What a write does: cut a rock (むかし編・現代編) or light a sign (文字が 消えた 町). */
   look?: 'rock' | 'sign';
+  /**
+   * 文字が 消えた 町: the episode's town, behind the drill (it brightens as
+   * `letters` come back), and where a letter just won is seen lighting up.
+   */
+  scene?: string;
+  letters?: readonly string[];
 }
 
 type Verdict = { kind: VerdictKind; mistakes: number } | null;
@@ -89,7 +97,7 @@ const COPY: Record<'rock' | 'sign', { verdict: Record<VerdictKind, { head: strin
 };
 
 
-export const KanjiDrill = ({ kanji, onObtained, onExit, onDone, nextLabel = 'つぎへ', extra, goal, look = 'rock' }: KanjiDrillProps) => {
+export const KanjiDrill = ({ kanji, onObtained, onExit, onDone, nextLabel = 'つぎへ', extra, goal, look = 'rock', scene, letters }: KanjiDrillProps) => {
   useBgm('story');
   // On a short screen the progress moves up beside the kanji and the page
   // packs tighter, so the sign still fits without scrolling (an iPhone SE
@@ -122,6 +130,14 @@ export const KanjiDrill = ({ kanji, onObtained, onExit, onDone, nextLabel = 'つ
   const [goalCard, setGoalCard] = useState(false);
   /** A star gained without a card (★2), shown for a moment. */
   const [starUp, setStarUp] = useState<number | null>(null);
+  /** Each write that lights the sign sends a glow over the town. */
+  const [pulse, setPulse] = useState(0);
+  /** The letter just came back: the town is shown lighting its sign, then the card. */
+  const [townShot, setTownShot] = useState(false);
+  const endTownShot = useCallback(() => {
+    setTownShot(false);
+    setGoalCard(true);
+  }, []);
   const pendingGoal = useRef(false);
   /**
    * A kanji already owned is not collected again. Writing it is a review:
@@ -170,6 +186,7 @@ export const KanjiDrill = ({ kanji, onObtained, onExit, onDone, nextLabel = 'つ
   );
 
   const handleSplit = useCallback(() => {
+    setPulse((p) => p + 1);
     if (pendingObtained.current) {
       pendingObtained.current = false;
       setObtained(true);
@@ -178,11 +195,12 @@ export const KanjiDrill = ({ kanji, onObtained, onExit, onDone, nextLabel = 'つ
     }
     if (pendingGoal.current) {
       pendingGoal.current = false;
-      setGoalCard(true);
+      if (hasSign(scene, kanji.char)) setTownShot(true);
+      else setGoalCard(true);
       return;
     }
     setRockNo((n) => n + 1);
-  }, [kanji, onObtained]);
+  }, [kanji, onObtained, scene]);
 
   const done = Math.min(reps, REPS_TO_OBTAIN);
   const stars = starsOf(reps);
@@ -201,7 +219,16 @@ export const KanjiDrill = ({ kanji, onObtained, onExit, onDone, nextLabel = 'つ
 
   return (
     <div className="isolate relative flex min-h-dvh flex-col items-center pb-[max(20px,env(safe-area-inset-bottom))]">
-      {sign ? <NightStreetBackdrop /> : <PictureBook scene="mukashi_meadow" className="!fixed -z-10" still />}
+      {sign ? (
+        scene ? (
+          <TownBackdrop scene={scene} letters={letters ?? [kanji.char]} pulse={pulse} />
+        ) : (
+          <NightStreetBackdrop />
+        )
+      ) : (
+        <PictureBook scene="mukashi_meadow" className="!fixed -z-10" still />
+      )}
+      <AnimatePresence>{townShot && scene && <TownShot scene={scene} char={kanji.char} onDone={endTownShot} />}</AnimatePresence>
       <TopBar onBack={onExit} />
 
       <div className={`flex w-full max-w-md flex-1 flex-col px-3 ${compact ? 'gap-2 pt-2' : 'gap-3 pt-3'}`}>

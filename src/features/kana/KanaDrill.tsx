@@ -9,6 +9,8 @@ import { useGameStore } from '../../store/gameStore';
 import { KANA_LENIENCY, KANA_REPS, KANA_SAMPLE_REPS, ROMAJI } from '../../data/kana';
 import SignLight, { type SignLightHandle } from '../write/SignLight';
 import { NightStreetBackdrop, SignStreet } from '../write/NightStreet';
+import { TownBackdrop, TownShot } from '../write/TownBackdrop';
+import { hasSign } from '../picturebook/hasSign';
 import { streetOf } from '../../lib/signStreet';
 import KanaText from './KanaText';
 import { useKnownKana } from './useKnownKana';
@@ -30,11 +32,13 @@ interface KanaDrillProps {
   kana: string[];
   onDone: () => void;
   onExit: () => void;
+  /** The episode's town behind the drill, and where a kana that came back lights up (see KanjiDrill). */
+  scene?: string;
 }
 
 type Verdict = { pass: boolean; mistakes: number } | null;
 
-export const KanaDrill = ({ kana, onDone, onExit }: KanaDrillProps) => {
+export const KanaDrill = ({ kana, onDone, onExit, scene }: KanaDrillProps) => {
   useBgm('story');
   // A short screen (a phone browser's bars): the signs move up beside the
   // kana and the page packs tighter, so nothing scrolls (see KanjiDrill).
@@ -70,16 +74,28 @@ export const KanaDrill = ({ kana, onDone, onExit }: KanaDrillProps) => {
     [current, recordKanaRep],
   );
 
+  /** Each write that lights the sign sends a glow over the town. */
+  const [pulse, setPulse] = useState(0);
+  /** A kana just came back: its sign in the town lights up before the card. */
+  const [shot, setShot] = useState<string | null>(null);
+  const endShot = useCallback(() => {
+    setReturned(shot);
+    setShot(null);
+  }, [shot]);
+
   const handleLit = useCallback(() => {
+    setPulse((p) => p + 1);
     setSampleOverride(null);
     setVerdict(null);
     if ((useGameStore.getState().kana[current] ?? 0) >= KANA_REPS) {
       sfx.star(0);
-      setReturned(current);
+      // The town first, its sign lighting up — then the card.
+      if (hasSign(scene, current)) setShot(current);
+      else setReturned(current);
       return;
     }
     setSignNo((n) => n + 1);
-  }, [current]);
+  }, [current, scene]);
 
   const next = () => {
     setReturned(null);
@@ -107,7 +123,8 @@ export const KanaDrill = ({ kana, onDone, onExit }: KanaDrillProps) => {
 
   return (
     <div className="isolate relative flex min-h-dvh flex-col items-center pb-[max(20px,env(safe-area-inset-bottom))]">
-      <NightStreetBackdrop />
+      {scene ? <TownBackdrop scene={scene} letters={kana} pulse={pulse} /> : <NightStreetBackdrop />}
+      <AnimatePresence>{shot && scene && <TownShot scene={scene} char={shot} onDone={endShot} />}</AnimatePresence>
       <TopBar onBack={onExit} />
 
       <div className={`flex w-full max-w-md flex-1 flex-col px-3 ${compact ? 'gap-2 pt-2' : 'gap-3 pt-3'}`}>

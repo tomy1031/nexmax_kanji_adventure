@@ -105,9 +105,11 @@ interface PictureBookProps {
    * cost frames the drill needs (2026-09-26, iPhone SE).
    */
   still?: boolean;
+  /** A letter whose sign stays dark for now (SceneSigns). */
+  signHold?: string;
 }
 
-export const PictureBook = ({ scene, fx = [], className, children, still: holdStill = false }: PictureBookProps) => {
+export const PictureBook = ({ scene, fx = [], className, children, still: holdStill = false, signHold }: PictureBookProps) => {
   const prefersReduced = useReducedMotion();
   const settingReduced = useGameStore((s) => s.settings.reducedMotion);
   const still = Boolean(prefersReduced || settingReduced || holdStill);
@@ -138,7 +140,7 @@ export const PictureBook = ({ scene, fx = [], className, children, still: holdSt
           {def.layers.map((layer) => (
             <PaperLayer key={layer.key} layer={layer} still={still} isFx={false} />
           ))}
-          {def.signs && <SceneSigns signs={def.signs} w={size.w} h={size.h} />}
+          {def.signs && <SceneSigns signs={def.signs} w={size.w} h={size.h} hold={signHold} />}
           <AnimatePresence>
             {fxLayers.map((layer) => (
               <PaperLayer key={layer.key} layer={layer} still={still} isFx />

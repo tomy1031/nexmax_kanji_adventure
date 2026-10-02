@@ -95,7 +95,8 @@ const EpisodePlayer = ({ id }: { id: string }) => {
           />
         );
       case 'write':
-        return <KanaDrill kana={ep.kana} onDone={() => setPhase('outro')} onExit={leave} />;
+        // The drill happens in the town the story opened in.
+        return <KanaDrill kana={ep.kana} scene={lines.intro.lines[0].bg} onDone={() => setPhase('outro')} onExit={leave} />;
       case 'outro':
         return (
           <NovelScene
