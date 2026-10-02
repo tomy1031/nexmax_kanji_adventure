@@ -212,6 +212,7 @@ export const MOJI1_SCRIPTS: Record<string, EpisodeScript> = {
         { fx: ['spring'], glyph: '🤖✨ 🤖✨ 🤖✨', text: 'ロボットたちが おきました！', en: 'The robots woke up!' },
         { speaker: 'worker', sprite: 'worker:awake', text: 'おはようございます！ ぼくは 七(なな)ばんです。', en: "Good morning! I'm Number Seven." },
         { speaker: 'nexmax', sprite: 'nexmax:smile', text: 'ぼくは ネクマックスです。', en: "I'm Nexmax." },
+        { speaker: 'worker', sprite: 'worker:awake', glyph: '🤖 ＝ 🤖', text: 'ぼくも ネクマックスです。まじめな ネクマックスです！', en: "I'm a Nexmax too — the serious one. I always finish what I start!" },
         { speaker: 'worker', sprite: 'worker:awake', glyph: '🤖 ＋ 🤖', text: 'いっしょに いきます！ まじめに はたらきます！', en: "I'll come with you! I'll work hard!" },
         { glyph: '🤝 ✨', text: '七(なな)ばんが、なかまに なりました！', en: 'Number Seven joined you!' },
         { speaker: 'nexmax', sprite: 'nexmax:guide', glyph: '💎 → 🤖❓', text: 'ほうせきで、ほかの なかまも よべます。', en: 'With gems, you can call other companions too.' },
