@@ -1,4 +1,7 @@
 import { motion } from 'framer-motion';
+import { RubyText } from '../../components/ui/Ruby';
+import { charRuby } from '../../lib/reading';
+import { useGameStore } from '../../store/gameStore';
 import { useKnownLetters } from './useKnownLetters';
 
 /**
@@ -42,6 +45,7 @@ export interface SceneSignSet {
 }
 
 const Spot = ({ spot, lit, style, k, ox, oy }: { spot: SignSpot; lit: boolean; style: SceneSignSet['style']; k: number; ox: number; oy: number }) => {
+  const furigana = useGameStore((s) => s.settings.furigana);
   const left = ox + spot.x * k;
   const top = oy + spot.y * k;
   const w = spot.w * k;
@@ -73,8 +77,9 @@ const Spot = ({ spot, lit, style, k, ox, oy }: { spot: SignSpot; lit: boolean; s
         animate={lit ? { opacity: 1, scale: [1.35, 1] } : { opacity: 0, scale: 1 }}
         transition={{ duration: 0.6 }}
       >
-        <span className="leading-none font-bold text-[#3b1f00]" style={{ fontSize: h * 0.62 }}>
-          {spot.char}
+        {/* A kanji keeps its reading over it, small, like every kanji in the game. */}
+        <span className="leading-[1.35] font-bold text-[#3b1f00] [&_rt]:text-[#5a3410]" style={{ fontSize: h * 0.5 }}>
+          <RubyText showFurigana={furigana}>{charRuby(spot.char)}</RubyText>
         </span>
       </motion.div>
     </div>
