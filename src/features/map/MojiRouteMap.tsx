@@ -270,6 +270,7 @@ export const MojiRouteMap = () => {
 
   /** つづき: the episode to play next (data/mojiFlow.ts), and its card, which gets the glow. */
   const startPath = useGameStore((s) => s.startPath);
+  const perfect = useGameStore((s) => s.perfectStages);
   const next = nextUp(cleared, startPath);
   // The episode the つづき bubble points at: fetch its pictures while the player looks at the map.
   useEffect(() => {
@@ -515,6 +516,12 @@ export const MojiRouteMap = () => {
                                       {fresh === ep.id && <span className="absolute -top-2 -right-1 rounded bg-[#e2453c] px-1 text-[10px] font-black text-white">NEW</span>}
                                       <span className="block text-xs font-black" style={{ color: 'var(--ink-2)' }}>
                                         <RubyText showFurigana={showFurigana}>{`${ep.order}話(わ) ${done ? '✓' : open ? '' : '🔒'}`}</RubyText>
+                                        {/* Won without a single slip (クリアの 得 B): a crown. */}
+                                        {perfect.includes(ep.id) && (
+                                          <span className="ml-1" role="img" aria-label="かんぺき">
+                                            👑
+                                          </span>
+                                        )}
                                       </span>
                                       <span className="block text-sm leading-[2] font-black">
                                         <KanjiBackText owned={owned}>{ep.title}</KanjiBackText>
