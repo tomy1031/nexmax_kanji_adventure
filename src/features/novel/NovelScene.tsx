@@ -182,8 +182,16 @@ export const NovelScene = ({ script, cast, onFinish, chapter, renderText, speech
    */
   const listening = Boolean(spriteId) && line?.speaker !== spriteId && !line?.sprite;
 
+  // The first line on 文字が 消えた 町 that has English: say once what the
+  // small buttons do, in English (2026-10-02, a player who cannot read Japanese
+  // meets an all-Japanese line here for the first time after 0章).
+  const toolsSeen = useGameStore((s) => s.tutorials.tools);
+  const markSeen = useGameStore((s) => s.markTutorialSeen);
+  const toolsHint = night && !toolsSeen && Boolean(line?.en);
+
   const goTo = useCallback(
     (nextIndex: number) => {
+      if (toolsHint) markSeen('tools');
       if (nextIndex >= script.lines.length) {
         onFinish();
         return;
@@ -191,7 +199,7 @@ export const NovelScene = ({ script, cast, onFinish, chapter, renderText, speech
       setIndex(nextIndex);
       setSeen((s) => (s.includes(nextIndex) ? s : [...s, nextIndex]));
     },
-    [script.lines.length, onFinish],
+    [script.lines.length, onFinish, toolsHint, markSeen],
   );
 
   const advance = useCallback(() => {
@@ -488,6 +496,18 @@ export const NovelScene = ({ script, cast, onFinish, chapter, renderText, speech
                   </motion.span>
                 </span>
               </div>
+            )}
+
+            {toolsHint && (
+              <motion.p
+                lang="en"
+                className="mt-2 rounded-xl border-2 border-dashed border-[#c9a052] px-3 py-1.5 text-[12px] leading-snug font-bold text-[#ffe7b8]"
+                initial={{ opacity: 0, y: 6 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.6 }}
+              >
+                👆 <b>🔊</b> listen · <b>EN</b> English · <b>？ ことば</b> word meanings
+              </motion.p>
             )}
           </motion.div>
         </AnimatePresence>

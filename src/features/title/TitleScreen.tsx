@@ -48,19 +48,22 @@ const art = (name: string) => assetPath(`img/title/${name}.webp`);
  */
 const PLATE_ASPECT = 3.8;
 const PLATES = {
-  newBlue: { src: 'btn_new_blue', label: 'はじめから', top: 0.11, bottom: 0.955 },
-  newBrown: { src: 'btn_new_brown', label: 'はじめから', top: 0.143, bottom: 0.952 },
-  continueBlue: { src: 'btn_continue_blue', label: 'つづきから', top: 0.12, bottom: 0.92 },
-  continueBrown: { src: 'btn_continue_brown', label: 'つづきから', top: 0.082, bottom: 0.925 },
-  settings: { src: 'btn_settings', label: 'せってい', top: 0.102, bottom: 0.925 },
+  newBlue: { src: 'btn_new_blue', label: 'はじめから', en: 'Start', top: 0.11, bottom: 0.955 },
+  newBrown: { src: 'btn_new_brown', label: 'はじめから', en: 'Start', top: 0.143, bottom: 0.952 },
+  continueBlue: { src: 'btn_continue_blue', label: 'つづきから', en: 'Continue', top: 0.12, bottom: 0.92 },
+  continueBrown: { src: 'btn_continue_brown', label: 'つづきから', en: 'Continue', top: 0.082, bottom: 0.925 },
+  settings: { src: 'btn_settings', label: 'せってい', en: 'Settings', top: 0.102, bottom: 0.925 },
 } as const;
 type PlateArt = (typeof PLATES)[keyof typeof PLATES];
 
 /** Widths in % of the column: the big plate, and every other one. */
 const BIG = 60;
 const SMALL = 43;
-/** Visible gap between two plates, in % of the column width. */
-const GAP = 3.2;
+/**
+ * Visible gap between two plates, in % of the column width — room for the
+ * English under each plate (the player cannot read Japanese yet).
+ */
+const GAP = 6.4;
 
 type PlateSpec = { art: PlateArt; width: number; onClick: () => void; disabled?: boolean; glow?: boolean };
 
@@ -88,6 +91,15 @@ const Plate = ({ spec, marginTop, still }: { spec: PlateSpec; marginTop: number;
       />
     )}
     <img src={art(spec.art.src)} alt={spec.art.label} draggable={false} className="relative block h-auto w-full select-none" />
+    {/* The plate's word in English, just under the drawn plate. */}
+    <span
+      aria-hidden
+      lang="en"
+      className="absolute left-1/2 -translate-x-1/2 text-[clamp(10px,3vw,13px)] leading-none font-bold whitespace-nowrap text-[#ffe9c2]"
+      style={{ top: `${spec.art.bottom * 100 + 4}%`, textShadow: '0 1px 2px rgba(10,6,30,0.95), 0 0 6px rgba(10,6,30,0.8)' }}
+    >
+      {spec.art.en}
+    </span>
   </motion.button>
 );
 

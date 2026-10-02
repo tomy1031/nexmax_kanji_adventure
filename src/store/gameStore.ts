@@ -82,7 +82,7 @@ export interface GameState {
   settings: { furigana: boolean; muted: boolean; reducedMotion: boolean; bgmOff: boolean };
   /** One-off explainers the player has already been shown. */
   /** intro: むかし編の 0話. prologue: 文字が 消えた 町の プロローグ (08 §10.2). stars: じゅんびの ★の ひみつ. */
-  tutorials: { forge: boolean; intro: boolean; prologue: boolean; stars: boolean };
+  tutorials: { forge: boolean; intro: boolean; prologue: boolean; stars: boolean; tools: boolean };
   /** The world last played in — where つづきから, ストーリー and もどる lead back to. */
   lastArc: 'mukashi' | 'gendai' | 'moji';
   /**
@@ -171,7 +171,7 @@ const initialState: GameState = {
   daily: freshDaily(),
   streak: { count: 0, lastDate: '' },
   settings: { furigana: true, muted: false, reducedMotion: false, bgmOff: false },
-  tutorials: { forge: false, intro: false, prologue: false, stars: false },
+  tutorials: { forge: false, intro: false, prologue: false, stars: false, tools: false },
   // A new player starts on the new route (08 §10.2).
   lastArc: 'moji',
   startPath: null,
