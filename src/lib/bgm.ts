@@ -17,13 +17,19 @@ import { assetPath } from './assetPath';
  * background and when せってい turns sound or BGM off.
  */
 
-export type BgmTrack = 'town' | 'story' | 'write' | 'battle';
+/** town: title・地図 / story: お話と 書き取り（同じ 曲で つなぐ）/ battle: たたかい / shop: 漢字やさん */
+export type BgmTrack = 'town' | 'story' | 'battle' | 'shop';
 
 /**
  * The file for each track, once it is in public/audio/bgm. A track without
  * one is silence (nothing is requested, so nothing 404s).
  */
-const FILES: Partial<Record<BgmTrack, string>> = {};
+const FILES: Partial<Record<BgmTrack, string>> = {
+  town: 'audio/bgm/town.mp3',
+  story: 'audio/bgm/story.mp3',
+  battle: 'audio/bgm/battle.mp3',
+  shop: 'audio/bgm/shop.mp3',
+};
 
 /** Under the sound effects, so a stroke or a hit is always heard. */
 const VOLUME = 0.32;

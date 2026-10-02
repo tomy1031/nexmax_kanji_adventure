@@ -215,7 +215,7 @@ const RoundButton = ({ icon: Icon, label, onClick, locked, showFurigana }: { ico
 );
 
 export const ForgeScreen = () => {
-  useBgm('town');
+  useBgm('shop');
   const navigate = useNavigate();
   const [params] = useSearchParams();
   // もどる goes back where the player came from (08 §3.8): `?back=` when the

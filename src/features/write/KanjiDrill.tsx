@@ -90,7 +90,7 @@ const COPY: Record<'rock' | 'sign', { verdict: Record<VerdictKind, { head: strin
 
 
 export const KanjiDrill = ({ kanji, onObtained, onExit, onDone, nextLabel = 'つぎへ', extra, goal, look = 'rock' }: KanjiDrillProps) => {
-  useBgm('write');
+  useBgm('story');
   // On a short screen the progress moves up beside the kanji and the page
   // packs tighter, so the sign still fits without scrolling (an iPhone SE
   // in its browser leaves about 550px).

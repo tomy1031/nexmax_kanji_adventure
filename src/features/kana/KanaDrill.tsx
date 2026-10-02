@@ -35,7 +35,7 @@ interface KanaDrillProps {
 type Verdict = { pass: boolean; mistakes: number } | null;
 
 export const KanaDrill = ({ kana, onDone, onExit }: KanaDrillProps) => {
-  useBgm('write');
+  useBgm('story');
   // A short screen (a phone browser's bars): the signs move up beside the
   // kana and the page packs tighter, so nothing scrolls (see KanjiDrill).
   const compact = useCompactHeight();
