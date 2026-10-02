@@ -14,7 +14,8 @@ import { useKnownLetters } from './useKnownLetters';
  * KANA_REPS times, a kanji owned at ★1), then shows the letter on a
  * lamp-lit face. The letter is drawn plain — the sign glows, the letter does
  * not (「漢字 自体が 光で 太字に 表示されるのは よくない」). A sign that lights
- * while it is on screen gives one warm pop.
+ * while it is on screen gives one warm pop, and the whole picture lies under a
+ * cool night veil that thins as its signs come back on.
  *
  *   panel — the painting already has the empty panel (the station's
  *           calendar): only the lit face is drawn over it.
@@ -98,8 +99,19 @@ export const SceneSigns = ({ signs, w, h, hold }: { signs: SceneSignSet; w: numb
   const k = Math.max(w / iw, h / ih);
   const ox = (w - iw * k) / 2;
   const oy = (h - ih * k) / 2;
+  // The town is gloomy while its letters are missing and warms as they come
+  // back: a cool night veil over the picture, thinner with every lit sign.
+  const lit = signs.spots.filter((s) => known.has(s.char) && s.char !== hold).length;
+  const gloom = 0.5 * (1 - lit / signs.spots.length);
   return (
     <div aria-hidden className="pointer-events-none absolute inset-0">
+      <motion.div
+        className="absolute inset-0 bg-[#141038]"
+        initial={false}
+        animate={{ opacity: gloom }}
+        transition={{ duration: 1.2 }}
+        style={{ willChange: 'opacity' }}
+      />
       {signs.spots.map((s) => (
         <Spot key={s.char + s.x} spot={s} lit={known.has(s.char) && s.char !== hold} style={s.style ?? signs.style} k={k} ox={ox} oy={oy} />
       ))}
