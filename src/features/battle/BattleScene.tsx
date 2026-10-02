@@ -168,6 +168,7 @@ export const BattleScene = ({
   const recordRep = useGameStore((s) => s.recordRep);
   const alreadyCleared = useGameStore((s) => s.clearedStages.includes(stage.id));
   const [clearedAtStart] = useState(alreadyCleared);
+  const [clearsAtStart] = useState(() => useGameStore.getState().clearedStages);
   const equippedGear = useGameStore((s) => s.equippedGear);
 
   // Worn gear: shield, armour, charm. The tutorial fight is gear-less.
@@ -443,7 +444,7 @@ export const BattleScene = ({
   // why it exists — a new button appearing unexplained teaches nothing.
   // Judged against the save as it was when the fight began: the win itself
   // marks the stage cleared, and reading it live would hide the news.
-  const opened = clearedAtStart || tutorial ? [] : featuresUnlockedBy(stage.id);
+  const opened = clearedAtStart || tutorial ? [] : featuresUnlockedBy(stage.id, clearsAtStart);
 
   const elementLabel = ELEMENT_LABEL[stage.boss.element];
 

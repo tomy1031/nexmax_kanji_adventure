@@ -5,8 +5,8 @@ import { motion } from 'framer-motion';
 import { RubyText } from './Ruby';
 import { LogoText } from './LogoText';
 import { assetPath } from '../../lib/assetPath';
-import { useGameStore } from '../../store/gameStore';
-import { Feature, isFeatureUnlocked, UNLOCKED_BY } from '../../data/unlocks';
+import { useGameStore, type GameState } from '../../store/gameStore';
+import { Feature, isFeatureUnlocked, opensOnMoji, UNLOCKED_BY } from '../../data/unlocks';
 import { GiBackpack, GiCog, GiOpenBook, GiPadlock, GiTreasureMap } from 'react-icons/gi';
 import type { IconType } from 'react-icons';
 
@@ -107,12 +107,23 @@ export const NexmaxSays = ({
 
 export type TabId = 'story' | 'kanji' | 'items' | 'settings';
 
+/** Where a locked tab opens, on the road the player is on: shown (furigana) and spoken. */
+const opensAtOf = (feature: Feature, arc: GameState['lastArc']): { text: string; spoken: string } => {
+  if (arc === 'moji') {
+    const { chapter, episode } = opensOnMoji(feature);
+    return { text: `${chapter}章(しょう)${episode}話(わ)`, spoken: `${chapter}しょう ${episode}わ` };
+  }
+  const n = UNLOCKED_BY[feature].replace('mukashi-', '');
+  return { text: `${n}話(わ)`, spoken: `${n}わ` };
+};
+
 /** The four tabs of the reference screens: ストーリー / 漢字ずかん / もちもの / せってい. */
 export const BottomTabs = ({ current }: { current: TabId }) => {
   const navigate = useNavigate();
   const mapPath = useMapPath();
   const showFurigana = useGameStore((s) => s.settings.furigana);
   const cleared = useGameStore((s) => s.clearedStages);
+  const arc = useGameStore((s) => s.lastArc);
   const tabs: { id: TabId; label: string; icon: IconType; to: string; feature?: Feature }[] = [
     { id: 'story', label: 'ストーリー', icon: GiTreasureMap, to: mapPath },
     { id: 'kanji', label: '漢字(かんじ)ずかん', icon: GiOpenBook, to: '/words', feature: Feature.WORDS },
@@ -136,7 +147,7 @@ export const BottomTabs = ({ current }: { current: TabId }) => {
           // One system opens per stage (docs/design/06 §4). A tab that is not
           // open yet stays visible, says when it opens, and does nothing.
           const locked = t.feature ? !isFeatureUnlocked(t.feature, cleared) : false;
-          const opensAt = t.feature ? UNLOCKED_BY[t.feature].replace('mukashi-', '') : '';
+          const opensAt = t.feature ? opensAtOf(t.feature, arc) : { text: '', spoken: '' };
           const Icon = locked ? GiPadlock : t.icon;
           return (
             <motion.button
@@ -144,7 +155,7 @@ export const BottomTabs = ({ current }: { current: TabId }) => {
               type="button"
               disabled={locked}
               whileTap={locked ? undefined : { scale: 0.94 }}
-              aria-label={locked ? `${opensAt}わで ひらく` : undefined}
+              aria-label={locked ? `${opensAt.spoken}で ひらく` : undefined}
               onClick={() => navigate(t.to)}
               aria-current={on ? 'page' : undefined}
               className="relative flex min-h-[60px] flex-1 flex-col items-center justify-center gap-0.5 rounded-xl border-2 text-[11px] leading-tight font-black"
@@ -161,7 +172,15 @@ export const BottomTabs = ({ current }: { current: TabId }) => {
               }}
             >
               <Icon aria-hidden size={24} style={{ filter: on ? 'drop-shadow(0 1px 0 #9a4f00)' : undefined }} />
-              <RubyText showFurigana={showFurigana}>{locked ? `${opensAt}話(わ)で ひらく` : t.label}</RubyText>
+              {locked ? (
+                // Two lines, broken where the words break: "1章2話で / ひらく".
+                <>
+                  <RubyText showFurigana={showFurigana}>{`${opensAt.text}で`}</RubyText>
+                  <span>ひらく</span>
+                </>
+              ) : (
+                <RubyText showFurigana={showFurigana}>{t.label}</RubyText>
+              )}
             </motion.button>
           );
         })}

@@ -16,6 +16,8 @@ import { useOwnedKanji } from '../moji/useOwnedKanji';
 import { getKanjiByChar } from '../../lib/kanjiDb';
 import { kanjiRuby } from '../../lib/reading';
 import { starsOf } from '../../lib/mastery';
+import { Feature, FEATURE_INTRO, isFeatureUnlocked } from '../../data/unlocks';
+import { isVersusConfigured } from '../../lib/supabaseClient';
 
 /**
  * 新ルート「文字が 消えた 町」の 章表 (08 §10, 段1).
@@ -55,6 +57,17 @@ export const MojiRouteMap = () => {
   // This map is now "home": つづきから, ストーリー and もどる come back here.
   useEffect(() => setLastArc('moji'), [setLastArc]);
 
+  // The systems this route has opened (unlocks.ts), as on the picture-book maps.
+  // The word book is a tab, and the collection is reached from そうび.
+  const extras = (
+    [
+      { f: Feature.FORGE, icon: '⚒' },
+      { f: Feature.DAILY, icon: '✓' },
+      { f: Feature.GACHA, icon: '◆' },
+      ...(isVersusConfigured ? [{ f: Feature.VERSUS, icon: '⚔' }] : []),
+    ] as const
+  ).filter(({ f }) => isFeatureUnlocked(f, cleared));
+
   return (
     <div className="isolate relative min-h-dvh pb-28">
       <PictureBook scene="mukashi_meadow" className="!fixed -z-10" />
@@ -67,6 +80,26 @@ export const MojiRouteMap = () => {
             <NexmaxSays text="0章(しょう)から はじめよう！" pose="hello" size={48} />
           </div>
         </div>
+
+        {/* ひらいた 機能（右の 丸ボタン） ----------------------------------- */}
+        {extras.length > 0 && (
+          <div className="flex justify-end gap-2">
+            {extras.map(({ f, icon }) => (
+              <button
+                key={f}
+                type="button"
+                onClick={() => navigate(FEATURE_INTRO[f].to)}
+                className="flex h-14 w-14 flex-col items-center justify-center rounded-full border-2 border-white text-[10px] leading-tight font-black text-white"
+                style={{ background: 'linear-gradient(180deg,#5cc0ff,#1d6fc4)', boxShadow: '0 3px 0 #15529a' }}
+              >
+                <span aria-hidden className="text-base leading-none">
+                  {icon}
+                </span>
+                <RubyText showFurigana={showFurigana}>{FEATURE_INTRO[f].label}</RubyText>
+              </button>
+            ))}
+          </div>
+        )}
 
         {/* 0章 かな編 (08 §3.4) --------------------------------------- */}
         <section className="g-parchment p-3">
