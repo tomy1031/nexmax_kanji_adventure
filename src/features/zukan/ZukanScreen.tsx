@@ -48,12 +48,25 @@ export const ZukanScreen = () => {
   const [params] = useSearchParams();
   const [tab, setTab] = useState<Tab>(params.get('tab') === 'kanji' ? 'kanji' : 'kana');
   const [card, setCard] = useState<KanjiData | null>(null);
+  // Every kanji in ずかん's order, so a card can turn to the one beside it.
+  const order = MOJI_CHAPTERS.filter((c) => c.level === 'N5')
+    .flatMap((c) => c.kanji.map((ch) => getKanjiByChar(ch)))
+    .filter((k) => k != null);
+  const at = card ? order.findIndex((k) => k.id === card.id) : -1;
   const kanaDone = [...HIRAGANA, ...KATAKANA].filter((k) => known.has(k)).length;
 
   return (
     <div className="isolate relative min-h-dvh pb-8">
       <NightStreetBackdrop />
-      {card && <KanjiCard kanji={card} onClose={() => setCard(null)} />}
+      {card && (
+        <KanjiCard
+          kanji={card}
+          onClose={() => setCard(null)}
+          onPrev={at > 0 ? () => setCard(order[at - 1]) : undefined}
+          onNext={at >= 0 && at < order.length - 1 ? () => setCard(order[at + 1]) : undefined}
+          position={at >= 0 ? `${at + 1} / ${order.length}` : undefined}
+        />
+      )}
       <TopBar title="ずかん" />
       <div className="mx-auto flex max-w-md flex-col gap-3 px-3 pt-3">
         <div role="tablist" className="flex gap-2">
