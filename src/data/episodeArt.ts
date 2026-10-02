@@ -4,8 +4,8 @@ import { KANA_CAST, KANA_SCRIPTS } from './scripts/kana';
 import { MOJI1_CAST, MOJI1_PRELUDE, MOJI1_SCRIPTS } from './scripts/moji1';
 import { getMojiEpisode } from './mojiEpisodes';
 
-/** The battle screen's frame (features/battle/NaniwaBattleView.tsx). */
-const BATTLE_UI = ['bg_tall', 'frame_top', 'frame_bottom', 'nexmax_brush', 'btn_back'].map((n) => `img/battle/${n}.webp`);
+/** The battle screen's frame (features/battle/NaniwaBattleView.tsx); its sky is the episode's own scene. */
+const BATTLE_UI = ['frame_top', 'frame_bottom', 'nexmax_brush', 'btn_back'].map((n) => `img/battle/${n}.webp`);
 
 /** Every painted scene and portrait a script shows. */
 const scriptArt = (scripts: NovelScript[], cast: CastMember[]): string[] => {
