@@ -34,4 +34,15 @@ export const NANIWA_FOLK: CastMember[] = [
   { id: 'kiosk', name: 'ばいてんの ひと', color: '#3a8fd8', sprites: { normal: folk('kiosk_trouble'), trouble: folk('kiosk_trouble'), happy: folk('kiosk_happy') } },
   { id: 'staff', name: 'えきいん', color: '#2f6fb8', sprites: { normal: folk('staff_trouble'), trouble: folk('staff_trouble'), happy: folk('staff_happy') } },
   { id: 'announcer', name: 'あんないがかり', color: '#2f6fb8', sprites: { normal: folk('announcer_trouble'), trouble: folk('announcer_trouble') } },
+  // 1章 3〜5話（09 §1）
+  { id: 'ropeway', name: 'ロープウェーの かかり', color: '#d9a21b', sprites: { normal: folk('ropeway_trouble'), trouble: folk('ropeway_trouble'), happy: folk('ropeway_happy') } },
+  {
+    // His name is his number, eaten: ？？？ until 七 is written.
+    id: 'worker',
+    name: '七(なな)ばん',
+    nameChars: '七(なな)',
+    color: '#2f6fb8',
+    sprites: { normal: folk('worker_sleep'), sleep: folk('worker_sleep'), awake: folk('worker_awake') },
+  },
+  { id: 'vendor', name: 'おみせの ひと', color: '#e0a400', sprites: { normal: folk('vendor_trouble'), trouble: folk('vendor_trouble'), happy: folk('vendor_happy') } },
 ];

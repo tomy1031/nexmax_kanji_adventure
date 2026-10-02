@@ -59,6 +59,35 @@ export const MOJI_EPISODES: MojiEpisode[] = [
     bg: 'naniwa_station_square',
     boss: { name: 'モジクイ', img: 'img/battle/mojikui.webp', hp: 80, attack: 30, element: Element.AN, icon: 'GiShadowFollower' },
   },
+  // 1章 3〜5話（09 §1）: ユニット2 の 数と お金。HP は 上の 決まり（★1・武器なしで 1字 約2回）に 合わせた
+  // （5話は 4字なので 低め）。がまん・なかま（4話）は 別の しくみで 入る。
+  {
+    id: 'moji-1-3',
+    chapter: 'moji-1',
+    order: 3,
+    title: '山(やま)の ロープウェー',
+    kanji: [...'一二三四五'],
+    bg: 'naniwa_ropeway',
+    boss: { name: 'とけいの モジクイ', img: 'img/battle/mojikui_clock.webp', hp: 90, attack: 32, element: Element.AN, icon: 'GiShadowFollower' },
+  },
+  {
+    id: 'moji-1-4',
+    chapter: 'moji-1',
+    order: 4,
+    title: 'なかまの ロボット',
+    kanji: [...'六七八九十'],
+    bg: 'naniwa_factory',
+    boss: { name: 'はぐるまの モジクイ', img: 'img/battle/mojikui_gear.webp', hp: 96, attack: 34, element: Element.AN, icon: 'GiShadowFollower' },
+  },
+  {
+    id: 'moji-1-5',
+    chapter: 'moji-1',
+    order: 5,
+    title: 'いくらですか',
+    kanji: [...'百千万円'],
+    bg: 'naniwa_market',
+    boss: { name: 'ねふだの モジクイ', img: 'img/battle/mojikui_price.webp', hp: 80, attack: 36, element: Element.AN, icon: 'GiShadowFollower' },
+  },
 ];
 
 export const episodesOf = (chapterId: string): MojiEpisode[] =>
