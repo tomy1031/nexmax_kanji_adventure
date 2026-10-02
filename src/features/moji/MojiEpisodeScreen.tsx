@@ -282,7 +282,9 @@ const EpisodePlayer = ({ id }: { id: string }) => {
 
   const renderText = useCallback((text: string) => <KanjiBackText owned={owned}>{text}</KanjiBackText>, [owned]);
   const label = { label: `${chapter.order}章(しょう) ${ep.order}`, title: ep.title };
-  const leave = () => navigate('/map/moji');
+  // Back where the player came from (2026-10-02「戻り先は 来た ところ」): ずかん's ✎ passes ?back=.
+  const back = params.get('back');
+  const leave = () => navigate(back?.startsWith('/') ? back : '/map/moji');
   const toReady = () => setPhase('ready');
   const forgeHere = `/forge?back=${encodeURIComponent(`/moji/${ep.id}?at=ready`)}`;
 
