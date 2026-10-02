@@ -16,7 +16,7 @@ import { MASTERY_REPS, starsOf } from '../../lib/mastery';
 import { assetPath } from '../../lib/assetPath';
 import { getKanaEpisode } from '../../data/kana';
 import { getMojiEpisode } from '../../data/mojiEpisodes';
-import { nextUp } from '../../data/mojiFlow';
+import { continuePath, episodePath, nextUp } from '../../data/mojiFlow';
 import { useBgm } from '../../lib/bgm';
 import { preloadImages } from '../../lib/preload';
 import { episodeArt } from '../../data/episodeArt';
@@ -235,7 +235,11 @@ export const MojiRouteMap = () => {
   const nextGroup: GroupId = next ? (groupOf(next) ?? 'n5') : 'n5';
   const nextKana = next ? getKanaEpisode(next) : undefined;
   const nextMoji = next ? getMojiEpisode(next) : undefined;
-  const playNext = () => (next ? navigate(next.startsWith('kana-') ? `/kana/${next}` : `/moji/${next}`) : setSheet('n5'));
+  const playNext = () => {
+    const to = continuePath(cleared, startPath, progress);
+    if (to) navigate(to);
+    else setSheet('n5');
+  };
 
   const MENU: { label: string; cx: number; w: number; onClick: () => void }[] = [
     { label: 'ステージせんたく', cx: 14.2, w: 22, onClick: () => setSheet(null) },
@@ -457,7 +461,7 @@ export const MojiRouteMap = () => {
                                       type="button"
                                       data-tap
                                       disabled={!open}
-                                      onClick={() => navigate(`/moji/${ep.id}`)}
+                                      onClick={() => navigate(episodePath(ep.id, cleared))}
                                       className="relative rounded-xl border-2 px-2 py-1.5 text-left disabled:opacity-50"
                                       style={{
                                         borderColor: fresh === ep.id ? '#e2453c' : done ? '#4f9a3c' : '#caa468',

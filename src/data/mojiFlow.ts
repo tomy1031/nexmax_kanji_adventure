@@ -89,3 +89,27 @@ export const practiceTarget = (progress: Progress, cleared: readonly string[]): 
   }
   return best && { episode: best.episode, char: best.char, left: best.left };
 };
+
+/**
+ * Where an episode on ステージせんたく leads. The first time, its story; once
+ * cleared, its じゅんび — a player comes back for more ★ or a rematch, and
+ * the story is one tap away there (おはなしを もう一度).
+ */
+export const episodePath = (id: string, cleared: readonly string[]): string =>
+  id.startsWith('kana-') ? `/kana/${id}` : cleared.includes(id) ? `/moji/${id}?at=ready` : `/moji/${id}`;
+
+/**
+ * Where つづき leads: the next episode, or, with nothing new to play, the
+ * じゅんび where writing counts most (「★を ふやそう」). Null once every
+ * open kanji is ★3.
+ */
+export const continuePath = (
+  cleared: readonly string[],
+  startPath: StartPath,
+  progress: Progress,
+): string | null => {
+  const next = nextUp(cleared, startPath);
+  if (next) return episodePath(next, cleared);
+  const target = practiceTarget(progress, cleared);
+  return target ? `/moji/${target.episode}?at=ready` : null;
+};
