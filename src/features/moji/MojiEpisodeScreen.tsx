@@ -310,10 +310,10 @@ const EpisodePlayer = ({ id }: { id: string }) => {
   const view = (() => {
     switch (phase) {
       case 'prelude':
-        return <NovelScene look="night" key="prelude" script={MOJI1_PRELUDE} cast={CAST} chapter={label} renderText={renderText} onFinish={() => setPhase('intro')} />;
+        return <NovelScene look="night" bgm="sad" key="prelude" script={MOJI1_PRELUDE} cast={CAST} chapter={label} renderText={renderText} onFinish={() => setPhase('intro')} />;
       case 'intro':
         return (
-          <NovelScene look="night"
+          <NovelScene look="night" bgm="sad"
             key="intro"
             script={lines.intro}
             cast={CAST}
@@ -340,7 +340,7 @@ const EpisodePlayer = ({ id }: { id: string }) => {
         );
       }
       case 'encounter':
-        return <NovelScene look="night" key="encounter" script={lines.encounter} cast={CAST} chapter={label} renderText={renderText} onFinish={toReady} />;
+        return <NovelScene look="night" bgm="tension" key="encounter" script={lines.encounter} cast={CAST} chapter={label} renderText={renderText} onFinish={toReady} />;
       case 'ready':
         return (
           <ReadyScreen

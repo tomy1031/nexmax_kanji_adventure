@@ -83,6 +83,7 @@ const EpisodePlayer = ({ id }: { id: string }) => {
         return (
           <NovelScene
             key="intro"
+            bgm="sad"
             script={lines.intro}
             cast={KANA_CAST}
             chapter={chapter}
