@@ -31,6 +31,20 @@ export type PrologueVisual =
   /** A hand of light writes あ. */
   | 'write';
 
+/**
+ * The painted picture behind each beat (scripts/art/manifest.mjs, bg_prologue).
+ * Beats that share a picture keep it on screen instead of fading it out and back.
+ */
+export const PROLOGUE_PICTURE: Record<PrologueVisual, string> = {
+  letters: 'img/prologue/prologue_sky.webp',
+  town: 'img/prologue/prologue_town.webp',
+  wake: 'img/prologue/prologue_eaten.webp',
+  eaten: 'img/prologue/prologue_eaten.webp',
+  guard: 'img/prologue/prologue_guard.webp',
+  fall: 'img/prologue/prologue_fall.webp',
+  write: 'img/stageselect/bg_night.webp',
+};
+
 export interface PrologueBeat {
   visual: PrologueVisual;
   /** English narration. */

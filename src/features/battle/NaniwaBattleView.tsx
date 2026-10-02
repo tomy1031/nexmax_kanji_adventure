@@ -198,7 +198,9 @@ export const NaniwaBattleView = ({
         style={{ backgroundImage: `url(${art('bg_wide')})` }}
       />
 
-      <div ref={colRef} className="relative mx-auto flex h-full w-[min(100%,56dvh)] flex-col [container-type:inline-size]">
+      {/* Inside the safe area: on a notched iPhone played from the home screen the
+          status bar and the home bar would otherwise cover the HP bar and もどる. */}
+      <div ref={colRef} className="relative mx-auto flex h-full w-[min(100%,56dvh)] flex-col pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)] [container-type:inline-size]">
         {/* 上: 空・あいて ------------------------------------------------- */}
         <motion.div className="relative min-h-0 flex-1" animate={fieldCtl}>
           {/* たて画面: the sky, the city and the river down to the deck line */}

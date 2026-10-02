@@ -103,7 +103,7 @@ export const KanaDrill = ({ kana, onDone, onExit }: KanaDrillProps) => {
   }
 
   return (
-    <div className="isolate relative flex min-h-dvh flex-col items-center pb-5">
+    <div className="isolate relative flex min-h-dvh flex-col items-center pb-[max(20px,env(safe-area-inset-bottom))]">
       <NightStreetBackdrop />
       <TopBar onBack={onExit} />
 

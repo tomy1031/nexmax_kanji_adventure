@@ -5,7 +5,7 @@ import { RubyText } from '../../components/ui/Ruby';
 import { assetPath } from '../../lib/assetPath';
 import { useGameStore } from '../../store/gameStore';
 import * as sfx from '../../lib/sfx';
-import { PROLOGUE, PROLOGUE_ASK, PROLOGUE_EXITS, type PrologueVisual } from '../../data/scripts/prologue';
+import { PROLOGUE, PROLOGUE_ASK, PROLOGUE_EXITS, PROLOGUE_PICTURE, type PrologueVisual } from '../../data/scripts/prologue';
 import { useBgm } from '../../lib/bgm';
 import { preloadImages } from '../../lib/preload';
 import { episodeArt } from '../../data/episodeArt';
@@ -72,28 +72,8 @@ const Letters = ({ eaten, still, few }: { eaten: boolean; still: boolean; few?: 
   </div>
 );
 
-/**
- * The painted picture behind each beat (scripts/art/manifest.mjs, bg_prologue),
- * and the slow push-in that keeps it alive. Beats that share a picture keep
- * it on screen instead of fading it out and back.
- */
-const PICTURE: Record<PrologueVisual, string> = {
-  letters: 'img/prologue/prologue_sky.webp',
-  town: 'img/prologue/prologue_town.webp',
-  wake: 'img/prologue/prologue_eaten.webp',
-  eaten: 'img/prologue/prologue_eaten.webp',
-  guard: 'img/prologue/prologue_guard.webp',
-  fall: 'img/prologue/prologue_fall.webp',
-  write: 'img/stageselect/bg_night.webp',
-};
-
 /** Fetch every picture up front, so no beat waits for its own. */
-const preloadPictures = () => {
-  for (const src of new Set(Object.values(PICTURE))) {
-    const img = new Image();
-    img.src = assetPath(src);
-  }
-};
+const preloadPictures = () => preloadImages([...new Set(Object.values(PROLOGUE_PICTURE))]);
 
 const Picture = ({ src, still, dim }: { src: string; still: boolean; dim: number }) => (
   <motion.div
@@ -218,7 +198,7 @@ export const PrologueScreen = () => {
     >
       {/* The painted picture, then what moves over it. */}
       <AnimatePresence mode="sync">
-        <Picture key={PICTURE[current.visual]} src={PICTURE[current.visual]} still={still} dim={done ? 0.45 : current.visual === 'write' ? 0.35 : 0} />
+        <Picture key={PROLOGUE_PICTURE[current.visual]} src={PROLOGUE_PICTURE[current.visual]} still={still} dim={done ? 0.45 : current.visual === 'write' ? 0.35 : 0} />
       </AnimatePresence>
       <AnimatePresence mode="sync">
         {!done && (
