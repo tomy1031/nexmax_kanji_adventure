@@ -1,10 +1,12 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
 import { assetPath } from '../../lib/assetPath';
 import { RubyText } from '../../components/ui/Ruby';
 import { useGameStore } from '../../store/gameStore';
 import { useBgm } from '../../lib/bgm';
+import { preloadImages } from '../../lib/preload';
+import { PROLOGUE_PICTURE } from '../../data/scripts/prologue';
 
 /**
  * Title (the layout example delivered with the parts, 「ChatGPT 画像 2026年9月29日
@@ -96,6 +98,10 @@ export const TitleScreen = () => {
   const seenIntro = useGameStore((s) => s.tutorials.intro);
   const seenPrologue = useGameStore((s) => s.tutorials.prologue);
   const canContinue = seenPrologue || seenIntro || hasSave;
+  // A new player's はじめから opens the prologue: have its pictures ready by then.
+  useEffect(() => {
+    if (!canContinue) preloadImages([...new Set(Object.values(PROLOGUE_PICTURE))]);
+  }, [canContinue]);
   const prefersReduced = useReducedMotion();
   const settingReduced = useGameStore((s) => s.settings.reducedMotion);
   const still = Boolean(prefersReduced || settingReduced);

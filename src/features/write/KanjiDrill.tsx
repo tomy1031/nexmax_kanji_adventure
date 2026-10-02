@@ -219,7 +219,7 @@ export const KanjiDrill = ({ kanji, onObtained, onExit, onDone, nextLabel = 'つ
   }, [starUp]);
 
   return (
-    <div className="isolate relative flex min-h-dvh flex-col items-center pb-5">
+    <div className="isolate relative flex min-h-dvh flex-col items-center pb-[max(20px,env(safe-area-inset-bottom))]">
       {sign ? <NightStreetBackdrop /> : <PictureBook scene="mukashi_meadow" className="!fixed -z-10" still />}
       <TopBar onBack={onExit} />
 

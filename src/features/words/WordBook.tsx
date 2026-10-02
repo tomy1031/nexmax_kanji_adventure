@@ -73,7 +73,7 @@ export const WordBook = () => {
   return (
     <div className="g-stage min-h-dvh pb-8">
       <Backdrop fixed />
-      <header className="g-header sticky top-0 z-20 px-4 py-3">
+      <header className="g-header sticky top-0 z-20 px-4 pt-[max(12px,env(safe-area-inset-top))] pb-3">
         <div className="flex items-center justify-between">
           <button type="button" className="g-btn g-btn-accent !min-h-[38px] !gap-1 !px-3.5 text-sm" onClick={safeBack}>
             <span aria-hidden>◀</span>もどる

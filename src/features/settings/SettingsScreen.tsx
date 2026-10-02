@@ -38,7 +38,7 @@ export const SettingsScreen = () => {
       {/* The world being played behind it: the night town on 文字が 消えた 町 (08 §3.8). */}
       {moji ? <NightStreetBackdrop /> : <Backdrop fixed />}
       <header
-        className="g-header sticky top-0 z-20 flex items-center justify-between px-4 py-3"
+        className="g-header sticky top-0 z-20 flex items-center justify-between px-4 pt-[max(12px,env(safe-area-inset-top))] pb-3"
       >
         <button type="button" className="g-btn g-btn-accent !min-h-[38px] !gap-1 !px-3.5 text-sm" onClick={safeBack}>
           <span aria-hidden>◀</span>もどる
