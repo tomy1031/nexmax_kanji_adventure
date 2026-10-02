@@ -1,4 +1,4 @@
-import { CRITICAL_MULTIPLIER, MASTERY_DAMAGE, MASTERY_REPS } from '../lib/mastery';
+import { CRITICAL_MULTIPLIER, MASTERY_DAMAGE, MASTERY_REPS, repsToNextStar, starsOf, type Stars } from '../lib/mastery';
 
 /**
  * ★の ひみつ — what each star buys, for じゅんび (lib/mastery.ts, 08 §4.2.2).
@@ -47,3 +47,26 @@ export const STAR_PERKS: StarPerk[] = [
 
 /** The closing line: where the next star comes from. */
 export const STAR_PERKS_HOW = { text: '字(じ)を タップして 書(か)くほど ★が ふえる', en: 'Tap a letter and write it: every write counts toward the next ★.' };
+
+/** What the next star buys, in a word (the result screen's 🎯). */
+export const NEXT_STAR_GAIN: Record<2 | 3, string> = { 2: 'こうげき アップ', 3: '字(じ)の わざ' };
+
+/**
+ * The next goal after a fight: of the kanji given, the one closest to its
+ * next star (★1 needs no fight — it comes from the drill), ties kept in
+ * order. Null when every one is ★3.
+ */
+export const nextStarGoal = <K extends { id: string }>(
+  kanji: readonly K[],
+  repsOf: (id: string) => number,
+): { kanji: K; left: number; next: 2 | 3 } | null => {
+  let best: { kanji: K; left: number; next: 2 | 3 } | null = null;
+  for (const k of kanji) {
+    const reps = repsOf(k.id);
+    const stars: Stars = starsOf(reps);
+    if (stars === 0 || stars === 3) continue;
+    const left = repsToNextStar(reps);
+    if (!best || left < best.left) best = { kanji: k, left, next: (stars + 1) as 2 | 3 };
+  }
+  return best;
+};

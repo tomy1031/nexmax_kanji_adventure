@@ -8,6 +8,7 @@ import { FEATURE_INTRO, type Feature } from '../../data/unlocks';
 import { KanjiWord } from '../../components/ui/Readings';
 import type { KanjiData } from '../../types/kanji';
 import type { Stars } from '../../lib/mastery';
+import { NEXT_STAR_GAIN } from '../../data/starPerks';
 import * as sfx from '../../lib/sfx';
 
 /**
@@ -70,9 +71,14 @@ export const ResultModal = ({
   /**
    * What this fight did for the learner (文字が 消えた 町): the kanji whose ★
    * went up, and the reading turns got right. Shown win or lose — the
-   * writing counted either way.
+   * writing counted either way. `goal`: the kanji closest to its next star,
+   * and what that star brings (🎯), so there is a reason to write again.
    */
-  growth?: { starUps: { kanji: KanjiData; stars: Stars }[]; read: { right: number; total: number } };
+  growth?: {
+    starUps: { kanji: KanjiData; stars: Stars }[];
+    read: { right: number; total: number };
+    goal?: { kanji: KanjiData; left: number; next: 2 | 3 } | null;
+  };
 }) => {
   const moji = route === 'moji';
   const showFurigana = useGameStore((s) => s.settings.furigana);
@@ -169,7 +175,7 @@ export const ResultModal = ({
           </RubyText>
         </p>
 
-        {growth && (growth.starUps.length > 0 || growth.read.total > 0) && (
+        {growth && (growth.starUps.length > 0 || growth.read.total > 0 || growth.goal) && (
           <div className="mt-3 rounded-xl px-3 py-2 text-left" style={{ background: 'rgba(255,255,255,0.55)', border: '2px solid #e0c48a' }}>
             <p className="text-xs font-black" style={{ color: 'var(--ink-2)' }}>
               この たたかいで
@@ -194,6 +200,17 @@ export const ResultModal = ({
             {growth.read.total > 0 && (
               <p className="mt-0.5 text-sm font-black">
                 📖 <RubyText showFurigana={showFurigana}>{`読(よ)めた ${growth.read.right} / ${growth.read.total}`}</RubyText>
+              </p>
+            )}
+            {growth.goal && (
+              <p className="mt-0.5 flex flex-wrap items-baseline gap-x-1 text-sm leading-[2] font-black">
+                🎯 <span>つぎ</span>
+                <span className="text-base">
+                  <KanjiWord kanji={growth.goal.kanji} showFurigana={showFurigana} />
+                </span>
+                <RubyText showFurigana={showFurigana}>
+                  {`あと ${growth.goal.left}回(かい)で ★${growth.goal.next}・${NEXT_STAR_GAIN[growth.goal.next]}`}
+                </RubyText>
               </p>
             )}
           </div>
