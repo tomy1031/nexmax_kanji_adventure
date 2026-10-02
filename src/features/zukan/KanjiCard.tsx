@@ -15,6 +15,7 @@ import { episodePath } from '../../data/mojiFlow';
 import { isMojiEpisodeUnlocked } from '../../data/mojiEpisodes';
 import KanjiBackText from '../moji/KanjiBackText';
 import { useOwnedKanji } from '../moji/useOwnedKanji';
+import { useEscapeToClose } from '../../hooks/useEscapeToClose';
 
 /**
  * ずかんの 字カード (data/kanjiCard.ts): one kanji, to review it.
@@ -33,6 +34,7 @@ export const KanjiCard = ({ kanji, onClose }: { kanji: KanjiData; onClose: () =>
   const cleared = useGameStore((s) => s.clearedStages);
   const owned = useOwnedKanji();
   const [en, setEn] = useState(false);
+  const closeRef = useEscapeToClose(onClose);
   const [strokes, setStrokes] = useState(false);
   const writerRef = useRef<KanjiWriterHandle>(null);
   const playTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -174,7 +176,7 @@ export const KanjiCard = ({ kanji, onClose }: { kanji: KanjiData; onClose: () =>
             </p>
           )
         )}
-        <button type="button" data-tap className="g-btn g-btn-ghost mt-2 w-full" onClick={onClose}>
+        <button ref={closeRef} type="button" data-tap className="g-btn g-btn-ghost mt-2 w-full" onClick={onClose}>
           とじる
         </button>
       </motion.div>
