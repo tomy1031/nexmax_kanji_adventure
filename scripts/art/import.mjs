@@ -64,11 +64,40 @@ const floodClear = (data, w, h, isBg) => {
   }
 };
 
-const cutOut = async (file) => {
+/**
+ * Background shut inside the picture — the gap between a bow and its string —
+ * that a flood from the edges cannot reach: large patches of flat, pure white.
+ * Only for things (prop): a character's white face-screen must stay.
+ */
+const clearEnclosedWhite = (data, w, h, minArea) => {
+  const pure = (i) => data[i * 4 + 3] > 0 && data[i * 4] >= 250 && data[i * 4 + 1] >= 250 && data[i * 4 + 2] >= 250;
+  const seen = new Uint8Array(w * h);
+  for (let start = 0; start < w * h; start++) {
+    if (seen[start] || !pure(start)) continue;
+    const region = [];
+    const stack = [start];
+    seen[start] = 1;
+    while (stack.length) {
+      const i = stack.pop();
+      region.push(i);
+      const x = i % w;
+      for (const j of [x > 0 ? i - 1 : -1, x < w - 1 ? i + 1 : -1, i - w, i + w]) {
+        if (j >= 0 && j < w * h && !seen[j] && pure(j)) {
+          seen[j] = 1;
+          stack.push(j);
+        }
+      }
+    }
+    if (region.length >= minArea) for (const i of region) data[i * 4 + 3] = 0;
+  }
+};
+
+const cutOut = async (file, { enclosed = false } = {}) => {
   const { data, info, transparent } = await load(file, 1024, 1536);
   if (!transparent) {
     const T = 236;
     floodClear(data, info.width, info.height, (i) => data[i * 4 + 3] < 16 || (data[i * 4] >= T && data[i * 4 + 1] >= T && data[i * 4 + 2] >= T));
+    if (enclosed) clearEnclosedWhite(data, info.width, info.height, 2500);
   }
   return sharp(data, { raw: { width: info.width, height: info.height, channels: 4 } }).trim({ threshold: 1 });
 };
@@ -117,7 +146,7 @@ for (const a of ASSETS) {
       .webp({ quality: 88, alphaQuality: 90 })
       .toFile(out);
   } else if (a.kind === 'prop') {
-    const img = await cutOut(raw);
+    const img = await cutOut(raw, { enclosed: true });
     await (await img.png().toBuffer().then((b) => sharp(b)))
       .resize(512, 512, { fit: 'inside', withoutEnlargement: true })
       .webp({ quality: 88, alphaQuality: 90 })

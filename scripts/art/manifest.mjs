@@ -782,7 +782,7 @@ const WEAPON_SHAPES = {
   SWORD: 'a mecha sword — a broad straight blade with a light-blue energy edge and a chunky hilt with the mounting joint.',
   AXE: 'a mecha battle axe — a big crescent axe head on a short thick haft.',
   SPEAR: 'a mecha lance — a long shaft ending in a drill-like spiral spearhead.',
-  BOW: 'a mecha bow — a curved bow with a glowing energy string and the mounting joint at the grip.',
+  BOW: 'a mecha bow — a curved bow with a thin glowing energy string and the mounting joint at the grip. The space between the string and the bow is empty: the plain white background shows through it, nothing is drawn there.',
   STAFF: 'a mecha staff — a slim staff topped with a ring that holds a floating round orb.',
   HAMMER: 'a mecha hammer — a big round-ended hammer head with two little thrusters on its back, on a short handle.',
   DAGGER: 'a pair of mecha daggers — two short curved blades crossed over each other, joined at one mounting joint.',

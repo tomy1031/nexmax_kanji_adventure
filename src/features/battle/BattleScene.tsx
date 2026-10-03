@@ -22,7 +22,7 @@ import * as sfx from '../../lib/sfx';
 import { comboMilestone, comboTier, isComboBreak, strokeEnd, strokeLift } from '../../lib/combo';
 import type { StrokeSpark } from './ComboFx';
 import { SKILL_INFO, SKILL_OF, gaugeGain, skillEffect, skillGaugeFull } from '../../lib/companionSkill';
-import { HURT_LINE, linesOf } from '../../data/companionLines';
+import { HURT_LINE, linesFor } from '../../data/companionLines';
 import type { CompanionView, SkillCut } from './CompanionFx';
 import {
   computeDamage,
@@ -338,7 +338,7 @@ export const BattleScene = ({
   // The companion says hello once the intro band has gone.
   useEffect(() => {
     if (!skillKind || !individual) return;
-    const t = setTimeout(() => companionSay(linesOf(individual.char).start), 1600);
+    const t = setTimeout(() => companionSay(linesFor(individual).start), 1600);
     return () => clearTimeout(t);
     // Once per fight.
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -561,7 +561,7 @@ export const BattleScene = ({
 
       if (nextBossHp <= 0) {
         bossDownRef.current = true;
-        if (skillKind && individual) companionSay(linesOf(individual.char).win);
+        if (skillKind && individual) companionSay(linesFor(individual).win);
         settleTimer.current = setTimeout(() => settle('win', nextMistakes, playerHp), mastery ? WIN_DELAY_MASTERY_MS : 650);
         return;
       }
@@ -768,7 +768,7 @@ export const BattleScene = ({
     const does = info.says(e);
     setGauge(0);
     setCut({ n: talkNo.current + 1, art: individual.art, name: individual.name, kind: skillKind, does });
-    companionSay(linesOf(individual.char).skill);
+    companionSay(linesFor(individual).skill);
     sfx.skill();
     if (e.heal) setPlayerHp((h) => Math.min(stats.maxHp, h + e.heal!));
     if (e.calm) setRage((r) => Math.max(0, r - e.calm!));

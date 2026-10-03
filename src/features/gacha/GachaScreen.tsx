@@ -24,7 +24,7 @@ import { RubyText } from '../../components/ui/Ruby';
 import { assetPath } from '../../lib/assetPath';
 import { DAILY_TOTAL } from '../../data/dailyTasks';
 import { SKILL_INFO, SKILL_OF } from '../../lib/companionSkill';
-import { linesOf } from '../../data/companionLines';
+import { linesFor } from '../../data/companionLines';
 import { useBgm } from '../../lib/bgm';
 import * as sfx from '../../lib/sfx';
 
@@ -425,7 +425,7 @@ const SingleCard = ({ r, face, showFurigana, onClose }: { r: Shown; face: boolea
             <RubyText showFurigana={showFurigana}>{r.card.name}</RubyText>
           </p>
           <p className="mt-1 rounded-2xl bg-white/70 px-3 py-1.5 text-sm leading-snug font-bold">
-            「<RubyText showFurigana={showFurigana}>{linesOf(r.card.char).start}</RubyText>」
+            「<RubyText showFurigana={showFurigana}>{linesFor(r.card).start}</RubyText>」
           </p>
           <p className="mt-2 text-xs" style={{ color: 'var(--ink-2)' }}>
             {info.icon} <RubyText showFurigana={showFurigana}>{`わざ「${info.name}」`}</RubyText>

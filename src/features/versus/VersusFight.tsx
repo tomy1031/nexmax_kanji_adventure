@@ -13,7 +13,7 @@ import type { StrokeSpark } from '../battle/ComboFx';
 import { SELF_HIT, SLIPS_TO_SELF_HIT, VS_MAX_HP, versusComboBonus, writeDamage } from './rules';
 import { STAMPS } from './types';
 import { SKILL_INFO, SKILL_OF, gaugeGain, skillGaugeFull, type SkillKind } from '../../lib/companionSkill';
-import { linesOf } from '../../data/companionLines';
+import { linesFor } from '../../data/companionLines';
 import { getIndividual, type Individual } from '../../data/individuals';
 import type { CompanionView, SkillCut } from '../battle/CompanionFx';
 import { throughWard, versusSkill, versusSkillSays } from './versusSkill';
@@ -132,7 +132,7 @@ export const VersusFight = ({ round, opponentName, opponentImg, weaponBonus, inc
   const companionSay = useCallback((text: string) => setTalk({ n: (talkNo.current += 1), text }), []);
   useEffect(() => {
     if (!myCard) return;
-    const t = setTimeout(() => companionSay(linesOf(myCard.char).start), 1200);
+    const t = setTimeout(() => companionSay(linesFor(myCard).start), 1200);
     return () => clearTimeout(t);
     // Once a match.
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -339,7 +339,7 @@ export const VersusFight = ({ round, opponentName, opponentImg, weaponBonus, inc
     const e = versusSkill(myKind, myCard.rarity);
     setGauge(0);
     setCut({ n: (cutNo.current += 1), art: myCard.art, name: myCard.name, kind: myKind, does: versusSkillSays(e) });
-    companionSay(linesOf(myCard.char).skill);
+    companionSay(linesFor(myCard).skill);
     sfx.skill();
     if (e.power) setPower(e.power);
     if (e.freeLooks) setFreeLooks((f) => f + e.freeLooks!);
