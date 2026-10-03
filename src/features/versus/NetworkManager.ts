@@ -185,6 +185,11 @@ class NetworkManager {
     const token = this.matchToken;
 
     const myKey = `p-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
+    // The lobby watcher (watchLobby) holds the same topic, and the client would
+    // hand that channel back: let go of it before queueing.
+    const stale = supabase.getChannels().find((c) => c.topic === `realtime:${LOBBY_TOPIC}`);
+    if (stale) await supabase.removeChannel(stale);
+    if (token !== this.matchToken) throw new MatchCancelledError();
     const lobby = supabase.channel(LOBBY_TOPIC, { config: { presence: { key: myKey } } });
     this.lobbyChannel = lobby;
 
@@ -250,6 +255,31 @@ class NetworkManager {
     // waiting for the pair channel's presence to decide it raced the handshake
     // (neither side yet knew it hosted, so nobody sent the round).
     await this.joinPair(pairCode, token, myKey < partnerKey);
+  }
+
+  /**
+   * How many are waiting in the lobby right now, for the ロビー to show —
+   * without queueing: the watcher's presence key is not a waiter's ('p-'), so
+   * it is never counted or paired. Returns a stop.
+   */
+  public watchLobby(onCount: (n: number) => void): () => void {
+    const supabase = getSupabase();
+    if (!supabase) return () => {};
+    const ch = supabase.channel(LOBBY_TOPIC, { config: { presence: { key: `w-${Math.random().toString(36).slice(2, 10)}` } } });
+    const count = () => {
+      const now = Date.now();
+      const state = ch.presenceState() as Record<string, Array<{ j?: number }>>;
+      onCount(Object.entries(state).filter(([k, v]) => k.startsWith('p-') && (v[0]?.j ?? 0) > 0 && now - (v[0]?.j ?? 0) < STALE_WAITER_MS).length);
+    };
+    ch.on('presence', { event: 'sync' }, count);
+    ch.on('presence', { event: 'join' }, count);
+    ch.on('presence', { event: 'leave' }, count);
+    ch.subscribe((status) => {
+      if (status === 'SUBSCRIBED') count();
+    });
+    return () => {
+      void supabase.removeChannel(ch);
+    };
   }
 
   /**
