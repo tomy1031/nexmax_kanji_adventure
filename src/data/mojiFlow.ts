@@ -1,5 +1,6 @@
 import { KANA_EPISODES } from './kana';
-import { MOJI_EPISODES, isMojiEpisodeUnlocked } from './mojiEpisodes';
+import { MOJI_EPISODES, getMojiEpisode, isMojiEpisodeUnlocked } from './mojiEpisodes';
+import { MOJI_FINALES, getMojiFinale, isFinaleOpen, lastEpisodeOf } from './mojiFinale';
 import { MOJI_CHAPTERS } from './mojiRoute';
 import { Feature, isFeatureUnlocked, UNLOCKED_ON_MOJI } from './unlocks';
 import { MASTERY_REPS } from '../lib/mastery';
@@ -31,8 +32,23 @@ export const ROUTE_ORDER: string[] = [
 const isKana = (id: string) => id.startsWith('kana-');
 const isMoji = (id: string) => id.startsWith('moji-');
 
-/** The episode after this one, or null when the story has not been written that far yet. */
-export const afterEpisode = (id: string): string | null => {
+/**
+ * The episode after this one, or null when the story has not been written
+ * that far yet. Given the clears, a chapter's last episode leads to its
+ * まとめの ボス once that is open (data/mojiFinale.ts), and the boss to
+ * whatever follows the chapter.
+ */
+export const afterEpisode = (id: string, cleared?: readonly string[]): string | null => {
+  const finale = getMojiFinale(id);
+  if (finale) {
+    const last = lastEpisodeOf(finale.chapter);
+    return last ? afterEpisode(last.id) : null;
+  }
+  if (cleared) {
+    const ep = getMojiEpisode(id);
+    const f = ep && MOJI_FINALES.find((x) => x.chapter === ep.chapter);
+    if (f && lastEpisodeOf(f.chapter)?.id === id && isFinaleOpen(f, cleared)) return f.id;
+  }
   const i = ROUTE_ORDER.indexOf(id);
   return i >= 0 && i + 1 < ROUTE_ORDER.length ? ROUTE_ORDER[i + 1] : null;
 };
@@ -55,6 +71,22 @@ export const nextUp = (cleared: readonly string[], startPath: StartPath): string
     if (kana) return kana;
   }
   return ROUTE_ORDER.filter(isMoji).find((id) => !cleared.includes(id)) ?? null;
+};
+
+const chapterOrder = (chapterId: string | undefined) => MOJI_CHAPTERS.find((c) => c.id === chapterId)?.order ?? Infinity;
+
+/**
+ * つづきから with the まとめの ボス: an open boss not beaten yet comes before
+ * the next chapter's episodes (or when nothing else is left).
+ */
+export const nextUpWithFinale = (cleared: readonly string[], startPath: StartPath): string | null => {
+  const next = nextUp(cleared, startPath);
+  const nextChapter = next ? getMojiEpisode(next)?.chapter : undefined;
+  if (next && !nextChapter) return next;
+  const boss = MOJI_FINALES.filter((f) => !cleared.includes(f.id) && isFinaleOpen(f, cleared))
+    .sort((a, b) => chapterOrder(a.chapter) - chapterOrder(b.chapter))
+    .find((f) => !next || chapterOrder(f.chapter) < chapterOrder(nextChapter));
+  return boss?.id ?? next;
 };
 
 /** The town episode whose clear opens each feature on this route (unlocks.ts, beside the picture-book arcs'). */
@@ -112,4 +144,14 @@ export const continuePath = (
   if (next) return episodePath(next, cleared);
   const target = practiceTarget(progress, cleared);
   return target ? `/moji/${target.episode}?at=ready` : null;
+};
+
+/** continuePath with the まとめの ボス (nextUpWithFinale). */
+export const continuePathWithFinale = (
+  cleared: readonly string[],
+  startPath: StartPath,
+  progress: Progress,
+): string | null => {
+  const next = nextUpWithFinale(cleared, startPath);
+  return next && getMojiFinale(next) ? episodePath(next, cleared) : continuePath(cleared, startPath, progress);
 };

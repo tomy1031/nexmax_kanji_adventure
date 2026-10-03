@@ -36,6 +36,7 @@ export const ResultModal = ({
   gems,
   perfect = false,
   hard = false,
+  milestone,
   showGems = true,
   newFriend,
   opened,
@@ -61,6 +62,8 @@ export const ResultModal = ({
   perfect?: boolean;
   /** The first Hard win of this stage: a 👹 and a bonus (lib/difficulty.ts). */
   hard?: boolean;
+  /** The first win that closes something: 「1章 クリア！」 (まとめの ボス). */
+  milestone?: string;
   /** Whether gems are worth showing yet (the new route shows them once the gacha is open). */
   showGems?: boolean;
   newFriend: boolean;
@@ -274,6 +277,11 @@ export const ResultModal = ({
         {hard && (
           <p className="mt-2 text-sm font-black" style={{ color: 'var(--color-danger)' }}>
             <RubyText showFurigana={showFurigana}>👹 ハードに はじめて 勝(か)った！</RubyText>
+          </p>
+        )}
+        {milestone && (
+          <p className="g-chip g-chip-gold mt-2 !text-base font-black">
+            🏁 <RubyText showFurigana={showFurigana}>{milestone}</RubyText>
           </p>
         )}
         {gems > 0 && showGems && (
