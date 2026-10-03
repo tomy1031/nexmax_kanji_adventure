@@ -23,7 +23,7 @@ import { pickRound } from './round';
 import { VersusFight } from './VersusFight';
 import KanjiCard from '../zukan/KanjiCard';
 import { charRuby } from '../../lib/reading';
-import { cpuTurn } from './cpu';
+import { CPU_LEVELS, cpuTurn, type CpuLevel } from './cpu';
 import { SELF_HIT } from './rules';
 
 /**
@@ -142,6 +142,9 @@ export const VersusScreen = () => {
   const [count, setCount] = useState(3);
   /** Playing the CPU (no relay, no rating), not a person. */
   const [cpu, setCpu] = useState(false);
+  /** How strong the CPU is (CPU_LEVELS), and the sheet that picks it. */
+  const [cpuLevel, setCpuLevel] = useState<CpuLevel>(1);
+  const [cpuMenu, setCpuMenu] = useState(false);
   /** ともだちと: the room's あいことば and whether this side made it. Unrated, like the CPU. */
   const [room, setRoom] = useState<{ code: string; host: boolean } | null>(null);
   /** The ともだちと sheet: choosing, or typing a friend's code. */
@@ -427,8 +430,10 @@ export const VersusScreen = () => {
   };
 
   /** Practice with the CPU: the same round rules, from the kanji this player has. */
-  const startCpu = () => {
+  const startCpu = (level: CpuLevel) => {
     sfx.tap();
+    setCpuMenu(false);
+    setCpuLevel(level);
     stopResend();
     networkManager.cancel();
     settled.current = false;
@@ -442,7 +447,7 @@ export const VersusScreen = () => {
     setCpu(true);
     setRoom(null);
     setFriendMenu('closed');
-    setThem({ avatar: null, rating: versus.rating, wins: 0, losses: 0, known: [] });
+    setThem({ avatar: CPU_LEVELS[level].avatar, rating: versus.rating, wins: 0, losses: 0, known: [] });
     const picked = pickRound(meRef.current.known, meRef.current.known, BASIC);
     void preloadCharData(picked);
     setRound(picked);
@@ -455,7 +460,7 @@ export const VersusScreen = () => {
     if (!cpu || phase !== 'fighting') return;
     let timer: ReturnType<typeof setTimeout>;
     const next = () => {
-      const turn = cpuTurn(versus.rating);
+      const turn = cpuTurn(versus.rating, Math.random, cpuLevel);
       timer = setTimeout(() => {
         hitNo.current += 1;
         setIncoming(turn.damage > 0 ? { n: hitNo.current, damage: turn.damage } : { n: hitNo.current, damage: SELF_HIT, self: true });
@@ -465,7 +470,7 @@ export const VersusScreen = () => {
     };
     next();
     return () => clearTimeout(timer);
-  }, [cpu, phase, versus.rating]);
+  }, [cpu, phase, versus.rating, cpuLevel]);
 
   // The search clock.
   useEffect(() => {
@@ -501,7 +506,7 @@ export const VersusScreen = () => {
     return (
       <VersusFight
         round={round}
-        opponentName={`${cpu ? 'CPU' : nameOf(them)} ✍️${Math.min(theirDone, round.length)}/${round.length}`}
+        opponentName={`${cpu ? `CPU・${CPU_LEVELS[cpuLevel].name}` : nameOf(them)} ✍️${Math.min(theirDone, round.length)}/${round.length}`}
         opponentImg={artOf(them, true)}
         weaponBonus={weaponBonus}
         incoming={incoming}
@@ -650,7 +655,7 @@ export const VersusScreen = () => {
                 className="g-btn g-btn-primary g-shine flex-1"
                 onClick={() => {
                   setError(null);
-                  if (cpu) startCpu();
+                  if (cpu) startCpu(cpuLevel);
                   else if (room) void enterRoom(room.code, room.host);
                   else void search();
                 }}
@@ -725,7 +730,14 @@ export const VersusScreen = () => {
                       <p className="mt-2 text-xs opacity-80">
                         <RubyText showFurigana={showFurigana}>いまは まっている 人(ひと)が いない みたい。</RubyText>
                       </p>
-                      <button type="button" className="g-btn g-btn-primary g-shine mt-2 w-full" onClick={startCpu}>
+                      <button
+                        type="button"
+                        className="g-btn g-btn-primary g-shine mt-2 w-full"
+                        onClick={() => {
+                          cancel();
+                          setCpuMenu(true);
+                        }}
+                      >
                         <span className="relative z-10">
                           🤖 <RubyText showFurigana={showFurigana}>CPU と れんしゅう</RubyText>
                         </span>
@@ -811,7 +823,14 @@ export const VersusScreen = () => {
                     >
                       👫 <RubyText showFurigana={showFurigana}>ともだちと</RubyText>
                     </button>
-                    <button type="button" className="g-btn g-btn-night flex-1 !min-h-[40px] !px-2 text-xs whitespace-nowrap" onClick={startCpu}>
+                    <button
+                      type="button"
+                      className="g-btn g-btn-night flex-1 !min-h-[40px] !px-2 text-xs whitespace-nowrap"
+                      onClick={() => {
+                        sfx.tap();
+                        setCpuMenu(true);
+                      }}
+                    >
                       🤖 <RubyText showFurigana={showFurigana}>CPU と れんしゅう</RubyText>
                     </button>
                   </div>
@@ -831,6 +850,56 @@ export const VersusScreen = () => {
           position={`${card + 1} / ${writes.length}`}
         />
       )}
+
+      {/* CPU と れんしゅう — how strong. */}
+      <AnimatePresence>
+        {cpuMenu && (
+          <motion.div
+            key="cpu"
+            className="fixed inset-0 z-30 flex items-end justify-center bg-black/55 px-4 pb-[max(20px,env(safe-area-inset-bottom))]"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setCpuMenu(false)}
+          >
+            <motion.section
+              className="g-novel-night w-full max-w-md rounded-2xl px-4 py-4 text-center"
+              initial={{ y: 40 }}
+              animate={{ y: 0 }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <p className="text-lg font-black">
+                🤖 <RubyText showFurigana={showFurigana}>CPU と れんしゅう</RubyText>
+              </p>
+              <p className="mt-0.5 text-xs opacity-85">
+                <RubyText showFurigana={showFurigana}>つよさを えらんでね。レートは かわりません。</RubyText>
+              </p>
+              <div className="mt-3 grid grid-cols-3 gap-2">
+                {CPU_LEVELS.map((l, i) => (
+                  <button
+                    key={l.name}
+                    type="button"
+                    className={`g-btn ${i === cpuLevel ? 'g-btn-primary' : 'g-btn-night'} !flex-col !gap-0.5 !px-1 !py-2`}
+                    onClick={() => startCpu(i as CpuLevel)}
+                  >
+                    <img src={assetPath(getIndividual(l.avatar)?.art ?? NEXMAX_ART)} alt="" aria-hidden className="h-16 w-14 object-contain" draggable={false} />
+                    <span className="text-sm font-black">
+                      <RubyText showFurigana={showFurigana}>{l.name}</RubyText>
+                    </span>
+                    <span aria-hidden className="text-[11px] tracking-tighter text-[#ffd36a]">
+                      {'★'.repeat(i + 1)}
+                      <span className="opacity-30">{'★'.repeat(2 - i)}</span>
+                    </span>
+                  </button>
+                ))}
+              </div>
+              <button type="button" className="mt-3 text-xs font-bold underline opacity-80" onClick={() => setCpuMenu(false)}>
+                <RubyText showFurigana={showFurigana}>とじる</RubyText>
+              </button>
+            </motion.section>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* ともだちと — make an あいことば, or type a friend's. */}
       <AnimatePresence>
@@ -933,7 +1002,7 @@ export const VersusScreen = () => {
               <motion.div className="flex flex-col items-center" initial={still ? false : { x: 160, opacity: 0 }} animate={{ x: 0, opacity: 1 }} transition={{ type: 'spring', stiffness: 220, damping: 20, delay: 0.1 }}>
                 <Avatar src={artOf(them, true)} mirrored size={128} />
                 <span className="mt-1 text-sm font-black">
-                  <RubyText showFurigana={showFurigana}>{`あいて・${cpu ? 'CPU' : nameOf(them)}`}</RubyText>
+                  <RubyText showFurigana={showFurigana}>{`あいて・${cpu ? `CPU（${CPU_LEVELS[cpuLevel].name}）` : nameOf(them)}`}</RubyText>
                 </span>
                 <RankBadge rating={them?.rating ?? 1000} showFurigana={showFurigana} />
               </motion.div>

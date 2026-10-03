@@ -19,9 +19,23 @@ export interface CpuTurn {
 /** Seconds per character: 8 at 1000, down to 5.5 for strong players, never below. */
 export const cpuPace = (rating: number): number => Math.min(9, Math.max(5.5, 8 - (rating - 1000) / 160));
 
-export const cpuTurn = (rating: number, rnd: () => number = Math.random): CpuTurn => {
-  const ms = Math.round(cpuPace(rating) * 1000 * (0.75 + rnd() * 0.5));
+/**
+ * How strong the CPU is, chosen before the match: やさしい for a learner just
+ * starting, ふつう (the default, as it always was), つよい for a quick hand.
+ * Each is its own なかま, so the three feel like three opponents.
+ */
+export const CPU_LEVELS = [
+  { name: 'やさしい', avatar: 'INFP', pace: 1.35, odds: [0.45, 0.75, 0.9] },
+  { name: 'ふつう', avatar: 'ENTJ', pace: 1, odds: [0.55, 0.85, 0.95] },
+  { name: 'つよい', avatar: 'ESTJ', pace: 0.75, odds: [0.7, 0.9, 0.97] },
+] as const;
+export type CpuLevel = 0 | 1 | 2;
+
+/** One character of the CPU: how long it takes, its slips (by the level's odds) and what it lands. */
+export const cpuTurn = (rating: number, rnd: () => number = Math.random, level: CpuLevel = 1): CpuTurn => {
+  const { pace, odds } = CPU_LEVELS[level];
+  const ms = Math.round(cpuPace(rating) * pace * 1000 * (0.75 + rnd() * 0.5));
   const r = rnd();
-  const mistakes = r < 0.55 ? 0 : r < 0.85 ? 1 : r < 0.95 ? 2 : SLIPS_TO_SELF_HIT;
+  const mistakes = r < odds[0] ? 0 : r < odds[1] ? 1 : r < odds[2] ? 2 : SLIPS_TO_SELF_HIT;
   return { ms, mistakes, damage: mistakes >= SLIPS_TO_SELF_HIT ? 0 : writeDamage(mistakes, false, 1) };
 };
