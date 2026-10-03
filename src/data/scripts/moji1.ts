@@ -364,13 +364,13 @@ export const MOJI1_SCRIPTS: Record<string, EpisodeScript> = {
     outro: {
       stageId: 'moji-1-8',
       lines: [
-        { bg: 'naniwa_clocktower', fx: ['darkclouds'], sprite: 'mojikui_clocktower:normal', glyph: '🛍️ 💨', text: 'モジクイは しょうてんがいへ にげました。', en: 'The Mojikui fled to the shopping arcade.' },
+        { bg: 'naniwa_clocktower', fx: ['darkclouds'], sprite: 'mojikui_clocktower:normal', glyph: '🏪 💨', text: 'モジクイは しょうてんがいへ にげました。', en: 'The Mojikui fled to the shopping arcade.' },
         { fx: ['spring'], glyph: '🕰️ ✨ 🌅', text: 'とけいが うごきました！ まちに 朝(あさ)が きました。', en: 'The clock moves again! Morning comes to the town.' },
         { speaker: 'keeper', sprite: 'keeper:happy', glyph: '🕢', text: '今(いま) 七(しち)時(じ)半(はん)です！', en: "It's half past seven!" },
         { speaker: 'nexmax', sprite: 'nexmax:smile', glyph: '🌅 🍞', text: '朝(あさ)ですね！ おはようございます！', en: "It's morning! Good morning!" },
         { speaker: 'keeper', sprite: 'keeper:happy', glyph: '🌅 ☀️ 🌙', text: '朝(あさ)、昼(ひる)、晩(ばん)。もう だいじょうぶです。', en: 'Morning, noon and night — all back in order.' },
-        { speaker: 'keeper', sprite: 'keeper:trouble', glyph: '🛍️ 🚪❓', text: 'でも、しょうてんがいの おみせが あきません……', en: "But the shops in the arcade won't open…" },
-        { speaker: 'nexmax', sprite: 'nexmax:determined', glyph: '🛍️ 👉', text: 'しょうてんがいへ いきましょう！', en: "Let's go to the arcade!" },
+        { speaker: 'keeper', sprite: 'keeper:trouble', glyph: '🏪 🚪❓', text: 'でも、しょうてんがいの おみせが あきません……', en: "But the shops in the arcade won't open…" },
+        { speaker: 'nexmax', sprite: 'nexmax:determined', glyph: '🏪 👉', text: 'しょうてんがいへ いきましょう！', en: "Let's go to the arcade!" },
       ],
     },
   },
@@ -379,7 +379,7 @@ export const MOJI1_SCRIPTS: Record<string, EpisodeScript> = {
       stageId: 'moji-1-9',
       lines: [
         { bg: 'naniwa_shopstreet', text: 'まちの しょうてんがいです。', en: "The town's covered shopping arcade." },
-        { glyph: '🛍️ 🪧❓', text: 'おみせの ふだの じが、ありません。', en: "The letters on the shops' signs are gone." },
+        { glyph: '🏪 🪧❓', text: 'おみせの ふだの じが、ありません。', en: "The letters on the shops' signs are gone." },
         { speaker: 'baker', sprite: 'baker:trouble', glyph: '🍞 🚪❓', text: 'きょうは 休(やす)みですか？ わたしも わかりません……💦', en: "Are we closed today? Even I don't know…" },
         { speaker: 'nexmax', sprite: 'nexmax:think', glyph: '🕘 ➡️ 🕔 ❓', text: '何(なん)時(じ)から 何(なん)時(じ)までですか？', en: 'From what time until what time are you open?' },
         { text: '午(ご)前(ぜん)、午(ご)後(ご)、休(やす)み、毎(まい)日(にち)、何(なん)……おとだけ、のこって います。', en: 'Only the sounds are left: gozen, gogo, yasumi, mainichi, nan.' },
@@ -401,7 +401,7 @@ export const MOJI1_SCRIPTS: Record<string, EpisodeScript> = {
       stageId: 'moji-1-9',
       lines: [
         { bg: 'naniwa_shopstreet', fx: ['darkclouds'], sprite: 'mojikui_signboard:normal', glyph: '🚏 💨', text: 'モジクイは バスていの ほうへ にげました。', en: 'The Mojikui fled toward the bus stop.' },
-        { fx: ['spring'], glyph: '🛍️ ✨ 🍞', text: 'ふだが もどって、おみせが あきました！', en: 'The signs came back, and the shops opened!' },
+        { fx: ['spring'], glyph: '🏪 ✨ 🍞', text: 'ふだが もどって、おみせが あきました！', en: 'The signs came back, and the shops opened!' },
         { speaker: 'baker', sprite: 'baker:happy', glyph: '🕗 ➡️ 🕕', text: '午(ご)前(ぜん) 八(はち)時(じ)から 午(ご)後(ご) 六(ろく)時(じ)までです。', en: "We're open from 8 a.m. to 6 p.m." },
         { speaker: 'baker', sprite: 'baker:happy', glyph: '📅 ✅', text: '毎(まい)日(にち) やって います。休(やす)みは ありません！', en: "We're open every day — no days off!" },
         { speaker: 'nexmax', sprite: 'nexmax:smile', glyph: '🍞 😋', text: 'これは 何(なん)ですか？ ……おいしい！', en: 'What is this? …Delicious!' },
