@@ -706,6 +706,9 @@ export const PHOTO_SCENES: Record<string, SceneDef> = {
   naniwa_bus_stop: photoScene('img/naniwa/naniwa_bus_stop.webp', boardRows([...'行来校週去年'])),
   // Below the platform's hanging sign, above the tunnel mouth.
   naniwa_station_deep: photoScene('img/naniwa/naniwa_station_deep.webp', boardRows([...'駅電車自転'], [800, 1440], 400)),
+  // 1章 12話 まとめの ボス: モジクイの 巣（駅の 奥の トンネル）と、灯りが ぜんぶ 戻った 町。
+  naniwa_nest: photoScene('img/naniwa/naniwa_nest.webp'),
+  naniwa_lights_back: photoScene('img/naniwa/naniwa_lights_back.webp'),
   // 1章: ナニワタウン
   naniwa_town: photoScene('img/title/bg.webp'),
   // 1章1話: the station calendar's seven empty panels, 日 月 火 水 木 金 土 (measured on the picture).

@@ -1,4 +1,5 @@
 import type { CastMember, NovelScript } from '../../types/novel';
+import type { FinaleScript } from '../mojiFinale';
 import { NANIWA_FOLK, NANIWA_NEXMAX } from './naniwaCast';
 
 /**
@@ -42,6 +43,7 @@ export const MOJI1_CAST: CastMember[] = [
   { id: 'mojikui_signboard', name: 'かんばんの モジクイ', color: '#5a2d8c', sprites: { normal: 'img/battle/mojikui_signboard.webp' } },
   { id: 'mojikui_bus', name: 'バスの モジクイ', color: '#5a2d8c', sprites: { normal: 'img/battle/mojikui_bus.webp' } },
   { id: 'mojikui_station', name: 'えきの モジクイ', color: '#5a2d8c', sprites: { normal: 'img/battle/mojikui_station.webp' } },
+  { id: 'mojikui_boss', name: '大(おお)モジクイ', color: '#3b1a66', sprites: { normal: 'img/battle/mojikui_boss.webp' } },
   ...NANIWA_FOLK,
 ];
 
@@ -363,13 +365,13 @@ export const MOJI1_SCRIPTS: Record<string, EpisodeScript> = {
     outro: {
       stageId: 'moji-1-8',
       lines: [
-        { bg: 'naniwa_clocktower', fx: ['darkclouds'], sprite: 'mojikui_clocktower:normal', glyph: '🛍️ 💨', text: 'モジクイは しょうてんがいへ にげました。', en: 'The Mojikui fled to the shopping arcade.' },
+        { bg: 'naniwa_clocktower', fx: ['darkclouds'], sprite: 'mojikui_clocktower:normal', glyph: '🏪 💨', text: 'モジクイは しょうてんがいへ にげました。', en: 'The Mojikui fled to the shopping arcade.' },
         { fx: ['spring'], glyph: '🕰️ ✨ 🌅', text: 'とけいが うごきました！ まちに 朝(あさ)が きました。', en: 'The clock moves again! Morning comes to the town.' },
         { speaker: 'keeper', sprite: 'keeper:happy', glyph: '🕢', text: '今(いま) 七(しち)時(じ)半(はん)です！', en: "It's half past seven!" },
         { speaker: 'nexmax', sprite: 'nexmax:smile', glyph: '🌅 🍞', text: '朝(あさ)ですね！ おはようございます！', en: "It's morning! Good morning!" },
         { speaker: 'keeper', sprite: 'keeper:happy', glyph: '🌅 ☀️ 🌙', text: '朝(あさ)、昼(ひる)、晩(ばん)。もう だいじょうぶです。', en: 'Morning, noon and night — all back in order.' },
-        { speaker: 'keeper', sprite: 'keeper:trouble', glyph: '🛍️ 🚪❓', text: 'でも、しょうてんがいの おみせが あきません……', en: "But the shops in the arcade won't open…" },
-        { speaker: 'nexmax', sprite: 'nexmax:determined', glyph: '🛍️ 👉', text: 'しょうてんがいへ いきましょう！', en: "Let's go to the arcade!" },
+        { speaker: 'keeper', sprite: 'keeper:trouble', glyph: '🏪 🚪❓', text: 'でも、しょうてんがいの おみせが あきません……', en: "But the shops in the arcade won't open…" },
+        { speaker: 'nexmax', sprite: 'nexmax:determined', glyph: '🏪 👉', text: 'しょうてんがいへ いきましょう！', en: "Let's go to the arcade!" },
       ],
     },
   },
@@ -378,7 +380,7 @@ export const MOJI1_SCRIPTS: Record<string, EpisodeScript> = {
       stageId: 'moji-1-9',
       lines: [
         { bg: 'naniwa_shopstreet', text: 'まちの しょうてんがいです。', en: "The town's covered shopping arcade." },
-        { glyph: '🛍️ 🪧❓', text: 'おみせの ふだの じが、ありません。', en: "The letters on the shops' signs are gone." },
+        { glyph: '🏪 🪧❓', text: 'おみせの ふだの じが、ありません。', en: "The letters on the shops' signs are gone." },
         { speaker: 'baker', sprite: 'baker:trouble', glyph: '🍞 🚪❓', text: 'きょうは 休(やす)みですか？ わたしも わかりません……💦', en: "Are we closed today? Even I don't know…" },
         { speaker: 'nexmax', sprite: 'nexmax:think', glyph: '🕘 ➡️ 🕔 ❓', text: '何(なん)時(じ)から 何(なん)時(じ)までですか？', en: 'From what time until what time are you open?' },
         { text: '午(ご)前(ぜん)、午(ご)後(ご)、休(やす)み、毎(まい)日(にち)、何(なん)……おとだけ、のこって います。', en: 'Only the sounds are left: gozen, gogo, yasumi, mainichi, nan.' },
@@ -400,7 +402,7 @@ export const MOJI1_SCRIPTS: Record<string, EpisodeScript> = {
       stageId: 'moji-1-9',
       lines: [
         { bg: 'naniwa_shopstreet', fx: ['darkclouds'], sprite: 'mojikui_signboard:normal', glyph: '🚏 💨', text: 'モジクイは バスていの ほうへ にげました。', en: 'The Mojikui fled toward the bus stop.' },
-        { fx: ['spring'], glyph: '🛍️ ✨ 🍞', text: 'ふだが もどって、おみせが あきました！', en: 'The signs came back, and the shops opened!' },
+        { fx: ['spring'], glyph: '🏪 ✨ 🍞', text: 'ふだが もどって、おみせが あきました！', en: 'The signs came back, and the shops opened!' },
         { speaker: 'baker', sprite: 'baker:happy', glyph: '🕗 ➡️ 🕕', text: '午(ご)前(ぜん) 八(はち)時(じ)から 午(ご)後(ご) 六(ろく)時(じ)までです。', en: "We're open from 8 a.m. to 6 p.m." },
         { speaker: 'baker', sprite: 'baker:happy', glyph: '📅 ✅', text: '毎(まい)日(にち) やって います。休(やす)みは ありません！', en: "We're open every day — no days off!" },
         { speaker: 'nexmax', sprite: 'nexmax:smile', glyph: '🍞 😋', text: 'これは 何(なん)ですか？ ……おいしい！', en: 'What is this? …Delicious!' },
@@ -477,5 +479,39 @@ export const MOJI1_SCRIPTS: Record<string, EpisodeScript> = {
         { speaker: 'nexmax', sprite: 'nexmax:determined', glyph: '🚲 💨 🕳️', text: '自(じ)転(てん)車(しゃ)で 行(い)きましょう！ ✊', en: "Let's go by bicycle!" },
       ],
     },
+  },
+};
+
+/**
+ * 1章 12話 まとめの ボス（10 §2・§3, data/mojiFinale.ts）: 11話の あと、自転車で トンネルの 奥の 巣へ。
+ * intro は 大モジクイと 向き合って 終わる（そのあと じゅんび・たたかい）。outro は 町の 灯りが
+ * ぜんぶ 戻り、海の むこうの 町（2章）が 霧に かくれて いる。1章の 字は もう 書いて あるので 漢字で 出る。
+ */
+export const MOJI1_FINALE: FinaleScript = {
+  intro: {
+    stageId: 'moji-1-boss',
+    lines: [
+      { bg: 'naniwa_nest', glyph: '🚲 💨 🕳️', text: '自(じ)転(てん)車(しゃ)で、トンネルの おくへ きました。', en: 'We rode the bicycles deep into the tunnel.' },
+      { glyph: '🪧 🕰️ 📕 🏷️', text: 'たべられた かんばん、とけい、本(ほん)、ねふだ……ぜんぶ ここに あります。', en: 'The eaten signs, clocks, books and price tags — they are all here.' },
+      { glyph: '🫧 ✨', text: 'あわの なかに、じが とじこめられて います。', en: 'Letters are trapped inside the bubbles.' },
+      { fx: ['darkclouds'], speaker: 'mojikui_boss', sprite: 'mojikui_boss:normal', text: 'よく きました。わたしが 大(おお)モジクイです！ 😈', en: 'So you made it. I am the Great Mojikui!' },
+      { speaker: 'mojikui_boss', sprite: 'mojikui_boss:normal', glyph: '👀 ✍️ ❓', text: 'あなたが にがてな じは どれですか？ その じから たべます！', en: "Which letters are you weakest at? I'll eat those first!" },
+      { speaker: 'nexmax', sprite: 'nexmax:determined', glyph: '✍️ 6️⃣0️⃣', text: 'まちに もどした じは、ぜんぶ かけます！', en: 'We can write every letter we brought back to the town!' },
+      { speaker: 'nexmax', sprite: 'nexmax:guide', glyph: '✍️ → 💡 → 🤖', text: 'あなたは かきます。ぼくが たたかいます！', en: "You write. I'll fight!" },
+    ],
+  },
+  outro: {
+    stageId: 'moji-1-boss',
+    lines: [
+      { bg: 'naniwa_nest', fx: ['sparkle'], glyph: '🫧💥 ✨✨✨', text: 'あわが われて、じが そとへ とんで いきます！', en: 'The bubbles burst, and the letters fly out!' },
+      { fx: ['darkclouds'], sprite: 'mojikui_boss:normal', glyph: '🌊 💨', text: '大(おお)モジクイは、うみの むこうへ にげました。', en: 'The Great Mojikui fled across the sea.' },
+      { bg: 'naniwa_lights_back', fx: ['spring'], glyph: '🏙️ 💡💡💡', text: 'ナニワタウンの あかりが、ぜんぶ もどりました！', en: "All of Naniwa Town's lights are back on!" },
+      { speaker: 'yamada', sprite: 'yamada:happy', glyph: '💐', text: '山(やま)田(だ)です。ありがとう ございます！', en: "It's Yamada. Thank you so much!" },
+      { speaker: 'rin', sprite: 'rin:happy', glyph: '🧑‍🎓 🏫', text: '来(らい)週(しゅう)も 学(がっ)校(こう)で あいましょう！', en: 'See you at school next week!' },
+      { speaker: 'nexmax', sprite: 'nexmax:smile', glyph: '✍️ 🎉', text: 'ありがとう！ あなたの じで、まちが もどりました。', en: 'Thank you! Your writing brought the town back.' },
+      { glyph: '🌊 🌫️ 🏙️ ❓', text: 'でも……うみの むこうの まちが、きりで みえません。', en: 'But… the town across the sea is hidden in fog.' },
+      { speaker: 'nexmax', sprite: 'nexmax:think', glyph: '🌫️ 👾', text: 'あそこにも、モジクイが いるかも しれません。', en: 'There may be Mojikui over there too.' },
+      { speaker: 'nexmax', sprite: 'nexmax:determined', glyph: '⛴️ 👉 🌫️', text: 'つぎは あの まちへ 行(い)きましょう！', en: "Next, let's go to that town!" },
+    ],
   },
 };
