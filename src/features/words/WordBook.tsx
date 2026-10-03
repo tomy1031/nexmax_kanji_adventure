@@ -1,10 +1,12 @@
 import { useMemo, useState } from 'react';
 import { useSafeBack } from '../../lib/nav';
 import { Backdrop } from '../../components/ui/Backdrop';
+import { NightStreetBackdrop } from '../write/NightStreet';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useGameStore } from '../../store/gameStore';
 import { ALL_KANJI } from '../../lib/kanjiDb';
 import { REPS_TO_OBTAIN } from '../../types/kanji';
+import { MOJI_OWN_REPS } from '../../lib/mastery';
 import {
   cardFor,
   charProgress,
@@ -47,12 +49,17 @@ export const WordBook = () => {
   const recordFound = useGameStore((s) => s.recordFound);
   const earnedFoundCount = useGameStore((s) => s.earnedFoundCount);
 
+  // On 文字が 消えた 町 a kanji is the player's at ★1 (MOJI_OWN_REPS), and the
+  // screen is the night town like the other menus; the old routes keep theirs.
+  const moji = useGameStore((s) => s.lastArc) === 'moji';
+  /** Text straight on the backdrop: dark ink on the picture book, light on the night town. */
+  const onBg = moji ? 'text-[#f4f1ff] [text-shadow:0_1px_4px_rgba(0,0,0,0.7)] [&_rt]:text-[#d9d2f5]' : 'g-onbg';
   const [tab, setTab] = useState<Tab>('cards');
   const [open, setOpen] = useState<WordCard | null>(null);
 
   const owned = useMemo(
-    () => new Set(ALL_KANJI.filter((k) => (progress[k.id]?.reps ?? 0) >= REPS_TO_OBTAIN).map((k) => k.char)),
-    [progress],
+    () => new Set(ALL_KANJI.filter((k) => (progress[k.id]?.reps ?? 0) >= (moji ? MOJI_OWN_REPS : REPS_TO_OBTAIN)).map((k) => k.char)),
+    [progress, moji],
   );
   const foundSet = useMemo(() => new Set(Object.keys(foundWords)), [foundWords]);
 
@@ -72,7 +79,7 @@ export const WordBook = () => {
 
   return (
     <div className="g-stage min-h-dvh pb-8">
-      <Backdrop fixed />
+      {moji ? <NightStreetBackdrop /> : <Backdrop fixed />}
       <header className="g-header sticky top-0 z-20 px-4 pt-[max(12px,env(safe-area-inset-top))] pb-3">
         <div className="flex items-center justify-between">
           <button type="button" className="g-btn g-btn-accent !min-h-[38px] !gap-1 !px-3.5 text-sm" onClick={safeBack}>
@@ -88,7 +95,7 @@ export const WordBook = () => {
         </div>
 
         <div className="mt-2 flex items-center justify-between gap-2 text-xs">
-          <span className="g-onbg font-bold tabular-nums">
+          <span className={`${onBg} font-bold tabular-nums`}>
             <RubyText showFurigana={showFurigana}>見(み)つけた</RubyText> {foundCount} / {all.length}
           </span>
           {title && (
@@ -98,7 +105,7 @@ export const WordBook = () => {
           )}
         </div>
         {upcoming && (
-          <p className="g-onbg mt-1 text-[11px] font-bold">
+          <p className={`${onBg} mt-1 text-[11px] font-bold`}>
             <RubyText showFurigana={showFurigana}>
               {`あと ${upcoming.at - earned} 語(ご)で 「${upcoming.ruby}」`}
             </RubyText>
