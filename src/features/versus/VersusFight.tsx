@@ -40,9 +40,11 @@ interface Props {
   onSelfHit: (damage: number, index: number) => void;
   onEnd: (won: boolean) => void;
   onForfeit: () => void;
+  /** Every character this side finished, and its slips (for the result's review). */
+  onWrite?: (char: string, mistakes: number) => void;
 }
 
-export const VersusFight = ({ round, opponentName, opponentImg, weaponBonus, incoming, onHit, onSelfHit, onEnd, onForfeit }: Props) => {
+export const VersusFight = ({ round, opponentName, opponentImg, weaponBonus, incoming, onHit, onSelfHit, onEnd, onForfeit, onWrite }: Props) => {
   const showFurigana = useGameStore((s) => s.settings.furigana);
   const progress = useGameStore((s) => s.progress);
   const recordReview = useGameStore((s) => s.recordReview);
@@ -136,6 +138,7 @@ export const VersusFight = ({ round, opponentName, opponentImg, weaponBonus, inc
       if (ended.current) return;
       const mistakes = totalMistakes;
       if (progress[target.id]?.obtainedAt != null) recordReview(target.id, mistakes);
+      onWrite?.(target.char, hinted ? Math.max(mistakes, 2) : mistakes);
       const n = index;
       setIndex(n + 1);
       setSlips(0);
@@ -179,7 +182,7 @@ export const VersusFight = ({ round, opponentName, opponentImg, weaponBonus, inc
       }, IMPACT_MS);
       say(clean ? `かんぺき！ ${damage}` : `${damage} あたえた`);
     },
-    [index, target.id, progress, recordReview, hinted, weaponBonus, onHit, onSelfHit, takeHit, say, heroCtl, enemyCtl, end, later],
+    [index, target.id, target.char, progress, recordReview, hinted, weaponBonus, onHit, onSelfHit, onWrite, takeHit, say, heroCtl, enemyCtl, end, later],
   );
 
   return (
