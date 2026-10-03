@@ -54,3 +54,22 @@ export const HURT_LINE: Record<SkillKind, string> = {
 export const DEFAULT_LINES: CompanionLines = { start: 'いっしょに がんばろう！', skill: 'いくよ！', win: 'やったね！' };
 
 export const linesOf = (id: string): CompanionLines => COMPANION_LINES[id] ?? DEFAULT_LINES;
+
+/**
+ * ★5 cards speak in their own costume's voice (docs/design/11 §4.1): the
+ * samurai is formal, the captain gives orders. Other cards use their
+ * character's lines.
+ */
+export const CARD_LINES: Record<string, CompanionLines> = {
+  'ISTJ-5': { start: 'いざ、まいる。字(じ)の 道(みち)を すすみます。', skill: 'この たて、くずれず！', win: 'みごと。よく 書(か)きました。' },
+  'ESTP-5': { start: '3・2・1、はっしゃ！', skill: 'ブースター ぜんかい！ つぎで きめろ！', win: 'ゴールまで いっしゅん！' },
+  'ENFP-5': { start: 'わっしょい！ おまつりだ！', skill: 'みんなで つなげよう、わっしょい！', win: 'さいこうの おまつりだったね！' },
+  'INTJ-5': { start: 'じけんの 字(じ)は、もう 見(み)えて います。', skill: '書(か)きじゅんの てがかりを どうぞ。', win: 'なぞは すべて とけました。' },
+  'ENTJ-5': { start: 'しゅっこう！ ゴールは あの 字(じ)だ！', skill: 'かじを とる。書(か)きじゅんを 見(み)よ！', win: 'ぶじ 着(つ)いた！ よく やった！' },
+  'ENFJ-5': { start: 'ネオン ぜんかいで おうえん するよ！', skill: 'ひかれ！ コンボを まもるよ！', win: 'きみが いちばん かがやいてた！' },
+  'rin-5': { start: 'おまつりの 字(じ)、いっしょに 書(か)こう！', skill: 'ちょうちんの ひかりで、どんどん いこう！', win: 'こんな おまつり、はじめて！' },
+  'keeper-5': { start: 'じかんよ、ゆっくり すすめ……。', skill: 'とけいを もどそう。おちついて。', win: 'ちょうど いい 時間(じかん)に、勝(か)ちましたな。' },
+};
+
+/** A card's lines: its own (★5), else its character's. */
+export const linesFor = (card: { id: string; char: string }): CompanionLines => CARD_LINES[card.id] ?? linesOf(card.char);

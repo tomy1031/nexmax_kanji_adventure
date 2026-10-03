@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { existsSync } from 'node:fs';
 import { CARDS, CHARACTERS, DRESSED, INDIVIDUALS, TOWN, cardsOf, getIndividual } from './individuals';
 import { SKILL_OF } from '../lib/companionSkill';
-import { COMPANION_LINES } from './companionLines';
+import { CARD_LINES, COMPANION_LINES, linesFor } from './companionLines';
 import { unreadKanji } from '../lib/ruby';
 
 describe('なかまの カード (docs/design/11 §4.1)', () => {
@@ -48,5 +48,17 @@ describe('なかまの カード (docs/design/11 §4.1)', () => {
   it('reads every kanji in names and taglines', () => {
     const bare = CARDS.flatMap((c) => [...unreadKanji(c.name), ...unreadKanji(c.tagline)].map((k) => `${c.id}: ${k}`));
     expect(bare).toEqual([]);
+  });
+});
+
+describe('★5 の ひとこと', () => {
+  it('gives every ★5 card its own lines, read', () => {
+    for (const c of CARDS.filter((x) => x.rarity === 5)) {
+      const l = CARD_LINES[c.id];
+      expect(l, c.id).toBeDefined();
+      expect([l.start, l.skill, l.win].flatMap((t) => unreadKanji(t)), c.id).toEqual([]);
+      expect(linesFor(c)).toBe(l);
+    }
+    expect(linesFor(getIndividual('ISTJ-4')!)).toBe(COMPANION_LINES.ISTJ);
   });
 });
