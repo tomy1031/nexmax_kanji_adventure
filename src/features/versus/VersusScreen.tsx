@@ -46,6 +46,25 @@ const BACKDROP = SCENES.naniwa_lights_back?.photo ?? 'img/title/bg.webp';
 /** How long a room waits for the friend who has its あいことば. */
 const FRIEND_WAIT_MS = 5 * 60 * 1000;
 const newCode = () => String(1000 + Math.floor(Math.random() * 9000));
+/** What a failed connection says: the relay's own errors are English and technical. */
+const NO_LINE = 'いまは つながりません。インターネットを たしかめてね。';
+
+/** Whether the device says it is online, kept up to date. */
+const useOnline = () => {
+  const [online, setOnline] = useState(() => (typeof navigator === 'undefined' ? true : navigator.onLine));
+  useEffect(() => {
+    const on = () => setOnline(true);
+    const off = () => setOnline(false);
+    window.addEventListener('online', on);
+    window.addEventListener('offline', off);
+    return () => {
+      window.removeEventListener('online', on);
+      window.removeEventListener('offline', off);
+    };
+  }, []);
+  return online;
+};
+
 /** After this long without a match, the search offers the CPU. */
 const OFFER_CPU_AFTER_S = 8;
 /** 1章's kanji: the round's last resort for two beginners. */
@@ -97,6 +116,7 @@ export const VersusScreen = () => {
   const still = Boolean(useReducedMotion() || reduced);
   // A short phone (SE) keeps the lobby on one screen with a smaller Nexmax.
   const compact = useCompactHeight();
+  const online = useOnline();
 
   const [phase, setPhase] = useState<Phase>('idle');
   const [waiting, setWaiting] = useState(0);
@@ -359,7 +379,8 @@ export const VersusScreen = () => {
 
   const failed = (e: unknown) => {
     if (e instanceof MatchCancelledError) return;
-    setError(e instanceof Error ? e.message : 'つながりませんでした。');
+    const message = e instanceof Error ? e.message : '';
+    setError(!message || /[A-Za-z]/.test(message) ? NO_LINE : message);
     setPhase('idle');
   };
 
@@ -759,12 +780,20 @@ export const VersusScreen = () => {
                       </div>
                     </div>
                   )}
-                  {error && (
+                  {(error || !online) && (
                     <p className="mt-1 text-sm font-bold text-[#ffb4a8]" aria-live="polite">
-                      <RubyText showFurigana={showFurigana}>{error}</RubyText>
+                      <RubyText showFurigana={showFurigana}>{online ? error! : '📡 インターネットに つながって いません。'}</RubyText>
+                      <span className="block text-xs font-bold text-[#d9d2f5]">
+                        <RubyText showFurigana={showFurigana}>🤖 CPU と れんしゅう なら できます。</RubyText>
+                      </span>
                     </p>
                   )}
-                  <button type="button" className="g-btn g-btn-primary g-shine mt-3 w-full !min-h-[56px] text-lg" onClick={() => void search()}>
+                  <button
+                    type="button"
+                    disabled={!online}
+                    className="g-btn g-btn-primary g-shine mt-3 w-full !min-h-[56px] text-lg disabled:opacity-45"
+                    onClick={() => void search()}
+                  >
                     <span className="relative z-10">
                       ⚔️ <RubyText showFurigana={showFurigana}>あいてを さがす</RubyText>
                     </span>
@@ -772,7 +801,8 @@ export const VersusScreen = () => {
                   <div className="mt-2 flex gap-2">
                     <button
                       type="button"
-                      className="g-btn g-btn-night flex-1 !min-h-[40px] !px-2 text-xs whitespace-nowrap"
+                      disabled={!online}
+                      className="g-btn g-btn-night flex-1 !min-h-[40px] !px-2 text-xs whitespace-nowrap disabled:opacity-45"
                       onClick={() => {
                         sfx.tap();
                         setTyped('');
