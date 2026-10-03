@@ -4,7 +4,7 @@ import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import { useMapPath } from '../../lib/nav';
 import { RubyText } from '../../components/ui/Ruby';
 import { useGameStore } from '../../store/gameStore';
-import { getKanjiById } from '../../lib/kanjiDb';
+import { getKanjiByChar, getKanjiById } from '../../lib/kanjiDb';
 import { weaponOf } from '../../lib/forge/weapon';
 import { preloadCharData } from '../../lib/strokeLoader';
 import { preloadImages } from '../../lib/preload';
@@ -21,6 +21,7 @@ import { networkManager, MatchCancelledError } from './NetworkManager';
 import { BattleEventType, ratingChange, rankFor, type BattleEvent, type VersusProfile } from './types';
 import { pickRound } from './round';
 import { VersusFight } from './VersusFight';
+import KanjiCard from '../zukan/KanjiCard';
 import { cpuTurn } from './cpu';
 import { SELF_HIT } from './rules';
 
@@ -107,6 +108,10 @@ export const VersusScreen = () => {
   const [theirDone, setTheirDone] = useState(0);
   /** Won because the other side left mid-match. */
   const [walkover, setWalkover] = useState(false);
+  /** What this side wrote in the match, latest result per character — the result's review. */
+  const [writes, setWrites] = useState<{ char: string; mistakes: number }[]>([]);
+  /** The review's kanji opened as a card (ずかん's 字カード). */
+  const [card, setCard] = useState<number | null>(null);
   const [won, setWon] = useState(false);
   const [delta, setDelta] = useState(0);
   const [count, setCount] = useState(3);
@@ -323,6 +328,7 @@ export const VersusScreen = () => {
     setIncoming(null);
     setTheirDone(0);
     setWalkover(false);
+    setWrites([]);
     setThem(null);
     setFriendMenu('closed');
   };
@@ -396,6 +402,7 @@ export const VersusScreen = () => {
     setIncoming(null);
     setTheirDone(0);
     setWalkover(false);
+    setWrites([]);
     setError(null);
     setCpu(true);
     setRoom(null);
@@ -470,6 +477,7 @@ export const VersusScreen = () => {
         }}
         onEnd={finish}
         onForfeit={() => finish(false)}
+        onWrite={(char, mistakes) => setWrites((w) => [...w.filter((x) => x.char !== char), { char, mistakes }])}
       />
     );
   }
@@ -551,6 +559,36 @@ export const VersusScreen = () => {
             <p className="text-xs opacity-80 tabular-nums">
               <RubyText showFurigana={showFurigana}>{`${versus.wins}勝(しょう) ${versus.losses}敗(はい)`}</RubyText>
             </p>
+            {writes.length > 0 && (
+              <div className="w-full">
+                <p className="text-xs font-bold opacity-90">
+                  <RubyText showFurigana={showFurigana}>この たいせんで 書(か)いた 字(じ)</RubyText>
+                </p>
+                <ul className="mt-1.5 flex flex-wrap justify-center gap-1.5">
+                  {writes.map((w, i) => {
+                    const mark = w.mistakes === 0 ? { m: '◎', c: '#ffd36a' } : w.mistakes < 3 ? { m: '○', c: '#9be37a' } : { m: '✕', c: '#ff9a8a' };
+                    return (
+                      <li key={w.char}>
+                        <button
+                          type="button"
+                          className="g-plate-brass relative flex h-12 w-11 items-center justify-center rounded-lg text-2xl font-black"
+                          aria-label={`${w.char} ${mark.m}`}
+                          onClick={() => setCard(i)}
+                        >
+                          {w.char}
+                          <span className="absolute -right-1 -bottom-1 text-xs font-black" style={{ color: mark.c, textShadow: '0 1px 2px #000' }}>
+                            {mark.m}
+                          </span>
+                        </button>
+                      </li>
+                    );
+                  })}
+                </ul>
+                <p className="mt-1 text-[10px] opacity-75">
+                  <RubyText showFurigana={showFurigana}>◎ きれい ○ ミス ありで 書(か)けた ✕ 3こ ミス ・ 字(じ)を おすと くわしく</RubyText>
+                </p>
+              </div>
+            )}
             <div className="flex w-full gap-2">
               <button type="button" className="g-btn g-btn-night flex-1" onClick={() => navigate(mapPath)}>
                 <RubyText showFurigana={showFurigana}>もどる</RubyText>
@@ -706,6 +744,16 @@ export const VersusScreen = () => {
           </>
         )}
       </main>
+
+      {card != null && writes[card] && getKanjiByChar(writes[card].char) && (
+        <KanjiCard
+          kanji={getKanjiByChar(writes[card].char)!}
+          onClose={() => setCard(null)}
+          onPrev={card > 0 ? () => setCard(card - 1) : undefined}
+          onNext={card < writes.length - 1 ? () => setCard(card + 1) : undefined}
+          position={`${card + 1} / ${writes.length}`}
+        />
+      )}
 
       {/* ともだちと — make an あいことば, or type a friend's. */}
       <AnimatePresence>
