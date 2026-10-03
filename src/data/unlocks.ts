@@ -45,8 +45,8 @@ export const UNLOCKED_BY: Record<Feature, string> = {
  * - 漢字やさん opens at the end of 1章 2話, where 山田さん shows the way in
  *   the story (08 §3.8), and the word book comes with it, through its door
  *   and ずかん's. After that, one system per episode; versus waits for
- *   chapter 1 to be over. An episode not written yet opens its feature once
- *   it is.
+ *   chapter 1 to be over: its まとめの ボス (data/mojiFinale.ts), the fight
+ *   that proves the player can write the whole chapter (2026-10-03).
  * - The story says what opened, not the result screen: featuresUnlockedBy
  *   answers for the picture-book arcs only.
  * - Episodes, not かな編: the kana prologue is optional (constraints
@@ -59,7 +59,7 @@ export const UNLOCKED_ON_MOJI = {
   daily: 'moji-1-3',
   gacha: 'moji-1-4',
   collection: 'moji-1-5',
-  versus: 'moji-2-1',
+  versus: 'moji-1-boss',
 } as const satisfies Record<Feature, string>;
 
 /** Label and one line of why, shown when the feature opens. */

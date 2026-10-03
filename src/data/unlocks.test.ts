@@ -16,6 +16,7 @@ import { MOJI_EPISODES } from './mojiEpisodes';
 import { MOJI_CHAPTERS } from './mojiRoute';
 import { KANA_EPISODES } from './kana';
 import { isForgeOpen } from './mojiFlow';
+import { MOJI_FINALES } from './mojiFinale';
 
 const stageIds = MUKASHI_STAGES.map((s) => s.id);
 
@@ -101,10 +102,12 @@ describe('time to the first fight', () => {
 describe('文字が 消えた 町 opens the same systems', () => {
   // The picture-book arcs are closing (constraints 2026-09-30). A player who
   // only plays the new route must still reach every system.
-  const MOJI_ID = /^moji-(\d+)-(\d+)$/;
+  // An episode ("moji-1-3") or a chapter's まとめの ボス ("moji-1-boss"),
+  // which comes after every episode of its chapter.
+  const MOJI_ID = /^moji-(\d+)-(\d+|boss)$/;
   const place = (f: Feature) => {
     const [, chapter, episode] = MOJI_ID.exec(UNLOCKED_ON_MOJI[f]) ?? [];
-    return { chapter: Number(chapter), at: Number(chapter) * 1000 + Number(episode) };
+    return { chapter: Number(chapter), at: Number(chapter) * 1000 + (episode === 'boss' ? 999 : Number(episode)) };
   };
 
   it('opens every feature on either route', () => {
@@ -149,8 +152,11 @@ describe('文字が 消えた 町 opens the same systems', () => {
     expect(place(Feature.DAILY).at).toBeGreaterThan(place(Feature.FORGE).at);
     expect(place(Feature.GACHA).at).toBeGreaterThan(place(Feature.DAILY).at);
     expect(place(Feature.COLLECTION).at).toBeGreaterThan(place(Feature.GACHA).at);
-    // Versus waits for chapter 1 to be over.
-    expect(place(Feature.VERSUS).chapter).toBeGreaterThanOrEqual(2);
+    // Versus waits for chapter 1 to be over: its まとめの ボス, the fight that
+    // proves the player can write the whole chapter (2026-10-03).
+    expect(place(Feature.VERSUS).at).toBeGreaterThan(place(Feature.COLLECTION).at);
+    expect(UNLOCKED_ON_MOJI[Feature.VERSUS]).toBe(MOJI_FINALES.find((f) => f.chapter === 'moji-1')?.id);
+    expect(isFeatureUnlocked(Feature.VERSUS, MOJI_EPISODES.filter((e) => e.chapter === 'moji-1').map((e) => e.id))).toBe(false);
   });
 
   it('opens nothing on the kana prologue — it is optional and owns no kanji', () => {
