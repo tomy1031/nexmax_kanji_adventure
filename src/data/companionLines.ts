@@ -31,6 +31,13 @@ export const COMPANION_LINES: Record<string, CompanionLines> = {
   INTJ: { start: 'つぎに 出(で)る 字(じ)は よそう できます。', skill: '書(か)きじゅんを 見(み)て いいですよ。', win: 'よそう どおり。' },
   ENTJ: { start: 'ゴールまで あんない します。', skill: 'みちを しめします。書(か)きじゅんを 見(み)て！', win: 'ゴール！ つぎの ゴールへ。' },
   ENFJ: { start: 'がんばれ！ がんばれ！', skill: 'フレー！ フレー！ コンボを まもるよ！', win: 'みんなの おかげだね！' },
+  // 町の なかま
+  rin: { start: 'いっしょに 字(じ)を 書(か)こう！', skill: 'リズムよく、どんどん いこう！', win: '本(ほん)が また 読(よ)めるね！' },
+  yamada: { start: 'わたしも おうえん します。', skill: 'はい、あたたかい お茶(ちゃ)ですよ。', win: 'ありがとう、ネクマックス。' },
+  teacher: { start: 'では、はじめましょう。', skill: '書(か)きじゅんを 見(み)て、ゆっくり 書(か)いて。', win: 'よく できました！ はなまるです。' },
+  doctor: { start: 'けがを したら すぐ 言(い)ってね。', skill: 'だいじょうぶ、すぐ なおりますよ。', win: 'げんきが 一(いち)ばんですね。' },
+  baker: { start: 'やきたての 元気(げんき)を どうぞ！', skill: 'パンを 食(た)べて、ちから いっぱい！', win: 'おいわいの パンを やきましょう！' },
+  keeper: { start: 'あわてない、あわてない。', skill: '時間(じかん)は まだ あります。おちついて。', win: 'ちょうど いい 時間(じかん)ですな。' },
 };
 
 /** When Nexmax is struck: by わざ, so the line points at what it can do. */

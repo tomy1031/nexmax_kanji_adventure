@@ -188,6 +188,7 @@ export const BattleScene = ({
   const clearStage = useGameStore((s) => s.clearStage);
   const addGems = useGameStore((s) => s.addGems);
   const grantIndividual = useGameStore((s) => s.grantIndividual);
+  const bondFromWin = useGameStore((s) => s.bondFromWin);
   const recordReview = useGameStore((s) => s.recordReview);
   const recordRep = useGameStore((s) => s.recordRep);
   const alreadyCleared = useGameStore((s) => s.clearedStages.includes(stage.id));
@@ -227,7 +228,7 @@ export const BattleScene = ({
 
   const individual = activeIndividualId ? (getIndividual(activeIndividualId) ?? null) : null;
   // なかまの わざ (docs/design/11 §3.2): on the new route, once a companion has joined.
-  const skillKind = mastery && !tutorial && individual ? SKILL_OF[individual.id] : undefined;
+  const skillKind = mastery && !tutorial && individual ? SKILL_OF[individual.char] : undefined;
   const gaugeFull = skillGaugeFull(difficulty);
 
   // The weapon rusts with the kanji it was made from.
@@ -338,7 +339,7 @@ export const BattleScene = ({
   // The companion says hello once the intro band has gone.
   useEffect(() => {
     if (!skillKind || !individual) return;
-    const t = setTimeout(() => companionSay(linesOf(individual.id).start), 1600);
+    const t = setTimeout(() => companionSay(linesOf(individual.char).start), 1600);
     return () => clearTimeout(t);
     // Once per fight.
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -357,6 +358,11 @@ export const BattleScene = ({
       const stars = starsFor(mistakes, hpLeft, stats.maxHp);
       setOutcome({ kind: 'win', stars });
       if (tutorial) return;
+      // きずな (11 §4.2): written through without a slip, with this companion along — once a day.
+      if (mastery && stars === 3 && individual) {
+        const lv = bondFromWin(individual.id);
+        if (lv != null) companionSay(`きずな Lv${lv}！ ありがとう！`);
+      }
       // Beating the opponent is experience: more the first time; a replay's share stops at its daily cap.
       if (mastery) gainExp(alreadyCleared ? EXP_BOSS_REPEAT : EXP_BOSS_FIRST, { bossRepeat: alreadyCleared });
 
@@ -382,7 +388,7 @@ export const BattleScene = ({
         hard,
       });
     },
-    [tutorial, alreadyCleared, stage, addGems, clearStage, grantIndividual, stats.maxHp, mastery, gainExp, markPerfect, difficulty, markHard],
+    [tutorial, alreadyCleared, stage, addGems, clearStage, grantIndividual, stats.maxHp, mastery, gainExp, markPerfect, difficulty, markHard, individual, bondFromWin, companionSay],
   );
 
   /**
@@ -556,7 +562,7 @@ export const BattleScene = ({
 
       if (nextBossHp <= 0) {
         bossDownRef.current = true;
-        if (skillKind && individual) companionSay(linesOf(individual.id).win);
+        if (skillKind && individual) companionSay(linesOf(individual.char).win);
         settleTimer.current = setTimeout(() => settle('win', nextMistakes, playerHp), mastery ? WIN_DELAY_MASTERY_MS : 650);
         return;
       }
@@ -758,12 +764,12 @@ export const BattleScene = ({
   /** わざ: the gauge is full and the companion is tapped. */
   const fireSkill = () => {
     if (!skillKind || !individual || gauge < gaugeFull || settledRef.current || bossDownRef.current) return;
-    const e = skillEffect(skillKind);
+    const e = skillEffect(skillKind, individual.rarity, useGameStore.getState().bonds?.[individual.id] ?? 0);
     const info = SKILL_INFO[skillKind];
     const does = info.says(e);
     setGauge(0);
     setCut({ n: talkNo.current + 1, art: individual.art, name: individual.name, kind: skillKind, does });
-    companionSay(linesOf(individual.id).skill);
+    companionSay(linesOf(individual.char).skill);
     sfx.skill();
     if (e.heal) setPlayerHp((h) => Math.min(stats.maxHp, h + e.heal!));
     if (e.calm) setRage((r) => Math.max(0, r - e.calm!));

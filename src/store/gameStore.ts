@@ -54,6 +54,9 @@ export interface DailyState {
   bossExpToday: number;
 }
 
+/** The highest きずな (11 §4.2). */
+export const BOND_MAX = 5;
+
 export const todayKey = (d: Date = new Date()): string =>
   `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 
@@ -93,6 +96,10 @@ export interface GameState {
   gems: number;
   /** Pity counter since the last top-rarity pull. */
   pityCount: number;
+  /** きずな by card id, 0..BOND_MAX (docs/design/11 §4.2): a duplicate pull or a ★3 win with it along. */
+  bonds: Record<string, number>;
+  /** The day each card last gained きずな from a win — one a day. */
+  bondDays: Record<string, string>;
   /** Today's task counters. */
   daily: DailyState;
   /** Consecutive days played. */
@@ -156,6 +163,10 @@ export interface GameActions {
   claimDailyTask: (taskId: string, reward: number) => boolean;
   rollDailyIfNeeded: () => void;
   bumpPity: () => void;
+  /** きずな +1 for this card. Returns the new level, or null when it is already at BOND_MAX. */
+  addBond: (cardId: string) => number | null;
+  /** A ★3 win with this card along: きずな +1, once a day. Returns the new level, or null. */
+  bondFromWin: (cardId: string) => number | null;
   resetPity: () => void;
   setSetting: <K extends keyof GameState['settings']>(key: K, value: GameState['settings'][K]) => void;
   markTutorialSeen: (key: keyof GameState['tutorials']) => void;
@@ -200,6 +211,8 @@ const initialState: GameState = {
   equippedGear: { shield: null, body: null, charm: null },
   gems: 0,
   pityCount: 0,
+  bonds: {},
+  bondDays: {},
   daily: freshDaily(),
   streak: { count: 0, lastDate: '' },
   settings: { furigana: true, muted: false, reducedMotion: false, bgmOff: false },
@@ -422,6 +435,19 @@ export const useGameStore = create<GameState & GameActions>()(
       },
 
       bumpPity: () => set((s) => ({ pityCount: s.pityCount + 1 })),
+      addBond: (cardId) => {
+        const now = get().bonds?.[cardId] ?? 0;
+        if (now >= BOND_MAX) return null;
+        set((s) => ({ bonds: { ...(s.bonds ?? {}), [cardId]: now + 1 } }));
+        return now + 1;
+      },
+      bondFromWin: (cardId) => {
+        const today = todayKey();
+        if (get().bondDays?.[cardId] === today) return null;
+        const lv = get().addBond(cardId);
+        if (lv != null) set((s) => ({ bondDays: { ...(s.bondDays ?? {}), [cardId]: today } }));
+        return lv;
+      },
       resetPity: () => set({ pityCount: 0 }),
 
       setSetting: (key, value) => set((s) => ({ settings: { ...s.settings, [key]: value } })),

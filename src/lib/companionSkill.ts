@@ -26,7 +26,7 @@ export type SkillKind = (typeof SkillKind)[keyof typeof SkillKind];
 /** A card's rarity (§4.1). Today's companions are all ★3. */
 export type Rarity = 3 | 4 | 5;
 
-/** Each companion's わざ, by personality (§3.2 table). */
+/** Each character's わざ, by personality (§3.2 table). Keyed by character: every card of it has the same. */
 export const SKILL_OF: Record<string, SkillKind> = {
   ESFJ: SkillKind.HEAL,
   ISFJ: SkillKind.HEAL,
@@ -44,6 +44,13 @@ export const SKILL_OF: Record<string, SkillKind> = {
   ENTP: SkillKind.POWER,
   ENFP: SkillKind.COMBO,
   ENFJ: SkillKind.COMBO,
+  // 町の なかま (data/individuals.ts TOWN)
+  yamada: SkillKind.HEAL,
+  doctor: SkillKind.HEAL,
+  teacher: SkillKind.HINT,
+  keeper: SkillKind.CALM,
+  baker: SkillKind.POWER,
+  rin: SkillKind.COMBO,
 };
 
 /** What one use does. Only the fields of its kind are set. */
@@ -112,7 +119,7 @@ export const SKILL_INFO: Record<SkillKind, { name: string; icon: string; color: 
     name: 'コンボ',
     icon: '🔥',
     color: '#ff6fa0',
-    says: (e) => `コンボ ＋${e.comboAdd}・${e.comboShield}字(じ) まちがえても 切(き)れない`,
+    says: (e) => `＋${e.comboAdd}・${e.comboShield}字(じ) まちがえても コンボが 切(き)れない`,
   },
 };
 
