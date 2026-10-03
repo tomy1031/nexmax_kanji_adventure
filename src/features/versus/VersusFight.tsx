@@ -8,6 +8,8 @@ import { getKanjiByChar } from '../../lib/kanjiDb';
 import { starsOf } from '../../lib/mastery';
 import { useGameStore } from '../../store/gameStore';
 import * as sfx from '../../lib/sfx';
+import { comboMilestone, comboTier, isComboBreak, strokeEnd, strokeLift } from '../../lib/combo';
+import type { StrokeSpark } from '../battle/ComboFx';
 import { SELF_HIT, SLIPS_TO_SELF_HIT, VS_MAX_HP, writeDamage } from './rules';
 import { STAMPS } from './types';
 
@@ -98,6 +100,13 @@ export const VersusFight = ({ round, opponentName, opponentImg, weaponBonus, inc
   const [slips, setSlips] = useState(0);
   const [hinted, setHinted] = useState(false);
   const [combo, setCombo] = useState(0);
+  const [spark, setSpark] = useState<StrokeSpark | null>(null);
+  const sparkNo = useRef(0);
+  const onStroke = (data: Record<string, unknown>, px: number) => {
+    sfx.neon(0.35, strokeLift(Number(data.strokeNum) || 0, combo));
+    const end = strokeEnd(data, px);
+    if (end) setSpark({ n: (sparkNo.current += 1), ...end });
+  };
   const [flash, setFlash] = useState<string | null>(null);
   const [flashNo, setFlashNo] = useState(0);
   const [hit, setHit] = useState<{ n: number; damage: number; critical?: boolean } | null>(null);
@@ -199,6 +208,7 @@ export const VersusFight = ({ round, opponentName, opponentImg, weaponBonus, inc
 
       if (mistakes >= SLIPS_TO_SELF_HIT) {
         // A failed write costs the writer, not the opponent.
+        if (isComboBreak(combo, 0)) sfx.comboBreak();
         setCombo(0);
         onSelfHit(SELF_HIT, n);
         takeHit(SELF_HIT);
@@ -208,7 +218,10 @@ export const VersusFight = ({ round, opponentName, opponentImg, weaponBonus, inc
 
       const damage = writeDamage(mistakes, hinted, weaponBonus);
       const clean = mistakes === 0 && !hinted;
-      setCombo((c) => (clean ? c + 1 : 0));
+      const nextCombo = clean ? combo + 1 : 0;
+      setCombo(nextCombo);
+      if (comboMilestone(nextCombo)) later(() => sfx.combo(comboTier(nextCombo).level), 150);
+      else if (isComboBreak(combo, nextCombo)) sfx.comboBreak();
       onHit(damage, n);
 
       // The light: from the board into Nexmax, then out at the other side.
@@ -235,7 +248,7 @@ export const VersusFight = ({ round, opponentName, opponentImg, weaponBonus, inc
       }, IMPACT_MS);
       say(clean ? `かんぺき！ ${damage}` : `${damage} あたえた`);
     },
-    [index, target.id, target.char, progress, recordReview, hinted, weaponBonus, onHit, onSelfHit, onWrite, takeHit, say, heroCtl, enemyCtl, end, later],
+    [index, target.id, target.char, progress, recordReview, hinted, weaponBonus, onHit, onSelfHit, onWrite, takeHit, say, heroCtl, enemyCtl, end, later, combo],
   );
 
   return (
@@ -262,16 +275,19 @@ export const VersusFight = ({ round, opponentName, opponentImg, weaponBonus, inc
             size={px}
             quizMode
             surface="ink"
-            onCorrectStroke={() => sfx.neon(0.35)}
+            onCorrectStroke={(d) => onStroke(d, px)}
             onMistake={handleMistake}
             onComplete={handleComplete}
           />
         )}
+        spark={spark}
         flash={flash}
         flashKey={flashNo}
         idle={index === 0 && !flash ? '✍️ はやく 正(ただ)しく 書(か)いて こうげき！' : null}
         hit={hit}
         combo={combo}
+        // The versus rule has no combo term yet (docs/design/11 §7): no +% that is not there.
+        comboPct={false}
         still={still}
         heroCtl={heroCtl}
         enemyCtl={enemyCtl}

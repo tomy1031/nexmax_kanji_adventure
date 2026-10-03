@@ -9,7 +9,8 @@ import { SCENES } from '../picturebook/scenes';
 import { exampleWord, kanjiRuby } from '../../lib/reading';
 import { parseRuby } from '../../lib/ruby';
 import { speak } from '../../lib/speech';
-import { comboMultiplier, type Stars } from '../../lib/mastery';
+import type { Stars } from '../../lib/mastery';
+import { ComboBanner, ComboEdge, ComboMeter, StrokeSparks, type StrokeSpark } from './ComboFx';
 import { useGameStore } from '../../store/gameStore';
 
 /**
@@ -211,6 +212,13 @@ export interface NaniwaBattleViewProps {
   idle: string | null;
   hit: { n: number; damage: number; critical?: boolean } | null;
   combo: number;
+  /**
+   * Show the COMBO's +% beside the count. Only where the bonus is really in
+   * the damage (たいせん leaves it out until its rule counts the combo).
+   */
+  comboPct?: boolean;
+  /** Where the last correct stroke ended (ComboFx StrokeSparks). */
+  spark?: StrokeSpark | null;
   still: boolean;
   heroCtl: LegacyAnimationControls;
   enemyCtl: LegacyAnimationControls;
@@ -247,6 +255,8 @@ export const NaniwaBattleView = ({
   idle,
   hit,
   combo,
+  comboPct = true,
+  spark = null,
   still,
   heroCtl,
   enemyCtl,
@@ -342,26 +352,14 @@ export const NaniwaBattleView = ({
                   </motion.span>
                 )}
               </AnimatePresence>
-              <AnimatePresence>
-                {combo >= 2 && (
-                  <motion.span
-                    key={`combo-${combo}`}
-                    initial={{ opacity: 0, scale: 2.2, rotate: -12 }}
-                    animate={{ opacity: 1, scale: 1, rotate: -8 }}
-                    exit={{ opacity: 0 }}
-                    transition={{ type: 'spring', stiffness: 420, damping: 14 }}
-                    className="g-outline-text pointer-events-none absolute top-[22%] left-[2%] font-black whitespace-nowrap"
-                    style={{ fontSize: cq(44), color: '#ffe27a', willChange: 'transform' }}
-                  >
-                    {combo} COMBO!
-                    <span className="block" style={{ fontSize: cq(24) }}>
-                      +{Math.round((comboMultiplier(combo) - 1) * 100)}%
-                    </span>
-                  </motion.span>
-                )}
-              </AnimatePresence>
             </motion.div>
           </div>
+
+          {/* COMBO: the count on the left of the sky, a band across at 3・5・7・10 */}
+          <div className="absolute z-10" style={{ left: pct(30 / W), top: pct(150 / TOP_H) }}>
+            <ComboMeter combo={combo} showPct={comboPct} still={still} />
+          </div>
+          <ComboBanner combo={combo} still={still} />
 
           {/* 上の わく: corner posts, the opponent's plate and bar */}
           <div className="absolute inset-x-0 top-0 aspect-[941/660] [@media(min-aspect-ratio:3/5)]:[mask-image:linear-gradient(90deg,transparent,#000_5%,#000_95%,transparent)]">
@@ -506,6 +504,12 @@ export const NaniwaBattleView = ({
           <div ref={boardRef} className="absolute flex items-center justify-center" style={onBottom(PAPER.x, PAPER.y, PAPER.w, PAPER.h)}>
             {writeSize > 0 && renderWriter(writeSize)}
           </div>
+          {/* sparks where each correct stroke ends, over the writer's own square */}
+          <div aria-hidden className="pointer-events-none absolute flex items-center justify-center" style={onBottom(PAPER.x, PAPER.y, PAPER.w, PAPER.h)}>
+            <div className="relative" style={{ width: writeSize, height: writeSize }}>
+              <StrokeSparks spark={spark} size={writeSize} combo={combo} still={still} />
+            </div>
+          </div>
           </>
           )}
 
@@ -572,6 +576,7 @@ export const NaniwaBattleView = ({
             )}
           </AnimatePresence>
         </div>
+        <ComboEdge combo={combo} still={still} />
         {overlay}
       </div>
     </div>
