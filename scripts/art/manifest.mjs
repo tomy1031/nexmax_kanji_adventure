@@ -167,6 +167,19 @@ or numbers anywhere.`,
 details, and the pose dramatic and heroic. No glow, aura or light effects in the picture — keep the plain pure white
 background right up to the character's outline.`,
 
+  // 武器を ロボットに 積む（11 §6）: ネクマックスの 背中・腕に つける メカの 武器。ロボットは 描かない。
+  WEAPON: `One robot-mounted weapon part for the small sky-blue robot in the reference image — draw ONLY the weapon,
+not the robot, no hands, no person. A chunky, cute, toy-like mecha weapon in the same polished, glossy 3D-like Japanese
+anime game rendering as the reference, soft shading and a clean dark outline. Its plating matches the robot: light
+sky-blue (#A9D6F5) and white with navy (#004F8D) accents and rounded edges, a round mounting joint at its base (where it
+clips onto the robot's back or arm), and a small round glass core set into it, glowing faintly white (where the written
+letter's light goes). Shown alone, diagonal, floating, centered. Output: 1024x1024 PNG, plain pure white (#FFFFFF)
+background with nothing else on it, no shadow on the ground, no text, no letters, no logo.`,
+
+  WEAPON_GOLD: `This is the legendary version: the plating is gold and white with ornate engraved trim and a few small
+gems, the glass core glows warm gold. Still no glow or light effects outside the weapon itself — keep the plain white
+background right up to its outline.`,
+
   ICON: `Output: 1024x1024 PNG. App icon for a kids' kanji learning game. Keep all important shapes inside the
 central 80% circle (the edges are cropped into a circle or rounded square on phones). Bold, simple, readable at 48px.
 No text, no letters, no kanji.`,
@@ -747,7 +760,38 @@ const CARDS = [
   card('keeper', 5, 'a time wizard outfit: a long midnight-blue robe with golden clock-gear patterns, a staff topped with an hourglass, a ring of small golden gears floating around him.', '★5 じかんの まほうつかい'),
 ];
 
-export const ASSETS = [...NEXMAX, ...GENDAI, ...MUKASHI_FOLK, ...ENEMIES, ...CREATURES, ...BG, ...NANIWA, ...NEXMAX_NANIWA, ...FOLK, ...PROLOGUE_ART, ...PROLOGUE_EATEN, ...MAPS, ...ICONS, ...CARDS];
+// ---------------------------------------------------------------------------
+// 武器（11 §6）: 8つの 形 × ふつう・金。戦いで ネクマックスの 背中に 積む。
+// ---------------------------------------------------------------------------
+
+const weapon = (cls, gold, shape) => ({
+  id: `weapon_${cls.toLowerCase()}${gold ? '_gold' : ''}`,
+  group: 'weapons',
+  prio: 'A',
+  out: `img/weapons/${cls.toLowerCase()}${gold ? '_gold' : ''}.webp`,
+  kind: 'prop',
+  bgmode: 'white',
+  refs: ['public/img/battle/nexmax_brush.webp'],
+  style: ['WEAPON', ...(gold ? ['WEAPON_GOLD'] : [])],
+  diff: `The weapon: ${shape}`,
+  used: `${cls}（${gold ? '★5 の 金' : '★1〜4'}）。戦いで ネクマックスに 積む・もちもの`,
+  note: '白い 背景を import.mjs が 切り抜く（prop）',
+});
+
+const WEAPON_SHAPES = {
+  SWORD: 'a mecha sword — a broad straight blade with a light-blue energy edge and a chunky hilt with the mounting joint.',
+  AXE: 'a mecha battle axe — a big crescent axe head on a short thick haft.',
+  SPEAR: 'a mecha lance — a long shaft ending in a drill-like spiral spearhead.',
+  BOW: 'a mecha bow — a curved bow with a glowing energy string and the mounting joint at the grip.',
+  STAFF: 'a mecha staff — a slim staff topped with a ring that holds a floating round orb.',
+  HAMMER: 'a mecha hammer — a big round-ended hammer head with two little thrusters on its back, on a short handle.',
+  DAGGER: 'a pair of mecha daggers — two short curved blades crossed over each other, joined at one mounting joint.',
+  SHIELD: 'a mecha shield — a rounded kite shield with a small cannon-like emitter in its center.',
+};
+
+const WEAPONS = Object.entries(WEAPON_SHAPES).flatMap(([cls, shape]) => [weapon(cls, false, shape), weapon(cls, true, shape)]);
+
+export const ASSETS = [...NEXMAX, ...GENDAI, ...MUKASHI_FOLK, ...ENEMIES, ...CREATURES, ...BG, ...NANIWA, ...NEXMAX_NANIWA, ...FOLK, ...PROLOGUE_ART, ...PROLOGUE_EATEN, ...MAPS, ...ICONS, ...CARDS, ...WEAPONS];
 
 export const GROUPS = {
   nexmax: 'ネクマックス（表情・ポーズ）',
@@ -761,6 +805,7 @@ export const GROUPS = {
   nexmax_naniwa: 'ナニワタウンの ネクマックス（新ルートの 立ち絵）',
   folk_naniwa: '町の 人の 表情（困る・よろこぶ）',
   companion_cards: 'なかまの カード ★4・★5',
+  weapons: '武器（ネクマックスに 積む）',
   map: 'ステージ選択の 地図',
   icon: 'アプリの アイコン',
 };

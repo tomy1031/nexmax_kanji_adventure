@@ -9,6 +9,7 @@
  *           inside the character — NexMax's face-screen — stays), trimmed,
  *           fit in 768x1152, WebP with alpha
  *   enemy   the same, fit in 512x512
+ *   prop    a thing on its own (a weapon): the same cut-out, trimmed, fit inside 512x512
  *   bg      cover-cropped to 800x1440 (the picture-book page, 400x720 at 2x)
  *   fg      as bg, keeping transparency; a raw file with no alpha is keyed
  *           on #00FF00
@@ -26,11 +27,14 @@ const ensureDir = (file) => mkdirSync(dirname(file), { recursive: true });
 
 /** RGBA pixels of a file, plus whether it already carries real transparency. */
 const load = async (file, w, h) => {
+  // Transparency is judged on the file itself: the padding a resize adds (a
+  // square picture into a tall box) is not the picture being transparent.
+  const own = await sharp(file).ensureAlpha().raw().toBuffer();
+  let transparent = false;
+  for (let i = 3; i < own.length; i += 4) if (own[i] < 250) { transparent = true; break; }
   let img = sharp(file).ensureAlpha();
   if (w && h) img = img.resize(w, h, { fit: 'contain', background: { r: 255, g: 255, b: 255, alpha: 0 } });
   const { data, info } = await img.raw().toBuffer({ resolveWithObject: true });
-  let transparent = false;
-  for (let i = 3; i < data.length; i += 4) if (data[i] < 250) { transparent = true; break; }
   return { data, info, transparent };
 };
 
@@ -110,6 +114,12 @@ for (const a of ASSETS) {
     const img = await cutOut(raw);
     await (await img.png().toBuffer().then((b) => sharp(b)))
       .resize(512, 512, { fit: 'contain', background: { r: 0, g: 0, b: 0, alpha: 0 } })
+      .webp({ quality: 88, alphaQuality: 90 })
+      .toFile(out);
+  } else if (a.kind === 'prop') {
+    const img = await cutOut(raw);
+    await (await img.png().toBuffer().then((b) => sharp(b)))
+      .resize(512, 512, { fit: 'inside', withoutEnlargement: true })
       .webp({ quality: 88, alphaQuality: 90 })
       .toFile(out);
   } else if (a.kind === 'bg') {
