@@ -148,3 +148,19 @@ describe('きずな (docs/design/11 §4.2)', () => {
     expect(useGameStore.getState().bondFromWin('rin')).toBe(2);
   });
 });
+
+describe('武器の 強化 (docs/design/11 §6)', () => {
+  it('adds the points once a day per weapon', () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date(2026, 9, 4, 9));
+    useGameStore.setState({ weapons: [{ id: 'a+b', kanjiIds: ['a', 'b'], craftedAt: 1 }] });
+    const { trainWeapon, canTrainToday } = useGameStore.getState();
+    expect(canTrainToday('a+b')).toBe(true);
+    expect(trainWeapon('a+b', 2)).toEqual({ before: 0, after: 2 });
+    expect(useGameStore.getState().canTrainToday('a+b')).toBe(false);
+    expect(useGameStore.getState().trainWeapon('a+b', 2)).toBeNull();
+    vi.setSystemTime(new Date(2026, 9, 5, 9));
+    expect(useGameStore.getState().trainWeapon('a+b', 1)).toEqual({ before: 2, after: 3 });
+    expect(useGameStore.getState().weapons[0].points).toBe(3);
+  });
+});
