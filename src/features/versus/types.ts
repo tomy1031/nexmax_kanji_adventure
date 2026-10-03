@@ -1,6 +1,8 @@
 /** Wire format for versus battles. Ported from kanji_go. */
 
 export const BattleEventType = {
+  /** Who is playing: shown on the VS screen, and what the round is chosen from. */
+  PROFILE: 'PROFILE',
   /** Host publishes the agreed kanji list; both sides start from it. */
   HANDSHAKE: 'HANDSHAKE',
   READY: 'READY',
@@ -31,7 +33,20 @@ export interface BattleEvent {
     weapon?: string;
     /** Index of the character just written. */
     index?: number;
+    /** The sender, with PROFILE (and the host's again with HANDSHAKE). */
+    profile?: VersusProfile;
   };
+}
+
+/** One side of a match, as the other sees it. No account: only what the game knows. */
+export interface VersusProfile {
+  /** The なかま they fight with (data/individuals.ts), or null for Nexmax himself. */
+  avatar: string | null;
+  rating: number;
+  wins: number;
+  losses: number;
+  /** The kanji they have (★1), for choosing a fair round. */
+  known: string[];
 }
 
 /** Persisted versus record. */

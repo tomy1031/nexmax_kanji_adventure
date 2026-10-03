@@ -1,89 +1,106 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { useMapPath } from '../../lib/nav';
-import { Backdrop } from '../../components/ui/Backdrop';
 import { useNavigate } from 'react-router-dom';
-import { motion, AnimatePresence } from 'framer-motion';
-import KanjiWriterCanvas, { type KanjiWriterHandle } from '../../components/KanjiWriterCanvas';
+import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
+import { useMapPath } from '../../lib/nav';
 import { RubyText } from '../../components/ui/Ruby';
-import { useCanvasSize } from '../../hooks/useCanvasSize';
 import { useGameStore } from '../../store/gameStore';
-import { getKanjiByChar, getKanjiById, ALL_KANJI } from '../../lib/kanjiDb';
+import { getKanjiById } from '../../lib/kanjiDb';
 import { weaponOf } from '../../lib/forge/weapon';
 import { preloadCharData } from '../../lib/strokeLoader';
+import { preloadImages } from '../../lib/preload';
+import { assetPath } from '../../lib/assetPath';
 import { isVersusConfigured } from '../../lib/versusConfig';
+import { playJingle, useBgm } from '../../lib/bgm';
+import * as sfx from '../../lib/sfx';
+import { getIndividual } from '../../data/individuals';
+import { MOJI_CHAPTERS } from '../../data/mojiRoute';
+import { SCENES } from '../picturebook/scenes';
+import { useOwnedKanji } from '../moji/useOwnedKanji';
+import { useCompactHeight } from '../../hooks/useCompactHeight';
 import { networkManager, MatchCancelledError } from './NetworkManager';
-import { BattleEventType, ratingChange, rankFor, type BattleEvent } from './types';
-import { REPS_TO_OBTAIN } from '../../types/kanji';
+import { BattleEventType, ratingChange, rankFor, type BattleEvent, type VersusProfile } from './types';
+import { pickRound } from './round';
+import { VersusFight } from './VersusFight';
 
 /**
- * Versus.
+ * たいせん — two players, the same kanji, who writes them better.
  *
- * Both players get the same characters and race to write them. A clean write
- * hits; three slips and you take the hit instead.
- *
- * The weapon matters, but only a little — capped at a 20% swing — because the
- * point of a match is who writes better, not who saved more gems. A player
- * with a worse collection must still be able to win by knowing their kanji,
- * or the mode stops teaching anything.
+ * ロビー → さがす → VS（ふたりの なかまが 向き合い、3・2・1）→ 書き合い（NaniwaBattleView）
+ * → 勝ち／負け. The relay is Supabase Realtime (NetworkManager); there are no
+ * accounts, so each side introduces itself with a PROFILE — the なかま it
+ * fights with, its rating, and the kanji it has, which the host uses to pick
+ * a round both can write (round.ts).
  */
 
-const MAX_HP = 100;
-const BASE_DAMAGE = 12;
-/** The most a weapon can add. Skill has to stay the dominant term. */
-const MAX_WEAPON_BONUS = 0.2;
-const ROUND_KANJI = 12;
+type Phase = 'idle' | 'searching' | 'matched' | 'fighting' | 'over';
 
-type Phase = 'idle' | 'searching' | 'ready' | 'fighting' | 'over';
+/** The weapon's pull on a hit: at most +20%, so writing well always matters more. */
+const MAX_WEAPON_BONUS = 0.2;
+/** Nexmax himself, when no なかま is chosen. */
+const NEXMAX_ART = 'img/chara/naniwa/nexmax_normal.webp';
+const BACKDROP = SCENES.naniwa_lights_back?.photo ?? 'img/title/bg.webp';
+/** 1章's kanji: the round's last resort for two beginners. */
+const BASIC = MOJI_CHAPTERS.find((c) => c.id === 'moji-1')?.kanji ?? [];
+
+/**
+ * The other side, when it fights without a なかま: not a second copy of this
+ * side's Nexmax (two identical robots could not be told apart), but the rival.
+ */
+const RIVAL = 'ENTJ';
+/** The なかま a profile fights with: its own if it has one we know, else the rival (other side) or none. */
+const companionOf = (p: VersusProfile | null, rival: boolean) => getIndividual(p?.avatar ?? '') ?? (rival ? getIndividual(RIVAL) : undefined);
+const artOf = (p: VersusProfile | null, rival = false) => companionOf(p, rival)?.art ?? NEXMAX_ART;
+const nameOf = (p: VersusProfile | null) => companionOf(p, true)?.shortName ?? 'ネクマックス';
+
+const Avatar = ({ src, mirrored = false, size }: { src: string; mirrored?: boolean; size: number }) => (
+  <img
+    src={assetPath(src)}
+    alt=""
+    aria-hidden
+    draggable={false}
+    className="pointer-events-none object-contain drop-shadow-[0_8px_18px_rgba(0,0,0,0.55)]"
+    style={{ width: size, height: size * 1.25, transform: mirrored ? 'scaleX(-1)' : undefined }}
+  />
+);
+
+const RankBadge = ({ rating, showFurigana }: { rating: number; showFurigana: boolean }) => {
+  const rank = rankFor(rating);
+  return (
+    <span className="g-pill-night inline-flex items-center gap-1.5 px-3 py-1 text-sm font-black tabular-nums">
+      <span aria-hidden className="inline-block h-2.5 w-2.5 rounded-full" style={{ background: rank.color }} />
+      <RubyText showFurigana={showFurigana}>{rank.label}</RubyText>
+      <span>{rating}</span>
+    </span>
+  );
+};
 
 export const VersusScreen = () => {
   const navigate = useNavigate();
   const mapPath = useMapPath();
-  const size = useCanvasSize(200, 0.24);
-  const writerRef = useRef<KanjiWriterHandle>(null);
-
   const showFurigana = useGameStore((s) => s.settings.furigana);
-  const progress = useGameStore((s) => s.progress);
   const weapons = useGameStore((s) => s.weapons);
   const equippedId = useGameStore((s) => s.equippedWeapon);
+  const activeIndividual = useGameStore((s) => s.activeIndividual);
   const versus = useGameStore((s) => s.versus);
   const recordVersus = useGameStore((s) => s.recordVersusResult);
-  const recordReview = useGameStore((s) => s.recordReview);
+  const owned = useOwnedKanji();
+  const reduced = useGameStore((s) => s.settings.reducedMotion);
+  const still = Boolean(useReducedMotion() || reduced);
+  // A short phone (SE) keeps the lobby on one screen with a smaller Nexmax.
+  const compact = useCompactHeight();
 
   const [phase, setPhase] = useState<Phase>('idle');
   const [waiting, setWaiting] = useState(0);
+  const [seconds, setSeconds] = useState(0);
   const [error, setError] = useState<string | null>(null);
-  const [myHp, setMyHpState] = useState(MAX_HP);
-  const [theirHp, setTheirHpState] = useState(MAX_HP);
-  // Mirrors of the HP, so a hit is judged outside a state updater: finish()
-  // records the result in the store, which must not run during a render.
-  const myHpRef = useRef(MAX_HP);
-  const theirHpRef = useRef(MAX_HP);
-  const setMyHp = (hp: number) => {
-    myHpRef.current = hp;
-    setMyHpState(hp);
-  };
-  const setTheirHp = (hp: number) => {
-    theirHpRef.current = hp;
-    setTheirHpState(hp);
-  };
   const [round, setRound] = useState<string[]>([]);
-  const [index, setIndex] = useState(0);
-  const [flash, setFlash] = useState<string | null>(null);
+  const [them, setThem] = useState<VersusProfile | null>(null);
+  const [incoming, setIncoming] = useState<{ n: number; damage: number } | null>(null);
   const [won, setWon] = useState(false);
   const [delta, setDelta] = useState(0);
+  const [count, setCount] = useState(3);
 
-  const settled = useRef(false);
-  /** The phase, for the relay's callbacks (registered once). */
-  const phaseRef = useRef<Phase>('idle');
-  useEffect(() => {
-    phaseRef.current = phase;
-  }, [phase]);
-  /** The host's round, re-sent until the guest answers READY. */
-  const handshake = useRef<{ kanji: string[]; timer: ReturnType<typeof setInterval> | null } | null>(null);
-  const stopHandshake = () => {
-    if (handshake.current?.timer) clearInterval(handshake.current.timer);
-    handshake.current = null;
-  };
+  useBgm(phase === 'fighting' ? 'boss' : phase === 'over' ? null : 'map');
 
   const weapon = useMemo(() => {
     const recipe = weapons.find((w) => w.id === equippedId);
@@ -91,16 +108,20 @@ export const VersusScreen = () => {
     const kanji = recipe.kanjiIds.map((id) => getKanjiById(id)).filter((k) => k != null);
     return kanji.length === recipe.kanjiIds.length ? weaponOf(kanji) : null;
   }, [weapons, equippedId]);
-
   /** 1.0 with nothing equipped, at most 1.2 with the best weapon. */
   const weaponBonus = weapon ? 1 + Math.min(MAX_WEAPON_BONUS, (weapon.attack / 96) * MAX_WEAPON_BONUS) : 1;
 
-  /** Characters this player owns — the pool a host draws the round from. */
-  const ownedChars = useMemo(
-    () => ALL_KANJI.filter((k) => progress[k.id]?.reps >= REPS_TO_OBTAIN).map((k) => k.char),
-    [progress],
+  const me: VersusProfile = useMemo(
+    () => ({ avatar: activeIndividual, rating: versus.rating, wins: versus.wins, losses: versus.losses, known: [...owned] }),
+    [activeIndividual, versus, owned],
   );
+  const meRef = useRef(me);
+  useEffect(() => {
+    meRef.current = me;
+  }, [me]);
 
+  // --- result -------------------------------------------------------------
+  const settled = useRef(false);
   const finish = useCallback(
     (didWin: boolean) => {
       if (settled.current) return;
@@ -112,72 +133,120 @@ export const VersusScreen = () => {
       setDelta(change);
       setWon(didWin);
       setPhase('over');
+      if (didWin) {
+        if (!playJingle()) sfx.fanfare();
+      } else sfx.lose();
       // The winner says so, and both stay a moment before leaving: leaving at
-      // once dropped the last hit, and the loser saw 「つうしんが きれました」
-      // instead of the result.
+      // once dropped the last hit, and the loser saw 「つうしんが きれました」.
       if (didWin) networkManager.send({ type: BattleEventType.VICTORY, timestamp: Date.now() });
       setTimeout(() => networkManager.disconnect(), 1500);
     },
     [versus.rating, recordVersus],
   );
 
-  // --- wire ---------------------------------------------------------------
+  // --- the handshake --------------------------------------------------------
+  /** A message repeated until the other side answers (a broadcast misses whoever has not subscribed yet). */
+  const resend = useRef<ReturnType<typeof setInterval> | null>(null);
+  const stopResend = () => {
+    if (resend.current) clearInterval(resend.current);
+    resend.current = null;
+  };
+  const repeat = (send: () => void, onGiveUp: () => void) => {
+    stopResend();
+    let tries = 0;
+    send();
+    resend.current = setInterval(() => {
+      tries += 1;
+      if (tries > 8) {
+        stopResend();
+        onGiveUp();
+        return;
+      }
+      send();
+    }, 1200);
+  };
+  const lost = (message: string) => {
+    stopResend();
+    setError(message);
+    networkManager.disconnect();
+    setPhase('idle');
+  };
+
+  const phaseRef = useRef<Phase>('idle');
+  useEffect(() => {
+    phaseRef.current = phase;
+  }, [phase]);
+  const roundRef = useRef<string[] | null>(null);
+  const hitNo = useRef(0);
+
   useEffect(() => {
     const off = networkManager.onEvent((e: BattleEvent) => {
       switch (e.type) {
-        case BattleEventType.HANDSHAKE: {
-          // The host picks the round so both sides write the same characters.
-          // It may arrive more than once (the host repeats it until READY): every
-          // copy is answered, the round is taken once.
-          if (e.data?.kanji?.length) {
-            networkManager.send({ type: BattleEventType.READY, timestamp: Date.now() });
-            if (phaseRef.current !== 'fighting') {
-              setRound(e.data.kanji);
-              void preloadCharData(e.data.kanji);
-              setPhase('fighting');
-            }
+        case BattleEventType.PROFILE: {
+          if (!e.data?.profile) break;
+          setThem(e.data.profile);
+          if (networkManager.isHosting()) {
+            // The guest is here and has said what it knows: choose the round, and repeat it until READY.
+            if (roundRef.current) break;
+            const picked = pickRound(meRef.current.known, e.data.profile.known, BASIC);
+            roundRef.current = picked;
+            void preloadCharData(picked);
+            repeat(
+              () => networkManager.send({ type: BattleEventType.HANDSHAKE, timestamp: Date.now(), data: { kanji: picked, profile: meRef.current } }),
+              () => lost('あいてと つながりませんでした。'),
+            );
+          } else {
+            networkManager.send({ type: BattleEventType.PROFILE, timestamp: Date.now(), data: { profile: meRef.current } });
           }
           break;
         }
+        case BattleEventType.HANDSHAKE: {
+          // Every copy is answered; the round is taken once.
+          if (!e.data?.kanji?.length) break;
+          networkManager.send({ type: BattleEventType.READY, timestamp: Date.now(), data: { profile: meRef.current } });
+          if (phaseRef.current !== 'searching') break;
+          if (e.data.profile) setThem(e.data.profile);
+          setRound(e.data.kanji);
+          void preloadCharData(e.data.kanji);
+          setPhase('matched');
+          break;
+        }
         case BattleEventType.READY: {
-          // The guest has the round: the host starts too.
-          const sent = handshake.current;
-          if (!sent) break;
-          stopHandshake();
-          setRound(sent.kanji);
-          setPhase('fighting');
+          if (!networkManager.isHosting() || !roundRef.current || phaseRef.current !== 'searching') break;
+          stopResend();
+          if (e.data?.profile) setThem(e.data.profile);
+          setRound(roundRef.current);
+          setPhase('matched');
           break;
         }
-        case BattleEventType.HIT: {
-          const dmg = e.data?.damage ?? 0;
-          const next = Math.max(0, myHpRef.current - dmg);
-          setMyHp(next);
-          if (next === 0) finish(false);
-          setFlash(`あいての こうげき！ ${dmg}`);
+        case BattleEventType.HIT:
+          hitNo.current += 1;
+          setIncoming({ n: hitNo.current, damage: e.data?.damage ?? 0 });
           break;
-        }
         case BattleEventType.VICTORY:
           // The other side brought this side's HP to 0 — even if its last hit was lost.
-          setMyHp(0);
           finish(false);
           break;
         case BattleEventType.DISCONNECT:
           // Leaving after the result is the normal end of a match.
           if (settled.current) break;
-          stopHandshake();
-          setError('あいてとの つうしんが きれました。');
-          setPhase('over');
+          stopResend();
+          if (phaseRef.current === 'fighting' || phaseRef.current === 'matched') {
+            setError('あいてが いなく なりました。');
+            setPhase('over');
+          }
           break;
         default:
           break;
       }
     });
     return off;
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- registered once; reads live values through refs
   }, [finish]);
 
   useEffect(
     () => () => {
-      stopHandshake();
+      stopResend();
       networkManager.disconnect();
     },
     [],
@@ -185,328 +254,305 @@ export const VersusScreen = () => {
 
   // --- matchmaking --------------------------------------------------------
   const search = async () => {
+    sfx.tap();
     setError(null);
     setPhase('searching');
+    setSeconds(0);
+    setCount(3);
     settled.current = false;
-    setMyHp(MAX_HP);
-    setTheirHp(MAX_HP);
-    setIndex(0);
-    setFlash(null);
-
+    roundRef.current = null;
+    hitNo.current = 0;
+    setIncoming(null);
+    setThem(null);
     try {
       await networkManager.findOpponent({ onWaiting: setWaiting });
-      setPhase('ready');
+      // The host speaks first, once the guest is in the room; the guest answers (PROFILE → HANDSHAKE → READY).
       if (!networkManager.isHosting()) return;
-
-      // The host publishes the round once the guest is in the room, and keeps
-      // sending it until the guest answers READY (a broadcast is not delivered
-      // to someone who has not subscribed yet).
-      const pool = ownedChars.length >= ROUND_KANJI ? ownedChars : ALL_KANJI.slice(0, 40).map((k) => k.char);
-      const picked = [...pool].sort(() => Math.random() - 0.5).slice(0, ROUND_KANJI);
-      void preloadCharData(picked);
       if (!(await networkManager.waitForPartner())) {
-        setError('あいてが いなく なりました。');
-        networkManager.disconnect();
-        setPhase('idle');
+        lost('あいてが いなく なりました。');
         return;
       }
-      stopHandshake();
-      const publish = () => networkManager.send({ type: BattleEventType.HANDSHAKE, timestamp: Date.now(), data: { kanji: picked } });
-      let tries = 0;
-      handshake.current = {
-        kanji: picked,
-        timer: setInterval(() => {
-          tries += 1;
-          if (tries > 8) {
-            stopHandshake();
-            setError('あいてと つながりませんでした。');
-            networkManager.disconnect();
-            setPhase('idle');
-            return;
-          }
-          publish();
-        }, 1200),
-      };
-      publish();
+      repeat(
+        () => {
+          if (!roundRef.current) networkManager.send({ type: BattleEventType.PROFILE, timestamp: Date.now(), data: { profile: meRef.current } });
+        },
+        () => {
+          if (!roundRef.current) lost('あいてと つながりませんでした。');
+        },
+      );
     } catch (e) {
-      if (e instanceof MatchCancelledError) {
-        setPhase('idle');
-        return;
-      }
+      if (e instanceof MatchCancelledError) return;
       setError(e instanceof Error ? e.message : 'つながりませんでした。');
       setPhase('idle');
     }
   };
 
   const cancel = () => {
-    stopHandshake();
+    stopResend();
     networkManager.cancel();
     setPhase('idle');
   };
 
-  // --- writing ------------------------------------------------------------
-  const target = round[index % Math.max(1, round.length)];
-  const targetKanji = target ? getKanjiByChar(target) : undefined;
-  const reading = targetKanji?.kun[0]?.replace(/\(.*\)/, '') || targetKanji?.on[0] || '';
+  // The search clock.
+  useEffect(() => {
+    if (phase !== 'searching') return;
+    const t = setInterval(() => setSeconds((s) => s + 1), 1000);
+    return () => clearInterval(t);
+  }, [phase]);
 
-  const onComplete = useCallback(
-    (summary: { totalMistakes: number }) => {
-      if (phase !== 'fighting' || settled.current) return;
-      const mistakes = summary.totalMistakes;
-
-      if (targetKanji && progress[targetKanji.id]?.obtainedAt != null) {
-        recordReview(targetKanji.id, mistakes);
-      }
-
-      if (mistakes >= 3) {
-        // A failed write costs you, rather than the opponent.
-        const dmg = Math.round(BASE_DAMAGE * 0.75);
-        const next = Math.max(0, myHpRef.current - dmg);
-        setMyHp(next);
-        if (next === 0) finish(false);
-        setFlash(`3回(かい)いじょう まちがえた。${dmg} うけた`);
-      } else {
-        const accuracy = mistakes === 0 ? 1.5 : mistakes === 1 ? 1.1 : 0.8;
-        const dmg = Math.max(1, Math.round(BASE_DAMAGE * accuracy * weaponBonus));
-        const next = Math.max(0, theirHpRef.current - dmg);
-        setTheirHp(next);
-        if (next === 0) finish(true);
-        networkManager.send({
-          type: BattleEventType.HIT,
-          timestamp: Date.now(),
-          data: { damage: dmg, index },
-        });
-        setFlash(mistakes === 0 ? `かんぺき！ ${dmg} あたえた` : `${dmg} あたえた`);
-      }
-      setIndex((i) => i + 1);
-    },
-    [phase, targetKanji, progress, recordReview, weaponBonus, index, finish],
-  );
+  // VS: the two face each other, then 3・2・1.
+  useEffect(() => {
+    if (phase !== 'matched') return;
+    preloadImages([artOf(them, true), BACKDROP]);
+    sfx.clang();
+    const ticks = [1300, 2100, 2900].map((ms, i) =>
+      setTimeout(() => {
+        setCount(2 - i);
+        if (i < 2) sfx.tap();
+        else sfx.slash(0.8);
+      }, ms),
+    );
+    const go = setTimeout(() => setPhase('fighting'), still ? 1200 : 3500);
+    return () => {
+      ticks.forEach(clearTimeout);
+      clearTimeout(go);
+    };
+  }, [phase, them, still]);
 
   const rank = rankFor(versus.rating);
+  const myArt = artOf(me);
 
-  // --- 未設定 -------------------------------------------------------------
-  if (!isVersusConfigured) {
+  if (phase === 'fighting' && round.length) {
     return (
-      <div className="g-stage flex min-h-dvh flex-col items-center justify-center gap-4 px-6 text-center">
-      <Backdrop fixed />
-        <h1 className="g-title text-lg">
-          <RubyText showFurigana={showFurigana}>たいせん</RubyText>
-        </h1>
-        <p className="text-sm" style={{ color: 'var(--ink-2)' }}>
-          <RubyText showFurigana={showFurigana}>
-            たいせんは まだ つかえません。サーバーの せっていが 要(い)ります。
-          </RubyText>
-        </p>
-        <p className="text-xs" style={{ color: 'var(--ink-3)' }}>
-          <RubyText showFurigana={showFurigana}>
-            VITE_SUPABASE_URL と VITE_SUPABASE_ANON_KEY を 設定(せってい)して ビルドすると 使(つか)えます（docs/versus.md）。
-          </RubyText>
-        </p>
-        <button type="button" className="g-btn g-btn-primary" onClick={() => navigate(mapPath)}>
-          もどる
-        </button>
-      </div>
+      <VersusFight
+        round={round}
+        opponentName={nameOf(them)}
+        opponentImg={artOf(them, true)}
+        weaponBonus={weaponBonus}
+        incoming={incoming}
+        onHit={(damage, index) => networkManager.send({ type: BattleEventType.HIT, timestamp: Date.now(), data: { damage, index } })}
+        onEnd={finish}
+        onForfeit={() => finish(false)}
+      />
     );
   }
 
   return (
-    <div className="g-stage flex min-h-dvh flex-col">
-      <header
-        className="g-header sticky top-0 z-20 flex items-center justify-between px-4 py-3"
-      >
+    <div className="relative isolate flex min-h-dvh flex-col overflow-hidden text-[#f4f1ff]">
+      {/* The town with every light back on — where the fights are held. */}
+      <div aria-hidden className="pointer-events-none fixed inset-0 -z-10 bg-[#120f2b]">
+        <img src={assetPath(BACKDROP)} alt="" className="h-full w-full object-cover" />
+        <div className="absolute inset-0" style={{ background: 'linear-gradient(180deg, rgba(14,11,40,0.55) 0%, rgba(18,14,46,0.35) 40%, rgba(10,8,28,0.88) 100%)' }} />
+      </div>
+
+      <header className="sticky top-0 z-20 flex items-center justify-between gap-2 px-4 pt-[max(12px,env(safe-area-inset-top))] pb-2">
         <button
           type="button"
-          className="g-btn g-btn-ghost !min-h-[40px] !px-4 text-sm"
+          className="g-btn g-btn-night !min-h-[40px] !px-3.5 text-sm"
           onClick={() => {
-            networkManager.disconnect();
+            cancel();
             navigate(mapPath);
           }}
         >
-          もどる
+          <span aria-hidden>◀</span>
+          <RubyText showFurigana={showFurigana}>もどる</RubyText>
         </button>
-        <h1 className="g-title text-base">
+        <h1 className="text-center text-xl leading-tight font-black tracking-widest" style={{ textShadow: '0 2px 10px rgba(0,0,0,0.7)' }}>
           <RubyText showFurigana={showFurigana}>たいせん</RubyText>
+          <span lang="en" className="block text-[10px] font-bold tracking-normal opacity-80">
+            Versus
+          </span>
         </h1>
-        <span className="g-chip text-xs" style={{ color: rank.color }}>
-          <RubyText showFurigana={showFurigana}>{rank.label}</RubyText>
-          <span className="tabular-nums">{versus.rating}</span>
-        </span>
+        <RankBadge rating={versus.rating} showFurigana={showFurigana} />
       </header>
 
-      <div className="mx-auto flex w-full max-w-md flex-1 flex-col px-4 py-4">
-        {/* 待機 / 開始 ------------------------------------------------- */}
-        {(phase === 'idle' || phase === 'searching' || phase === 'ready') && (
-          <div className="flex flex-1 flex-col items-center justify-center gap-4 text-center">
-            <p className="text-sm" style={{ color: 'var(--ink-2)' }}>
-              <RubyText showFurigana={showFurigana}>
-                おなじ 漢字(かんじ)を 書(か)いて、はやく 正(ただ)しく 書(か)いたほうが 勝(か)ちます。
-              </RubyText>
-            </p>
-            <p className="text-xs" style={{ color: 'var(--ink-3)' }}>
-              <RubyText showFurigana={showFurigana}>
-                武器(ぶき)の 差(さ)は 2わり までです。字(じ)が 書(か)ければ 勝(か)てます。
-              </RubyText>
-            </p>
-
-            {phase === 'idle' && (
-              <button type="button" className="g-btn g-btn-primary w-full text-lg" onClick={search}>
-                <RubyText showFurigana={showFurigana}>あいてを さがす</RubyText>
-              </button>
-            )}
-
-            {phase === 'searching' && (
-              <>
-                <motion.p
-                  animate={{ opacity: [0.5, 1, 0.5] }}
-                  transition={{ repeat: Infinity, duration: 1.4 }}
-                  className="g-title"
-                >
-                  <RubyText showFurigana={showFurigana}>さがしています…</RubyText>
-                </motion.p>
-                <p className="text-xs tabular-nums" style={{ color: 'var(--ink-3)' }}>
-                  <RubyText showFurigana={showFurigana}>{`まっている 人(ひと)：${waiting}`}</RubyText>
-                </p>
-                <button type="button" className="g-btn g-btn-ghost w-full" onClick={cancel}>
-                  やめる
-                </button>
-              </>
-            )}
-
-            {phase === 'ready' && (
-              <p className="g-title">
-                <RubyText showFurigana={showFurigana}>あいてが 見(み)つかりました！</RubyText>
-              </p>
-            )}
-
-            {error && (
-              <p className="text-sm" style={{ color: 'var(--color-danger)' }} aria-live="polite">
-                <RubyText showFurigana={showFurigana}>{error}</RubyText>
-              </p>
-            )}
+      <main className="mx-auto flex w-full max-w-md flex-1 flex-col items-center justify-end gap-3 px-4 pb-[max(20px,env(safe-area-inset-bottom))]">
+        {!isVersusConfigured ? (
+          <div className="g-novel-night w-full rounded-2xl p-4 text-center text-sm">
+            <RubyText showFurigana={showFurigana}>たいせんは いま つかえません。</RubyText>
           </div>
-        )}
-
-        {/* 対戦中 ------------------------------------------------------ */}
-        {phase === 'fighting' && targetKanji && (
-          <>
-            <div className="g-panel mb-2 p-3">
-              <p className="mb-1 text-xs" style={{ color: 'var(--ink-2)' }}>
-                <RubyText showFurigana={showFurigana}>あいて</RubyText>
-              </p>
-              <div className="h-2.5 overflow-hidden rounded-full" style={{ background: 'var(--line)' }}>
-                <motion.div
-                  className="h-full rounded-full"
-                  style={{ background: 'var(--color-danger)' }}
-                  animate={{ width: `${(theirHp / MAX_HP) * 100}%` }}
-                />
-              </div>
-            </div>
-
-            <div className="g-panel mb-3 p-3">
-              <p className="mb-1 text-xs" style={{ color: 'var(--ink-2)' }}>
-                <RubyText showFurigana={showFurigana}>じぶん</RubyText>
-                {weapon && (
-                  <span className="ml-2">
-                    <RubyText showFurigana={showFurigana}>{weapon.name}</RubyText>
-                  </span>
-                )}
-              </p>
-              <div className="h-2.5 overflow-hidden rounded-full" style={{ background: 'var(--line)' }}>
-                <motion.div
-                  className="h-full rounded-full"
-                  style={{ background: 'var(--color-success)' }}
-                  animate={{ width: `${(myHp / MAX_HP) * 100}%` }}
-                />
-              </div>
-            </div>
-
-            <p className="text-center text-xs" style={{ color: 'var(--ink-2)' }}>
-              <RubyText showFurigana={showFurigana}>この ことばを 書(か)く</RubyText>
-            </p>
-            <p className="g-title mb-2 text-center text-lg">
-              {reading}
-              <span className="ml-2 text-sm font-normal" style={{ color: 'var(--ink-2)' }}>
-                {targetKanji.meanings.join(' / ')}
-              </span>
-            </p>
-
-            <div className="flex justify-center">
-              <KanjiWriterCanvas
-                ref={writerRef}
-                key={`${targetKanji.id}-${index}`}
-                char={targetKanji.char}
-                size={size}
-                quizMode
-                onComplete={onComplete}
-              />
-            </div>
-
-            <div className="mt-2 h-8 text-center" aria-live="polite">
-              <AnimatePresence mode="wait">
-                {flash && (
-                  <motion.p
-                    key={flash + index}
-                    initial={{ opacity: 0, y: 6 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0 }}
-                    className="g-title text-sm"
-                  >
-                    <RubyText showFurigana={showFurigana}>{flash}</RubyText>
-                  </motion.p>
-                )}
-              </AnimatePresence>
-            </div>
-
-            <button
-              type="button"
-              className="g-btn g-btn-ghost mx-auto mt-1 !min-h-[38px] !px-4 text-xs"
-              onClick={() => writerRef.current?.animateStroke()}
+        ) : phase === 'over' ? (
+          <motion.section
+            initial={{ opacity: 0, scale: 0.92 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="g-novel-night flex w-full flex-col items-center gap-3 rounded-2xl px-4 py-5 text-center"
+          >
+            <p
+              className="text-4xl font-black tracking-widest"
+              style={{ color: error ? '#d9d2f5' : won ? '#ffd36a' : '#9fb3d9', textShadow: '0 3px 0 rgba(0,0,0,0.45)' }}
             >
-              <RubyText showFurigana={showFurigana}>わからない</RubyText>
-            </button>
-          </>
-        )}
-
-        {/* 決着 -------------------------------------------------------- */}
-        {phase === 'over' && (
-          <div className="flex flex-1 flex-col items-center justify-center gap-4 text-center">
-            <p className="g-title text-2xl">
-              {error ? (
-                <RubyText showFurigana={showFurigana}>{error}</RubyText>
-              ) : won ? (
-                <RubyText showFurigana={showFurigana}>勝(か)ち！</RubyText>
-              ) : (
-                <RubyText showFurigana={showFurigana}>負(ま)け</RubyText>
-              )}
+              <RubyText showFurigana={showFurigana}>{error ?? (won ? '勝(か)ち！' : '負(ま)け')}</RubyText>
             </p>
+            <div className="flex items-end gap-6">
+              <Avatar src={myArt} size={88} />
+              <Avatar src={artOf(them, true)} mirrored size={88} />
+            </div>
             {!error && (
-              <p className="g-chip" style={{ color: rank.color }}>
-                <RubyText showFurigana={showFurigana}>レート</RubyText>
-                <span className="tabular-nums">
-                  {versus.rating} ({delta >= 0 ? '+' : ''}
-                  {delta})
+              <p className="g-pill-night px-4 py-1.5 text-base font-black tabular-nums" style={{ color: rank.color }}>
+                <RubyText showFurigana={showFurigana}>{`レート ${versus.rating}`}</RubyText>
+                <span className="ml-2" style={{ color: delta >= 0 ? '#9be37a' : '#ff9a8a' }}>
+                  {delta >= 0 ? '+' : ''}
+                  {delta}
                 </span>
               </p>
             )}
+            <p className="text-xs opacity-80 tabular-nums">
+              <RubyText showFurigana={showFurigana}>{`${versus.wins}勝(しょう) ${versus.losses}敗(はい)`}</RubyText>
+            </p>
             <div className="flex w-full gap-2">
-              <button type="button" className="g-btn g-btn-ghost flex-1" onClick={() => navigate(mapPath)}>
-                もどる
+              <button type="button" className="g-btn g-btn-night flex-1" onClick={() => navigate(mapPath)}>
+                <RubyText showFurigana={showFurigana}>もどる</RubyText>
               </button>
               <button
                 type="button"
-                className="g-btn g-btn-primary flex-1"
+                className="g-btn g-btn-primary g-shine flex-1"
                 onClick={() => {
                   setError(null);
-                  setPhase('idle');
+                  void search();
                 }}
               >
-                <RubyText showFurigana={showFurigana}>もう一度(いちど)</RubyText>
+                <span className="relative z-10">
+                  <RubyText showFurigana={showFurigana}>もう一度(いちど)</RubyText>
+                </span>
               </button>
             </div>
-          </div>
+          </motion.section>
+        ) : (
+          <>
+            {/* Nexmax (or the chosen なかま), with the search rings around him. */}
+            <div className="relative flex flex-1 items-end justify-center">
+              {phase === 'searching' && !still && (
+                <>
+                  {[0, 0.7, 1.4].map((d) => (
+                    <motion.span
+                      key={d}
+                      aria-hidden
+                      className="absolute bottom-[18%] left-1/2 h-40 w-40 -translate-x-1/2 rounded-full border-2 border-[#ffd36a]"
+                      initial={{ opacity: 0.7, scale: 0.4 }}
+                      animate={{ opacity: 0, scale: 1.8 }}
+                      transition={{ repeat: Infinity, duration: 2.1, delay: d, ease: 'easeOut' }}
+                    />
+                  ))}
+                </>
+              )}
+              <motion.div animate={phase === 'searching' && !still ? { y: [0, -6, 0] } : undefined} transition={{ repeat: Infinity, duration: 1.6 }}>
+                <Avatar src={myArt} size={compact ? 118 : 170} />
+              </motion.div>
+            </div>
+
+            <section className="g-novel-night w-full rounded-2xl px-4 py-4 text-center">
+              {phase === 'searching' ? (
+                <>
+                  <motion.p
+                    animate={still ? undefined : { opacity: [0.55, 1, 0.55] }}
+                    transition={{ repeat: Infinity, duration: 1.4 }}
+                    className="text-lg font-black"
+                  >
+                    <RubyText showFurigana={showFurigana}>あいてを さがして います…</RubyText>
+                  </motion.p>
+                  <p className="mt-1 text-xs opacity-80 tabular-nums">
+                    <RubyText showFurigana={showFurigana}>{`${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, '0')} ・ まっている 人(ひと) ${Math.max(1, waiting)}`}</RubyText>
+                  </p>
+                  <button type="button" className="g-btn g-btn-night mt-3 w-full" onClick={cancel}>
+                    <RubyText showFurigana={showFurigana}>やめる</RubyText>
+                  </button>
+                </>
+              ) : (
+                <>
+                  <p className="text-sm font-bold">
+                    <RubyText showFurigana={showFurigana}>おなじ 字(じ)を 書(か)いて、はやく 正(ただ)しく 書(か)いた ほうが 勝(か)ち。</RubyText>
+                  </p>
+                  <ul className="mt-2.5 grid grid-cols-3 gap-1.5 text-[11px] leading-snug font-bold">
+                    <li className="g-pill-night flex flex-col items-center rounded-xl px-1 py-1.5">
+                      <span aria-hidden className="text-xl">
+                        ✍️⚡
+                      </span>
+                      <RubyText showFurigana={showFurigana}>きれいに 書(か)くと こうげき</RubyText>
+                    </li>
+                    <li className="g-pill-night flex flex-col items-center rounded-xl px-1 py-1.5">
+                      <span aria-hidden className="text-xl">
+                        ❌❌❌
+                      </span>
+                      <RubyText showFurigana={showFurigana}>3こ まちがえると じぶんに</RubyText>
+                    </li>
+                    <li className="g-pill-night flex flex-col items-center rounded-xl px-1 py-1.5">
+                      <span aria-hidden className="text-xl">
+                        🗡️
+                      </span>
+                      <RubyText showFurigana={showFurigana}>ぶきの 差(さ)は 2わりまで</RubyText>
+                    </li>
+                  </ul>
+                  <p className="mt-2 text-xs opacity-80 tabular-nums">
+                    <RubyText showFurigana={showFurigana}>{`${versus.wins}勝(しょう) ${versus.losses}敗(はい)`}</RubyText>
+                  </p>
+                  {error && (
+                    <p className="mt-1 text-sm font-bold text-[#ffb4a8]" aria-live="polite">
+                      <RubyText showFurigana={showFurigana}>{error}</RubyText>
+                    </p>
+                  )}
+                  <button type="button" className="g-btn g-btn-primary g-shine mt-3 w-full !min-h-[56px] text-lg" onClick={() => void search()}>
+                    <span className="relative z-10">
+                      ⚔️ <RubyText showFurigana={showFurigana}>あいてを さがす</RubyText>
+                    </span>
+                  </button>
+                </>
+              )}
+            </section>
+          </>
         )}
-      </div>
+      </main>
+
+      {/* VS — the two なかま face each other, then 3・2・1. */}
+      <AnimatePresence>
+        {phase === 'matched' && (
+          <motion.div
+            key="vs"
+            className="fixed inset-0 z-40 flex flex-col items-center justify-center overflow-hidden"
+            style={{ background: 'linear-gradient(115deg, #1d3f8f 0%, #1a2a66 49.6%, #f2c45a 49.8%, #f2c45a 50.4%, #6b1630 50.6%, #3a0d22 100%)' }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+          >
+            <div className="flex w-full max-w-md items-end justify-between px-3">
+              <motion.div className="flex flex-col items-center" initial={still ? false : { x: -160, opacity: 0 }} animate={{ x: 0, opacity: 1 }} transition={{ type: 'spring', stiffness: 220, damping: 20 }}>
+                <Avatar src={myArt} size={128} />
+                <span className="mt-1 text-sm font-black">
+                  <RubyText showFurigana={showFurigana}>じぶん</RubyText>
+                </span>
+                <RankBadge rating={versus.rating} showFurigana={showFurigana} />
+              </motion.div>
+              <motion.div className="flex flex-col items-center" initial={still ? false : { x: 160, opacity: 0 }} animate={{ x: 0, opacity: 1 }} transition={{ type: 'spring', stiffness: 220, damping: 20, delay: 0.1 }}>
+                <Avatar src={artOf(them, true)} mirrored size={128} />
+                <span className="mt-1 text-sm font-black">
+                  <RubyText showFurigana={showFurigana}>{`あいて・${nameOf(them)}`}</RubyText>
+                </span>
+                <RankBadge rating={them?.rating ?? 1000} showFurigana={showFurigana} />
+              </motion.div>
+            </div>
+            <motion.p
+              className="absolute top-[34%] text-7xl font-black italic"
+              style={{ color: '#ffd36a', textShadow: '0 4px 0 #8a4b12, 0 0 24px rgba(255,190,80,0.7)' }}
+              initial={still ? false : { scale: 3, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{ delay: 0.35, type: 'spring', stiffness: 300, damping: 14 }}
+            >
+              VS
+            </motion.p>
+            <AnimatePresence mode="wait">
+              <motion.p
+                key={count}
+                className="absolute bottom-[16%] text-6xl font-black tabular-nums"
+                style={{ textShadow: '0 3px 0 rgba(0,0,0,0.5)' }}
+                initial={{ scale: 1.8, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0.6, opacity: 0 }}
+              >
+                {count > 0 ? count : <RubyText showFurigana={showFurigana}>書(か)け！</RubyText>}
+              </motion.p>
+            </AnimatePresence>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };
