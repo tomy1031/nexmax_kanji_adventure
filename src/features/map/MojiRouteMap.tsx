@@ -261,7 +261,7 @@ const readingOf = (ch: string): string => {
 };
 
 export const MojiRouteMap = () => {
-  useBgm('town');
+  useBgm('map');
   const navigate = useNavigate();
   const showFurigana = useGameStore((s) => s.settings.furigana);
   const setLastArc = useGameStore((s) => s.setLastArc);

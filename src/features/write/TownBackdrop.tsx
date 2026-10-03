@@ -7,6 +7,7 @@ import { RubyText } from '../../components/ui/Ruby';
 import { getKanjiByChar } from '../../lib/kanjiDb';
 import { charRuby } from '../../lib/reading';
 import { useGameStore } from '../../store/gameStore';
+import { playJingle } from '../../lib/bgm';
 
 /**
  * The drill's backdrop on 文字が 消えた 町: the episode's own town, dark while
@@ -76,7 +77,10 @@ export const TownShot = ({ scene, char, onDone }: { scene: string; char: string;
   // Dark for a beat, then lit, so the change itself is seen.
   const [held, setHeld] = useState(true);
   useEffect(() => {
-    const light = setTimeout(() => setHeld(false), 900);
+    const light = setTimeout(() => {
+      setHeld(false);
+      playJingle();
+    }, 900);
     const done = setTimeout(onDone, 2500);
     return () => {
       clearTimeout(light);

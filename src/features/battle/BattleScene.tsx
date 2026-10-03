@@ -163,7 +163,8 @@ export const BattleScene = ({
   mastery = false,
   difficulty = 'normal',
 }: BattleSceneProps) => {
-  useBgm('battle');
+  // The new route's Mojikui fights have their own, bigger tune.
+  useBgm(mastery ? 'boss' : 'battle');
   const navigate = useNavigate();
   const size = useCanvasSize(210, 0.25, 96);
   const tutorial = mode === 'tutorial';
