@@ -128,3 +128,23 @@ describe('Hard の 得 (store)', () => {
     expect(merged.perfectStages).toEqual(['moji-1-1']);
   });
 });
+
+describe('きずな (docs/design/11 §4.2)', () => {
+  it('rises one at a time, up to five', () => {
+    const { addBond } = useGameStore.getState();
+    expect([1, 2, 3, 4, 5].map(() => addBond('ISTJ'))).toEqual([1, 2, 3, 4, 5]);
+    expect(addBond('ISTJ')).toBeNull();
+    expect(useGameStore.getState().bonds.ISTJ).toBe(5);
+  });
+
+  it('rises from a win once a day per card', () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date(2026, 9, 4, 9));
+    const { bondFromWin } = useGameStore.getState();
+    expect(bondFromWin('rin')).toBe(1);
+    expect(bondFromWin('rin')).toBeNull();
+    expect(bondFromWin('ISTJ-4')).toBe(1);
+    vi.setSystemTime(new Date(2026, 9, 5, 9));
+    expect(useGameStore.getState().bondFromWin('rin')).toBe(2);
+  });
+});

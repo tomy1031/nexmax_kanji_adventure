@@ -5,11 +5,11 @@ import { NightStreetBackdrop } from '../write/NightStreet';
 import { useNavigate } from 'react-router-dom';
 import { useGameStore } from '../../store/gameStore';
 import { getKanjiById } from '../../lib/kanjiDb';
-import { weaponOf, RARITY_LABEL, CLASS_LABEL } from '../../lib/forge/weapon';
+import { weaponOf, RARITY_LABEL } from '../../lib/forge/weapon';
 import { ELEMENT_LABEL } from '../../lib/forge/elements';
-import { INDIVIDUALS, getIndividual } from '../../data/individuals';
+import { CARDS } from '../../data/individuals';
+import { CompanionBook } from './CompanionBook';
 import { RubyText } from '../../components/ui/Ruby';
-import { assetPath } from '../../lib/assetPath';
 import { rustLevel } from '../../lib/srs';
 import { GameIcon } from '../../components/ui/GameIcon';
 
@@ -26,8 +26,6 @@ export const CollectionScreen = () => {
   const equipped = useGameStore((s) => s.equippedWeapon);
   const equipWeapon = useGameStore((s) => s.equipWeapon);
   const ownedIndividuals = useGameStore((s) => s.individuals);
-  const active = useGameStore((s) => s.activeIndividual);
-  const setActive = useGameStore((s) => s.setActiveIndividual);
   const progress = useGameStore((s) => s.progress);
 
   const [tab, setTab] = useState<Tab>('weapons');
@@ -71,7 +69,7 @@ export const CollectionScreen = () => {
           {(
             [
               ['weapons', '武器(ぶき)', forged.length],
-              ['individuals', 'なかま', `${ownedIndividuals.length}/${INDIVIDUALS.length}`],
+              ['individuals', 'なかま', `${ownedIndividuals.length}/${CARDS.length}`],
             ] as const
           ).map(([id, label, count]) => (
             <button
@@ -161,60 +159,7 @@ export const CollectionScreen = () => {
             </ul>
           ))}
 
-        {tab === 'individuals' && (
-          <ul className="grid grid-cols-2 gap-2">
-            {INDIVIDUALS.map((ind) => {
-              const have = ownedIndividuals.includes(ind.id);
-              const isActive = active === ind.id;
-              return (
-                <li key={ind.id}>
-                  <button
-                    type="button"
-                    disabled={!have}
-                    onClick={() => setActive(ind.id)}
-                    className="g-panel flex w-full flex-col items-center gap-1 p-3 disabled:opacity-45"
-                    style={{ borderColor: isActive ? 'var(--accent)' : undefined }}
-                  >
-                    <img
-                      src={assetPath(have ? ind.art : ind.emblem)}
-                      alt=""
-                      aria-hidden
-                      className="h-24 object-contain"
-                      style={{ filter: have ? undefined : 'grayscale(1) opacity(0.5)' }}
-                    />
-                    <p className="g-title text-center text-xs leading-snug">
-                      {have ? (
-                        <RubyText showFurigana={showFurigana}>{ind.name}</RubyText>
-                      ) : (
-                        <span style={{ color: 'var(--ink-3)' }}>？？？</span>
-                      )}
-                    </p>
-                    {have && (
-                      <p className="text-[10px]" style={{ color: 'var(--ink-2)' }}>
-                        <RubyText showFurigana={showFurigana}>
-                          {`${CLASS_LABEL[ind.favours].ja}(${CLASS_LABEL[ind.favours].reading}) +${ind.bonus}%`}
-                        </RubyText>
-                      </p>
-                    )}
-                    {isActive && (
-                      <span className="g-chip !py-0.5 text-[10px]" style={{ background: 'var(--accent)', color: '#fff', borderColor: 'transparent' }}>
-                        いっしょに いる
-                      </span>
-                    )}
-                  </button>
-                </li>
-              );
-            })}
-          </ul>
-        )}
-
-        {tab === 'individuals' && active && (
-          <p className="mt-3 text-center text-xs" style={{ color: 'var(--ink-2)' }}>
-            <RubyText showFurigana={showFurigana}>
-              {getIndividual(active)?.tagline ?? ''}
-            </RubyText>
-          </p>
-        )}
+        {tab === 'individuals' && <CompanionBook showFurigana={showFurigana} />}
       </div>
     </div>
   );

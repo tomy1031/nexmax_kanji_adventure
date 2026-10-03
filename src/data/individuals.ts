@@ -1,5 +1,6 @@
 import { Element } from '../lib/forge/elements';
 import { WeaponClass } from '../lib/forge/weapon';
+import type { Rarity } from '../lib/companionSkill';
 
 /**
  * ネクマックスの個体 — the collectible characters.
@@ -23,7 +24,14 @@ export const Rank = {
 export type Rank = (typeof Rank)[keyof typeof Rank];
 
 export interface Individual {
+  /** The card: the character's id for its first card ("ISTJ", "rin"), "ISTJ-4" for its ★4 (docs/design/11 §4.1). */
   id: string;
+  /** The character the card is of — its わざ and lines go by this. */
+  char: string;
+  /** ★3〜5. The same character can come as more than one. */
+  rarity: Rarity;
+  /** ネクマックスの なかま (a robot) or 町の 人 (a person of Naniwa Town). */
+  kind: 'robot' | 'town';
   /** Display name in furigana notation. */
   name: string;
   /** Short name for tight spaces. */
@@ -45,11 +53,15 @@ export interface Individual {
 const portrait = (code: string) => `img/chara/types/${code}.webp`;
 const emblem = (code: string) => `img/ui/emblems/${code}.webp`;
 
+/** The sixteen robots' first cards: ★3, or ★4 for the rare three (Rank.SPECIAL). */
+type RobotDef = Omit<Individual, 'char' | 'rarity' | 'kind'>;
+const robot = (d: RobotDef): Individual => ({ ...d, char: d.id, rarity: d.rank === 'SPECIAL' ? 4 : 3, kind: 'robot' });
+
 /**
  * The sixteen. Names and taglines follow NexmaxAcademy's personality ledger so
  * a learner who met them there recognises them here.
  */
-export const INDIVIDUALS: readonly Individual[] = [
+const ROBOTS: RobotDef[] = [
   // --- 物語でもらう個体 ---------------------------------------------------
   {
     id: 'ISTJ',
@@ -249,7 +261,96 @@ export const INDIVIDUALS: readonly Individual[] = [
   },
 ];
 
-const byId = new Map(INDIVIDUALS.map((i) => [i.id, i]));
+/** The sixteen robots, as the story and today's gacha give them. */
+export const INDIVIDUALS: readonly Individual[] = ROBOTS.map(robot);
+
+/**
+ * 町の なかま (11 §4.1, 2026-10-03「町の 人は ネクマックスタイプで なくても 良い」):
+ * people of Naniwa Town the player has helped, at ★3 in their town clothes.
+ */
+const town = (id: string, name: string, tagline: string, favours: WeaponClass, resists: Element): Individual => ({
+  id,
+  char: id,
+  rarity: 3,
+  kind: 'town',
+  name,
+  shortName: name,
+  tagline,
+  art: `img/chara/naniwa/folk_${id}_happy.webp`,
+  // No badge of their own: the portrait stands in for it.
+  emblem: `img/chara/naniwa/folk_${id}_happy.webp`,
+  rank: Rank.STANDARD,
+  favours,
+  resists,
+  bonus: 20,
+});
+
+export const TOWN: readonly Individual[] = [
+  town('rin', 'リンさん', '本(ほん)が だいすきな りゅうがくせい。', WeaponClass.SPEAR, Element.KOU),
+  town('yamada', '山(やま)田(だ)さん', 'ナニワタウンの やさしい 人(ひと)。', WeaponClass.STAFF, Element.MOKU),
+  town('teacher', '先(せん)生(せい)', '日本語(にほんご)学校(がっこう)の 先(せん)生(せい)。', WeaponClass.SWORD, Element.KIN),
+  town('doctor', 'お医(い)者(しゃ)さん', 'みんなの けんこうを まもります。', WeaponClass.SHIELD, Element.SUI),
+  town('baker', 'パンやさん', 'まいあさ おいしい パンを やきます。', WeaponClass.HAMMER, Element.KA),
+  town('keeper', 'とけいだいの 人(ひと)', '町(まち)の 時間(じかん)を まもります。', WeaponClass.AXE, Element.DO),
+];
+
+/**
+ * ★4・★5 — the same character dressed up (11 §4.1). Same わざ and weapon,
+ * stronger: the favoured-weapon bonus +10 a step, the わざ by rarity.
+ */
+const dressed = (char: string, rarity: 4 | 5, title: string, fullName?: string): Individual => {
+  const base = [...ROBOTS.map(robot), ...TOWN].find((i) => i.id === char)!;
+  return {
+    ...base,
+    id: `${char}-${rarity}`,
+    rarity,
+    name: fullName ?? `${title} ${base.shortName}`,
+    art: `img/chara/cards/${char}-${rarity}.webp`,
+    rank: rarity === 5 ? Rank.SPECIAL : Rank.STANDARD,
+    bonus: base.bonus + (rarity - base.rarity) * 10,
+  };
+};
+
+export const DRESSED: readonly Individual[] = [
+  dressed('ISTJ', 4, 'えきちょうの'),
+  dressed('ISFJ', 4, 'ナースの'),
+  dressed('ESTP', 4, 'ランナーの'),
+  dressed('ESTJ', 4, 'せいとかいの'),
+  dressed('ESFJ', 4, 'カフェの'),
+  dressed('INTP', 4, 'はかせの'),
+  dressed('ENTP', 4, 'はつめいかの'),
+  dressed('INFJ', 4, 'としょいいんの'),
+  dressed('INFP', 4, 'えかきの'),
+  dressed('ENFP', 4, 'たんけんかの'),
+  dressed('ISTP', 4, 'メカニックの'),
+  dressed('ISFP', 4, 'ゆかたの'),
+  dressed('ESFP', 4, 'アイドルの'),
+  dressed('ISTJ', 5, 'さむらいの'),
+  dressed('ESTP', 5, 'ロケットの'),
+  dressed('ENFP', 5, 'まつりの'),
+  dressed('INTJ', 5, 'たんていの'),
+  dressed('ENTJ', 5, 'せんちょうの'),
+  dressed('ENFJ', 5, 'ネオンの'),
+  dressed('rin', 4, 'ゆかたの'),
+  dressed('yamada', 4, 'はなびの'),
+  dressed('teacher', 4, 'しょどうの'),
+  dressed('doctor', 4, 'さくらの'),
+  dressed('baker', 4, 'クリスマスの'),
+  dressed('keeper', 4, 'ほしぞらの'),
+  dressed('rin', 5, 'まつりの'),
+  dressed('keeper', 5, 'じかんの', 'じかんの まほうつかい'),
+];
+
+/** Every card there is. */
+export const CARDS: readonly Individual[] = [...INDIVIDUALS, ...TOWN, ...DRESSED];
+
+/** The characters, in order: the robots, then the town. */
+export const CHARACTERS: readonly string[] = [...INDIVIDUALS, ...TOWN].map((i) => i.id);
+
+/** A character's cards, ★ ascending. */
+export const cardsOf = (char: string): Individual[] => CARDS.filter((c) => c.char === char).sort((a, b) => a.rarity - b.rarity);
+
+const byId = new Map(CARDS.map((i) => [i.id, i]));
 export const getIndividual = (id: string): Individual | undefined => byId.get(id);
 
 export const individualsOfRank = (rank: Rank): Individual[] =>

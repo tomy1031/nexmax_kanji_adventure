@@ -149,6 +149,23 @@ numbers anywhere (any paper, card, sign or tag is blank).`,
   HUMAN_SAME: `Character: exactly the person in the reference image — the same face, hair, age, body, clothes, colors and
 props, the same glossy 3D-like Japanese anime game rendering with soft shading and a clean dark outline. Only the pose
 and the expression change, as described below. No readable letters or numbers anywhere (any paper, card or tag is blank).`,
+  // なかまの ★4・★5（11 §4.1）: 同じ ロボットが 着がえる。体・頭・顔・色は 変えない。
+  CARD_ROBOT: `Character: exactly the robot in the reference image — the same body shape, head, face-screen, antenna,
+ear pods and main body colors, the same glossy 3D-like Japanese anime game rendering with soft shading and a clean dark
+outline. It is now dressed up as described below: only the outfit, the props and the pose change, the robot underneath
+does not. Full body, a lively, confident pose, a happy face on the screen. Kid-friendly. No readable letters or numbers
+anywhere (any paper, card, sign or tag is blank).`,
+
+  // 町の なかまの ★4・★5: 同じ 人が 着がえる。
+  CARD_TOWN: `Character: exactly the person in the reference image — the same face, hair, age and body, the same glossy
+3D-like Japanese anime game rendering with soft shading and a clean dark outline. They are now dressed up as described
+below: only the outfit, the props and the pose change. Full body, a cheerful pose. Kid-friendly. No readable letters
+or numbers anywhere.`,
+
+  // ★5 だけ: 衣装を 豪華に。光は 絵に 入れない（白い 背景の 切り抜きを こわさない。光は 画面で 足す）。
+  CARD_STAR5: `This is the rarest version of the character: make the outfit grand and ornate, with gold trim and fine
+details, and the pose dramatic and heroic. No glow, aura or light effects in the picture — keep the plain pure white
+background right up to the character's outline.`,
 
   ICON: `Output: 1024x1024 PNG. App icon for a kids' kanji learning game. Keep all important shapes inside the
 central 80% circle (the edges are cropped into a circle or rounded square on phones). Bold, simple, readable at 48px.
@@ -679,7 +696,58 @@ a few tiny warm sparkles. High contrast: the sky-blue robot pops against the ind
   },
 ];
 
-export const ASSETS = [...NEXMAX, ...GENDAI, ...MUKASHI_FOLK, ...ENEMIES, ...CREATURES, ...BG, ...NANIWA, ...NEXMAX_NANIWA, ...FOLK, ...PROLOGUE_ART, ...PROLOGUE_EATEN, ...MAPS, ...ICONS];
+// ---------------------------------------------------------------------------
+// なかまの カード ★4・★5（11 §4.1）。★3 は 今の 絵（ロボット: types、町の 人: folk_*_happy）。
+// ---------------------------------------------------------------------------
+
+const card = (char, rarity, outfit, used) => {
+  const town = !/^[EI][NS][FT][JP]$/.test(char);
+  return {
+    id: `card_${char}_${rarity}`,
+    group: 'companion_cards',
+    prio: 'A',
+    out: `img/chara/cards/${char}-${rarity}.webp`,
+    kind: 'chara',
+    bgmode: 'white',
+    refs: [town ? `art-src/folk_${char}_happy.png` : `public/img/chara/types/${char}.webp`],
+    style: [town ? 'CARD_TOWN' : 'CARD_ROBOT', ...(rarity === 5 ? ['CARD_STAR5'] : []), 'CHARA_OUT'],
+    diff: `Outfit and pose: ${outfit}`,
+    used,
+    note: town ? `町の 人の 絵（folk_${char}_happy）を 先に 作る。白い 背景を 切り抜く` : '白い 背景を import.mjs が 切り抜く',
+  };
+};
+
+const CARDS = [
+  card('ISTJ', 4, "a station master's outfit: a navy station-master jacket with gold buttons, a peaked cap with a gold band, white gloves, holding up a small signal lantern.", '★4 えきちょうの まじめ'),
+  card('ISFJ', 4, "a nurse's outfit: a light-pink nurse uniform and a nurse cap with a small heart, holding a first-aid kit with a heart on it.", '★4 ナースの みまもり'),
+  card('ESTP', 4, "a sprinter's outfit: a red running vest with a blank race bib (no numbers), running shorts and a sweatband, in a dynamic running pose.", '★4 ランナーの スタート'),
+  card('ESTJ', 4, 'a student-council outfit: a navy school blazer with a red tie and an armband, a clipboard under one arm, pointing forward.', '★4 せいとかいの まとめ'),
+  card('ESFJ', 4, 'a café outfit: a brown barista apron over a white shirt and a small bow tie, holding a tray with a latte and a slice of strawberry cake.', '★4 カフェの おせわ'),
+  card('INTP', 4, "a scientist's outfit: a white lab coat, round goggles pushed up on the head, holding a bubbling round flask.", '★4 はかせの なぜなぜ'),
+  card('ENTP', 4, "an inventor's outfit: brown work overalls with pockets full of little gadgets, a light-bulb gadget glowing above the head on a spring, holding a screwdriver.", '★4 はつめいかの アイデア'),
+  card('INFJ', 4, 'a library-committee outfit: a cream knit vest over a shirt and round reading glasses, hugging a stack of books with blank covers.', '★4 としょいいんの おもいやり'),
+  card('INFP', 4, "a painter's outfit: a red beret and a paint-splashed smock, holding a palette and a brush.", '★4 えかきの ゆめ'),
+  card('ENFP', 4, "an explorer's outfit: a khaki safari hat and vest, binoculars around the neck, a coil of rope, holding up a treasure map with no writing.", '★4 たんけんかの わくわく'),
+  card('ISTP', 4, "a mechanic's outfit: an orange jumpsuit, a tool belt full of tools, welding goggles on the head, holding a big wrench over the shoulder.", '★4 メカニックの どうぐ'),
+  card('ISFP', 4, 'a summer-festival outfit: a colorful floral yukata with an obi sash, holding a round paper fan and a little bag with a goldfish.', '★4 ゆかたの デザイン'),
+  card('ESFP', 4, 'a stage-idol outfit: a sparkly frilly stage costume and a headset microphone, holding a glow stick up high, winking.', '★4 アイドルの もりあげ'),
+  card('ISTJ', 5, 'ornate red-and-gold samurai armor with a crested helmet, a sheathed katana at the side, a firm heroic stance.', '★5 さむらいの まじめ'),
+  card('ESTP', 5, 'a rocket-hero suit in red and gold with rocket boosters on the back, flying upward with one fist raised.', '★5 ロケットの スタート'),
+  card('ENFP', 5, 'a grand festival outfit: a red-and-gold happi coat and a twisted headband, carrying a small portable shrine float on the shoulder, festival lanterns hanging from it.', '★5 まつりの わくわく'),
+  card('INTJ', 5, "a master detective's outfit: a long caped coat and a deerstalker hat in deep green with gold trim, holding a big magnifying glass, a confident look.", '★5 たんていの よそう'),
+  card('ENTJ', 5, "a ship captain's outfit: a white-and-gold captain's uniform with epaulettes and a captain's hat, holding a brass telescope, one foot on a small ship's wheel.", '★5 せんちょうの あんない'),
+  card('ENFJ', 5, 'a neon cheerleader outfit in bright pink and cyan with light-up pom-poms, jumping in a star pose.', '★5 ネオンの おうえん'),
+  card('rin', 4, 'a summer-festival yukata with a cherry-blossom pattern and a red obi, hair up with a flower ornament, holding a lit sparkler.', '★4 ゆかたの リンさん'),
+  card('yamada', 4, 'a navy yukata with a fireworks pattern, holding a round paper fan and waving.', '★4 はなびの 山田さん'),
+  card('teacher', 4, 'a calligraphy outfit: a dark-blue hakama and a white top with tied-back sleeves, holding a giant calligraphy brush.', '★4 しょどうの 先生'),
+  card('doctor', 4, 'the white coat with a pink cherry-blossom scarf, holding a bouquet of cherry blossoms, the stethoscope around the neck.', '★4 さくらの お医者さん'),
+  card('baker', 4, "a Christmas baker's outfit: a red-and-white baker's jacket and a Santa hat, holding a tray of decorated cookies and a wreath-shaped bread.", '★4 クリスマスの パンやさん'),
+  card('keeper', 4, "an astronomer's outfit: a deep-blue starry cape and a pointed star hat, holding a brass telescope.", '★4 ほしぞらの とけいだいの 人'),
+  card('rin', 5, 'a grand festival dancer outfit: an ornate red-and-gold kimono with long flowing sleeves, holding two paper lanterns, dancing.', '★5 まつりの リンさん'),
+  card('keeper', 5, 'a time wizard outfit: a long midnight-blue robe with golden clock-gear patterns, a staff topped with an hourglass, a ring of small golden gears floating around him.', '★5 じかんの まほうつかい'),
+];
+
+export const ASSETS = [...NEXMAX, ...GENDAI, ...MUKASHI_FOLK, ...ENEMIES, ...CREATURES, ...BG, ...NANIWA, ...NEXMAX_NANIWA, ...FOLK, ...PROLOGUE_ART, ...PROLOGUE_EATEN, ...MAPS, ...ICONS, ...CARDS];
 
 export const GROUPS = {
   nexmax: 'ネクマックス（表情・ポーズ）',
@@ -692,6 +760,7 @@ export const GROUPS = {
   bg_prologue: 'プロローグの 1枚絵',
   nexmax_naniwa: 'ナニワタウンの ネクマックス（新ルートの 立ち絵）',
   folk_naniwa: '町の 人の 表情（困る・よろこぶ）',
+  companion_cards: 'なかまの カード ★4・★5',
   map: 'ステージ選択の 地図',
   icon: 'アプリの アイコン',
 };

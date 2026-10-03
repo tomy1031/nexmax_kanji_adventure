@@ -14,6 +14,13 @@ import { SKILL_INFO, SKILL_OF, skillEffect } from '../../lib/companionSkill';
  * first companion joins (1章 4話) there is nothing to show.
  */
 
+/** ★3〜5, gold. */
+export const Stars = ({ n }: { n: number }) => (
+  <span aria-label={`★${n}`} className="text-[11px] leading-none tracking-tight" style={{ color: n === 5 ? '#d0567a' : '#e8a317' }}>
+    {'★'.repeat(n)}
+  </span>
+);
+
 const classLine = (ind: Individual) => `${CLASS_LABEL[ind.favours].ja}(${CLASS_LABEL[ind.favours].reading}) ＋${ind.bonus}%`;
 
 /** Halves the opponent's strike when it is of the element this companion resists (lib/battle.ts counterDamage). */
@@ -23,11 +30,12 @@ export const CompanionPick = ({ bossElement, showFurigana }: { bossElement: Elem
   const owned = useGameStore((s) => s.individuals);
   const activeId = useGameStore((s) => s.activeIndividual);
   const setActive = useGameStore((s) => s.setActiveIndividual);
+  const bonds = useGameStore((s) => s.bonds);
   const [open, setOpen] = useState(false);
   const list = owned.map((id) => getIndividual(id)).filter((i): i is Individual => i != null);
   if (list.length === 0) return null;
   const active = (activeId && getIndividual(activeId)) || null;
-  const kind = active ? SKILL_OF[active.id] : undefined;
+  const kind = active ? SKILL_OF[active.char] : undefined;
   const info = kind ? SKILL_INFO[kind] : undefined;
 
   return (
@@ -43,10 +51,11 @@ export const CompanionPick = ({ bossElement, showFurigana }: { bossElement: Elem
           {active && info && kind ? (
             <>
               <span className="block truncate text-sm font-black">
-                <RubyText showFurigana={showFurigana}>{active.name}</RubyText>
+                <Stars n={active.rarity} /> <RubyText showFurigana={showFurigana}>{active.name}</RubyText>
+                {(bonds?.[active.id] ?? 0) > 0 && <span className="ml-1 text-[11px] text-[#d0567a]">♥{bonds?.[active.id]}</span>}
               </span>
               <span className="block text-[11px] leading-snug font-bold" style={{ color: 'var(--ink-2)' }}>
-                {info.icon} <RubyText showFurigana={showFurigana}>{`わざ「${info.name}」 ${info.says(skillEffect(kind))}`}</RubyText>
+                {info.icon} <RubyText showFurigana={showFurigana}>{`わざ「${info.name}」 ${info.says(skillEffect(kind, active.rarity, bonds?.[active.id] ?? 0))}`}</RubyText>
               </span>
               <span className="block text-[11px] leading-snug font-bold" style={{ color: 'var(--ink-2)' }}>
                 <RubyText showFurigana={showFurigana}>{`とくいな 武器(ぶき): ${classLine(active)}`}</RubyText>
@@ -91,7 +100,7 @@ export const CompanionPick = ({ bossElement, showFurigana }: { bossElement: Elem
               </div>
               <ul className="grid grid-cols-2 gap-2">
                 {list.map((ind) => {
-                  const k = SKILL_OF[ind.id];
+                  const k = SKILL_OF[ind.char];
                   const i = SKILL_INFO[k];
                   const on = ind.id === activeId;
                   const good = ind.resists === bossElement;
@@ -118,8 +127,9 @@ export const CompanionPick = ({ bossElement, showFurigana }: { bossElement: Elem
                           </span>
                         )}
                         <img src={assetPath(ind.art)} alt="" aria-hidden className="h-20 w-20 object-contain" />
-                        <span className="text-xs font-black">
-                          <RubyText showFurigana={showFurigana}>{ind.shortName}</RubyText>
+                        <Stars n={ind.rarity} />
+                        <span className="text-xs leading-snug font-black">
+                          <RubyText showFurigana={showFurigana}>{ind.name}</RubyText>
                         </span>
                         <span className="text-[11px] font-bold" style={{ color: i.color === '#ffd36a' ? '#a87a00' : 'var(--ink-2)' }}>
                           {i.icon} <RubyText showFurigana={showFurigana}>{i.name}</RubyText>
