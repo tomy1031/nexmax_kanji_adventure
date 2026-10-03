@@ -22,6 +22,7 @@ import { BattleEventType, ratingChange, rankFor, type BattleEvent, type VersusPr
 import { pickRound } from './round';
 import { VersusFight } from './VersusFight';
 import { cpuTurn } from './cpu';
+import { SELF_HIT } from './rules';
 
 /**
  * たいせん — two players, the same kanji, who writes them better.
@@ -98,7 +99,11 @@ export const VersusScreen = () => {
   const [error, setError] = useState<string | null>(null);
   const [round, setRound] = useState<string[]>([]);
   const [them, setThem] = useState<VersusProfile | null>(null);
-  const [incoming, setIncoming] = useState<{ n: number; damage: number } | null>(null);
+  const [incoming, setIncoming] = useState<{ n: number; damage: number; self?: boolean } | null>(null);
+  /** Characters the other side has finished, for its name plate. */
+  const [theirDone, setTheirDone] = useState(0);
+  /** Won because the other side left mid-match. */
+  const [walkover, setWalkover] = useState(false);
   const [won, setWon] = useState(false);
   const [delta, setDelta] = useState(0);
   const [count, setCount] = useState(3);
@@ -240,8 +245,10 @@ export const VersusScreen = () => {
           break;
         }
         case BattleEventType.HIT:
+        case BattleEventType.MISS:
           hitNo.current += 1;
-          setIncoming({ n: hitNo.current, damage: e.data?.damage ?? 0 });
+          setIncoming({ n: hitNo.current, damage: e.data?.damage ?? 0, self: e.type === BattleEventType.MISS });
+          setTheirDone((d) => Math.max(d, (e.data?.index ?? d) + 1));
           break;
         case BattleEventType.VICTORY:
           // The other side brought this side's HP to 0 — even if its last hit was lost.
@@ -251,9 +258,12 @@ export const VersusScreen = () => {
           // Leaving after the result is the normal end of a match.
           if (settled.current) break;
           stopResend();
-          if (phaseRef.current === 'fighting' || phaseRef.current === 'matched') {
-            setError('あいてが いなく なりました。');
-            setPhase('over');
+          if (phaseRef.current === 'fighting') {
+            // Leaving a match is losing it: the one who stayed wins.
+            setWalkover(true);
+            finish(true);
+          } else if (phaseRef.current === 'matched') {
+            lost('あいてが いなく なりました。');
           }
           break;
         default:
@@ -284,6 +294,8 @@ export const VersusScreen = () => {
     roundRef.current = null;
     hitNo.current = 0;
     setIncoming(null);
+    setTheirDone(0);
+    setWalkover(false);
     setThem(null);
     try {
       await networkManager.findOpponent({ onWaiting: setWaiting });
@@ -322,6 +334,8 @@ export const VersusScreen = () => {
     settled.current = false;
     hitNo.current = 0;
     setIncoming(null);
+    setTheirDone(0);
+    setWalkover(false);
     setError(null);
     setCpu(true);
     setThem({ avatar: null, rating: versus.rating, wins: 0, losses: 0, known: [] });
@@ -339,10 +353,9 @@ export const VersusScreen = () => {
     const next = () => {
       const turn = cpuTurn(versus.rating);
       timer = setTimeout(() => {
-        if (turn.damage > 0) {
-          hitNo.current += 1;
-          setIncoming({ n: hitNo.current, damage: turn.damage });
-        }
+        hitNo.current += 1;
+        setIncoming(turn.damage > 0 ? { n: hitNo.current, damage: turn.damage } : { n: hitNo.current, damage: SELF_HIT, self: true });
+        setTheirDone((d) => d + 1);
         next();
       }, turn.ms);
     };
@@ -383,12 +396,15 @@ export const VersusScreen = () => {
     return (
       <VersusFight
         round={round}
-        opponentName={cpu ? 'CPU' : nameOf(them)}
+        opponentName={`${cpu ? 'CPU' : nameOf(them)} ✍️${Math.min(theirDone, round.length)}/${round.length}`}
         opponentImg={artOf(them, true)}
         weaponBonus={weaponBonus}
         incoming={incoming}
         onHit={(damage, index) => {
           if (!cpu) networkManager.send({ type: BattleEventType.HIT, timestamp: Date.now(), data: { damage, index } });
+        }}
+        onSelfHit={(damage, index) => {
+          if (!cpu) networkManager.send({ type: BattleEventType.MISS, timestamp: Date.now(), data: { damage, index } });
         }}
         onEnd={finish}
         onForfeit={() => finish(false)}
@@ -446,6 +462,11 @@ export const VersusScreen = () => {
               <Avatar src={myArt} size={88} />
               <Avatar src={artOf(them, true)} mirrored size={88} />
             </div>
+            {walkover && (
+              <p className="text-sm font-bold opacity-90">
+                <RubyText showFurigana={showFurigana}>あいてが いなく なったので、あなたの 勝(か)ち。</RubyText>
+              </p>
+            )}
             {cpu && (
               <p className="g-pill-night px-4 py-1.5 text-sm font-black">
                 🤖 <RubyText showFurigana={showFurigana}>CPU と れんしゅう（レートは かわりません）</RubyText>
