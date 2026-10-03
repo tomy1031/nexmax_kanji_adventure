@@ -252,6 +252,15 @@ class NetworkManager {
     await this.joinPair(pairCode, token, myKey < partnerKey);
   }
 
+  /**
+   * ともだちと: meet one friend in a room named by a 4-digit あいことば, no
+   * lobby. Whoever made the code hosts; the friend who typed it is the guest.
+   */
+  public async joinRoom(code: string, host: boolean): Promise<void> {
+    this.cancel();
+    await this.joinPair(`room-${code}`, this.matchToken, host);
+  }
+
   private async joinPair(pairCode: string, token: number, host: boolean): Promise<void> {
     const supabase = getSupabase();
     if (!supabase) throw new RelayUnavailableError();
@@ -261,7 +270,14 @@ class NetworkManager {
     this.isHost = host;
     this.roleDecided = true;
 
-    const channel = supabase.channel(`nexmax-kanji-pair-${pairCode}`, {
+    // The client hands back a channel it still holds under the same name — a
+    // friend's room is entered again for a rematch — so let go of it first.
+    const topic = `nexmax-kanji-pair-${pairCode}`;
+    const stale = supabase.getChannels().find((c) => c.topic === `realtime:${topic}`);
+    if (stale) await supabase.removeChannel(stale);
+    if (token !== this.matchToken) throw new MatchCancelledError();
+
+    const channel = supabase.channel(topic, {
       config: { broadcast: { self: false }, presence: { key: this.myKey } },
     });
     this.channel = channel;

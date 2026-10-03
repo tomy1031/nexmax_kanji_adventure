@@ -41,6 +41,9 @@ const MAX_WEAPON_BONUS = 0.2;
 /** Nexmax himself, when no なかま is chosen. */
 const NEXMAX_ART = 'img/chara/naniwa/nexmax_normal.webp';
 const BACKDROP = SCENES.naniwa_lights_back?.photo ?? 'img/title/bg.webp';
+/** How long a room waits for the friend who has its あいことば. */
+const FRIEND_WAIT_MS = 5 * 60 * 1000;
+const newCode = () => String(1000 + Math.floor(Math.random() * 9000));
 /** After this long without a match, the search offers the CPU. */
 const OFFER_CPU_AFTER_S = 8;
 /** 1章's kanji: the round's last resort for two beginners. */
@@ -109,6 +112,11 @@ export const VersusScreen = () => {
   const [count, setCount] = useState(3);
   /** Playing the CPU (no relay, no rating), not a person. */
   const [cpu, setCpu] = useState(false);
+  /** ともだちと: the room's あいことば and whether this side made it. Unrated, like the CPU. */
+  const [room, setRoom] = useState<{ code: string; host: boolean } | null>(null);
+  /** The ともだちと sheet: choosing, or typing a friend's code. */
+  const [friendMenu, setFriendMenu] = useState<'closed' | 'choose' | 'enter'>('closed');
+  const [typed, setTyped] = useState('');
 
   useBgm(phase === 'fighting' ? 'boss' : phase === 'over' ? null : 'map');
 
@@ -135,20 +143,37 @@ export const VersusScreen = () => {
   useEffect(() => {
     cpuRef.current = cpu;
   }, [cpu]);
+  const roomRef = useRef<{ code: string; host: boolean } | null>(null);
+  useEffect(() => {
+    roomRef.current = room;
+  }, [room]);
 
   const settled = useRef(false);
+  /** Leaving the room a moment after the result — called off if the next match starts first. */
+  const leaving = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const leaveSoon = () => {
+    if (leaving.current) clearTimeout(leaving.current);
+    leaving.current = setTimeout(() => {
+      leaving.current = null;
+      networkManager.disconnect();
+    }, 1500);
+  };
   const finish = useCallback(
     (didWin: boolean) => {
       if (settled.current) return;
       settled.current = true;
-      if (cpuRef.current) {
-        // Practice: the result, without the rating.
+      if (cpuRef.current || roomRef.current) {
+        // Practice and friends: the result, without the rating.
         setDelta(0);
         setWon(didWin);
         setPhase('over');
         if (didWin) {
           if (!playJingle()) sfx.fanfare();
         } else sfx.lose();
+        if (roomRef.current) {
+          if (didWin) networkManager.send({ type: BattleEventType.VICTORY, timestamp: Date.now() });
+          leaveSoon();
+        }
         return;
       }
       // Both sides rate against a notional equal opponent: the relay carries no
@@ -164,7 +189,7 @@ export const VersusScreen = () => {
       // The winner says so, and both stay a moment before leaving: leaving at
       // once dropped the last hit, and the loser saw 「つうしんが きれました」.
       if (didWin) networkManager.send({ type: BattleEventType.VICTORY, timestamp: Date.now() });
-      setTimeout(() => networkManager.disconnect(), 1500);
+      leaveSoon();
     },
     [versus.rating, recordVersus],
   );
@@ -283,9 +308,11 @@ export const VersusScreen = () => {
   );
 
   // --- matchmaking --------------------------------------------------------
-  const search = async () => {
+  /** A fresh match: nothing carried over from the last one. */
+  const resetMatch = () => {
     sfx.tap();
-    setCpu(false);
+    if (leaving.current) clearTimeout(leaving.current);
+    leaving.current = null;
     setError(null);
     setPhase('searching');
     setSeconds(0);
@@ -297,26 +324,59 @@ export const VersusScreen = () => {
     setTheirDone(0);
     setWalkover(false);
     setThem(null);
+    setFriendMenu('closed');
+  };
+
+  /** The host speaks first, once the guest is in the room; the guest answers (PROFILE → HANDSHAKE → READY). */
+  const hostHandshake = () =>
+    repeat(
+      () => {
+        if (!roundRef.current) networkManager.send({ type: BattleEventType.PROFILE, timestamp: Date.now(), data: { profile: meRef.current } });
+      },
+      () => {
+        if (!roundRef.current) lost('あいてと つながりませんでした。');
+      },
+    );
+
+  const failed = (e: unknown) => {
+    if (e instanceof MatchCancelledError) return;
+    setError(e instanceof Error ? e.message : 'つながりませんでした。');
+    setPhase('idle');
+  };
+
+  const search = async () => {
+    resetMatch();
+    setCpu(false);
+    setRoom(null);
     try {
       await networkManager.findOpponent({ onWaiting: setWaiting });
-      // The host speaks first, once the guest is in the room; the guest answers (PROFILE → HANDSHAKE → READY).
       if (!networkManager.isHosting()) return;
       if (!(await networkManager.waitForPartner())) {
         lost('あいてが いなく なりました。');
         return;
       }
-      repeat(
-        () => {
-          if (!roundRef.current) networkManager.send({ type: BattleEventType.PROFILE, timestamp: Date.now(), data: { profile: meRef.current } });
-        },
-        () => {
-          if (!roundRef.current) lost('あいてと つながりませんでした。');
-        },
-      );
+      hostHandshake();
     } catch (e) {
-      if (e instanceof MatchCancelledError) return;
-      setError(e instanceof Error ? e.message : 'つながりませんでした。');
-      setPhase('idle');
+      failed(e);
+    }
+  };
+
+  /** ともだちと: make a room (host) or go into a friend's (guest), by its あいことば. */
+  const enterRoom = async (code: string, host: boolean) => {
+    resetMatch();
+    setCpu(false);
+    setRoom({ code, host });
+    try {
+      await networkManager.joinRoom(code, host);
+      // The maker waits for the friend; the friend waits for the maker to be there.
+      const there = await networkManager.waitForPartner(host ? FRIEND_WAIT_MS : 15000);
+      if (!there) {
+        lost(host ? 'ともだちが きませんでした。' : 'その あいことばの へやが ありません。');
+        return;
+      }
+      if (host) hostHandshake();
+    } catch (e) {
+      failed(e);
     }
   };
 
@@ -338,6 +398,8 @@ export const VersusScreen = () => {
     setWalkover(false);
     setError(null);
     setCpu(true);
+    setRoom(null);
+    setFriendMenu('closed');
     setThem({ avatar: null, rating: versus.rating, wins: 0, losses: 0, known: [] });
     const picked = pickRound(meRef.current.known, meRef.current.known, BASIC);
     void preloadCharData(picked);
@@ -467,12 +529,17 @@ export const VersusScreen = () => {
                 <RubyText showFurigana={showFurigana}>あいてが いなく なったので、あなたの 勝(か)ち。</RubyText>
               </p>
             )}
+            {room && (
+              <p className="g-pill-night px-4 py-1.5 text-sm font-black">
+                👫 <RubyText showFurigana={showFurigana}>ともだちと たいせん（レートは かわりません）</RubyText>
+              </p>
+            )}
             {cpu && (
               <p className="g-pill-night px-4 py-1.5 text-sm font-black">
                 🤖 <RubyText showFurigana={showFurigana}>CPU と れんしゅう（レートは かわりません）</RubyText>
               </p>
             )}
-            {!error && !cpu && (
+            {!error && !cpu && !room && (
               <p className="g-pill-night px-4 py-1.5 text-base font-black tabular-nums" style={{ color: rank.color }}>
                 <RubyText showFurigana={showFurigana}>{`レート ${versus.rating}`}</RubyText>
                 <span className="ml-2" style={{ color: delta >= 0 ? '#9be37a' : '#ff9a8a' }}>
@@ -494,6 +561,7 @@ export const VersusScreen = () => {
                 onClick={() => {
                   setError(null);
                   if (cpu) startCpu();
+                  else if (room) void enterRoom(room.code, room.host);
                   else void search();
                 }}
               >
@@ -527,7 +595,30 @@ export const VersusScreen = () => {
             </div>
 
             <section className="g-novel-night w-full rounded-2xl px-4 py-4 text-center">
-              {phase === 'searching' ? (
+              {phase === 'searching' && room ? (
+                <>
+                  <p className="text-sm font-bold">
+                    <RubyText showFurigana={showFurigana}>{room.host ? '👫 ともだちに この あいことばを おしえてね' : 'あいことばの へやに はいって います…'}</RubyText>
+                  </p>
+                  <p className="mt-2 flex justify-center gap-2" aria-label={`あいことば ${room.code}`}>
+                    {[...room.code].map((d, i) => (
+                      <span key={i} className="g-plate-brass flex h-14 w-12 items-center justify-center rounded-xl text-3xl font-black tabular-nums">
+                        {d}
+                      </span>
+                    ))}
+                  </p>
+                  <motion.p
+                    animate={still ? undefined : { opacity: [0.55, 1, 0.55] }}
+                    transition={{ repeat: Infinity, duration: 1.4 }}
+                    className="mt-2 text-xs font-bold opacity-90 tabular-nums"
+                  >
+                    <RubyText showFurigana={showFurigana}>{`まっています… ${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, '0')}`}</RubyText>
+                  </motion.p>
+                  <button type="button" className="g-btn g-btn-night mt-3 w-full" onClick={cancel}>
+                    <RubyText showFurigana={showFurigana}>やめる</RubyText>
+                  </button>
+                </>
+              ) : phase === 'searching' ? (
                 <>
                   <motion.p
                     animate={still ? undefined : { opacity: [0.55, 1, 0.55] }}
@@ -593,15 +684,107 @@ export const VersusScreen = () => {
                       ⚔️ <RubyText showFurigana={showFurigana}>あいてを さがす</RubyText>
                     </span>
                   </button>
-                  <button type="button" className="g-btn g-btn-night mt-2 w-full !min-h-[40px] text-sm" onClick={startCpu}>
-                    🤖 <RubyText showFurigana={showFurigana}>CPU と れんしゅう</RubyText>
-                  </button>
+                  <div className="mt-2 flex gap-2">
+                    <button
+                      type="button"
+                      className="g-btn g-btn-night flex-1 !min-h-[40px] !px-2 text-sm"
+                      onClick={() => {
+                        sfx.tap();
+                        setTyped('');
+                        setFriendMenu('choose');
+                      }}
+                    >
+                      👫 <RubyText showFurigana={showFurigana}>ともだちと</RubyText>
+                    </button>
+                    <button type="button" className="g-btn g-btn-night flex-1 !min-h-[40px] !px-2 text-sm" onClick={startCpu}>
+                      🤖 <RubyText showFurigana={showFurigana}>CPU と れんしゅう</RubyText>
+                    </button>
+                  </div>
                 </>
               )}
             </section>
           </>
         )}
       </main>
+
+      {/* ともだちと — make an あいことば, or type a friend's. */}
+      <AnimatePresence>
+        {friendMenu !== 'closed' && (
+          <motion.div
+            key="friends"
+            className="fixed inset-0 z-30 flex items-end justify-center bg-black/55 px-4 pb-[max(20px,env(safe-area-inset-bottom))]"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setFriendMenu('closed')}
+          >
+            <motion.section
+              className="g-novel-night w-full max-w-md rounded-2xl px-4 py-4 text-center"
+              initial={{ y: 40 }}
+              animate={{ y: 0 }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <p className="text-lg font-black">
+                👫 <RubyText showFurigana={showFurigana}>ともだちと たいせん</RubyText>
+              </p>
+              {friendMenu === 'choose' ? (
+                <>
+                  <p className="mt-1 text-xs opacity-85">
+                    <RubyText showFurigana={showFurigana}>4けたの あいことばで、ともだちと だけ たいせん します。</RubyText>
+                  </p>
+                  <button type="button" className="g-btn g-btn-primary g-shine mt-3 w-full !min-h-[52px]" onClick={() => void enterRoom(newCode(), true)}>
+                    <span className="relative z-10">
+                      🔑 <RubyText showFurigana={showFurigana}>あいことばを つくる</RubyText>
+                    </span>
+                  </button>
+                  <button
+                    type="button"
+                    className="g-btn g-btn-night mt-2 w-full !min-h-[48px]"
+                    onClick={() => {
+                      sfx.tap();
+                      setFriendMenu('enter');
+                    }}
+                  >
+                    🔢 <RubyText showFurigana={showFurigana}>あいことばを いれる</RubyText>
+                  </button>
+                </>
+              ) : (
+                <>
+                  <p className="mt-2 flex justify-center gap-2" aria-live="polite">
+                    {[0, 1, 2, 3].map((i) => (
+                      <span key={i} className="g-plate-brass flex h-14 w-12 items-center justify-center rounded-xl text-3xl font-black tabular-nums">
+                        {typed[i] ?? ''}
+                      </span>
+                    ))}
+                  </p>
+                  <div className="mt-3 grid grid-cols-3 gap-2">
+                    {['1', '2', '3', '4', '5', '6', '7', '8', '9', '⌫', '0', 'OK'].map((k) => (
+                      <button
+                        key={k}
+                        type="button"
+                        aria-label={k === '⌫' ? 'けす' : k === 'OK' ? 'はいる' : k}
+                        disabled={k === 'OK' && typed.length < 4}
+                        className={`g-btn ${k === 'OK' ? 'g-btn-primary' : 'g-btn-night'} !min-h-[48px] text-xl font-black disabled:opacity-40`}
+                        onClick={() => {
+                          sfx.tap();
+                          if (k === '⌫') setTyped((t) => t.slice(0, -1));
+                          else if (k === 'OK') void enterRoom(typed, false);
+                          else setTyped((t) => (t.length < 4 ? t + k : t));
+                        }}
+                      >
+                        {k === 'OK' ? <RubyText showFurigana={showFurigana}>はいる</RubyText> : k}
+                      </button>
+                    ))}
+                  </div>
+                </>
+              )}
+              <button type="button" className="mt-3 text-xs font-bold underline opacity-80" onClick={() => setFriendMenu('closed')}>
+                <RubyText showFurigana={showFurigana}>とじる</RubyText>
+              </button>
+            </motion.section>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* VS — the two なかま face each other, then 3・2・1. */}
       <AnimatePresence>
