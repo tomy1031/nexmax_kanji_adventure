@@ -400,7 +400,9 @@ export const NovelScene = ({ script, cast, onFinish, chapter, renderText, speech
       />
 
       {/* 会話ボックス（巻物） ------------------------------------------- */}
-      <div className="absolute right-0 bottom-0 left-0 z-20 p-3 pb-[max(12px,env(safe-area-inset-bottom))]">
+      {/* On a tablet the box stops at a readable width and the text grows with it,
+          instead of one small line across a 1160px-wide empty box. */}
+      <div className="absolute right-0 bottom-0 left-0 z-20 mx-auto max-w-[880px] p-3 pb-[max(12px,env(safe-area-inset-bottom))]">
         <NamePlate
           member={speaker}
           narrator={line && !line.speaker ? narrator : undefined}
@@ -421,7 +423,7 @@ export const NovelScene = ({ script, cast, onFinish, chapter, renderText, speech
               revealKey={index}
               full={still || shown === index}
               onDone={() => setShown(index)}
-              className="text-[16px] leading-[2.15] font-bold whitespace-pre-line"
+              className="text-[16px] leading-[2.15] font-bold whitespace-pre-line md:text-[22px]"
             >
               {renderText ? renderText(line.text) : <RubyText showFurigana={showFurigana}>{line.text}</RubyText>}
             </TypeReveal>
@@ -429,7 +431,7 @@ export const NovelScene = ({ script, cast, onFinish, chapter, renderText, speech
             {/* The Japanese of an English line, once the line has appeared. */}
             {line.ja && (
               <p
-                className={`mt-0.5 text-[14px] leading-[2.2] font-bold transition-opacity duration-300 ${shown === index ? 'opacity-100' : 'opacity-0'}`}
+                className={`mt-0.5 text-[14px] leading-[2.2] font-bold transition-opacity duration-300 md:text-[18px] ${shown === index ? 'opacity-100' : 'opacity-0'}`}
                 style={{ color: tone.ja }}
                 lang="ja"
               >
@@ -438,7 +440,7 @@ export const NovelScene = ({ script, cast, onFinish, chapter, renderText, speech
             )}
 
             {enFor === index && line.en && (
-              <p className="mt-1 text-[13px] leading-snug font-bold" style={{ color: tone.en }} lang="en">
+              <p className="mt-1 text-[13px] leading-snug font-bold md:text-[16px]" style={{ color: tone.en }} lang="en">
                 {line.en}
               </p>
             )}
