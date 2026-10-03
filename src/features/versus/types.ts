@@ -14,6 +14,8 @@ export const BattleEventType = {
   DISCONNECT: 'DISCONNECT',
   /** Heartbeat, so a silent drop is noticed. */
   PING: 'PING',
+  /** A stamp (STAMPS index): the only thing players say to each other. */
+  EMOTE: 'EMOTE',
 } as const;
 export type BattleEventType = (typeof BattleEventType)[keyof typeof BattleEventType];
 
@@ -35,6 +37,8 @@ export interface BattleEvent {
     index?: number;
     /** The sender, with PROFILE (and the host's again with HANDSHAKE). */
     profile?: VersusProfile;
+    /** Which stamp, with EMOTE. */
+    emote?: number;
   };
 }
 
@@ -48,6 +52,12 @@ export interface VersusProfile {
   /** The kanji they have (★1), for choosing a fair round. */
   known: string[];
 }
+
+/**
+ * The stamps of たいせん. Players never type to each other — a learning game
+ * for children has no chat — so a fixed, friendly few is all there is.
+ */
+export const STAMPS = ['👍', '😆', '😱', '🙏'] as const;
 
 /** Persisted versus record. */
 export interface VersusStats {

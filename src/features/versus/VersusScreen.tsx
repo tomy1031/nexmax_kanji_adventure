@@ -113,6 +113,8 @@ export const VersusScreen = () => {
   const [writes, setWrites] = useState<{ char: string; mistakes: number }[]>([]);
   /** The review's kanji opened as a card (ずかん's 字カード). */
   const [card, setCard] = useState<number | null>(null);
+  /** The other side's latest stamp. */
+  const [stampIn, setStampIn] = useState<{ n: number; stamp: number } | null>(null);
   const [won, setWon] = useState(false);
   const [delta, setDelta] = useState(0);
   const [count, setCount] = useState(3);
@@ -280,6 +282,9 @@ export const VersusScreen = () => {
           hitNo.current += 1;
           setIncoming({ n: hitNo.current, damage: e.data?.damage ?? 0, self: e.type === BattleEventType.MISS });
           setTheirDone((d) => Math.max(d, (e.data?.index ?? d) + 1));
+          break;
+        case BattleEventType.EMOTE:
+          if (typeof e.data?.emote === 'number') setStampIn({ n: Date.now(), stamp: e.data.emote });
           break;
         case BattleEventType.VICTORY:
           // The other side brought this side's HP to 0 — even if its last hit was lost.
@@ -479,6 +484,12 @@ export const VersusScreen = () => {
         onEnd={finish}
         onForfeit={() => finish(false)}
         onWrite={(char, mistakes) => setWrites((w) => [...w.filter((x) => x.char !== char), { char, mistakes }])}
+        stampIn={stampIn}
+        onStamp={(stamp) => {
+          if (!cpu) networkManager.send({ type: BattleEventType.EMOTE, timestamp: Date.now(), data: { emote: stamp } });
+          // The CPU answers a greeting now and then.
+          else if (Math.random() < 0.6) setTimeout(() => setStampIn({ n: Date.now(), stamp: stamp === 3 ? 3 : 1 }), 900);
+        }}
       />
     );
   }
