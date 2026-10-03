@@ -92,6 +92,53 @@ export const MOJI_EPISODES: MojiEpisode[] = [
     bg: 'naniwa_market',
     boss: { name: 'ねふだの モジクイ', img: 'img/battle/mojikui_price.webp', hp: 80, attack: 36, element: Element.AN, icon: 'GiShadowFollower' },
   },
+  // 1章 6〜10話（10 §1・§4）: ユニット3〜5 を 2話ずつ（11話は 次の PR）。題は その 話で 書く 字を かなで（書く 前は 読めない）。
+  // ボスの 数字は 10 §4 の 表（上の 決まりに 合わせて ある）。
+  {
+    id: 'moji-1-6',
+    chapter: 'moji-1',
+    order: 6,
+    title: 'はじめまして',
+    kanji: [...'学生先会社員'],
+    bg: 'naniwa_school',
+    boss: { name: 'なふだの モジクイ', img: 'img/battle/mojikui_nametag.webp', hp: 96, attack: 36, element: Element.AN, icon: 'GiShadowFollower' },
+  },
+  {
+    id: 'moji-1-7',
+    chapter: 'moji-1',
+    order: 7,
+    title: 'びょういんの ほん',
+    kanji: [...'医者本中国人'],
+    bg: 'naniwa_clinic',
+    boss: { name: 'ほんの モジクイ', img: 'img/battle/mojikui_book.webp', hp: 96, attack: 38, element: Element.AN, icon: 'GiShadowFollower' },
+  },
+  {
+    id: 'moji-1-8',
+    chapter: 'moji-1',
+    order: 8,
+    title: 'とまった とけいだい',
+    kanji: [...'今朝昼晩時分半'],
+    bg: 'naniwa_clocktower',
+    boss: { name: 'とけいだいの モジクイ', img: 'img/battle/mojikui_clocktower.webp', hp: 110, attack: 40, element: Element.AN, icon: 'GiShadowFollower' },
+  },
+  {
+    id: 'moji-1-9',
+    chapter: 'moji-1',
+    order: 9,
+    title: 'おみせは やすみ？',
+    kanji: [...'午前後休毎何'],
+    bg: 'naniwa_shopstreet',
+    boss: { name: 'かんばんの モジクイ', img: 'img/battle/mojikui_signboard.webp', hp: 96, attack: 40, element: Element.AN, icon: 'GiShadowFollower' },
+  },
+  {
+    id: 'moji-1-10',
+    chapter: 'moji-1',
+    order: 10,
+    title: 'がっこうへ いく',
+    kanji: [...'行来校週去年'],
+    bg: 'naniwa_bus_stop',
+    boss: { name: 'バスの モジクイ', img: 'img/battle/mojikui_bus.webp', hp: 96, attack: 42, element: Element.AN, icon: 'GiShadowFollower' },
+  },
 ];
 
 export const episodesOf = (chapterId: string): MojiEpisode[] =>
