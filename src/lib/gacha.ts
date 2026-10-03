@@ -1,112 +1,180 @@
-import { INDIVIDUALS, Rank, type Individual } from '../data/individuals';
+import { CARDS, type Individual } from '../data/individuals';
+import type { Rarity } from './companionSkill';
 
 /**
- * The gem shop.
+ * The gem shop (docs/design/11 §5).
  *
- * Deliberately dull odds and a short hard ceiling. This is a study app for
+ * Deliberately honest odds and a short hard ceiling. This is a study app for
  * teenagers: the gacha exists to give the daily habit a payoff, not to teach
  * anyone that pulling is exciting. So:
- *   - no paid currency, ever;
- *   - the ceiling is ten pulls, not three hundred;
- *   - a duplicate converts into gems instead of being a loss;
- *   - and the pull animation is short and does not fake a near-miss.
+ *   - no paid currency, ever — gems come only from studying;
+ *   - the ★5 ceiling is thirty pulls, not three hundred, and a ten-pull
+ *     always holds a ★4 or better;
+ *   - a duplicate is never a loss: it raises that card's きずな, and gives
+ *     gems back once the きずな is full;
+ *   - the rarity shows on the card's back before it turns (no fake near-miss).
+ *
+ * Three gachas: いつもの (every card), ピックアップ (this week's ★5 and two ★4
+ * come up more), and 町の ガチャ (the town's people only, cheaper, no ★5).
  */
 
 export const PULL_COST = 100;
 /**
- * Ten pulls for the price of nine, with a guarantee.
- *
- * At ~110 gems a day from the daily tasks, a single pull is an everyday thing
- * and a ten-pull is a weekly event worth saving for. That rhythm is the point:
- * the big moment should arrive about as often as a week of study does.
+ * Ten pulls for the price of nine, with a guarantee. At ~110 gems a day from
+ * the daily tasks, a ten-pull is a weekly event worth saving for.
  */
 export const MULTI_COUNT = 10;
 export const MULTI_COST = PULL_COST * 9;
-/** Guaranteed SPECIAL on this pull if none has landed yet. */
-export const PITY_LIMIT = 10;
-/** Gems returned when the pull is someone already owned. */
-export const DUPLICATE_REFUND = 40;
+/** A ★5 is certain on this pull if none has landed since the last one (いつもの・ピックアップ). */
+export const STAR5_CEILING = 30;
+/** Gems back for a duplicate whose きずな is already full, by its rarity. */
+export const BOND_REFUND: Record<Rarity, number> = { 3: 20, 4: 60, 5: 200 };
 
-const SPECIAL_RATE = 0.08;
+export const BannerId = { STANDARD: 'standard', PICKUP: 'pickup', TOWN: 'town' } as const;
+export type BannerId = (typeof BannerId)[keyof typeof BannerId];
 
-export interface PullResult {
-  individual: Individual;
-  duplicate: boolean;
-  /** Gems handed back for a duplicate. */
-  refund: number;
-  /** True when the pity ceiling forced this result. */
-  guaranteed: boolean;
+export interface Banner {
+  id: BannerId;
+  /** Furigana notation. */
+  name: string;
+  single: number;
+  multi: number;
+  /** Chance of each rarity on an ordinary pull; they add up to 1. */
+  rates: Record<Rarity, number>;
+  /** Whether its pulls count toward, and can trigger, the ★5 ceiling. */
+  ceiling: boolean;
+  /** The cards it can give. */
+  has: (c: Individual) => boolean;
 }
 
-const pool = (rank: Rank) => INDIVIDUALS.filter((i) => i.rank === rank);
+export const BANNERS: Record<BannerId, Banner> = {
+  standard: {
+    id: 'standard',
+    name: 'いつもの ガチャ',
+    single: PULL_COST,
+    multi: MULTI_COST,
+    rates: { 5: 0.03, 4: 0.17, 3: 0.8 },
+    ceiling: true,
+    has: () => true,
+  },
+  pickup: {
+    id: 'pickup',
+    name: 'ピックアップ',
+    single: PULL_COST,
+    multi: MULTI_COST,
+    rates: { 5: 0.03, 4: 0.17, 3: 0.8 },
+    ceiling: true,
+    has: () => true,
+  },
+  town: {
+    id: 'town',
+    name: '町(まち)の ガチャ',
+    single: 60,
+    multi: 540,
+    rates: { 5: 0, 4: 0.25, 3: 0.75 },
+    ceiling: false,
+    has: (c) => c.kind === 'town' && c.rarity < 5,
+  },
+};
+
+const FIVES = CARDS.filter((c) => c.rarity === 5);
+const FOURS = CARDS.filter((c) => c.rarity === 4);
+const mod = (n: number, m: number) => ((n % m) + m) % m;
+
+/** Weeks since Monday 2026-01-05 (local time): the pickup changes every Monday. */
+export const weekOf = (d: Date = new Date()): number => {
+  const monday = new Date(2026, 0, 5).getTime();
+  const day = new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
+  return Math.floor(Math.round((day - monday) / 86400000) / 7);
+};
+
+/** Days until the pickup changes (1..7). */
+export const daysToNextPickup = (d: Date = new Date()): number => 7 - mod(Math.round((new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime() - new Date(2026, 0, 5).getTime()) / 86400000), 7);
+
+/** This week's pickup: one ★5 and two ★4, in turn so every card has its week. */
+export const pickupOf = (week: number): { five: Individual; fours: Individual[] } => ({
+  five: FIVES[mod(week, FIVES.length)],
+  fours: [FOURS[mod(week * 2, FOURS.length)], FOURS[mod(week * 2 + 1, FOURS.length)]],
+});
+
+export interface PullResult {
+  card: Individual;
+  duplicate: boolean;
+  /** The ceiling (or the ten-pull's promise) made this result. */
+  guaranteed: boolean;
+  /** This week's pickup card. */
+  featured: boolean;
+}
 
 /**
  * One pull. `random` is injected so the result is testable.
+ * `atLeast4`: the ten-pull's promise, used on its last card.
  */
 export const pull = (
-  owned: string[],
-  pityCount: number,
+  bannerId: BannerId,
+  owned: readonly string[],
+  pity: number,
+  week: number,
   random: () => number = Math.random,
+  atLeast4 = false,
 ): PullResult => {
-  const guaranteed = pityCount + 1 >= PITY_LIMIT;
-  const wantSpecial = guaranteed || random() < SPECIAL_RATE;
+  const banner = BANNERS[bannerId];
+  const ceilingHit = banner.ceiling && pity + 1 >= STAR5_CEILING;
+  const roll = random();
+  let rarity: Rarity = ceilingHit ? 5 : roll < banner.rates[5] ? 5 : roll < banner.rates[5] + banner.rates[4] ? 4 : 3;
+  const promised = atLeast4 && rarity === 3;
+  if (promised) rarity = 4;
 
-  const candidates = wantSpecial ? pool(Rank.SPECIAL) : pool(Rank.STANDARD);
-  // Prefer someone the player does not have yet: a collection that fills up is
+  const pool = CARDS.filter((c) => c.rarity === rarity && banner.has(c));
+  const pick = <T,>(xs: readonly T[]) => xs[Math.floor(random() * xs.length) % xs.length];
+
+  if (bannerId === 'pickup' && rarity >= 4) {
+    const { five, fours } = pickupOf(week);
+    const featured = rarity === 5 ? [five] : fours;
+    // Half of every ★5 (or ★4) is this week's.
+    if (random() < 0.5) {
+      const card = pick(featured);
+      return { card, duplicate: owned.includes(card.id), guaranteed: ceilingHit || promised, featured: true };
+    }
+  }
+  // Prefer a card the player does not have yet: a collection that fills up is
   // the point, and a wall of duplicates reads as the game wasting their time.
-  const fresh = candidates.filter((i) => !owned.includes(i.id));
-  const from = fresh.length > 0 ? fresh : candidates;
-
-  const individual = from[Math.floor(random() * from.length) % from.length];
-  const duplicate = owned.includes(individual.id);
-
-  return {
-    individual,
-    duplicate,
-    refund: duplicate ? DUPLICATE_REFUND : 0,
-    guaranteed: guaranteed && wantSpecial,
-  };
+  const fresh = pool.filter((c) => !owned.includes(c.id));
+  const card = pick(fresh.length > 0 ? fresh : pool);
+  const featured = bannerId === 'pickup' && (card.id === pickupOf(week).five.id || pickupOf(week).fours.some((f) => f.id === card.id));
+  return { card, duplicate: owned.includes(card.id), guaranteed: ceilingHit || promised, featured };
 };
 
-/** Pulls remaining before the ceiling forces a SPECIAL. */
-export const pullsUntilGuaranteed = (pityCount: number): number =>
-  Math.max(0, PITY_LIMIT - pityCount);
+/** Pulls left before the ★5 ceiling. */
+export const pullsUntilStar5 = (pity: number): number => Math.max(0, STAR5_CEILING - pity);
+
+/** The ★5 counter after this result. Only the gachas with a ceiling move it. */
+export const pityAfter = (bannerId: BannerId, pity: number, r: PullResult): number =>
+  !BANNERS[bannerId].ceiling ? pity : r.card.rarity === 5 ? 0 : pity + 1;
 
 /**
- * A ten-pull.
- *
- * Resolved as ten ordinary pulls so the odds are exactly the single-pull odds
- * — nothing is quietly worse in bulk. The guarantee is that **at least one of
- * the ten is a SPECIAL**: if the first nine did not produce one, the tenth is
- * forced. That is stated on the screen rather than buried.
- *
- * `owned` is threaded through each pull so the run prefers characters the
- * player does not have yet, and duplicates inside one run are not double-
- * counted as new.
+ * A ten-pull: ten ordinary pulls, so the odds are exactly the single-pull odds
+ * — nothing is quietly worse in bulk. The promise is that at least one of the
+ * ten is ★4 or better: if the first nine held none, the tenth is made one.
+ * `owned` is threaded through, so one run does not hand out the same new card twice as new.
  */
 export const pullMany = (
-  owned: string[],
-  pityCount: number,
+  bannerId: BannerId,
+  owned: readonly string[],
+  pity: number,
+  week: number,
   random: () => number = Math.random,
 ): { results: PullResult[]; pityAfter: number } => {
   const results: PullResult[] = [];
   const seen = [...owned];
-  let pity = pityCount;
-
+  let p = pity;
   for (let i = 0; i < MULTI_COUNT; i++) {
-    const isLast = i === MULTI_COUNT - 1;
-    const noSpecialYet = !results.some((r) => r.individual.rank === Rank.SPECIAL);
-    // The ten-pull's own promise, on top of the running pity counter.
-    const forced = isLast && noSpecialYet;
-
-    const result = forced
-      ? { ...pull(seen, PITY_LIMIT - 1, random), guaranteed: true }
-      : pull(seen, pity, random);
-
-    results.push(result);
-    if (!seen.includes(result.individual.id)) seen.push(result.individual.id);
-    pity = result.individual.rank === Rank.SPECIAL ? 0 : pity + 1;
+    const last = i === MULTI_COUNT - 1;
+    const none4 = !results.some((r) => r.card.rarity >= 4);
+    const r = pull(bannerId, seen, p, week, random, last && none4);
+    results.push(r);
+    if (!seen.includes(r.card.id)) seen.push(r.card.id);
+    p = pityAfter(bannerId, p, r);
   }
-
-  return { results, pityAfter: pity };
+  return { results, pityAfter: p };
 };
