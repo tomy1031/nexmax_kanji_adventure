@@ -1,9 +1,12 @@
 import type { FinaleScript } from './mojiFinale';
+import { MOJI1_FINALE } from './scripts/moji1';
 
 /**
  * まとめの ボス — its story, by finale id (data/mojiFinale.ts). Written with
- * the chapter's other scripts (src/data/scripts/) and registered here; until
- * then the finale opens on じゅんび and ends on つづく without a story.
+ * the chapter's other scripts (src/data/scripts/) and registered here; a
+ * finale without one opens on じゅんび and ends on つづく without a story.
  * The rules are the episodes' (mojiFinale.test.ts).
  */
-export const MOJI_FINALE_SCRIPTS: Partial<Record<string, FinaleScript>> = {};
+export const MOJI_FINALE_SCRIPTS: Partial<Record<string, FinaleScript>> = {
+  'moji-1-boss': MOJI1_FINALE,
+};

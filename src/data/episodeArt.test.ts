@@ -18,4 +18,12 @@ describe('episodeArt — what the stage select fetches ahead', () => {
     expect(episodeArt('moji-1-2')).toContain('img/chara/naniwa/folk_yamada_sad.webp');
     expect(episodeArt('moji-1-1')).toContain('img/battle/frame_top.webp');
   });
+
+  it('fetches the まとめの ボス too: its nest, the big モジクイ and the town with its lights back', () => {
+    const art = episodeArt('moji-1-boss');
+    expect(art).toContain('img/naniwa/naniwa_nest.webp');
+    expect(art).toContain('img/battle/mojikui_boss.webp');
+    expect(art).toContain('img/naniwa/naniwa_lights_back.webp');
+    expect(art.filter((p) => !existsSync(`public/${p}`))).toEqual([]);
+  });
 });

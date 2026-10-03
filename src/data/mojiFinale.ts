@@ -47,10 +47,10 @@ export const MOJI_FINALES: MojiFinale[] = [
     patience: 2,
     // A chapter's end: about three episodes' worth, for a fight twice as long.
     reward: 100,
-    // Stand-ins until the nest's scene and the big モジクイ are drawn (10 §4).
-    bg: 'naniwa_town',
+    // The nest at the end of the station's tunnel (11話 points there).
+    bg: 'naniwa_nest',
     // HP: ten kanji at about two clean ★1 writes each (8 a write, bare-handed).
-    boss: { name: '大(おお)モジクイ', img: 'img/battle/mojikui.webp', hp: 160, attack: 45, element: Element.AN, icon: 'GiShadowFollower' },
+    boss: { name: '大(おお)モジクイ', img: 'img/battle/mojikui_boss.webp', hp: 160, attack: 45, element: Element.AN, icon: 'GiShadowFollower' },
   },
 ];
 
