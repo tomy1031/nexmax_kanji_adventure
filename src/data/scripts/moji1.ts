@@ -36,6 +36,11 @@ export const MOJI1_CAST: CastMember[] = [
   { id: 'mojikui_clock', name: 'とけいの モジクイ', color: '#5a2d8c', sprites: { normal: 'img/battle/mojikui_clock.webp' } },
   { id: 'mojikui_gear', name: 'はぐるまの モジクイ', color: '#5a2d8c', sprites: { normal: 'img/battle/mojikui_gear.webp' } },
   { id: 'mojikui_price', name: 'ねふだの モジクイ', color: '#5a2d8c', sprites: { normal: 'img/battle/mojikui_price.webp' } },
+  { id: 'mojikui_nametag', name: 'なふだの モジクイ', color: '#5a2d8c', sprites: { normal: 'img/battle/mojikui_nametag.webp' } },
+  { id: 'mojikui_book', name: 'ほんの モジクイ', color: '#5a2d8c', sprites: { normal: 'img/battle/mojikui_book.webp' } },
+  { id: 'mojikui_clocktower', name: 'とけいだいの モジクイ', color: '#5a2d8c', sprites: { normal: 'img/battle/mojikui_clocktower.webp' } },
+  { id: 'mojikui_signboard', name: 'かんばんの モジクイ', color: '#5a2d8c', sprites: { normal: 'img/battle/mojikui_signboard.webp' } },
+  { id: 'mojikui_bus', name: 'バスの モジクイ', color: '#5a2d8c', sprites: { normal: 'img/battle/mojikui_bus.webp' } },
   ...NANIWA_FOLK,
 ];
 
@@ -253,6 +258,189 @@ export const MOJI1_SCRIPTS: Record<string, EpisodeScript> = {
         { speaker: 'vendor', sprite: 'vendor:happy', glyph: '📖 🔨 🤖', text: 'つくった ぶきと なかまは、ずかんに ならべて みられますよ。', en: 'You can line up the weapons you made and your companions in the picture book.' },
         { speaker: 'nexmax', sprite: 'nexmax:guide', glyph: '📖 ✨', text: 'ずかんで、ぶきと なかまが みられます！', en: 'The collection is open: weapons and companions!' },
         { speaker: 'nexmax', sprite: 'nexmax:determined', glyph: '🌉 👉', text: 'モジクイを おいかけましょう！', en: "Let's chase the Mojikui!" },
+      ],
+    },
+  },
+  // 1章 6〜10話（10 §2）: 名札 → 病院 → 時計台 → 商店街 → バス停（→ 11話 駅の 奥）。
+  'moji-1-6': {
+    intro: {
+      stageId: 'moji-1-6',
+      lines: [
+        { bg: 'naniwa_school', text: 'はしを わたると、ちいさな にほんごの がっこうが ありました。', en: 'Across the bridge stands a small Japanese-language school.' },
+        { glyph: '🏫 🪧❓', text: 'いりぐちの なふだの じが、ありません。', en: 'The letters on the name plates at the entrance are gone.' },
+        { speaker: 'teacher', sprite: 'teacher:trouble', text: 'あなたは だれですか？ わたしは……だれですか？ 😰', en: 'Who are you? And who… am I?' },
+        { speaker: 'office', sprite: 'office:trouble', glyph: '💼 🪧❓', text: 'わたしの なふだも ありません……', en: 'My name plate is gone too…' },
+        { text: '学(がく)生(せい)、先(せん)生(せい)、会(かい)社(しゃ)員(いん)……おとだけ、のこって います。', en: 'Only the sounds are left: gakusei, sensei, kaishain.' },
+        { glyph: '🪧 👀', text: '……カリカリ。なふだを かじる おとが します。', en: 'Scritch, scratch. Something is nibbling the name plates.' },
+        { speaker: 'nexmax', sprite: 'nexmax:think', glyph: '🙇 ❓', text: 'なまえが ないと、「はじめまして」が いえません。', en: "Without names, nobody can say 'nice to meet you'." },
+        { speaker: 'nexmax', sprite: 'nexmax:guide', text: '✍️💡🪧 かきます！', en: "Let's write!" },
+      ],
+    },
+    encounter: {
+      stageId: 'moji-1-6',
+      lines: [
+        { bg: 'naniwa_school', glyph: '学(がく) 生(せい) 先(せん) 会(かい) 社(しゃ) 員(いん)', text: 'なふだが ひかります。💡', en: 'The name plates light up.' },
+        { fx: ['darkclouds'], speaker: 'mojikui_nametag', sprite: 'mojikui_nametag:normal', text: 'なまえは おいしい！ だれが だれか、もう わかりません！ 😈', en: 'Names are tasty! Now nobody knows who anybody is!' },
+        { speaker: 'nexmax', sprite: 'nexmax:determined', text: 'なふだの モジクイです！', en: 'The name-plate Mojikui!' },
+        { speaker: 'nexmax', sprite: 'nexmax:guide', glyph: '✍️ → 💡 → 🤖', text: 'あなたは かきます。ぼくが たたかいます！', en: "You write. I'll fight!" },
+      ],
+    },
+    outro: {
+      stageId: 'moji-1-6',
+      lines: [
+        { bg: 'naniwa_school', fx: ['darkclouds'], sprite: 'mojikui_nametag:normal', glyph: '🏥 💨', text: 'モジクイは となりの びょういんへ にげました。', en: 'The Mojikui fled to the clinic next door.' },
+        { fx: ['spring'], glyph: '学(がく)生(せい) 先(せん)生(せい) 会(かい)社(しゃ)員(いん)', text: 'なふだが もどりました！', en: 'The name plates came back!' },
+        { speaker: 'teacher', sprite: 'teacher:happy', glyph: '👩‍🏫', text: 'はじめまして。わたしは 先(せん)生(せい)です。', en: "Nice to meet you. I'm the teacher here." },
+        { speaker: 'office', sprite: 'office:happy', glyph: '💼 🙇', text: 'はじめまして。わたしは 会(かい)社(しゃ)員(いん)です。よろしく おねがいします。', en: "Nice to meet you. I'm an office worker — I study here in the evenings." },
+        { speaker: 'nexmax', sprite: 'nexmax:hello', glyph: '🧑‍🎓 🤖', text: 'はじめまして。ぼくは ネクマックスです。学(がく)生(せい)です！', en: "Nice to meet you. I'm Nexmax — a student!" },
+        { speaker: 'teacher', sprite: 'teacher:happy', glyph: '🫵 🧑‍🎓', text: 'あなたも 学(がく)生(せい)ですね。', en: "And you're a student too." },
+        { speaker: 'nexmax', sprite: 'nexmax:determined', glyph: '🏥 👉', text: 'びょういんへ いきましょう！', en: "Let's go to the clinic!" },
+      ],
+    },
+  },
+  'moji-1-7': {
+    intro: {
+      stageId: 'moji-1-7',
+      lines: [
+        { bg: 'naniwa_clinic', text: 'がっこうの となりの びょういんです。', en: 'The clinic next to the school.' },
+        { speaker: 'nexmax', sprite: 'nexmax:think', glyph: '🤖 😵‍💫', text: 'あたまが ぐるぐる します……じしょの データが ありません……', en: 'My head is spinning… some of my dictionary data is missing…' },
+        { glyph: '🚪 📕 ❓', text: 'ドアの ふだも、ほんの じも、ありません。', en: 'The plate on the door and the words in the books are gone.' },
+        { speaker: 'doctor', sprite: 'doctor:trouble', glyph: '🩺 📕❓', text: 'この ほんが よめません。くすりが わかりません……😰', en: "I can't read this book, so I can't tell which medicine to give…" },
+        { speaker: 'rin', sprite: 'rin:trouble', glyph: '📕 🔍', text: 'すみません。わたしの ほんは どこですか？', en: 'Excuse me. Where is my book?' },
+        { text: '医(い)者(しゃ)、本(ほん)、中(ちゅう)国(ごく)、人(じん)……おとだけ、のこって います。', en: 'Only the sounds are left: isha, hon, chuugoku, jin.' },
+        { glyph: '📚 👀', text: '……ペラペラ。ほんだなの うしろで、なにかが ページを たべて います。', en: 'Flip, flip. Behind the bookshelf something is eating pages.' },
+        { speaker: 'nexmax', sprite: 'nexmax:guide', text: '✍️💡🪧 かきます！', en: "Let's write!" },
+      ],
+    },
+    encounter: {
+      stageId: 'moji-1-7',
+      lines: [
+        { bg: 'naniwa_clinic', glyph: '医(い) 者(しゃ) 本(ほん) 中(ちゅう) 国(ごく) 人(じん)', text: 'ふだと ほんが ひかります。💡', en: 'The door plate and the books light up.' },
+        { fx: ['darkclouds'], speaker: 'mojikui_book', sprite: 'mojikui_book:normal', text: 'ほんの じは ごちそう！ ぜんぶ たべます！ 😋', en: "Words in books are a feast! I'll eat them all!" },
+        { speaker: 'rin', sprite: 'rin:trouble', text: 'わたしの ほん……！ 😱', en: 'My book…!' },
+        { speaker: 'nexmax', sprite: 'nexmax:determined', text: 'ほんの モジクイです！', en: 'The book Mojikui!' },
+        { speaker: 'nexmax', sprite: 'nexmax:guide', glyph: '✍️ → 💡 → 🤖', text: 'あなたは かきます。ぼくが たたかいます！', en: "You write. I'll fight!" },
+      ],
+    },
+    outro: {
+      stageId: 'moji-1-7',
+      lines: [
+        { bg: 'naniwa_clinic', fx: ['darkclouds'], sprite: 'mojikui_book:normal', glyph: '🕰️ 💨', text: 'モジクイは まちの とけいだいへ にげました。', en: 'The Mojikui fled to the town clock tower.' },
+        { fx: ['spring'], glyph: '医(い)者(しゃ) 📕 本(ほん)', text: 'ふだと ほんの じが もどりました！', en: 'The door plate and the words in the books came back!' },
+        { speaker: 'doctor', sprite: 'doctor:happy', glyph: '🩺 💊 🤖', text: 'わたしは 医(い)者(しゃ)です。この くすりを どうぞ。', en: "I'm the doctor. Here, take this medicine." },
+        { fx: ['heal'], speaker: 'nexmax', sprite: 'nexmax:smile', glyph: '🤖 ✨', text: 'あたまが すっきり！ なおりました！', en: 'My head is clear! I feel better!' },
+        { speaker: 'rin', sprite: 'rin:happy', glyph: '📕 💕', text: 'わたしの 本(ほん)です！ ありがとう ございます。', en: "That's my book! Thank you so much." },
+        { speaker: 'rin', sprite: 'rin:happy', glyph: '🌏 → 🏙️', text: 'はじめまして。わたしは リンです。中(ちゅう)国(ごく)人(じん)です。', en: "Nice to meet you. I'm Rin. I'm from China." },
+        { speaker: 'rin', sprite: 'rin:happy', glyph: '🧑‍🎓 🏫', text: '中(ちゅう)国(ごく)から きました。がっこうの 学(がく)生(せい)です。', en: "I came from China. I'm a student at the school." },
+        { speaker: 'nexmax', sprite: 'nexmax:hello', glyph: '🤖 🤝 🧑‍🎓', text: 'ぼくは ネクマックスです。日(に)本(ほん)の ロボットです！', en: "I'm Nexmax, a robot from Japan!" },
+        { speaker: 'nexmax', sprite: 'nexmax:determined', glyph: '🕰️ 👉', text: 'とけいだいへ いきましょう！', en: "Let's go to the clock tower!" },
+      ],
+    },
+  },
+  'moji-1-8': {
+    intro: {
+      stageId: 'moji-1-8',
+      lines: [
+        { bg: 'naniwa_clocktower', text: 'まちの ひろばの、おおきな とけいだいです。', en: 'The big clock tower in the town square.' },
+        { glyph: '🕰️ ❓ 🌙', text: 'もじばんの じが ありません。はりが とまって います。', en: 'The numbers on the dial are gone. The hands have stopped.' },
+        { speaker: 'keeper', sprite: 'keeper:trouble', glyph: '⌚ ❓', text: '今(いま) 何(なん)時(じ)ですか？ あさが きません……😰', en: "What time is it now? Morning won't come…" },
+        { glyph: '🌅 ☀️ 🌙 ❓', text: 'あさ？ ひる？ ばん？ だれも わかりません。', en: 'Morning? Noon? Night? Nobody can tell.' },
+        { text: '今(いま)、朝(あさ)、昼(ひる)、晩(ばん)、時(じ)、分(ふん)、半(はん)……おとだけ、のこって います。', en: 'Only the sounds are left: ima, asa, hiru, ban, ji, fun, han.' },
+        { glyph: '⚙️ 👀', text: '……チク、タク、ガブッ。とけいの なかに、おおきな かげが……。', en: 'Tick, tock, chomp. A big shadow inside the clock…' },
+        { speaker: 'nexmax', sprite: 'nexmax:guide', text: '✍️💡🪧 かきます！', en: "Let's write!" },
+      ],
+    },
+    encounter: {
+      stageId: 'moji-1-8',
+      lines: [
+        { bg: 'naniwa_clocktower', glyph: '今(いま) 朝(あさ) 昼(ひる) 晩(ばん) 時(じ) 分(ふん) 半(はん)', text: 'もじばんが ひかります。💡', en: 'The clock face lights up.' },
+        { fx: ['darkclouds'], speaker: 'mojikui_clocktower', sprite: 'mojikui_clocktower:normal', text: 'じかんを たべれば、ずっと よるです！ 🌙😈', en: 'If I eat time, it stays night forever!' },
+        { speaker: 'nexmax', sprite: 'nexmax:determined', text: 'おおきい……！ とけいだいの モジクイです！', en: "It's huge…! The clock-tower Mojikui!" },
+        { speaker: 'nexmax', sprite: 'nexmax:guide', glyph: '✍️ → 💡 → 🤖', text: 'あなたは かきます。ぼくが たたかいます！', en: "You write. I'll fight!" },
+      ],
+    },
+    outro: {
+      stageId: 'moji-1-8',
+      lines: [
+        { bg: 'naniwa_clocktower', fx: ['darkclouds'], sprite: 'mojikui_clocktower:normal', glyph: '🛍️ 💨', text: 'モジクイは しょうてんがいへ にげました。', en: 'The Mojikui fled to the shopping arcade.' },
+        { fx: ['spring'], glyph: '🕰️ ✨ 🌅', text: 'とけいが うごきました！ まちに 朝(あさ)が きました。', en: 'The clock moves again! Morning comes to the town.' },
+        { speaker: 'keeper', sprite: 'keeper:happy', glyph: '🕢', text: '今(いま) 七(しち)時(じ)半(はん)です！', en: "It's half past seven!" },
+        { speaker: 'nexmax', sprite: 'nexmax:smile', glyph: '🌅 🍞', text: '朝(あさ)ですね！ おはようございます！', en: "It's morning! Good morning!" },
+        { speaker: 'keeper', sprite: 'keeper:happy', glyph: '🌅 ☀️ 🌙', text: '朝(あさ)、昼(ひる)、晩(ばん)。もう だいじょうぶです。', en: 'Morning, noon and night — all back in order.' },
+        { speaker: 'keeper', sprite: 'keeper:trouble', glyph: '🛍️ 🚪❓', text: 'でも、しょうてんがいの おみせが あきません……', en: "But the shops in the arcade won't open…" },
+        { speaker: 'nexmax', sprite: 'nexmax:determined', glyph: '🛍️ 👉', text: 'しょうてんがいへ いきましょう！', en: "Let's go to the arcade!" },
+      ],
+    },
+  },
+  'moji-1-9': {
+    intro: {
+      stageId: 'moji-1-9',
+      lines: [
+        { bg: 'naniwa_shopstreet', text: 'まちの しょうてんがいです。', en: "The town's covered shopping arcade." },
+        { glyph: '🛍️ 🪧❓', text: 'おみせの ふだの じが、ありません。', en: "The letters on the shops' signs are gone." },
+        { speaker: 'baker', sprite: 'baker:trouble', glyph: '🍞 🚪❓', text: 'きょうは 休(やす)みですか？ わたしも わかりません……💦', en: "Are we closed today? Even I don't know…" },
+        { speaker: 'nexmax', sprite: 'nexmax:think', glyph: '🕘 ➡️ 🕔 ❓', text: '何(なん)時(じ)から 何(なん)時(じ)までですか？', en: 'From what time until what time are you open?' },
+        { text: '午(ご)前(ぜん)、午(ご)後(ご)、休(やす)み、毎(まい)日(にち)、何(なん)……おとだけ、のこって います。', en: 'Only the sounds are left: gozen, gogo, yasumi, mainichi, nan.' },
+        { glyph: '🪧 👀', text: '……バリッ。かんばんを かじる おとが……。', en: 'Crack! The sound of something biting a signboard…' },
+        { speaker: 'nexmax', sprite: 'nexmax:guide', text: '✍️💡🪧 かきます！', en: "Let's write!" },
+      ],
+    },
+    encounter: {
+      stageId: 'moji-1-9',
+      lines: [
+        { bg: 'naniwa_shopstreet', glyph: '午(ご) 前(ぜん) 後(ご) 休(やす) 毎(まい) 何(なん)', text: 'ふだが ひかります。💡', en: 'The signs light up.' },
+        { fx: ['darkclouds'], speaker: 'mojikui_signboard', sprite: 'mojikui_signboard:normal', text: 'おみせは ずっと 休(やす)み！ パンは わたしが たべます！ 😋', en: "The shops stay closed forever! I'll eat the bread!" },
+        { speaker: 'baker', sprite: 'baker:trouble', text: 'わたしの パン……！ 😱', en: 'My bread…!' },
+        { speaker: 'nexmax', sprite: 'nexmax:determined', text: 'かんばんの モジクイです！', en: 'The signboard Mojikui!' },
+        { speaker: 'nexmax', sprite: 'nexmax:guide', glyph: '✍️ → 💡 → 🤖', text: 'あなたは かきます。ぼくが たたかいます！', en: "You write. I'll fight!" },
+      ],
+    },
+    outro: {
+      stageId: 'moji-1-9',
+      lines: [
+        { bg: 'naniwa_shopstreet', fx: ['darkclouds'], sprite: 'mojikui_signboard:normal', glyph: '🚏 💨', text: 'モジクイは バスていの ほうへ にげました。', en: 'The Mojikui fled toward the bus stop.' },
+        { fx: ['spring'], glyph: '🛍️ ✨ 🍞', text: 'ふだが もどって、おみせが あきました！', en: 'The signs came back, and the shops opened!' },
+        { speaker: 'baker', sprite: 'baker:happy', glyph: '🕗 ➡️ 🕕', text: '午(ご)前(ぜん) 八(はち)時(じ)から 午(ご)後(ご) 六(ろく)時(じ)までです。', en: "We're open from 8 a.m. to 6 p.m." },
+        { speaker: 'baker', sprite: 'baker:happy', glyph: '📅 ✅', text: '毎(まい)日(にち) やって います。休(やす)みは ありません！', en: "We're open every day — no days off!" },
+        { speaker: 'nexmax', sprite: 'nexmax:smile', glyph: '🍞 😋', text: 'これは 何(なん)ですか？ ……おいしい！', en: 'What is this? …Delicious!' },
+        { speaker: 'baker', sprite: 'baker:happy', glyph: '🚏 👀 🌑', text: 'けさ、バスていで くろい かげを みましたよ。', en: 'This morning I saw a black shadow at the bus stop.' },
+        { speaker: 'nexmax', sprite: 'nexmax:determined', glyph: '🚏 👉', text: 'バスていへ いきましょう！', en: "Let's go to the bus stop!" },
+      ],
+    },
+  },
+  'moji-1-10': {
+    intro: {
+      stageId: 'moji-1-10',
+      lines: [
+        { bg: 'naniwa_bus_stop', text: 'がっこうの まえの バスていです。', en: 'The bus stop in front of the school.' },
+        { glyph: '🚌 🪧❓', text: 'バスの いきさきの じが、ありません。', en: "The bus's destination sign is blank." },
+        { speaker: 'driver', sprite: 'driver:trouble', glyph: '🚌 ❓', text: 'この バスは どこへ いきますか？ わたしも わかりません……😰', en: "Where does this bus go? Even I don't know…" },
+        { speaker: 'rin', sprite: 'rin:trouble', glyph: '📅 ❓', text: 'がっこうの よていひょうも ありません。来(らい)週(しゅう)は 何(なん)ですか？', en: "The school's schedule is blank too. What's on next week?" },
+        { text: '行(い)く、来(く)る、校(こう)、週(しゅう)、去(きょ)年(ねん)……おとだけ、のこって います。', en: 'Only the sounds are left: iku, kuru, kou, shuu, kyonen.' },
+        { glyph: '🚏 👀', text: '……ギギギ。バスていの ふだを まげる かげが……。', en: 'Creak… a shadow is bending the bus-stop sign…' },
+        { speaker: 'nexmax', sprite: 'nexmax:guide', text: '✍️💡🪧 かきます！', en: "Let's write!" },
+      ],
+    },
+    encounter: {
+      stageId: 'moji-1-10',
+      lines: [
+        { bg: 'naniwa_bus_stop', glyph: '行(い) 来(く) 校(こう) 週(しゅう) 去(きょ) 年(ねん)', text: 'バスの ふだが ひかります。💡', en: "The bus's sign lights up." },
+        { fx: ['darkclouds'], speaker: 'mojikui_bus', sprite: 'mojikui_bus:normal', text: 'バスは どこへも いきません！ ブルルン！ 😈', en: 'The bus goes nowhere! Vroom!' },
+        { speaker: 'nexmax', sprite: 'nexmax:determined', text: 'バスの モジクイです！', en: 'The bus Mojikui!' },
+        { speaker: 'nexmax', sprite: 'nexmax:guide', glyph: '✍️ → 💡 → 🤖', text: 'あなたは かきます。ぼくが たたかいます！', en: "You write. I'll fight!" },
+      ],
+    },
+    outro: {
+      stageId: 'moji-1-10',
+      lines: [
+        { bg: 'naniwa_bus_stop', fx: ['darkclouds'], sprite: 'mojikui_bus:normal', glyph: '🚉 💨', text: 'モジクイは えきへ にげました。', en: 'The Mojikui fled to the station.' },
+        { fx: ['spring'], glyph: '🚌 ✨', text: 'いきさきが もどって、バスが うごきます！', en: 'The destination is back — the bus can run!' },
+        { speaker: 'driver', sprite: 'driver:happy', glyph: '🚌 → 🏫', text: 'この バスは 学(がっ)校(こう)へ 行(い)きます！', en: 'This bus goes to the school!' },
+        { speaker: 'rin', sprite: 'rin:happy', glyph: '🌏 → 🗾', text: 'わたしは 去(きょ)年(ねん) 日(に)本(ほん)へ 来(き)ました。', en: 'I came to Japan last year.' },
+        { speaker: 'rin', sprite: 'rin:happy', glyph: '🧑‍🎓 🏫', text: '毎(まい)日(にち) 学(がっ)校(こう)へ 行(い)きます。', en: 'I go to school every day.' },
+        { speaker: 'teacher', sprite: 'teacher:happy', glyph: '📅 ➡️ 🏫', text: '来(らい)週(しゅう)も 学(がっ)校(こう)へ 来(き)て くださいね。', en: 'Please come to school next week too.' },
+        { speaker: 'driver', sprite: 'driver:happy', glyph: '🚌 → 🚉', text: 'えきまで のって ください！', en: "Hop on — I'll take you to the station!" },
+        { speaker: 'nexmax', sprite: 'nexmax:determined', glyph: '🚉 👉', text: 'えきへ 行(い)きましょう！', en: "Let's go to the station!" },
       ],
     },
   },

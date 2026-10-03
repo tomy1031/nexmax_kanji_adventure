@@ -689,6 +689,21 @@ export const PHOTO_SCENES: Record<string, SceneDef> = {
   naniwa_ropeway: photoScene('img/naniwa/naniwa_ropeway.webp', boardRows([...'一二三四五'])),
   naniwa_factory: photoScene('img/naniwa/naniwa_factory.webp', boardRows([...'六七八九十'])),
   naniwa_market: photoScene('img/naniwa/naniwa_market.webp', boardRows([...'百千万円'], [800, 1440], 330)),
+  // 1章 6〜10話（10 §2）: 学校の 名札・病院の 札と 本・時計台の 文字盤・店の 札・バスの 行き先。
+  naniwa_school: photoScene('img/naniwa/naniwa_school.webp', boardRows([...'学生先会社員'])),
+  // Below the clinic's own hanging sign, in front of the bookshelf.
+  naniwa_clinic: photoScene('img/naniwa/naniwa_clinic.webp', boardRows([...'医者本中国人'], [800, 1440], 400)),
+  // In the sky left of the tower, so the eaten clock face stays in sight.
+  naniwa_clocktower: photoScene('img/naniwa/naniwa_clocktower.webp', {
+    image: [800, 1440],
+    style: 'hang',
+    spots: [
+      ...[...'今朝昼晩'].map((char, i) => ({ char, x: 70 + i * 100, y: 270, w: 76, h: 87 })),
+      ...[...'時分半'].map((char, i) => ({ char, x: 120 + i * 100, y: 391, w: 76, h: 87 })),
+    ],
+  }),
+  naniwa_shopstreet: photoScene('img/naniwa/naniwa_shopstreet.webp', boardRows([...'午前後休毎何'])),
+  naniwa_bus_stop: photoScene('img/naniwa/naniwa_bus_stop.webp', boardRows([...'行来校週去年'])),
   // 1章: ナニワタウン
   naniwa_town: photoScene('img/title/bg.webp'),
   // 1章1話: the station calendar's seven empty panels, 日 月 火 水 木 金 土 (measured on the picture).
