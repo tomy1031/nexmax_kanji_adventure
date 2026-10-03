@@ -92,7 +92,7 @@ export const MOJI_EPISODES: MojiEpisode[] = [
     bg: 'naniwa_market',
     boss: { name: 'ねふだの モジクイ', img: 'img/battle/mojikui_price.webp', hp: 80, attack: 36, element: Element.AN, icon: 'GiShadowFollower' },
   },
-  // 1章 6〜10話（10 §1・§4）: ユニット3〜5 を 2話ずつ（11話は 次の PR）。題は その 話で 書く 字を かなで（書く 前は 読めない）。
+  // 1章 6〜11話（10 §1・§4）: ユニット3〜5 を 2話ずつ。題は その 話で 書く 字を かなで（書く 前は 読めない）。
   // ボスの 数字は 10 §4 の 表（上の 決まりに 合わせて ある）。
   {
     id: 'moji-1-6',
@@ -138,6 +138,15 @@ export const MOJI_EPISODES: MojiEpisode[] = [
     kanji: [...'行来校週去年'],
     bg: 'naniwa_bus_stop',
     boss: { name: 'バスの モジクイ', img: 'img/battle/mojikui_bus.webp', hp: 96, attack: 42, element: Element.AN, icon: 'GiShadowFollower' },
+  },
+  {
+    id: 'moji-1-11',
+    chapter: 'moji-1',
+    order: 11,
+    title: 'でんしゃが うごかない',
+    kanji: [...'駅電車自転'],
+    bg: 'naniwa_station_deep',
+    boss: { name: 'えきの モジクイ', img: 'img/battle/mojikui_station.webp', hp: 80, attack: 42, element: Element.AN, icon: 'GiShadowFollower' },
   },
 ];
 

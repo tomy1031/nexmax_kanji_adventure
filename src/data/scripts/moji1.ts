@@ -42,6 +42,7 @@ export const MOJI1_CAST: CastMember[] = [
   { id: 'mojikui_clocktower', name: 'とけいだいの モジクイ', color: '#5a2d8c', sprites: { normal: 'img/battle/mojikui_clocktower.webp' } },
   { id: 'mojikui_signboard', name: 'かんばんの モジクイ', color: '#5a2d8c', sprites: { normal: 'img/battle/mojikui_signboard.webp' } },
   { id: 'mojikui_bus', name: 'バスの モジクイ', color: '#5a2d8c', sprites: { normal: 'img/battle/mojikui_bus.webp' } },
+  { id: 'mojikui_station', name: 'えきの モジクイ', color: '#5a2d8c', sprites: { normal: 'img/battle/mojikui_station.webp' } },
   { id: 'mojikui_boss', name: '大(おお)モジクイ', color: '#3b1a66', sprites: { normal: 'img/battle/mojikui_boss.webp' } },
   ...NANIWA_FOLK,
 ];
@@ -263,7 +264,7 @@ export const MOJI1_SCRIPTS: Record<string, EpisodeScript> = {
       ],
     },
   },
-  // 1章 6〜10話（10 §2）: 名札 → 病院 → 時計台 → 商店街 → バス停（→ 11話 駅の 奥）。
+  // 1章 6〜11話（10 §2）: 名札 → 病院 → 時計台 → 商店街 → バス停 → 駅の 奥（モジクイの 巣。12話 まとめの ボスへ）。
   'moji-1-6': {
     intro: {
       stageId: 'moji-1-6',
@@ -443,6 +444,39 @@ export const MOJI1_SCRIPTS: Record<string, EpisodeScript> = {
         { speaker: 'teacher', sprite: 'teacher:happy', glyph: '📅 ➡️ 🏫', text: '来(らい)週(しゅう)も 学(がっ)校(こう)へ 来(き)て くださいね。', en: 'Please come to school next week too.' },
         { speaker: 'driver', sprite: 'driver:happy', glyph: '🚌 → 🚉', text: 'えきまで のって ください！', en: "Hop on — I'll take you to the station!" },
         { speaker: 'nexmax', sprite: 'nexmax:determined', glyph: '🚉 👉', text: 'えきへ 行(い)きましょう！', en: "Let's go to the station!" },
+      ],
+    },
+  },
+  'moji-1-11': {
+    intro: {
+      stageId: 'moji-1-11',
+      lines: [
+        { bg: 'naniwa_station_deep', text: 'まちの えきの、いちばん おくです。', en: 'The farthest end of the town station.' },
+        { glyph: '🚉 🪧❓', text: 'えきの なまえも、でんしゃの ふだも、ありません。', en: "The station's name and the trains' signs are gone." },
+        { speaker: 'staff', sprite: 'staff:trouble', glyph: '🚃 ❌', text: 'でんしゃが うごきません。まちの あしが とまりました……😰', en: "The trains won't move. The whole town is stuck…" },
+        { glyph: '🌑 🕳️', text: 'トンネルの おくから、くろい けむりが でて います。', en: 'Black smoke is seeping out of the tunnel.' },
+        { text: '駅(えき)、電(でん)車(しゃ)、自(じ)転(てん)車(しゃ)……おとだけ、のこって います。', en: 'Only the sounds are left: eki, densha, jitensha.' },
+        { speaker: 'nexmax', sprite: 'nexmax:think', glyph: '🚃 ❌ → 🚲 ❓', text: 'でんしゃが ないなら……じてんしゃで いきますか？', en: "If the trains are down… shall we go by bicycle?" },
+        { speaker: 'nexmax', sprite: 'nexmax:guide', text: '✍️💡🪧 かきます！', en: "Let's write!" },
+      ],
+    },
+    encounter: {
+      stageId: 'moji-1-11',
+      lines: [
+        { bg: 'naniwa_station_deep', glyph: '駅(えき) 電(でん) 車(しゃ) 自(じ) 転(てん)', text: 'えきの ふだが ひかります。💡', en: 'The station signs light up.' },
+        { fx: ['darkclouds'], speaker: 'mojikui_station', sprite: 'mojikui_station:normal', text: 'この さきは わたしたちの す！ だれも とおしません！ 😈', en: 'Beyond here is our nest! No one gets through!' },
+        { speaker: 'nexmax', sprite: 'nexmax:determined', text: 'えきの モジクイです！', en: 'The station Mojikui!' },
+        { speaker: 'nexmax', sprite: 'nexmax:guide', glyph: '✍️ → 💡 → 🤖', text: 'あなたは かきます。ぼくが たたかいます！', en: "You write. I'll fight!" },
+      ],
+    },
+    outro: {
+      stageId: 'moji-1-11',
+      lines: [
+        { bg: 'naniwa_station_deep', fx: ['darkclouds'], sprite: 'mojikui_station:normal', glyph: '🕳️ 💨', text: 'モジクイは トンネルの おくへ にげました。', en: 'The Mojikui fled deep into the tunnel.' },
+        { fx: ['spring'], glyph: '🚉 🚃 ✨', text: '駅(えき)の なまえが もどって、電(でん)車(しゃ)が うごきます！', en: "The station's name is back, and the trains run again!" },
+        { speaker: 'staff', sprite: 'staff:happy', glyph: '🚲 🚲', text: 'トンネルの おくへは、この 自(じ)転(てん)車(しゃ)で 行(い)って ください！', en: 'Take these bicycles into the tunnel!' },
+        { speaker: 'nexmax', sprite: 'nexmax:think', glyph: '🕳️ 👾👾👾', text: 'あの おくが、モジクイの すです。', en: "Deep in there is the Mojikui's nest." },
+        { speaker: 'nexmax', sprite: 'nexmax:determined', glyph: '🚲 💨 🕳️', text: '自(じ)転(てん)車(しゃ)で 行(い)きましょう！ ✊', en: "Let's go by bicycle!" },
       ],
     },
   },
