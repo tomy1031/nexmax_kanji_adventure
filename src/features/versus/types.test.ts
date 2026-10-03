@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { ratingChange, rankFor, DEFAULT_VERSUS_STATS } from './types';
+import { ratingChange, rankFor, nextRank, DEFAULT_VERSUS_STATS } from './types';
 
 describe('ratingChange', () => {
   it('gains on a win and loses on a defeat against an equal opponent', () => {
@@ -40,5 +40,18 @@ describe('fairness: skill must beat equipment', () => {
     // A clean writer with no weapon must out-damage a sloppy writer with the
     // best weapon in the game.
     expect(1.5 * 1.0).toBeGreaterThan(0.8 * 1.2);
+  });
+});
+
+describe('nextRank', () => {
+  it('names the rank to climb to and how far it is', () => {
+    expect(nextRank(1000)).toEqual({ label: '銅(どう)', at: 1050, from: 800 });
+    expect(nextRank(1050)).toEqual({ label: '銀(ぎん)', at: 1200, from: 1050 });
+    expect(nextRank(1399)?.label).toBe('金(きん)');
+    expect(nextRank(1400)).toBeNull();
+  });
+
+  it('agrees with rankFor at every step', () => {
+    for (const r of [800, 1049, 1050, 1199, 1200, 1399]) expect(rankFor(nextRank(r)!.at).label).toBe(nextRank(r)!.label);
   });
 });

@@ -75,6 +75,23 @@ export const ratingChange = (mine: number, theirs: number, won: boolean): number
   return Math.round(32 * ((won ? 1 : 0) - expected));
 };
 
+/** Where each rank above 石 begins (rankFor). */
+const RANK_STEPS = [
+  { at: 1050, label: '銅(どう)' },
+  { at: 1200, label: '銀(ぎん)' },
+  { at: 1400, label: '金(きん)' },
+] as const;
+
+/**
+ * The next rank up and where it begins, with where the current one began (for
+ * a progress bar); null at 金. 石 begins at the rating floor, 800.
+ */
+export const nextRank = (rating: number): { label: string; at: number; from: number } | null => {
+  const i = RANK_STEPS.findIndex((r) => rating < r.at);
+  if (i < 0) return null;
+  return { label: RANK_STEPS[i].label, at: RANK_STEPS[i].at, from: i === 0 ? 800 : RANK_STEPS[i - 1].at };
+};
+
 /** Rank badge for a rating. */
 export const rankFor = (rating: number): { label: string; color: string } => {
   if (rating >= 1400) return { label: '金(きん)', color: '#ffcf4a' };
