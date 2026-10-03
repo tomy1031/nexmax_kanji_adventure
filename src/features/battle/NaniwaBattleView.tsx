@@ -223,6 +223,8 @@ export interface NaniwaBattleViewProps {
   onFlee: () => void;
   /** 読む ターン: a thrown kanji to read, in place of the reading panel and the board. */
   read?: ReadTurnView | null;
+  /** Laid over the column, for what only one kind of fight has (たいせん's stamps). */
+  overlay?: ReactNode;
 }
 
 export const NaniwaBattleView = ({
@@ -255,6 +257,7 @@ export const NaniwaBattleView = ({
   onStrokeOrder,
   onFlee,
   read = null,
+  overlay,
 }: NaniwaBattleViewProps) => {
   const fieldPhoto = field ? SCENES[field]?.photo : undefined;
   const colRef = useRef<HTMLDivElement>(null);
@@ -569,6 +572,7 @@ export const NaniwaBattleView = ({
             )}
           </AnimatePresence>
         </div>
+        {overlay}
       </div>
     </div>
   );

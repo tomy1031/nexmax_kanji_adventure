@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { useAnimationControls, useReducedMotion } from 'framer-motion';
+import { AnimatePresence, motion, useAnimationControls, useReducedMotion } from 'framer-motion';
 import KanjiWriterCanvas, { type KanjiWriterHandle } from '../../components/KanjiWriterCanvas';
 import { NaniwaBattleView } from '../battle/NaniwaBattleView';
 import LightFlow, { type Flow } from '../battle/LightFlow';
@@ -9,6 +9,11 @@ import { starsOf } from '../../lib/mastery';
 import { useGameStore } from '../../store/gameStore';
 import * as sfx from '../../lib/sfx';
 import { SELF_HIT, SLIPS_TO_SELF_HIT, VS_MAX_HP, writeDamage } from './rules';
+import { STAMPS } from './types';
+
+/** One stamp at a time: a moment between them, so they stay a greeting, not a flood. */
+const STAMP_COOLDOWN_MS = 1500;
+const STAMP_SHOWN_MS = 2200;
 
 /**
  * The fight of a versus match, on the same stage as the story's fights
@@ -42,9 +47,33 @@ interface Props {
   onForfeit: () => void;
   /** Every character this side finished, and its slips (for the result's review). */
   onWrite?: (char: string, mistakes: number) => void;
+  /** The other side's latest stamp (STAMPS index); `n` changes with each one. */
+  stampIn?: { n: number; stamp: number } | null;
+  /** This side sent a stamp. */
+  onStamp?: (stamp: number) => void;
 }
 
-export const VersusFight = ({ round, opponentName, opponentImg, weaponBonus, incoming, onHit, onSelfHit, onEnd, onForfeit, onWrite }: Props) => {
+/** A stamp said by one side: a speech bubble that pops up and fades. */
+const StampBubble = ({ said, className }: { said: { n: number; stamp: number } | null; className: string }) => (
+  <AnimatePresence>
+    {said && (
+      <motion.span
+        key={said.n}
+        aria-live="polite"
+        className={`pointer-events-none absolute z-20 flex items-center justify-center rounded-[3cqw] border-[0.4cqw] border-[#d4a04a] bg-[#fffaf0] text-[9cqw] leading-none shadow-lg ${className}`}
+        style={{ width: '15cqw', height: '13cqw' }}
+        initial={{ scale: 0.3, opacity: 0, y: 8 }}
+        animate={{ scale: 1, opacity: 1, y: 0 }}
+        exit={{ opacity: 0 }}
+        transition={{ type: 'spring', stiffness: 520, damping: 18 }}
+      >
+        {STAMPS[said.stamp]}
+      </motion.span>
+    )}
+  </AnimatePresence>
+);
+
+export const VersusFight = ({ round, opponentName, opponentImg, weaponBonus, incoming, onHit, onSelfHit, onEnd, onForfeit, onWrite, stampIn, onStamp }: Props) => {
   const showFurigana = useGameStore((s) => s.settings.furigana);
   const progress = useGameStore((s) => s.progress);
   const recordReview = useGameStore((s) => s.recordReview);
@@ -126,6 +155,30 @@ export const VersusFight = ({ round, opponentName, opponentImg, weaponBonus, inc
     takeHit(incoming.damage);
     say(`あいての こうげき！ ${incoming.damage}`);
   }, [incoming, enemyCtl, takeHit, say, end]);
+
+  // Stamps: the picker, the last one each side said (shown for a moment).
+  const [stampMenu, setStampMenu] = useState(false);
+  const [mine, setMine] = useState<{ n: number; stamp: number } | null>(null);
+  // The other side's stamp shows until its moment is over (then this holds its n).
+  const [theirsDone, setTheirsDone] = useState<number | null>(null);
+  const theirs = stampIn && stampIn.stamp >= 0 && stampIn.stamp < STAMPS.length && stampIn.n !== theirsDone ? stampIn : null;
+  const lastStamp = useRef(-STAMP_COOLDOWN_MS);
+  useEffect(() => {
+    if (!stampIn) return;
+    sfx.tap();
+    const t = setTimeout(() => setTheirsDone(stampIn.n), STAMP_SHOWN_MS);
+    return () => clearTimeout(t);
+  }, [stampIn]);
+  /** `at`: the tap's time (its event timeStamp), for the cooldown and the bubble's key. */
+  const sendStamp = (stamp: number, at: number) => {
+    setStampMenu(false);
+    if (at - lastStamp.current < STAMP_COOLDOWN_MS) return;
+    lastStamp.current = at;
+    const said = { n: at, stamp };
+    setMine(said);
+    later(() => setMine((s) => (s?.n === said.n ? null : s)), STAMP_SHOWN_MS);
+    onStamp?.(stamp);
+  };
 
   const char = round[index % round.length];
   const target = getKanjiByChar(char)!;
@@ -231,6 +284,48 @@ export const VersusFight = ({ round, opponentName, opponentImg, weaponBonus, inc
           writerRef.current?.animateStroke();
         }}
         onFlee={onForfeit}
+        overlay={
+          onStamp ? (
+            <>
+              {/* the other side, beside its なかま; this side, beside Nexmax */}
+              <StampBubble said={theirs} className="top-[12%] left-[6%]" />
+              <StampBubble said={mine} className="top-[40%] left-[36%]" />
+              <div className="absolute top-[44%] right-[3cqw] z-20 flex flex-row items-center gap-[1.5cqw]">
+                <AnimatePresence>
+                  {stampMenu && (
+                    <motion.div
+                      className="flex gap-[1.5cqw] rounded-[3cqw] border-[0.4cqw] border-[#d4a04a] bg-[#1b1640]/95 p-[1.5cqw]"
+                      initial={{ opacity: 0, x: 8 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      exit={{ opacity: 0 }}
+                    >
+                      {STAMPS.map((s, i) => (
+                        <button
+                          key={s}
+                          type="button"
+                          aria-label={`スタンプ ${s}`}
+                          className="flex h-[12cqw] w-[12cqw] items-center justify-center rounded-[2.4cqw] bg-white/10 text-[7.5cqw] leading-none active:scale-90"
+                          onClick={(e) => sendStamp(i, e.timeStamp)}
+                        >
+                          {s}
+                        </button>
+                      ))}
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+                <button
+                  type="button"
+                  aria-label="スタンプ"
+                  aria-expanded={stampMenu}
+                  className="flex h-[12cqw] w-[12cqw] items-center justify-center rounded-full border-[0.4cqw] border-[#d4a04a] bg-[#1b1640]/90 text-[6.5cqw] leading-none shadow-lg"
+                  onClick={() => setStampMenu((m) => !m)}
+                >
+                  💬
+                </button>
+              </div>
+            </>
+          ) : undefined
+        }
       />
       <LightFlow flow={flow} still={still} />
     </>
