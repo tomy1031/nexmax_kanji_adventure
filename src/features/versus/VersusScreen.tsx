@@ -21,6 +21,7 @@ import { networkManager, MatchCancelledError } from './NetworkManager';
 import { BattleEventType, ratingChange, rankFor, type BattleEvent, type VersusProfile } from './types';
 import { pickRound } from './round';
 import { VersusFight } from './VersusFight';
+import { cpuTurn } from './cpu';
 
 /**
  * たいせん — two players, the same kanji, who writes them better.
@@ -39,6 +40,8 @@ const MAX_WEAPON_BONUS = 0.2;
 /** Nexmax himself, when no なかま is chosen. */
 const NEXMAX_ART = 'img/chara/naniwa/nexmax_normal.webp';
 const BACKDROP = SCENES.naniwa_lights_back?.photo ?? 'img/title/bg.webp';
+/** After this long without a match, the search offers the CPU. */
+const OFFER_CPU_AFTER_S = 8;
 /** 1章's kanji: the round's last resort for two beginners. */
 const BASIC = MOJI_CHAPTERS.find((c) => c.id === 'moji-1')?.kanji ?? [];
 
@@ -99,6 +102,8 @@ export const VersusScreen = () => {
   const [won, setWon] = useState(false);
   const [delta, setDelta] = useState(0);
   const [count, setCount] = useState(3);
+  /** Playing the CPU (no relay, no rating), not a person. */
+  const [cpu, setCpu] = useState(false);
 
   useBgm(phase === 'fighting' ? 'boss' : phase === 'over' ? null : 'map');
 
@@ -121,11 +126,26 @@ export const VersusScreen = () => {
   }, [me]);
 
   // --- result -------------------------------------------------------------
+  const cpuRef = useRef(false);
+  useEffect(() => {
+    cpuRef.current = cpu;
+  }, [cpu]);
+
   const settled = useRef(false);
   const finish = useCallback(
     (didWin: boolean) => {
       if (settled.current) return;
       settled.current = true;
+      if (cpuRef.current) {
+        // Practice: the result, without the rating.
+        setDelta(0);
+        setWon(didWin);
+        setPhase('over');
+        if (didWin) {
+          if (!playJingle()) sfx.fanfare();
+        } else sfx.lose();
+        return;
+      }
       // Both sides rate against a notional equal opponent: the relay carries no
       // account, so there is no trustworthy opponent rating to read.
       const change = ratingChange(versus.rating, versus.rating, didWin);
@@ -255,6 +275,7 @@ export const VersusScreen = () => {
   // --- matchmaking --------------------------------------------------------
   const search = async () => {
     sfx.tap();
+    setCpu(false);
     setError(null);
     setPhase('searching');
     setSeconds(0);
@@ -293,6 +314,42 @@ export const VersusScreen = () => {
     setPhase('idle');
   };
 
+  /** Practice with the CPU: the same round rules, from the kanji this player has. */
+  const startCpu = () => {
+    sfx.tap();
+    stopResend();
+    networkManager.cancel();
+    settled.current = false;
+    hitNo.current = 0;
+    setIncoming(null);
+    setError(null);
+    setCpu(true);
+    setThem({ avatar: null, rating: versus.rating, wins: 0, losses: 0, known: [] });
+    const picked = pickRound(meRef.current.known, meRef.current.known, BASIC);
+    void preloadCharData(picked);
+    setRound(picked);
+    setCount(3);
+    setPhase('matched');
+  };
+
+  // The CPU writes its own round: a hit every few seconds while the fight lasts.
+  useEffect(() => {
+    if (!cpu || phase !== 'fighting') return;
+    let timer: ReturnType<typeof setTimeout>;
+    const next = () => {
+      const turn = cpuTurn(versus.rating);
+      timer = setTimeout(() => {
+        if (turn.damage > 0) {
+          hitNo.current += 1;
+          setIncoming({ n: hitNo.current, damage: turn.damage });
+        }
+        next();
+      }, turn.ms);
+    };
+    next();
+    return () => clearTimeout(timer);
+  }, [cpu, phase, versus.rating]);
+
   // The search clock.
   useEffect(() => {
     if (phase !== 'searching') return;
@@ -326,11 +383,13 @@ export const VersusScreen = () => {
     return (
       <VersusFight
         round={round}
-        opponentName={nameOf(them)}
+        opponentName={cpu ? 'CPU' : nameOf(them)}
         opponentImg={artOf(them, true)}
         weaponBonus={weaponBonus}
         incoming={incoming}
-        onHit={(damage, index) => networkManager.send({ type: BattleEventType.HIT, timestamp: Date.now(), data: { damage, index } })}
+        onHit={(damage, index) => {
+          if (!cpu) networkManager.send({ type: BattleEventType.HIT, timestamp: Date.now(), data: { damage, index } });
+        }}
         onEnd={finish}
         onForfeit={() => finish(false)}
       />
@@ -387,7 +446,12 @@ export const VersusScreen = () => {
               <Avatar src={myArt} size={88} />
               <Avatar src={artOf(them, true)} mirrored size={88} />
             </div>
-            {!error && (
+            {cpu && (
+              <p className="g-pill-night px-4 py-1.5 text-sm font-black">
+                🤖 <RubyText showFurigana={showFurigana}>CPU と れんしゅう（レートは かわりません）</RubyText>
+              </p>
+            )}
+            {!error && !cpu && (
               <p className="g-pill-night px-4 py-1.5 text-base font-black tabular-nums" style={{ color: rank.color }}>
                 <RubyText showFurigana={showFurigana}>{`レート ${versus.rating}`}</RubyText>
                 <span className="ml-2" style={{ color: delta >= 0 ? '#9be37a' : '#ff9a8a' }}>
@@ -408,7 +472,8 @@ export const VersusScreen = () => {
                 className="g-btn g-btn-primary g-shine flex-1"
                 onClick={() => {
                   setError(null);
-                  void search();
+                  if (cpu) startCpu();
+                  else void search();
                 }}
               >
                 <span className="relative z-10">
@@ -453,7 +518,19 @@ export const VersusScreen = () => {
                   <p className="mt-1 text-xs opacity-80 tabular-nums">
                     <RubyText showFurigana={showFurigana}>{`${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, '0')} ・ まっている 人(ひと) ${Math.max(1, waiting)}`}</RubyText>
                   </p>
-                  <button type="button" className="g-btn g-btn-night mt-3 w-full" onClick={cancel}>
+                  {seconds >= OFFER_CPU_AFTER_S && (
+                    <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}>
+                      <p className="mt-2 text-xs opacity-80">
+                        <RubyText showFurigana={showFurigana}>いまは まっている 人(ひと)が いない みたい。</RubyText>
+                      </p>
+                      <button type="button" className="g-btn g-btn-primary g-shine mt-2 w-full" onClick={startCpu}>
+                        <span className="relative z-10">
+                          🤖 <RubyText showFurigana={showFurigana}>CPU と れんしゅう</RubyText>
+                        </span>
+                      </button>
+                    </motion.div>
+                  )}
+                  <button type="button" className="g-btn g-btn-night mt-2 w-full" onClick={cancel}>
                     <RubyText showFurigana={showFurigana}>やめる</RubyText>
                   </button>
                 </>
@@ -495,6 +572,9 @@ export const VersusScreen = () => {
                       ⚔️ <RubyText showFurigana={showFurigana}>あいてを さがす</RubyText>
                     </span>
                   </button>
+                  <button type="button" className="g-btn g-btn-night mt-2 w-full !min-h-[40px] text-sm" onClick={startCpu}>
+                    🤖 <RubyText showFurigana={showFurigana}>CPU と れんしゅう</RubyText>
+                  </button>
                 </>
               )}
             </section>
@@ -524,7 +604,7 @@ export const VersusScreen = () => {
               <motion.div className="flex flex-col items-center" initial={still ? false : { x: 160, opacity: 0 }} animate={{ x: 0, opacity: 1 }} transition={{ type: 'spring', stiffness: 220, damping: 20, delay: 0.1 }}>
                 <Avatar src={artOf(them, true)} mirrored size={128} />
                 <span className="mt-1 text-sm font-black">
-                  <RubyText showFurigana={showFurigana}>{`あいて・${nameOf(them)}`}</RubyText>
+                  <RubyText showFurigana={showFurigana}>{`あいて・${cpu ? 'CPU' : nameOf(them)}`}</RubyText>
                 </span>
                 <RankBadge rating={them?.rating ?? 1000} showFurigana={showFurigana} />
               </motion.div>
