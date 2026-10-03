@@ -135,6 +135,21 @@ accessories and outfit, the same glossy 3D-like Japanese anime game rendering wi
 the expression on the face-screen change, as described below. Kid-friendly, expressive and easy to read at a small
 size. No readable letters or numbers anywhere (any paper, card or tag is blank).`,
 
+  // 町の 人を 人に（2026-10-03「町の 人は ネクマックスタイプで なくても 良い」）: なかまの ロボットと 見分ける。
+  // 参照の ロボットは 画風・色・持ち物の ため。人の 姿は diff の Who で 決める。
+  HUMAN_PAINTED: `Character: a HUMAN townsperson of a cozy harbor town — NOT a robot: no antenna, no helmet, no
+face-screen, no ear pods, no mechanical joints, a real human face with hair. Draw in the same polished, glossy
+3D-like Japanese anime game rendering as the reference image: soft shading, clean dark outline, bright saturated
+colors, so the person can stand beside the robots of the reference without looking out of place. Cute chibi
+proportion about 2.5 heads tall, big expressive eyes, rosy cheeks, friendly. Kid-friendly and easy to read at a
+small size. The reference is for the rendering style, the main colors and the props only. No readable letters or
+numbers anywhere (any paper, card, sign or tag is blank).`,
+
+  // 同じ 人の 2枚目（表情ちがい）: 1枚目を 参照に する。
+  HUMAN_SAME: `Character: exactly the person in the reference image — the same face, hair, age, body, clothes, colors and
+props, the same glossy 3D-like Japanese anime game rendering with soft shading and a clean dark outline. Only the pose
+and the expression change, as described below. No readable letters or numbers anywhere (any paper, card or tag is blank).`,
+
   ICON: `Output: 1024x1024 PNG. App icon for a kids' kanji learning game. Keep all important shapes inside the
 central 80% circle (the edges are cropped into a circle or rounded square on phones). Bold, simple, readable at 48px.
 No text, no letters, no kanji.`,
@@ -512,39 +527,80 @@ const folk = (id, type, diff, used) => ({
   note: '白い 背景を import.mjs が 切り抜く',
 });
 
+/**
+ * 町の 人は 人（2026-10-03）。ロボットの なかま（types の 16体）と 見分けが つく ように、
+ * 七ばん（工場の ロボット）だけ ロボットの まま。1人 2枚の ときは 1枚目（よろこぶ 顔）を
+ * 先に 作り、2枚目は それを 参照に して 同じ 人に する。
+ */
+const PEOPLE = {
+  traveler: { ref: 'ESTP', who: 'a cheerful young man in his twenties, a backpacker: messy short brown hair, sunglasses pushed up on his head, an orange hoodie, khaki cargo shorts, sneakers, a small yellow rolling suitcase' },
+  girl: { ref: 'ISFP_f', who: 'a little girl about seven years old: a short black bob with a yellow star hair clip, a yellow raincoat over a white dress, red rain boots' },
+  kiosk: { ref: 'ISFJ_f', who: 'a friendly young woman in her twenties who works at the airport kiosk: brown hair in a low bun, a light-blue cap and a light-blue apron over a white shirt' },
+  staff: { ref: 'ISTJ', who: 'a polite middle-aged station clerk: neat short black hair, a navy station uniform with a peaked cap and white gloves' },
+  announcer: { ref: 'ESTJ', who: 'an energetic young station guide in his twenties: short spiky black hair, a navy uniform vest over a white shirt, a red armband, a megaphone' },
+  ropeway: { ref: 'ISTP', who: 'a sturdy ropeway mechanic in his thirties: a twisted towel headband, a grey work jumpsuit with rolled-up sleeves, a tool belt, a wrench' },
+  vendor: { ref: 'ESFP', who: 'a lively market vendor in his fifties: a round friendly face, short grey hair under a red-and-white twisted headband, a red festival happi coat over a white T-shirt, a green apron' },
+  teacher: { ref: 'ISTJ_f', who: 'a kind language-school teacher in her thirties: black hair in a neat bun, round glasses, a navy blazer over a light-blue blouse, a long grey skirt' },
+  office: { ref: 'ESFJ', who: 'an office worker man in his thirties: neat side-parted black hair, a grey suit with a blue tie, a slim brown leather briefcase' },
+  doctor: { ref: 'INTP_f', who: 'a cheerful doctor in her forties: a short brown bob, a white lab coat over a green top, a stethoscope around her neck' },
+  rin: { ref: 'INFP_f', who: 'Rin, a 16-year-old exchange student: long straight black hair in a high ponytail with a pink scrunchie, a pink knit scarf, a cream cardigan over a white blouse, a pink pleated skirt, a small pink backpack' },
+  keeper: { ref: 'ENTJ', who: 'an elderly clock-tower keeper: a white walrus moustache, small round spectacles, a brown bowler hat, a dark-green waistcoat with a gold pocket-watch chain, brown trousers' },
+  baker: { ref: 'ENFJ_f', who: 'a warm bakery owner in her thirties: wavy orange hair under a tall white baker\'s hat, a white baker\'s jacket and a pink apron with a little flour on it' },
+  driver: { ref: 'ENTP', who: 'a cheerful bus driver in his forties: a navy driver\'s cap, a light-blue short-sleeved uniform shirt with a navy tie, white gloves, a neat short beard' },
+  yamada: { ref: 'ESFJ_f', who: 'Yamada-san, a gentle woman in her forties who lives in the town: short wavy brown hair with a pink cherry-blossom hairpin, a sky-blue cardigan over a white blouse, a navy pleated skirt, a small pink rosette pinned on the cardigan' },
+};
+
+/** `first`: the person's first picture, drawn from the robot's style; the other one copies it. */
+const human = (person, mood, first, diff, used) => {
+  const p = PEOPLE[person];
+  return {
+    id: `folk_${person}_${mood}`,
+    group: 'folk_naniwa',
+    prio: 'A',
+    out: `img/chara/naniwa/folk_${person}_${mood}.webp`,
+    kind: 'chara',
+    bgmode: 'white',
+    refs: first === mood ? [`public/img/chara/types/${p.ref}.webp`] : [`art-src/folk_${person}_${first}.png`],
+    style: first === mood ? ['HUMAN_PAINTED', 'CHARA_OUT'] : ['HUMAN_SAME', 'CHARA_OUT'],
+    diff: first === mood ? `Who: ${p.who}.\nPose and expression: ${diff}` : `Pose and expression: ${diff}`,
+    used,
+    note: first === mood ? '白い 背景を import.mjs が 切り抜く' : `folk_${person}_${first} の あとに 作る（それを 参照）。白い 背景を 切り抜く`,
+  };
+};
+
 const FOLK = [
-  folk('yamada_sad', 'ESFJ_f', 'worried and sad: both mitten hands pressed to her cheeks, eyes looking down with a small tear, a wobbly little frown; the flower on her head stays.', '1章 2話 山田さん（名前の 漢字が 消えた）'),
-  folk('yamada_happy', 'ESFJ_f', 'overjoyed: both hands clasped beside her cheek, eyes closed in a big happy smile, a few small sparkles around her.', '1章 2話 山田さん（名前が 戻った）'),
-  folk('girl_sad', 'ISFP_f', 'sad and worried: holding an empty red dog collar with a small blank tag in both hands against her chest, teary eyes, looking down.', 'かな編 3話 犬を さがす 女の子'),
-  folk('girl_happy', 'ISFP_f', 'overjoyed: hugging a small fluffy white puppy (a cute real dog) in her arms, eyes closed in a big smile.', 'かな編 3話 犬が 戻った 女の子'),
-  folk('kiosk_trouble', 'ISFJ_f', 'puzzled and troubled: holding her tray with a cup in one hand, scratching her head with the other, staring at a blank menu card in confusion, a sweat drop by her head.', 'かな編 7話 売店の 人（品書きが 消えた）'),
-  folk('kiosk_happy', 'ISFJ_f', 'cheerful: holding out two steaming mugs of cocoa toward the viewer with a big smile.', 'かな編 7話 売店の 人（ココア）'),
-  folk('staff_trouble', 'ISTJ', 'a troubled station clerk: staring at his blank clipboard with a confused frown, his other hand on top of his head, a sweat drop.', 'かな編 7・8話 駅員（切符の 機械が 読めない）'),
-  folk('announcer_trouble', 'ESTJ', 'confused: the megaphone lowered at his side, the other hand raised palm-up in a shrug, eyebrows raised, mouth open as if saying "huh?".', '1章 1話 駅の 案内係（きょうは 何曜日？）'),
-  folk('ropeway_trouble', 'ISTP', 'a troubled ropeway mechanic: wrench in one hand, scratching his head with the other, looking at a blank timetable card with a worried frown, a sweat drop.', '1章 3話 ロープウェーの 係（時刻表が 読めない）'),
-  folk('ropeway_happy', 'ISTP', 'a happy ropeway mechanic: holding out a small stamp card (blank squares, no letters) toward the viewer with a big smile, wrench in the other hand raised.', '1章 3話 ロープウェーの 係（スタンプカードを くれる）'),
-  folk('worker_sleep', 'ISTJ', 'fast asleep sitting slumped: eyes closed as two curved lines, head drooping, clipboard slipping from his hands, a small "z" bubble shape (no letters, just a curl).', '1章 4話 眠った 工場の ロボット'),
-  folk('worker_awake', 'ISTJ', 'just woken up and delighted: standing straight, one hand saluting, clipboard under the other arm, bright eyes, a big smile, a few sparkles.', '1章 4話 起きた ロボット（なかまに なる）'),
-  folk('vendor_trouble', 'ESFP', 'a troubled market vendor: holding up a blank price tag in one hand and an apple in the other, puzzled, mouth open as if saying "how much?", a sweat drop.', '1章 5話 市場の 店の 人（値札が 読めない）'),
-  folk('vendor_happy', 'ESFP', 'a happy market vendor: holding a basket of fruit and a gold coin, winking with a big smile, confetti sparkles.', '1章 5話 市場の 店の 人（値札が 戻った）'),
-  folk('traveler_happy', 'ESTP', 'relieved and happy: one hand on his rolling suitcase, the other giving a thumbs-up, a big grin, eyes bright.', 'かな編 4話 旅行者（道が わかった）'),
-  folk('staff_happy', 'ISTJ', 'a relieved station clerk: holding his clipboard to his chest, the other hand raised in a cheerful salute, a big smile.', 'かな編 7・8話 駅員（切符が 出た・ゲートが 開いた）'),
+  human('yamada', 'happy', 'happy', 'overjoyed: both hands clasped beside her cheek, eyes closed in a big happy smile, a few small sparkles around her.', '1章 2話 山田さん（名前が 戻った）'),
+  human('yamada', 'sad', 'happy', 'worried and sad: both hands pressed to her cheeks, eyes looking down with a small tear, a wobbly little frown.', '1章 2話 山田さん（名前の 漢字が 消えた）'),
+  human('girl', 'happy', 'happy', 'overjoyed: hugging a small fluffy white puppy (a cute real dog) in her arms, eyes closed in a big smile.', 'かな編 3話 犬が 戻った 女の子'),
+  human('girl', 'sad', 'happy', 'sad and worried: holding an empty red dog collar with a small blank tag in both hands against her chest, teary eyes, looking down. No dog in the picture.', 'かな編 3話 犬を さがす 女の子'),
+  human('kiosk', 'happy', 'happy', 'cheerful: holding out two steaming mugs of cocoa toward the viewer with a big smile.', 'かな編 7話 売店の 人（ココア）'),
+  human('kiosk', 'trouble', 'happy', 'puzzled and troubled: holding a tray with a cup in one hand, scratching her head with the other, staring at a blank menu card in confusion, a sweat drop by her head.', 'かな編 7話 売店の 人（品書きが 消えた）'),
+  human('staff', 'happy', 'happy', 'relieved: holding his clipboard to his chest, the other hand raised in a cheerful salute, a big smile.', 'かな編 7・8話 駅員（切符が 出た・ゲートが 開いた）'),
+  human('staff', 'trouble', 'happy', 'troubled: staring at his blank clipboard with a confused frown, his other hand on top of his cap, a sweat drop.', 'かな編 7・8話 駅員（切符の 機械が 読めない）'),
+  human('announcer', 'trouble', 'trouble', 'confused: the megaphone lowered at his side, the other hand raised palm-up in a shrug, eyebrows raised, mouth open as if saying "huh?".', '1章 1話 駅の 案内係（きょうは 何曜日？）'),
+  human('ropeway', 'happy', 'happy', 'happy: holding out a small stamp card (blank squares, no letters) toward the viewer with a big smile, the wrench raised in the other hand.', '1章 3話 ロープウェーの 係（スタンプカードを くれる）'),
+  human('ropeway', 'trouble', 'happy', 'troubled: wrench in one hand, scratching his head with the other, looking at a blank timetable card with a worried frown, a sweat drop.', '1章 3話 ロープウェーの 係（時刻表が 読めない）'),
+  folk('worker_sleep', 'ISTJ', 'fast asleep sitting slumped: eyes closed as two curved lines, head drooping, clipboard slipping from his hands, a small "z" bubble shape (no letters, just a curl).', '1章 4話 眠った 工場の ロボット（七ばん。ロボットの まま）'),
+  folk('worker_awake', 'ISTJ', 'just woken up and delighted: standing straight, one hand saluting, clipboard under the other arm, bright eyes, a big smile, a few sparkles.', '1章 4話 起きた ロボット（なかまに なる。ロボットの まま）'),
+  human('vendor', 'happy', 'happy', 'happy: holding a basket of fruit and a gold coin, winking with a big smile, confetti sparkles.', '1章 5話 市場の 店の 人（値札が 戻った）'),
+  human('vendor', 'trouble', 'happy', 'troubled: holding up a blank price tag in one hand and an apple in the other, puzzled, mouth open as if saying "how much?", a sweat drop.', '1章 5話 市場の 店の 人（値札が 読めない）'),
+  human('traveler', 'happy', 'happy', 'relieved and happy: one hand on his rolling suitcase, the other giving a thumbs-up, a big grin, eyes bright.', 'かな編 4話 旅行者（道が わかった）'),
+  human('traveler', 'trouble', 'happy', 'lost: pulling the small rolling suitcase, looking around anxiously with one hand shading his eyes, a worried frown.', 'かな編 1話 空港の 旅行者（行き先が 読めない）'),
   // 1章 6〜10話（10 §2）
-  folk('teacher_trouble', 'ISTJ_f', 'a puzzled teacher: holding a blank wooden name plate in one hand and staring at it, the other hand touching her glasses, a worried frown and a sweat drop.', '1章 6話 日本語学校の 先生（名札が 消えた）'),
-  folk('teacher_happy', 'ISTJ_f', 'a cheerful teacher: one hand raised as if greeting a class, the other hugging her clipboard, a warm big smile.', '1章 6・10話 先生（名前が 戻った）'),
-  folk('office_trouble', 'ESFJ', 'a troubled office worker: holding a slim leather briefcase in one hand and a blank business card in the other, looking at the card with a confused frown, a sweat drop.', '1章 6話 会社員（夜に 日本語を 習う。名札が 消えた）'),
-  folk('office_happy', 'ESFJ', 'a happy office worker: bowing politely with a friendly smile, holding out a blank business card with both hands, briefcase at his feet.', '1章 6話 会社員（はじめまして）'),
-  folk('doctor_trouble', 'INTP_f', 'a troubled doctor: a stethoscope around her neck, holding an open book whose pages are blank, her magnifying glass held up to it, a puzzled frown and a sweat drop.', '1章 7話 お医者さん（本の 字が 消えた）'),
-  folk('doctor_happy', 'INTP_f', 'a cheerful doctor: a stethoscope around her neck, giving a thumbs-up and holding a small blank medicine bottle, a big reassuring smile.', '1章 7話 お医者さん（ネクマックスが 直る）'),
-  folk('rin_trouble', 'INFP_f', 'a new exchange student looking for a book: a small backpack on her back, a blank notebook held to her chest, looking around anxiously with one hand raised to her brow, a worried little frown.', '1章 7話 留学生の リンさん（本を さがす）'),
-  folk('rin_happy', 'INFP_f', 'a delighted exchange student: hugging a thick book with a blank cover to her chest, eyes closed in a big smile, a small backpack on, a few sparkles.', '1章 7・10話 リンさん（本が 読めた・学校へ 行く）'),
-  folk('keeper_trouble', 'ENTJ', 'a dismayed clock-tower keeper: holding up his round pocket watch whose face is blank, staring at it in shock, the other hand on top of his head.', '1章 8話 時計台の 係（朝が 来ない）'),
-  folk('keeper_happy', 'ENTJ', 'a happy clock-tower keeper: holding his pocket watch up proudly, the other hand pointing up at the sky, a big smile, a few sparkles like morning light.', '1章 8話 時計台の 係（町に 朝が 来た）'),
-  folk('baker_trouble', 'ENFJ_f', 'a troubled bakery owner: holding a blank hanging open/closed board in both hands, tilting her head in confusion, a sweat drop.', '1章 9話 パンやの 人（店が 開いて いるか わからない）'),
-  folk('baker_happy', 'ENFJ_f', 'a happy bakery owner: holding out a tray of fresh bread rolls toward the viewer with a big smile, a few sparkles.', '1章 9話 パンやの 人（店が 開いた）'),
-  folk('driver_trouble', 'ENTP', 'a troubled bus driver: his goggles pushed up on his head, holding a blank folded route map, scratching his head with a confused frown, a sweat drop.', '1章 10話 バスの 運転手（行き先が 読めない）'),
-  folk('driver_happy', 'ENTP', 'a happy bus driver: goggles pushed up, giving a big thumbs-up with a wide grin, the other hand waving people aboard.', '1章 10話 バスの 運転手（バスが 動く）'),
-  folk('traveler_trouble', 'ESTP', 'a lost traveler: pulling a small rolling suitcase, looking around anxiously with one hand shading his eyes, a worried frown.', 'かな編 1話 空港の 旅行者（行き先が 読めない）'),
+  human('teacher', 'happy', 'happy', 'cheerful: one hand raised as if greeting a class, the other hugging a clipboard, a warm big smile.', '1章 6・10話 先生（名前が 戻った）'),
+  human('teacher', 'trouble', 'happy', 'puzzled: holding a blank wooden name plate in one hand and staring at it, the other hand touching her glasses, a worried frown and a sweat drop.', '1章 6話 日本語学校の 先生（名札が 消えた）'),
+  human('office', 'happy', 'happy', 'happy: bowing politely with a friendly smile, holding out a blank business card with both hands, the briefcase at his feet.', '1章 6話 会社員（はじめまして）'),
+  human('office', 'trouble', 'happy', 'troubled: the briefcase in one hand and a blank business card in the other, looking at the card with a confused frown, a sweat drop.', '1章 6話 会社員（夜に 日本語を 習う。名札が 消えた）'),
+  human('doctor', 'happy', 'happy', 'cheerful: giving a thumbs-up and holding a small blank medicine bottle, a big reassuring smile.', '1章 7話 お医者さん（ネクマックスが 直る）'),
+  human('doctor', 'trouble', 'happy', 'troubled: holding an open book whose pages are blank, a magnifying glass held up to it, a puzzled frown and a sweat drop.', '1章 7話 お医者さん（本の 字が 消えた）'),
+  human('rin', 'happy', 'happy', 'delighted: hugging a thick book with a blank cover to her chest, eyes closed in a big smile, a few sparkles.', '1章 7・10話 リンさん（本が 読めた・学校へ 行く）'),
+  human('rin', 'trouble', 'happy', 'looking for a book: a blank notebook held to her chest, looking around anxiously with one hand raised to her brow, a worried little frown.', '1章 7話 留学生の リンさん（本を さがす）'),
+  human('keeper', 'happy', 'happy', 'happy: holding his round pocket watch up proudly, the other hand pointing up at the sky, a big smile, a few sparkles like morning light.', '1章 8話 時計台の 係（町に 朝が 来た）'),
+  human('keeper', 'trouble', 'happy', 'dismayed: holding up the pocket watch whose face is blank, staring at it in shock, the other hand on top of his hat.', '1章 8話 時計台の 係（朝が 来ない）'),
+  human('baker', 'happy', 'happy', 'happy: holding out a tray of fresh bread rolls toward the viewer with a big smile, a few sparkles.', '1章 9話 パンやの 人（店が 開いた）'),
+  human('baker', 'trouble', 'happy', 'troubled: holding a blank hanging open/closed board in both hands, tilting her head in confusion, a sweat drop.', '1章 9話 パンやの 人（店が 開いて いるか わからない）'),
+  human('driver', 'happy', 'happy', 'happy: giving a big thumbs-up with a wide grin, the other hand waving people aboard.', '1章 10話 バスの 運転手（バスが 動く）'),
+  human('driver', 'trouble', 'happy', 'troubled: holding a blank folded route map, scratching his head under the cap with a confused frown, a sweat drop.', '1章 10話 バスの 運転手（行き先が 読めない）'),
 ];
 
 // ---------------------------------------------------------------------------
