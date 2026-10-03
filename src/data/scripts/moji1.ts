@@ -509,6 +509,8 @@ export const MOJI1_FINALE: FinaleScript = {
       { speaker: 'yamada', sprite: 'yamada:happy', glyph: '💐', text: '山(やま)田(だ)です。ありがとう ございます！', en: "It's Yamada. Thank you so much!" },
       { speaker: 'rin', sprite: 'rin:happy', glyph: '🧑‍🎓 🏫', text: '来(らい)週(しゅう)も 学(がっ)校(こう)で あいましょう！', en: 'See you at school next week!' },
       { speaker: 'nexmax', sprite: 'nexmax:smile', glyph: '✍️ 🎉', text: 'ありがとう！ あなたの じで、まちが もどりました。', en: 'Thank you! Your writing brought the town back.' },
+      { speaker: 'rin', sprite: 'rin:happy', glyph: '✍️ 🆚 ✍️', text: 'こんどは、じを かいて しょうぶ しましょう！', en: "Next time, let's have a writing match!" },
+      { speaker: 'nexmax', sprite: 'nexmax:guide', glyph: '⚔️ ✍️ 🧑‍🤝‍🧑', text: 'ほかの 人(ひと)と じを かいて きそう「たいせん」が できます！', en: 'Versus is open: race other players to write the same letters!' },
       { glyph: '🌊 🌫️ 🏙️ ❓', text: 'でも……うみの むこうの まちが、きりで みえません。', en: 'But… the town across the sea is hidden in fog.' },
       { speaker: 'nexmax', sprite: 'nexmax:think', glyph: '🌫️ 👾', text: 'あそこにも、モジクイが いるかも しれません。', en: 'There may be Mojikui over there too.' },
       { speaker: 'nexmax', sprite: 'nexmax:determined', glyph: '⛴️ 👉 🌫️', text: 'つぎは あの まちへ 行(い)きましょう！', en: "Next, let's go to that town!" },

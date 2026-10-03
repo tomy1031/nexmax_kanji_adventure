@@ -22,6 +22,7 @@ import { useBgm } from '../../lib/bgm';
 import { preloadImages } from '../../lib/preload';
 import { episodeArt } from '../../data/episodeArt';
 import { Feature, isFeatureUnlocked } from '../../data/unlocks';
+import { isVersusConfigured } from '../../lib/versusConfig';
 
 /**
  * ステージせんたく — 文字が 消えた 町の 入口 (08 §3.7).
@@ -174,6 +175,8 @@ const FeatureTags = ({ cleared, showFurigana, onOpen }: { cleared: readonly stri
   const tags = [
     { feature: Feature.DAILY, icon: '📅', label: 'まいにち', en: 'Daily', path: '/daily' },
     { feature: Feature.GACHA, icon: '🤖', label: 'なかま', en: 'Friends', path: '/gacha' },
+    // Only where the relay is configured: a tag that always says つながりません is a broken promise.
+    ...(isVersusConfigured ? [{ feature: Feature.VERSUS, icon: '⚔️', label: 'たいせん', en: 'Versus', path: '/versus' }] : []),
   ].filter((t) => isFeatureUnlocked(t.feature, cleared));
   return (
     <>
