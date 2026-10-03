@@ -3,7 +3,8 @@ import type { Element } from './forge/elements';
 import { weaponOf, type Weapon } from './forge/weapon';
 import { getIndividual, type Individual } from '../data/individuals';
 import { getGear } from '../data/equipment';
-import { episodesOf, type MojiEpisode } from '../data/mojiEpisodes';
+import { episodesOf, type MojiBoss, type MojiEpisode } from '../data/mojiEpisodes';
+import { finaleOrder, type MojiFinale } from '../data/mojiFinale';
 import { getKanjiByChar, getKanjiById } from './kanjiDb';
 import { basePatience, computeDamage, statsFromGear, type PlayerStats } from './battle';
 import { MASTERY_REPS, masteryMultiplier, starsOf } from './mastery';
@@ -129,19 +130,34 @@ export interface HardFight {
   writesPerRead: number;
 }
 
-/** An episode's Hard fight, sized to the save. Read once as the fight starts — it moves as the player writes. */
-export const hardFight = (ep: MojiEpisode, save: LoadoutSave): HardFight => {
-  const pool = hardPool(ep);
+/** What a Hard fight is sized from: the story's boss and patience, how many kanji it asks for, and from which. */
+export interface HardTarget {
+  boss: Pick<MojiBoss, 'hp' | 'attack' | 'element'>;
+  patience: number;
+  asks: number;
+  pool: KanjiData[];
+}
+
+/** A Hard fight, sized to the save. Read once as the fight starts — it moves as the player writes. */
+export const hardFightFor = (t: HardTarget, save: LoadoutSave): HardFight => {
   const loadout = loadoutFromSave(save);
   const repsOf = (id: string) => save.progress[id]?.reps ?? 0;
-  const asked = weakestN(pool, repsOf, ep.kanji.length);
+  const asked = weakestN(t.pool, repsOf, t.asks);
   return {
     boss: {
-      hp: hardBossHp(ep.boss.hp, asked.map((k) => cleanHit(loadout, ep.boss.element, repsOf(k.id)))),
-      attack: hardBossAttack(ep.boss.attack, loadout, ep.boss.element),
+      hp: hardBossHp(t.boss.hp, asked.map((k) => cleanHit(loadout, t.boss.element, repsOf(k.id)))),
+      attack: hardBossAttack(t.boss.attack, loadout, t.boss.element),
     },
-    patience: hardPatience(basePatience(ep.order)),
-    pool,
+    patience: hardPatience(t.patience),
+    pool: t.pool,
     writesPerRead: HARD_WRITES_PER_READ,
   };
 };
+
+/** An episode's Hard fight. */
+export const hardFight = (ep: MojiEpisode, save: LoadoutSave): HardFight =>
+  hardFightFor({ boss: ep.boss, patience: basePatience(ep.order), asks: ep.kanji.length, pool: hardPool(ep) }, save);
+
+/** A まとめの ボス's Hard fight: the whole chapter, weakest first; HP sized to the weakest `asks`. */
+export const hardFinaleFight = (f: MojiFinale, save: LoadoutSave, now?: number): HardFight =>
+  hardFightFor({ boss: f.boss, patience: f.patience, asks: f.asks, pool: finaleOrder(f, save.progress, now) }, save);
