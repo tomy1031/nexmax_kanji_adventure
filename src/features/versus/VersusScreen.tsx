@@ -117,6 +117,8 @@ export const VersusScreen = () => {
   // A short phone (SE) keeps the lobby on one screen with a smaller Nexmax.
   const compact = useCompactHeight();
   const online = useOnline();
+  /** How many are waiting in the lobby right now (null until known). */
+  const [lobbyCount, setLobbyCount] = useState<number | null>(null);
 
   const [phase, setPhase] = useState<Phase>('idle');
   const [waiting, setWaiting] = useState(0);
@@ -472,6 +474,14 @@ export const VersusScreen = () => {
     return () => clearTimeout(timer);
   }, [cpu, phase, versus.rating, cpuLevel]);
 
+  // While the ロビー is shown, watch how many are waiting, so a player can see
+  // whether a match is likely before tapping (or go to CPU / ともだち instead).
+  useEffect(() => {
+    if (phase !== 'idle' || !online || !isVersusConfigured) return;
+    const stop = networkManager.watchLobby(setLobbyCount);
+    return stop;
+  }, [phase, online]);
+
   // The search clock.
   useEffect(() => {
     if (phase !== 'searching') return;
@@ -685,7 +695,7 @@ export const VersusScreen = () => {
                 </>
               )}
               <motion.div animate={phase === 'searching' && !still ? { y: [0, -6, 0] } : undefined} transition={{ repeat: Infinity, duration: 1.6 }}>
-                <Avatar src={myArt} size={compact ? 118 : 170} />
+                <Avatar src={myArt} size={compact ? 104 : 170} />
               </motion.div>
             </div>
 
@@ -810,6 +820,13 @@ export const VersusScreen = () => {
                       ⚔️ <RubyText showFurigana={showFurigana}>あいてを さがす</RubyText>
                     </span>
                   </button>
+                  {online && lobbyCount != null && (
+                    <p className="mt-1.5 text-xs font-bold tabular-nums" style={{ color: lobbyCount > 0 ? '#9be37a' : '#d9d2f5' }} aria-live="polite">
+                      <RubyText showFurigana={showFurigana}>
+                        {lobbyCount > 0 ? `👀 いま まっている 人(ひと) ${lobbyCount}人(にん)。すぐ あそべるかも！` : '👀 いまは だれも まっていません'}
+                      </RubyText>
+                    </p>
+                  )}
                   <div className="mt-2 flex gap-2">
                     <button
                       type="button"
