@@ -13,9 +13,11 @@ import {
   lastEpisodeOf,
 } from './mojiFinale';
 import { MOJI_EPISODES, type MojiEpisode } from './mojiEpisodes';
+import { MOJI_FINALE_SCRIPTS } from './mojiFinaleScripts';
+import { MOJI1_CAST } from './scripts/moji1';
 import { MOJI_CHAPTERS } from './mojiRoute';
 import { ROUTE_ORDER, afterEpisode, continuePath, continuePathWithFinale, episodePath, nextUp, nextUpWithFinale } from './mojiFlow';
-import { SCENES } from '../features/picturebook/scenes';
+import { SCENES, fxNamesOf } from '../features/picturebook/scenes';
 import { unreadKanji } from '../lib/ruby';
 import { computeDamage } from '../lib/battle';
 import { masteryMultiplier, pickWeakest } from '../lib/mastery';
@@ -143,5 +145,36 @@ describe('まとめの ボス in the flow (as written today)', () => {
       expect(afterEpisode(lastEpisodeOf('moji-1')!.id, allCleared)).toBe(afterEpisode(lastEpisodeOf('moji-1')!.id));
     }
     expect(nextUpWithFinale([], 'kana')).toBe(nextUp([], 'kana'));
+  });
+});
+
+describe('まとめの ボス: its story, once written', () => {
+  const entries = Object.entries(MOJI_FINALE_SCRIPTS);
+
+  it('belongs to a finale, opens on a scene and follows the episodes’ rules', () => {
+    const bad: string[] = [];
+    const cast = new Map(MOJI1_CAST.map((c) => [c.id, c.sprites]));
+    for (const [finaleId, script] of entries) {
+      if (!getMojiFinale(finaleId)) bad.push(`${finaleId}: no such finale`);
+      for (const s of [script!.intro, script!.outro]) {
+        if (s.stageId !== finaleId) bad.push(`${finaleId}: stageId ${s.stageId}`);
+        if (!s.lines[0]?.bg) bad.push(`${finaleId}: first line has no scene`);
+        if (!s.lines.some((l) => /\p{Extended_Pictographic}/u.test(l.text + (l.glyph ?? '')))) bad.push(`${finaleId}: no pictures`);
+        let scene = '';
+        for (const l of s.lines) {
+          if (l.bg) scene = l.bg;
+          for (const c of [...unreadKanji(l.text), ...unreadKanji(l.glyph ?? '')]) bad.push(`${finaleId}: ${c} without a reading`);
+          if (/[A-Za-z]/.test(l.text)) bad.push(`${finaleId}: English on screen "${l.text}"`);
+          if (!SCENES[scene]) bad.push(`${finaleId}: scene ${scene}`);
+          for (const fx of l.fx ?? []) if (!fxNamesOf(scene).includes(fx)) bad.push(`${finaleId}: fx ${fx}`);
+          if (l.speaker && !cast.has(l.speaker)) bad.push(`${finaleId}: speaker ${l.speaker}`);
+          if (l.sprite) {
+            const [who, expr] = l.sprite.split(':');
+            if (!cast.get(who)?.[expr ?? 'normal']) bad.push(`${finaleId}: sprite ${l.sprite}`);
+          }
+        }
+      }
+    }
+    expect(bad).toEqual([]);
   });
 });
