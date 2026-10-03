@@ -21,7 +21,16 @@ anon キーは **公開前提の 鍵**（ブラウザの バンドルに 必ず 
 無料枠の プロジェクトは、しばらく 使われないと **一時停止** します（ホスト名が DNS から 消え、
 対戦の 画面は「つながりません」に なる）。2026-10-03 にも 止まって いたので 再開 しました。
 Supabase の ダッシュボード（または Supabase MCP の restore_project）で 再開 できます。
-kanji_go の リポジトリに 3日ごとの keep-alive（`.github/workflows/supabase-keepalive.yml`）が あります。
+止まらない ように、kanji_go の DB に 読むだけの 表 `public.keepalive`（1行）を 置き、
+2つの keep-alive が 別の 日に それを 読みます（2026-10-03）。片方の スケジュールが 止まっても 平気です。
+
+| リポジトリ | ワークフロー | 日 |
+| --- | --- | --- |
+| kanji_go | `.github/workflows/supabase-keepalive.yml` | 1・4・7…日 |
+| このリポジトリ | `.github/workflows/relay-keepalive.yml` | 2・5・8…日 |
+
+`/rest/v1/` を 叩くだけの ping は「使って いる」と 数えられず、2026-09-25 に 止まりました。
+表を 消すと keep-alive が 失敗に なるので、消さないで ください。
 
 ## 別の プロジェクトに つなぐ とき
 

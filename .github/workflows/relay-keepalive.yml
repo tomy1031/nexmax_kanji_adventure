@@ -1,0 +1,39 @@
+# Keeps the versus relay (kanji_go's free-tier Supabase project) awake.
+#
+# Supabase pauses a free project after 7 days without activity; versus then
+# says つながりません until someone restores it by hand (docs/versus.md).
+# kanji_go runs the same read every 3 days (days 1, 4, 7, …); this one runs on
+# days 2, 5, 8, … so that one repo's schedule going quiet — GitHub turns off
+# schedules in a repo with no pushes for 60 days — does not pause the project.
+#
+# It reads the one row of public.keepalive, a real database query: the bare
+# /rest/v1/ ping kanji_go used stopped counting (paused on 2026-09-25). The
+# table is read-only for the anon role. The anon key is the public one the
+# app already ships (src/lib/versusConfig.ts).
+name: Relay keep-alive
+
+on:
+  schedule:
+    - cron: '41 15 2-31/3 * *'   # days 2, 5, 8, … at 15:41 UTC
+  workflow_dispatch:
+
+permissions: {}
+
+jobs:
+  read:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Read the keepalive row
+        env:
+          SUPABASE_URL: https://iyceaspukufevktabmvy.supabase.co
+          SUPABASE_ANON_KEY: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Iml5Y2Vhc3B1a3VmZXZrdGFibXZ5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM2NjU3NTIsImV4cCI6MjA5OTI0MTc1Mn0.btg1ezB0lVHzsZFOf59W6CwN12xm6Adwh6f6BdWW9L4
+        run: |
+          set -e
+          body=$(curl -sS --retry 3 --retry-delay 20 \
+            -H "apikey: $SUPABASE_ANON_KEY" \
+            -H "Authorization: Bearer $SUPABASE_ANON_KEY" \
+            "$SUPABASE_URL/rest/v1/keepalive?select=id&id=eq.1")
+          echo "keepalive answered: $body"
+          # Anything but the row means the project is paused (no DNS) or the
+          # table is gone: restore it from the Supabase dashboard.
+          test "$body" = '[{"id":1}]'
