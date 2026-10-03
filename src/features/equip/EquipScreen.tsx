@@ -11,6 +11,7 @@ import { GEAR, SLOT_LABEL, getGear, missingFor, type GearItem, type GearSlot } f
 import { RARITY_LABEL } from '../../lib/forge/weapon';
 import { weaponArt, weaponFromRecipe, weaponWord } from '../../lib/forge/recipe';
 import { WeaponMount } from '../battle/WeaponMount';
+import { WeaponTrain } from './WeaponTrain';
 import { statsFromGear } from '../../lib/battle';
 import { charRuby } from '../../lib/reading';
 import { REPS_TO_OBTAIN } from '../../types/kanji';
@@ -61,6 +62,8 @@ export const EquipScreen = () => {
 
   const [slot, setSlot] = useState<Slot>('weapon');
   const [showAll, setShowAll] = useState(false);
+  /** 強化 (11 §6): the weapon being worked on, by recipe id. */
+  const [training, setTraining] = useState<string | null>(null);
 
   const owned = useMemo(
     () => new Set(ALL_KANJI.filter((k) => (progress[k.id]?.reps ?? 0) >= REPS_TO_OBTAIN).map((k) => k.char)),
@@ -218,14 +221,21 @@ export const EquipScreen = () => {
                           {(w.level ?? 0) > 0 && <span className="ml-1 font-black text-[#b0741a]">⚒{w.level}</span>}
                         </p>
                       </div>
-                      <button
-                        type="button"
-                        disabled={on}
-                        className="g-btn g-btn-accent !min-h-[36px] !px-3 text-xs"
-                        onClick={() => equipWeapon(w.id)}
-                      >
-                        <RubyText showFurigana={showFurigana}>{on ? 'そうび中(ちゅう)' : 'そうびする'}</RubyText>
-                      </button>
+                      <div className="flex shrink-0 flex-col gap-1">
+                        <button
+                          type="button"
+                          disabled={on}
+                          className="g-btn g-btn-accent !min-h-[34px] !px-3 text-xs"
+                          onClick={() => equipWeapon(w.id)}
+                        >
+                          <RubyText showFurigana={showFurigana}>{on ? 'そうび中(ちゅう)' : 'そうびする'}</RubyText>
+                        </button>
+                        {moji && (
+                          <button type="button" className="g-btn g-btn-ghost !min-h-[30px] !px-3 text-[11px]" onClick={() => setTraining(w.id)}>
+                            ⚒ <RubyText showFurigana={showFurigana}>強化(きょうか)</RubyText>
+                          </button>
+                        )}
+                      </div>
                     </li>
                   );
                 })
@@ -319,6 +329,7 @@ export const EquipScreen = () => {
         </div>
       </div>
       {!moji && <BottomTabs current="items" />}
+      {training && <WeaponTrain recipeId={training} onClose={() => setTraining(null)} />}
     </div>
   );
 };
