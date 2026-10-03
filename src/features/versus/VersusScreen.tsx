@@ -22,6 +22,7 @@ import { BattleEventType, ratingChange, rankFor, type BattleEvent, type VersusPr
 import { pickRound } from './round';
 import { VersusFight } from './VersusFight';
 import KanjiCard from '../zukan/KanjiCard';
+import { charRuby } from '../../lib/reading';
 import { cpuTurn } from './cpu';
 import { SELF_HIT } from './rules';
 
@@ -575,7 +576,7 @@ export const VersusScreen = () => {
                           aria-label={`${w.char} ${mark.m}`}
                           onClick={() => setCard(i)}
                         >
-                          {w.char}
+                          <RubyText showFurigana={showFurigana}>{charRuby(w.char)}</RubyText>
                           <span className="absolute -right-1 -bottom-1 text-xs font-black" style={{ color: mark.c, textShadow: '0 1px 2px #000' }}>
                             {mark.m}
                           </span>
