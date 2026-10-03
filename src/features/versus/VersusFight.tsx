@@ -29,15 +29,20 @@ interface Props {
   opponentImg?: string;
   /** 1.0 bare-handed, at most 1.2 (VersusScreen). */
   weaponBonus: number;
-  /** The other side's latest hit; `n` changes with each one. */
-  incoming: { n: number; damage: number } | null;
+  /**
+   * The other side's latest write; `n` changes with each one. `self`: it
+   * slipped three times and the hit turned back on it (its HP, not this side's).
+   */
+  incoming: { n: number; damage: number; self?: boolean } | null;
   /** This side landed a hit: send it. */
   onHit: (damage: number, index: number) => void;
+  /** This side slipped three times and took the hit itself: tell the other side. */
+  onSelfHit: (damage: number, index: number) => void;
   onEnd: (won: boolean) => void;
   onForfeit: () => void;
 }
 
-export const VersusFight = ({ round, opponentName, opponentImg, weaponBonus, incoming, onHit, onEnd, onForfeit }: Props) => {
+export const VersusFight = ({ round, opponentName, opponentImg, weaponBonus, incoming, onHit, onSelfHit, onEnd, onForfeit }: Props) => {
   const showFurigana = useGameStore((s) => s.settings.furigana);
   const progress = useGameStore((s) => s.progress);
   const recordReview = useGameStore((s) => s.recordReview);
@@ -104,10 +109,21 @@ export const VersusFight = ({ round, opponentName, opponentImg, weaponBonus, inc
   useEffect(() => {
     if (!incoming || incoming.n === seen.current || ended.current) return;
     seen.current = incoming.n;
+    if (incoming.self) {
+      // Its own three slips: the light turns back on it.
+      void enemyCtl.start({ x: [0, 10, -6, 0], transition: { duration: 0.4 } });
+      const next = Math.max(0, theirHpRef.current - incoming.damage);
+      theirHpRef.current = next;
+      setTheirHpState(next);
+      setHit({ n: -incoming.n, damage: incoming.damage });
+      say(`あいては 3こ まちがえた！ ${incoming.damage}`);
+      if (next === 0) end(true, 600);
+      return;
+    }
     void enemyCtl.start({ x: [0, -80, 0], transition: { duration: 0.45 } });
     takeHit(incoming.damage);
     say(`あいての こうげき！ ${incoming.damage}`);
-  }, [incoming, enemyCtl, takeHit, say]);
+  }, [incoming, enemyCtl, takeHit, say, end]);
 
   const char = round[index % round.length];
   const target = getKanjiByChar(char)!;
@@ -128,6 +144,7 @@ export const VersusFight = ({ round, opponentName, opponentImg, weaponBonus, inc
       if (mistakes >= SLIPS_TO_SELF_HIT) {
         // A failed write costs the writer, not the opponent.
         setCombo(0);
+        onSelfHit(SELF_HIT, n);
         takeHit(SELF_HIT);
         say(`ミスが ${SLIPS_TO_SELF_HIT}こ。${SELF_HIT} うけた`);
         return;
@@ -162,7 +179,7 @@ export const VersusFight = ({ round, opponentName, opponentImg, weaponBonus, inc
       }, IMPACT_MS);
       say(clean ? `かんぺき！ ${damage}` : `${damage} あたえた`);
     },
-    [index, target.id, progress, recordReview, hinted, weaponBonus, onHit, takeHit, say, heroCtl, enemyCtl, end, later],
+    [index, target.id, progress, recordReview, hinted, weaponBonus, onHit, onSelfHit, takeHit, say, heroCtl, enemyCtl, end, later],
   );
 
   return (
