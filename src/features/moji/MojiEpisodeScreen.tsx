@@ -3,6 +3,7 @@ import { Navigate, useNavigate, useParams, useSearchParams } from 'react-router-
 import { motion } from 'framer-motion';
 import NovelScene from '../novel/NovelScene';
 import KanjiDrill from '../write/KanjiDrill';
+import { CompanionPick } from './CompanionPick';
 import BattleScene from '../battle/BattleScene';
 import PictureBook from '../picturebook/PictureBook';
 import { RubyText } from '../../components/ui/Ruby';
@@ -211,6 +212,8 @@ const ReadyScreen = ({
 
         {/* ネクマックスの レベル: there from the start (09 §2). */}
         <NexmaxLevelPlate showFurigana={showFurigana} />
+        {/* なかま: who comes along and what their わざ does (11 §3.3). */}
+        <CompanionPick bossElement={ep.boss.element} showFurigana={showFurigana} />
 
         {heading && (
           <p className="rt-light -mb-1 self-start rounded-full bg-[#1b1430]/75 px-3 text-xs leading-[2.2] font-black text-[#ffe9c2]">

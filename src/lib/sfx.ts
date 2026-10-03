@@ -24,6 +24,7 @@ import { useGameStore } from '../store/gameStore';
  *   beam   — Nexmax firing the written character's light: charge, release.
  *   combo  — a COMBO banner: a run up the scale, longer at each tier.
  *   comboBreak — a COMBO ending: a soft fall.
+ *   skill  — a companion's わざ: a rising sweep and a bell chord.
  *
  * Respects せってい → 音を 消す. Browsers only allow audio after a tap, which
  * every one of these follows.
@@ -238,6 +239,16 @@ export const combo = (tier = 1) => {
     if (last) tone(ac, { at: t + i * 0.055, freq: f * 2, dur: 0.4, type: 'sine', gain: 0.04 });
   }
   noiseBurst(ac, { at: t, dur: 0.18, type: 'highpass', from: 5000, to: 8000, q: 0.7, gain: 0.04 });
+};
+
+/** A companion's わざ: a quick rising sweep and a bright bell chord. */
+export const skill = () => {
+  const ac = audio();
+  if (!ac) return;
+  const t = ac.currentTime;
+  tone(ac, { at: t, freq: 330, dur: 0.22, type: 'sawtooth', gain: 0.03, glideTo: 1320 });
+  noiseBurst(ac, { at: t, dur: 0.25, type: 'bandpass', from: 1200, to: 6000, q: 1, gain: 0.08 });
+  [1046.5, 1318.5, 1568, 2093].forEach((f, i) => tone(ac, { at: t + 0.2 + i * 0.03, freq: f, dur: 0.6, type: 'triangle', gain: 0.06 }));
 };
 
 /** A COMBO ending: a soft fall, not a scold — the mistake already sounded. */

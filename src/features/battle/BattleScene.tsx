@@ -20,6 +20,9 @@ import { getGear } from '../../data/equipment';
 import * as sfx from '../../lib/sfx';
 import { comboMilestone, comboTier, isComboBreak, strokeEnd, strokeLift } from '../../lib/combo';
 import type { StrokeSpark } from './ComboFx';
+import { SKILL_INFO, SKILL_OF, gaugeGain, skillEffect, skillGaugeFull } from '../../lib/companionSkill';
+import { HURT_LINE, linesOf } from '../../data/companionLines';
+import type { CompanionView, SkillCut } from './CompanionFx';
 import {
   computeDamage,
   counterDamage,
@@ -223,6 +226,9 @@ export const BattleScene = ({
   }, [weapons, equippedId, weaponOverride]);
 
   const individual = activeIndividualId ? (getIndividual(activeIndividualId) ?? null) : null;
+  // なかまの わざ (docs/design/11 §3.2): on the new route, once a companion has joined.
+  const skillKind = mastery && !tutorial && individual ? SKILL_OF[individual.id] : undefined;
+  const gaugeFull = skillGaugeFull(difficulty);
 
   // The weapon rusts with the kanji it was made from.
   const rust = useMemo(() => {
@@ -272,6 +278,15 @@ export const BattleScene = ({
   // Set at the first reading turn, so where the answer sits differs fight to fight.
   const fightSeedRef = useRef(0);
   const [outcome, setOutcome] = useState<Outcome>(null);
+  /** わざ: the gauge, what a used one still holds for the coming writes, the cut-in and the companion's bubble. */
+  const [gauge, setGauge] = useState(0);
+  const [buffs, setBuffs] = useState({ guards: 0, freeLooks: 0, power: 1, comboShield: 0 });
+  const [cut, setCut] = useState<SkillCut | null>(null);
+  const [talk, setTalk] = useState<{ n: number; text: string } | null>(null);
+  const talkNo = useRef(0);
+  const companionSay = useCallback((text: string) => setTalk({ n: (talkNo.current += 1), text }), []);
+  // The stroke order was shown for free (ヒント) during this write: no half, no slip, but no ★ either.
+  const freeLookRef = useRef(false);
   const [rewards, setRewards] = useState<{ gems: number; individual: string | null; perfect: boolean; hard: boolean }>({
     gems: 0,
     individual: null,
@@ -319,6 +334,15 @@ export const BattleScene = ({
   const target = mastery ? (kanjiPool.find((k) => k.id === weakestId) ?? kanjiPool[0]) : kanjiPool[turn % kanjiPool.length];
   const ownsTarget = target ? progress[target.id]?.obtainedAt != null : false;
   const targetStars: Stars = target ? starsOf(progress[target.id]?.reps ?? 0) : 0;
+
+  // The companion says hello once the intro band has gone.
+  useEffect(() => {
+    if (!skillKind || !individual) return;
+    const t = setTimeout(() => companionSay(linesOf(individual.id).start), 1600);
+    return () => clearTimeout(t);
+    // Once per fight.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const settle = useCallback(
     (kind: 'win' | 'lose', mistakes: number, hpLeft: number) => {
@@ -374,6 +398,15 @@ export const BattleScene = ({
       return;
     }
     setRage(0);
+    if (buffs.guards > 0) {
+      // まもり: the strike is blocked.
+      setBuffs((b) => ({ ...b, guards: b.guards - 1 }));
+      sfx.clang();
+      void fieldCtl.start({ x: [0, -3, 3, 0], transition: { duration: 0.25 } });
+      say('🛡️ まもった！ ダメージ 0');
+      companionSay('まもったよ！');
+      return;
+    }
     const back = strikeDamage(counterDamage(stage.boss.attack, individual, stage.boss.element), stats.defense);
     const nextPlayerHp = Math.max(0, playerHp - back);
     setPlayerHp(nextPlayerHp);
@@ -381,8 +414,9 @@ export const BattleScene = ({
     void enemyCtl.start({ x: [0, -80, 0], transition: { duration: 0.45 } });
     void fieldCtl.start({ x: [0, -6, 6, -3, 0], transition: { duration: 0.35, delay: 0.25 } });
     say(`ミスが ${patience}こ たまった。${back} ダメージを うけた`);
+    if (skillKind && nextPlayerHp > 0) companionSay(HURT_LINE[skillKind]);
     if (nextPlayerHp <= 0) settle('lose', totalMistakes, 0);
-  }, [rage, patience, stage.boss, individual, stats.defense, playerHp, enemyCtl, fieldCtl, settle, totalMistakes, say]);
+  }, [rage, patience, stage.boss, individual, stats.defense, playerHp, enemyCtl, fieldCtl, settle, totalMistakes, say, buffs.guards, skillKind, companionSay]);
 
   const handleMistake = useCallback(() => {
     if (settledRef.current || bossDownRef.current) return;
@@ -393,6 +427,16 @@ export const BattleScene = ({
 
   const showStrokeOrder = () => {
     if (settledRef.current || bossDownRef.current || readQ) return;
+    // ヒント: a free look for this character — no slip, no half.
+    if (!hinted && (freeLookRef.current || buffs.freeLooks > 0)) {
+      if (!freeLookRef.current) {
+        freeLookRef.current = true;
+        setBuffs((b) => ({ ...b, freeLooks: b.freeLooks - 1 }));
+        say('💡 ヒント！ 見(み)ても こうげきは へらない');
+      }
+      writerRef.current?.animateStroke();
+      return;
+    }
     // Looking is allowed, and costs: one slip, and this write hits for half.
     if (!hinted) addSlip();
     setHinted(true);
@@ -404,6 +448,9 @@ export const BattleScene = ({
       if (settledRef.current || bossDownRef.current) return;
       const mistakes = Math.max(summary.totalMistakes, writeSlipsRef.current);
       writeSlipsRef.current = 0;
+      const lookedFree = freeLookRef.current;
+      freeLookRef.current = false;
+      if (skillKind) setGauge((g) => Math.min(gaugeFull, g + gaugeGain(mistakes, hinted || lookedFree)));
       // A look at the stroke order counts against the stars like a slip.
       const nextMistakes = totalMistakes + mistakes + (hinted ? 1 : 0);
       setTotalMistakes(nextMistakes);
@@ -414,7 +461,7 @@ export const BattleScene = ({
       let starUp: Stars | null = null;
       if (!tutorial && target && progress[target.id]?.obtainedAt != null) {
         recordReview(target.id, mistakes);
-      } else if (mastery && target && mistakes === 0 && !hinted) {
+      } else if (mastery && target && mistakes === 0 && !hinted && !lookedFree) {
         // Written from memory without a slip: that is a write, and it counts.
         const before = progress[target.id]?.reps ?? 0;
         recordRep(target.id, 0);
@@ -427,8 +474,14 @@ export const BattleScene = ({
       }
       const clean = mistakes === 0 && !hinted;
       const critical = mastery && targetStars === 3 && clean;
-      const nextCombo = mastery && clean ? combo + 1 : 0;
+      // コンボ (わざ): a slip may pass without ending the run.
+      const shielded = mastery && !clean && combo > 0 && buffs.comboShield > 0;
+      const nextCombo = mastery && clean ? combo + 1 : shielded ? combo : 0;
       setCombo(nextCombo);
+      // ちから (わざ): this write hits harder, once.
+      const power = buffs.power;
+      if (shielded || power !== 1) setBuffs((b) => ({ ...b, power: 1, comboShield: shielded ? b.comboShield - 1 : b.comboShield }));
+      if (shielded) companionSay('コンボ、まもったよ！');
       // The run's sound: a climb at 3・5・7・10, a soft fall when it ends.
       if (comboMilestone(nextCombo)) atImpact(() => sfx.combo(comboTier(nextCombo).level), 150);
       else if (isComboBreak(combo, nextCombo)) sfx.comboBreak();
@@ -442,7 +495,7 @@ export const BattleScene = ({
         attackPct: stats.attackPct,
         owned: ownsTarget && !tutorial && !mastery,
         hinted,
-        mastery: mastery ? masteryMultiplier(targetStars, clean) * comboMultiplier(nextCombo) : 1,
+        mastery: mastery ? masteryMultiplier(targetStars, clean) * comboMultiplier(nextCombo) * power : 1,
       });
       setHinted(false);
       const struck = { n: turn, damage: result.damage, critical };
@@ -482,8 +535,11 @@ export const BattleScene = ({
       const nextBossHp = Math.max(0, bossHp - result.damage);
       setBossHp(nextBossHp);
 
+      // 得意な 武器: the companion's bonus, said out loud so it is seen to count.
+      const favoured = result.favoured && individual ? `（とくい ＋${individual.bonus}%）` : '';
       say(
-        critical
+        (power !== 1 ? `💥 ×${power}！ ` : '') +
+        (critical
           ? `字(じ)の わざ！ ${result.damage} ダメージ`
           : starUp
             ? `★${starUp}に なった！ ${result.damage} ダメージ`
@@ -495,11 +551,12 @@ export const BattleScene = ({
             ? `こうかは ばつぐん！ ${result.damage} ダメージ`
             : result.elementMultiplier < 1
               ? `こうかは いまひとつ。${result.damage} ダメージ`
-              : `${result.damage} ダメージ`,
+              : `${result.damage} ダメージ`) + favoured,
       );
 
       if (nextBossHp <= 0) {
         bossDownRef.current = true;
+        if (skillKind && individual) companionSay(linesOf(individual.id).win);
         settleTimer.current = setTimeout(() => settle('win', nextMistakes, playerHp), mastery ? WIN_DELAY_MASTERY_MS : 650);
         return;
       }
@@ -523,7 +580,7 @@ export const BattleScene = ({
     [
       tutorial, totalMistakes, target, progress, recordReview, recordRep, weapon, individual, stage.boss,
       rust, bossHp, playerHp, settle, heroCtl, enemyCtl, turn, stats.attackPct, ownsTarget, hinted,
-      mastery, targetStars, kanjiPool, combo, say, difficulty,
+      mastery, targetStars, kanjiPool, combo, say, difficulty, skillKind, gaugeFull, buffs, companionSay,
     ],
   );
 
@@ -557,6 +614,7 @@ export const BattleScene = ({
         return;
       }
       gainExp(EXP_READ);
+      if (skillKind) setGauge((g) => Math.min(gaugeFull, g + 1));
       const clean = computeDamage({
         weapon,
         individual,
@@ -584,7 +642,7 @@ export const BattleScene = ({
       }
       atImpact(finishRead, IMPACT_MS + 600);
     },
-    [mastery, readQ, readPicked, say, addSlip, gainExp, weapon, individual, stage.boss.element, rust, stats.attackPct, heroCtl, enemyCtl, turn, bossHp, settle, totalMistakes, playerHp, finishRead, combo],
+    [mastery, readQ, readPicked, say, addSlip, gainExp, weapon, individual, stage.boss.element, rust, stats.attackPct, heroCtl, enemyCtl, turn, bossHp, settle, totalMistakes, playerHp, finishRead, combo, skillKind, gaugeFull],
   );
 
   // What this clear opens. One per stage at most, announced with a line of
@@ -697,6 +755,32 @@ export const BattleScene = ({
     </>
   );
 
+  /** わざ: the gauge is full and the companion is tapped. */
+  const fireSkill = () => {
+    if (!skillKind || !individual || gauge < gaugeFull || settledRef.current || bossDownRef.current) return;
+    const e = skillEffect(skillKind);
+    const info = SKILL_INFO[skillKind];
+    const does = info.says(e);
+    setGauge(0);
+    setCut({ n: talkNo.current + 1, art: individual.art, name: individual.name, kind: skillKind, does });
+    companionSay(linesOf(individual.id).skill);
+    sfx.skill();
+    if (e.heal) setPlayerHp((h) => Math.min(stats.maxHp, h + e.heal!));
+    if (e.calm) setRage((r) => Math.max(0, r - e.calm!));
+    if (e.comboAdd) setCombo((c) => c + e.comboAdd!);
+    setBuffs((b) => ({
+      guards: b.guards + (e.guards ?? 0),
+      freeLooks: b.freeLooks + (e.freeLooks ?? 0),
+      power: e.power ?? b.power,
+      comboShield: b.comboShield + (e.comboShield ?? 0),
+    }));
+    say(`${info.icon} ${info.name}！ ${does}`);
+  };
+  const companionView: CompanionView | null =
+    skillKind && individual
+      ? { art: individual.art, name: individual.name, kind: skillKind, gauge, full: gaugeFull, talk, onSkill: fireSkill }
+      : null;
+
   // 文字が 消えた 町: the fight laid out from its delivered parts (08 §3.6).
   if (mastery) {
     return (
@@ -730,6 +814,8 @@ export const BattleScene = ({
             />
           )}
           spark={spark}
+          companion={companionView}
+          cut={cut}
           flash={flash}
           flashKey={flashNo}
           idle={turn === 0 && !flash ? '💡 書(か)いた 字(じ)の 光(ひかり)で こうげき！' : null}

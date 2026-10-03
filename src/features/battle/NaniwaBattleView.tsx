@@ -11,6 +11,7 @@ import { parseRuby } from '../../lib/ruby';
 import { speak } from '../../lib/speech';
 import type { Stars } from '../../lib/mastery';
 import { ComboBanner, ComboEdge, ComboMeter, StrokeSparks, type StrokeSpark } from './ComboFx';
+import { CompanionStand, SkillCutIn, type CompanionView, type SkillCut } from './CompanionFx';
 import { useGameStore } from '../../store/gameStore';
 
 /**
@@ -219,6 +220,10 @@ export interface NaniwaBattleViewProps {
   comboPct?: boolean;
   /** Where the last correct stroke ended (ComboFx StrokeSparks). */
   spark?: StrokeSpark | null;
+  /** The companion beside Nexmax, its わざ gauge and line (CompanionFx). None before the first joins. */
+  companion?: CompanionView | null;
+  /** A わざ being used: its cut-in across the column. */
+  cut?: SkillCut | null;
   still: boolean;
   heroCtl: LegacyAnimationControls;
   enemyCtl: LegacyAnimationControls;
@@ -257,6 +262,8 @@ export const NaniwaBattleView = ({
   combo,
   comboPct = true,
   spark = null,
+  companion = null,
+  cut = null,
   still,
   heroCtl,
   enemyCtl,
@@ -422,6 +429,13 @@ export const NaniwaBattleView = ({
             <div ref={heroRef} aria-hidden className="absolute h-px w-px" style={{ left: '60%', top: '62%' }} />
           </motion.div>
 
+          {/* なかま — on the deck to the right, out of the light's way */}
+          {companion && (
+            <div className="absolute z-[6]" style={onBottom(640, 370, 290, 320)}>
+              <CompanionStand c={companion} showFurigana={showFurigana} still={still} />
+            </div>
+          )}
+
           {/* 名前と HP */}
           <p
             className="absolute flex items-center justify-center leading-none font-bold tracking-[0.06em] whitespace-nowrap"
@@ -577,6 +591,7 @@ export const NaniwaBattleView = ({
           </AnimatePresence>
         </div>
         <ComboEdge combo={combo} still={still} />
+        <SkillCutIn cut={cut} showFurigana={showFurigana} still={still} />
         {overlay}
       </div>
     </div>
