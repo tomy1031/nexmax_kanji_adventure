@@ -18,6 +18,8 @@ import ResultModal from './ResultModal';
 import { LogoText } from '../../components/ui/LogoText';
 import { getGear } from '../../data/equipment';
 import * as sfx from '../../lib/sfx';
+import { comboMilestone, comboTier, isComboBreak, strokeEnd, strokeLift } from '../../lib/combo';
+import type { StrokeSpark } from './ComboFx';
 import {
   computeDamage,
   counterDamage,
@@ -249,6 +251,14 @@ export const BattleScene = ({
   const [hit, setHit] = useState<{ n: number; damage: number; critical?: boolean } | null>(null);
   /** Clean writes in a row (新ルート). */
   const [combo, setCombo] = useState(0);
+  // Where the last correct stroke ended, for its sparks (ComboFx).
+  const [spark, setSpark] = useState<StrokeSpark | null>(null);
+  const sparkNo = useRef(0);
+  const onStroke = (data: Record<string, unknown>, px: number) => {
+    sfx.neon(0.35, strokeLift(Number(data.strokeNum) || 0, combo));
+    const end = strokeEnd(data, px);
+    if (end) setSpark({ n: (sparkNo.current += 1), ...end });
+  };
   /** 読む ターン (新ルート): the kanji thrown with its four readings, and the one picked. */
   const [readQ, setReadQ] = useState<{ kanji: KanjiData; choices: string[]; answer: string } | null>(null);
   const [readPicked, setReadPicked] = useState<string | null>(null);
@@ -419,6 +429,9 @@ export const BattleScene = ({
       const critical = mastery && targetStars === 3 && clean;
       const nextCombo = mastery && clean ? combo + 1 : 0;
       setCombo(nextCombo);
+      // The run's sound: a climb at 3・5・7・10, a soft fall when it ends.
+      if (comboMilestone(nextCombo)) atImpact(() => sfx.combo(comboTier(nextCombo).level), 150);
+      else if (isComboBreak(combo, nextCombo)) sfx.comboBreak();
 
       const result = computeDamage({
         weapon,
@@ -536,6 +549,7 @@ export const BattleScene = ({
       setGrowth((g) => ({ ...g, readTotal: g.readTotal + 1, readRight: g.readRight + (right ? 1 : 0) }));
       if (!right) {
         sfx.clang();
+        if (isComboBreak(combo, 0)) sfx.comboBreak();
         setTotalMistakes((n) => n + 1);
         setCombo(0);
         say(`「${readQ.answer}」と よむ`);
@@ -570,7 +584,7 @@ export const BattleScene = ({
       }
       atImpact(finishRead, IMPACT_MS + 600);
     },
-    [mastery, readQ, readPicked, say, addSlip, gainExp, weapon, individual, stage.boss.element, rust, stats.attackPct, heroCtl, enemyCtl, turn, bossHp, settle, totalMistakes, playerHp, finishRead],
+    [mastery, readQ, readPicked, say, addSlip, gainExp, weapon, individual, stage.boss.element, rust, stats.attackPct, heroCtl, enemyCtl, turn, bossHp, settle, totalMistakes, playerHp, finishRead, combo],
   );
 
   // What this clear opens. One per stage at most, announced with a line of
@@ -710,11 +724,12 @@ export const BattleScene = ({
               size={px}
               quizMode
               surface="ink"
-              onCorrectStroke={() => sfx.neon(0.35)}
+              onCorrectStroke={(d) => onStroke(d, px)}
               onMistake={handleMistake}
               onComplete={handleComplete}
             />
           )}
+          spark={spark}
           flash={flash}
           flashKey={flashNo}
           idle={turn === 0 && !flash ? '💡 書(か)いた 字(じ)の 光(ひかり)で こうげき！' : null}

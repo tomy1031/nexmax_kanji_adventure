@@ -22,6 +22,8 @@ import { useGameStore } from '../store/gameStore';
  *   fizz   — a tube that will not light: a sputter. A mistake.
  *   signOn — the whole sign coming on: a relay's clunk, the hum swelling.
  *   beam   — Nexmax firing the written character's light: charge, release.
+ *   combo  — a COMBO banner: a run up the scale, longer at each tier.
+ *   comboBreak — a COMBO ending: a soft fall.
  *
  * Respects せってい → 音を 消す. Browsers only allow audio after a tap, which
  * every one of these follows.
@@ -201,8 +203,12 @@ export const battleStart = () => {
   noiseBurst(ac, { at: t + 0.05, dur: 0.45, type: 'bandpass', from: 400, to: 3600, q: 1.2, gain: 0.25 });
 };
 
-/** A stroke lighting up as a neon tube. `power` 0..1: a longer stroke rings longer. */
-export const neon = (power = 0.6) => {
+/**
+ * A stroke lighting up as a neon tube. `power` 0..1: a longer stroke rings
+ * longer. `lift` raises the glass ping by that many semitones — in a fight it
+ * climbs with each stroke and with the COMBO (lib/combo.ts strokeLift).
+ */
+export const neon = (power = 0.6, lift = 0) => {
   const ac = audio();
   if (!ac) return;
   const t = ac.currentTime;
@@ -211,7 +217,36 @@ export const neon = (power = 0.6) => {
   tone(ac, { at: t, freq: 240, dur: 0.1 + power * 0.06, type: 'square', gain: 0.018 });
   noiseBurst(ac, { at: t, dur: 0.07, type: 'bandpass', from: 2600, to: 1800, q: 3, gain: 0.07 });
   // The glass lighting up.
-  tone(ac, { at: t + 0.05, freq: 1568 + power * 400, dur: 0.22, type: 'sine', gain: 0.05 + power * 0.03 });
+  tone(ac, { at: t + 0.05, freq: (1568 + power * 400) * 2 ** (lift / 12), dur: 0.22, type: 'sine', gain: 0.05 + power * 0.03 });
+};
+
+/**
+ * A COMBO banner (3, 5, 7, 10…): a quick run up the scale, longer and higher
+ * with each tier (1..5), ending on a ringing top note.
+ */
+export const combo = (tier = 1) => {
+  const ac = audio();
+  if (!ac) return;
+  const t = ac.currentTime;
+  const steps = [0, 4, 7, 12, 16, 19, 24];
+  const n = Math.min(steps.length, 2 + tier);
+  const base = 659.3 * 2 ** ((tier - 1) / 12);
+  for (let i = 0; i < n; i++) {
+    const last = i === n - 1;
+    const f = base * 2 ** (steps[i] / 12);
+    tone(ac, { at: t + i * 0.055, freq: f, dur: last ? 0.5 : 0.12, type: 'triangle', gain: last ? 0.1 : 0.07 });
+    if (last) tone(ac, { at: t + i * 0.055, freq: f * 2, dur: 0.4, type: 'sine', gain: 0.04 });
+  }
+  noiseBurst(ac, { at: t, dur: 0.18, type: 'highpass', from: 5000, to: 8000, q: 0.7, gain: 0.04 });
+};
+
+/** A COMBO ending: a soft fall, not a scold — the mistake already sounded. */
+export const comboBreak = () => {
+  const ac = audio();
+  if (!ac) return;
+  const t = ac.currentTime;
+  tone(ac, { at: t, freq: 523.3, dur: 0.16, type: 'triangle', gain: 0.06, glideTo: 392 });
+  tone(ac, { at: t + 0.13, freq: 392, dur: 0.3, type: 'triangle', gain: 0.05, glideTo: 261.6 });
 };
 
 /** A tube that will not light: three quick sputters and a sagging hum. */
