@@ -18,7 +18,7 @@ import { SCENES } from '../picturebook/scenes';
 import { useOwnedKanji } from '../moji/useOwnedKanji';
 import { useCompactHeight } from '../../hooks/useCompactHeight';
 import { networkManager, MatchCancelledError } from './NetworkManager';
-import { BattleEventType, ratingChange, rankFor, type BattleEvent, type VersusProfile } from './types';
+import { BattleEventType, nextRank, ratingChange, rankFor, type BattleEvent, type VersusProfile } from './types';
 import { pickRound } from './round';
 import { VersusFight } from './VersusFight';
 import KanjiCard from '../zukan/KanjiCard';
@@ -113,6 +113,8 @@ export const VersusScreen = () => {
   const [writes, setWrites] = useState<{ char: string; mistakes: number }[]>([]);
   /** The review's kanji opened as a card (ずかん's 字カード). */
   const [card, setCard] = useState<number | null>(null);
+  /** The rank just reached by this match, for the result's celebration. */
+  const [rankUp, setRankUp] = useState<string | null>(null);
   /** The other side's latest stamp. */
   const [stampIn, setStampIn] = useState<{ n: number; stamp: number } | null>(null);
   const [won, setWon] = useState(false);
@@ -187,7 +189,11 @@ export const VersusScreen = () => {
       // Both sides rate against a notional equal opponent: the relay carries no
       // account, so there is no trustworthy opponent rating to read.
       const change = ratingChange(versus.rating, versus.rating, didWin);
+      const before = rankFor(versus.rating).label;
       recordVersus(didWin, change);
+      // The store keeps the rating's floor; read what it made of the change.
+      const after = useGameStore.getState().versus.rating;
+      if (after > versus.rating && rankFor(after).label !== before) setRankUp(rankFor(after).label);
       setDelta(change);
       setWon(didWin);
       setPhase('over');
@@ -335,6 +341,7 @@ export const VersusScreen = () => {
     setTheirDone(0);
     setWalkover(false);
     setWrites([]);
+    setRankUp(null);
     setThem(null);
     setFriendMenu('closed');
   };
@@ -409,6 +416,7 @@ export const VersusScreen = () => {
     setTheirDone(0);
     setWalkover(false);
     setWrites([]);
+    setRankUp(null);
     setError(null);
     setCpu(true);
     setRoom(null);
@@ -465,6 +473,7 @@ export const VersusScreen = () => {
   }, [phase, them, still]);
 
   const rank = rankFor(versus.rating);
+  const nextUp = nextRank(versus.rating);
   const myArt = artOf(me);
 
   if (phase === 'fighting' && round.length) {
@@ -534,6 +543,16 @@ export const VersusScreen = () => {
             animate={{ opacity: 1, scale: 1 }}
             className="g-novel-night flex w-full flex-col items-center gap-3 rounded-2xl px-4 py-5 text-center"
           >
+            {rankUp && (
+              <motion.p
+                className="g-plate-brass rounded-full px-4 py-1 text-base font-black"
+                initial={{ scale: 0.4, opacity: 0 }}
+                animate={{ scale: [0.4, 1.15, 1], opacity: 1 }}
+                transition={{ delay: 0.5, duration: 0.6 }}
+              >
+                🎉 <RubyText showFurigana={showFurigana}>{`ランクアップ！ ${rankUp}`}</RubyText>
+              </motion.p>
+            )}
             <p
               className="text-4xl font-black tracking-widest"
               style={{ color: error ? '#d9d2f5' : won ? '#ffd36a' : '#9fb3d9', textShadow: '0 3px 0 rgba(0,0,0,0.45)' }}
@@ -698,10 +717,13 @@ export const VersusScreen = () => {
                 </>
               ) : (
                 <>
-                  <p className="text-sm font-bold">
-                    <RubyText showFurigana={showFurigana}>おなじ 字(じ)を 書(か)いて、はやく 正(ただ)しく 書(か)いた ほうが 勝(か)ち。</RubyText>
-                  </p>
-                  <ul className="mt-2.5 grid grid-cols-3 gap-1.5 text-[11px] leading-snug font-bold">
+                  {/* A short phone keeps the lobby on one screen: the three rule cards say it already. */}
+                  {!compact && (
+                    <p className="mb-2.5 text-sm font-bold">
+                      <RubyText showFurigana={showFurigana}>おなじ 字(じ)を 書(か)いて、はやく 正(ただ)しく 書(か)いた ほうが 勝(か)ち。</RubyText>
+                    </p>
+                  )}
+                  <ul className="grid grid-cols-3 gap-1.5 text-[11px] leading-snug font-bold">
                     <li className="g-pill-night flex flex-col items-center rounded-xl px-1 py-1.5">
                       <span aria-hidden className="text-xl">
                         ✍️⚡
@@ -724,6 +746,19 @@ export const VersusScreen = () => {
                   <p className="mt-2 text-xs opacity-80 tabular-nums">
                     <RubyText showFurigana={showFurigana}>{`${versus.wins}勝(しょう) ${versus.losses}敗(はい)`}</RubyText>
                   </p>
+                  {nextUp && (
+                    <div className="mx-auto mt-1.5 w-4/5">
+                      <p className="text-[11px] font-bold opacity-90 tabular-nums">
+                        <RubyText showFurigana={showFurigana}>{`${nextUp.label}まで あと ${nextUp.at - versus.rating}`}</RubyText>
+                      </p>
+                      <div className="mt-0.5 h-1.5 overflow-hidden rounded-full bg-white/15">
+                        <div
+                          className="h-full rounded-full bg-[#ffd36a]"
+                          style={{ width: `${Math.max(4, ((versus.rating - nextUp.from) / (nextUp.at - nextUp.from)) * 100)}%` }}
+                        />
+                      </div>
+                    </div>
+                  )}
                   {error && (
                     <p className="mt-1 text-sm font-bold text-[#ffb4a8]" aria-live="polite">
                       <RubyText showFurigana={showFurigana}>{error}</RubyText>
@@ -737,7 +772,7 @@ export const VersusScreen = () => {
                   <div className="mt-2 flex gap-2">
                     <button
                       type="button"
-                      className="g-btn g-btn-night flex-1 !min-h-[40px] !px-2 text-sm"
+                      className="g-btn g-btn-night flex-1 !min-h-[40px] !px-2 text-xs whitespace-nowrap"
                       onClick={() => {
                         sfx.tap();
                         setTyped('');
@@ -746,7 +781,7 @@ export const VersusScreen = () => {
                     >
                       👫 <RubyText showFurigana={showFurigana}>ともだちと</RubyText>
                     </button>
-                    <button type="button" className="g-btn g-btn-night flex-1 !min-h-[40px] !px-2 text-sm" onClick={startCpu}>
+                    <button type="button" className="g-btn g-btn-night flex-1 !min-h-[40px] !px-2 text-xs whitespace-nowrap" onClick={startCpu}>
                       🤖 <RubyText showFurigana={showFurigana}>CPU と れんしゅう</RubyText>
                     </button>
                   </div>
