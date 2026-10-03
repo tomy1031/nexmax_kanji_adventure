@@ -169,7 +169,7 @@ export const CompanionBook = ({ showFurigana }: { showFurigana: boolean }) => {
               </ul>
               <p className="mt-2 text-[11px] leading-snug" style={{ color: 'var(--ink-2)' }}>
                 <RubyText showFurigana={showFurigana}>
-                  ♥ きずな: つれて 行(い)って ミスなしで 勝(か)つと ふえます（1日(にち) 1回(かい)）。わざが 強(つよ)く なります。
+                  ♥ きずな: 同(おな)じ カードが ガチャで 出(で)るか、つれて 行(い)って ミスなしで 勝(か)つと（1日(にち) 1回(かい)） ふえます。わざが 強(つよ)く なります。
                 </RubyText>
               </p>
             </motion.div>
