@@ -6,6 +6,17 @@ import { useNavigate } from 'react-router-dom';
 import { useGameStore } from '../../store/gameStore';
 import { RubyText } from '../../components/ui/Ruby';
 
+/** Set once the debug screen has been found; it then has a button here. */
+const DEBUG_KEY = 'nexmax-debug';
+const TAPS_TO_DEBUG = 7;
+const debugFound = (): boolean => {
+  try {
+    return localStorage.getItem(DEBUG_KEY) === '1';
+  } catch {
+    return false;
+  }
+};
+
 /**
  * Settings, and the credits the asset licences require.
  *
@@ -24,6 +35,19 @@ export const SettingsScreen = () => {
   const showFurigana = settings.furigana;
 
   const [confirmReset, setConfirmReset] = useState(false);
+  // Hidden from players: 「この ゲームに ついて」 tapped seven times opens the debug screen.
+  const [aboutTaps, setAboutTaps] = useState(0);
+  const [showDebug] = useState(debugFound);
+  const tapAbout = () => {
+    if (aboutTaps + 1 < TAPS_TO_DEBUG) return setAboutTaps(aboutTaps + 1);
+    setAboutTaps(0);
+    try {
+      localStorage.setItem(DEBUG_KEY, '1');
+    } catch {
+      // Blocked storage: the screen still opens, the button just does not stay.
+    }
+    navigate('/debug');
+  };
 
   const toggles = [
     {
@@ -115,7 +139,7 @@ export const SettingsScreen = () => {
 
         {/* クレジット — ライセンス上 必要 ------------------------------- */}
         <div className="g-panel mt-4 p-4 text-xs leading-relaxed" style={{ color: 'var(--ink-2)' }}>
-          <p className="g-eyebrow mb-2">
+          <p className="g-eyebrow mb-2 select-none" onClick={tapAbout}>
             <RubyText showFurigana={showFurigana}>この ゲームに ついて</RubyText>
           </p>
           <ul className="space-y-1.5">
@@ -184,6 +208,12 @@ export const SettingsScreen = () => {
             </button>
           )}
         </div>
+
+        {showDebug && (
+          <button type="button" className="g-btn g-btn-ghost mt-4 w-full text-xs" onClick={() => navigate('/debug')}>
+            🛠 デバッグ
+          </button>
+        )}
       </div>
     </div>
   );

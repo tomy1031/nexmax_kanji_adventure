@@ -62,6 +62,8 @@ const DailyScreen = lazy(orReload(chunks.daily));
 const VersusScreen = lazy(orReload(chunks.versus));
 const WordBook = lazy(orReload(chunks.words));
 const TutorialStage = lazy(orReload(chunks.tutorial));
+// For testing only (せってい → この ゲームに ついて ×7): not warmed with the rest.
+const DebugScreen = lazy(orReload(() => import('./features/dev/DebugScreen')));
 
 const warmLater = () => {
   const run = () => {
@@ -190,6 +192,7 @@ const App = () => {
             <Route path="/equip" element={<EquipScreen />} />
             <Route path="/zukan" element={<ZukanScreen />} />
             <Route path="/settings" element={<SettingsScreen />} />
+            <Route path="/debug" element={<Later><DebugScreen /></Later>} />
             <Route path="*" element={<TitleScreen />} />
           </Routes>
         )}
