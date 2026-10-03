@@ -261,7 +261,7 @@ const readingOf = (ch: string): string => {
 };
 
 export const MojiRouteMap = () => {
-  useBgm('town');
+  useBgm('map');
   const navigate = useNavigate();
   const showFurigana = useGameStore((s) => s.settings.furigana);
   const setLastArc = useGameStore((s) => s.setLastArc);
@@ -306,6 +306,7 @@ export const MojiRouteMap = () => {
   /** つづき: the episode to play next (data/mojiFlow.ts), and its card, which gets the glow. */
   const startPath = useGameStore((s) => s.startPath);
   const perfect = useGameStore((s) => s.perfectStages);
+  const hard = useGameStore((s) => s.hardStages);
   const next = nextUp(cleared, startPath);
   // The episode the つづき bubble points at: fetch its pictures while the player looks at the map.
   useEffect(() => {
@@ -555,6 +556,12 @@ export const MojiRouteMap = () => {
                                         {perfect.includes(ep.id) && (
                                           <span className="ml-1" role="img" aria-label="かんぺき">
                                             👑
+                                          </span>
+                                        )}
+                                        {/* Won on Hard (09 §4): the demon's mark. */}
+                                        {hard.includes(ep.id) && (
+                                          <span className="ml-1" role="img" aria-label="ハード クリア">
+                                            👹
                                           </span>
                                         )}
                                       </span>

@@ -18,7 +18,7 @@ import { TownBackdrop, TownShot } from './TownBackdrop';
 import { hasSign } from '../picturebook/hasSign';
 import { streetOf } from '../../lib/signStreet';
 import * as sfx from '../../lib/sfx';
-import { useBgm } from '../../lib/bgm';
+import { jinglePlaying, useBgm } from '../../lib/bgm';
 
 /**
  * The writing drill: write the character, and it cuts a rock. Each rock
@@ -207,7 +207,8 @@ export const KanjiDrill = ({ kanji, onObtained, onExit, onDone, nextLabel = 'つ
   const street = streetOf(reps, goal != null ? MASTERY_REPS : [REPS_TO_OBTAIN]);
 
   useEffect(() => {
-    if (goalCard) sfx.fanfare();
+    // After the town shot its jingle is still ringing; the fanfare would clash.
+    if (goalCard && !jinglePlaying()) sfx.fanfare();
   }, [goalCard]);
 
   useEffect(() => {

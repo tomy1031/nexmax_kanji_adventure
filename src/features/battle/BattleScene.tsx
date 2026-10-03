@@ -163,7 +163,8 @@ export const BattleScene = ({
   mastery = false,
   difficulty = 'normal',
 }: BattleSceneProps) => {
-  useBgm('battle');
+  // The new route's Mojikui fights have their own, bigger tune.
+  useBgm(mastery ? 'boss' : 'battle');
   const navigate = useNavigate();
   const size = useCanvasSize(210, 0.25, 96);
   const tutorial = mode === 'tutorial';
@@ -686,6 +687,7 @@ export const BattleScene = ({
         <NaniwaBattleView
           bossName={stage.boss.name}
           bossImg={stage.boss.img}
+          field={stage.bg}
           bossHp={bossHp}
           bossMaxHp={stage.boss.hp}
           playerHp={playerHp}

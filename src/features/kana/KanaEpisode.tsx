@@ -84,6 +84,7 @@ const EpisodePlayer = ({ id }: { id: string }) => {
           <NovelScene
             key="intro"
             bgm="sad"
+            holdLetters={ep.kana}
             script={lines.intro}
             cast={KANA_CAST}
             chapter={chapter}

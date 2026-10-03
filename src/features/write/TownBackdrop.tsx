@@ -2,11 +2,12 @@ import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import PictureBook from '../picturebook/PictureBook';
 import { SCENES } from '../picturebook/scenes';
-import { signPageY } from '../picturebook/hasSign';
+import { signPageX, signPageY } from '../picturebook/hasSign';
 import { RubyText } from '../../components/ui/Ruby';
 import { getKanjiByChar } from '../../lib/kanjiDb';
 import { charRuby } from '../../lib/reading';
 import { useGameStore } from '../../store/gameStore';
+import { playJingle } from '../../lib/bgm';
 
 /**
  * The drill's backdrop on 文字が 消えた 町: the episode's own town, dark while
@@ -29,7 +30,9 @@ export const TownBackdrop = ({ scene, letters, pulse }: { scene: string; letters
 
   return (
     <div aria-hidden className="pointer-events-none fixed inset-0 -z-10 bg-[#0e0b28]">
-      <PictureBook scene={scene} still />
+      {/* Signs faint here: behind the drill they only clutter it (on a wide screen they are
+          huge beside it). The town shot shows a sign lighting up, full size. */}
+      <PictureBook scene={scene} still signsFaint />
       {/* The night over the town lifts as the letters come back (the scene's
           own signs veil it too, SceneSigns); dim enough for the drill to read. */}
       <motion.div className="absolute inset-0 bg-[#0e0b28]" initial={false} animate={{ opacity: 0.5 - 0.25 * back }} transition={{ duration: 0.9 }} />
@@ -66,14 +69,18 @@ export const TownShot = ({ scene, char, onDone }: { scene: string; char: string;
     const k = Math.max(w / iw, h / ih);
     // A wide screen slides the page so the signs show (PictureBook, signPageY).
     const top = signPageY(signs, ih * k, h) ?? (h - ih * k) / 2;
-    const x = (w - iw * k) / 2 + (spot.x + spot.w / 2) * k;
+    const leftEdge = signPageX(signs, iw * k, w) ?? (w - iw * k) / 2;
+    const x = leftEdge + (spot.x + spot.w / 2) * k;
     const y = top + (spot.y + spot.h / 2) * k;
     return `${((x / w) * 100).toFixed(1)}% ${((y / h) * 100).toFixed(1)}%`;
   });
   // Dark for a beat, then lit, so the change itself is seen.
   const [held, setHeld] = useState(true);
   useEffect(() => {
-    const light = setTimeout(() => setHeld(false), 900);
+    const light = setTimeout(() => {
+      setHeld(false);
+      playJingle();
+    }, 900);
     const done = setTimeout(onDone, 2500);
     return () => {
       clearTimeout(light);
