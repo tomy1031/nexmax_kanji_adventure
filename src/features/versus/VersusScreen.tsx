@@ -52,8 +52,20 @@ export const VersusScreen = () => {
   const [phase, setPhase] = useState<Phase>('idle');
   const [waiting, setWaiting] = useState(0);
   const [error, setError] = useState<string | null>(null);
-  const [myHp, setMyHp] = useState(MAX_HP);
-  const [theirHp, setTheirHp] = useState(MAX_HP);
+  const [myHp, setMyHpState] = useState(MAX_HP);
+  const [theirHp, setTheirHpState] = useState(MAX_HP);
+  // Mirrors of the HP, so a hit is judged outside a state updater: finish()
+  // records the result in the store, which must not run during a render.
+  const myHpRef = useRef(MAX_HP);
+  const theirHpRef = useRef(MAX_HP);
+  const setMyHp = (hp: number) => {
+    myHpRef.current = hp;
+    setMyHpState(hp);
+  };
+  const setTheirHp = (hp: number) => {
+    theirHpRef.current = hp;
+    setTheirHpState(hp);
+  };
   const [round, setRound] = useState<string[]>([]);
   const [index, setIndex] = useState(0);
   const [flash, setFlash] = useState<string | null>(null);
@@ -61,6 +73,17 @@ export const VersusScreen = () => {
   const [delta, setDelta] = useState(0);
 
   const settled = useRef(false);
+  /** The phase, for the relay's callbacks (registered once). */
+  const phaseRef = useRef<Phase>('idle');
+  useEffect(() => {
+    phaseRef.current = phase;
+  }, [phase]);
+  /** The host's round, re-sent until the guest answers READY. */
+  const handshake = useRef<{ kanji: string[]; timer: ReturnType<typeof setInterval> | null } | null>(null);
+  const stopHandshake = () => {
+    if (handshake.current?.timer) clearInterval(handshake.current.timer);
+    handshake.current = null;
+  };
 
   const weapon = useMemo(() => {
     const recipe = weapons.find((w) => w.id === equippedId);
@@ -89,7 +112,11 @@ export const VersusScreen = () => {
       setDelta(change);
       setWon(didWin);
       setPhase('over');
-      networkManager.disconnect();
+      // The winner says so, and both stay a moment before leaving: leaving at
+      // once dropped the last hit, and the loser saw 「つうしんが きれました」
+      // instead of the result.
+      if (didWin) networkManager.send({ type: BattleEventType.VICTORY, timestamp: Date.now() });
+      setTimeout(() => networkManager.disconnect(), 1500);
     },
     [versus.rating, recordVersus],
   );
@@ -100,24 +127,44 @@ export const VersusScreen = () => {
       switch (e.type) {
         case BattleEventType.HANDSHAKE: {
           // The host picks the round so both sides write the same characters.
+          // It may arrive more than once (the host repeats it until READY): every
+          // copy is answered, the round is taken once.
           if (e.data?.kanji?.length) {
-            setRound(e.data.kanji);
-            void preloadCharData(e.data.kanji);
-            setPhase('fighting');
+            networkManager.send({ type: BattleEventType.READY, timestamp: Date.now() });
+            if (phaseRef.current !== 'fighting') {
+              setRound(e.data.kanji);
+              void preloadCharData(e.data.kanji);
+              setPhase('fighting');
+            }
           }
+          break;
+        }
+        case BattleEventType.READY: {
+          // The guest has the round: the host starts too.
+          const sent = handshake.current;
+          if (!sent) break;
+          stopHandshake();
+          setRound(sent.kanji);
+          setPhase('fighting');
           break;
         }
         case BattleEventType.HIT: {
           const dmg = e.data?.damage ?? 0;
-          setMyHp((hp) => {
-            const next = Math.max(0, hp - dmg);
-            if (next === 0) finish(false);
-            return next;
-          });
+          const next = Math.max(0, myHpRef.current - dmg);
+          setMyHp(next);
+          if (next === 0) finish(false);
           setFlash(`あいての こうげき！ ${dmg}`);
           break;
         }
+        case BattleEventType.VICTORY:
+          // The other side brought this side's HP to 0 — even if its last hit was lost.
+          setMyHp(0);
+          finish(false);
+          break;
         case BattleEventType.DISCONNECT:
+          // Leaving after the result is the normal end of a match.
+          if (settled.current) break;
+          stopHandshake();
           setError('あいてとの つうしんが きれました。');
           setPhase('over');
           break;
@@ -128,7 +175,13 @@ export const VersusScreen = () => {
     return off;
   }, [finish]);
 
-  useEffect(() => () => networkManager.disconnect(), []);
+  useEffect(
+    () => () => {
+      stopHandshake();
+      networkManager.disconnect();
+    },
+    [],
+  );
 
   // --- matchmaking --------------------------------------------------------
   const search = async () => {
@@ -143,22 +196,38 @@ export const VersusScreen = () => {
     try {
       await networkManager.findOpponent({ onWaiting: setWaiting });
       setPhase('ready');
+      if (!networkManager.isHosting()) return;
 
-      // Give presence a moment to settle, then the host publishes the round.
-      setTimeout(() => {
-        if (networkManager.isHosting()) {
-          const pool = ownedChars.length >= ROUND_KANJI ? ownedChars : ALL_KANJI.slice(0, 40).map((k) => k.char);
-          const picked = [...pool].sort(() => Math.random() - 0.5).slice(0, ROUND_KANJI);
-          networkManager.send({
-            type: BattleEventType.HANDSHAKE,
-            timestamp: Date.now(),
-            data: { kanji: picked },
-          });
-          setRound(picked);
-          void preloadCharData(picked);
-          setPhase('fighting');
-        }
-      }, 900);
+      // The host publishes the round once the guest is in the room, and keeps
+      // sending it until the guest answers READY (a broadcast is not delivered
+      // to someone who has not subscribed yet).
+      const pool = ownedChars.length >= ROUND_KANJI ? ownedChars : ALL_KANJI.slice(0, 40).map((k) => k.char);
+      const picked = [...pool].sort(() => Math.random() - 0.5).slice(0, ROUND_KANJI);
+      void preloadCharData(picked);
+      if (!(await networkManager.waitForPartner())) {
+        setError('あいてが いなく なりました。');
+        networkManager.disconnect();
+        setPhase('idle');
+        return;
+      }
+      stopHandshake();
+      const publish = () => networkManager.send({ type: BattleEventType.HANDSHAKE, timestamp: Date.now(), data: { kanji: picked } });
+      let tries = 0;
+      handshake.current = {
+        kanji: picked,
+        timer: setInterval(() => {
+          tries += 1;
+          if (tries > 8) {
+            stopHandshake();
+            setError('あいてと つながりませんでした。');
+            networkManager.disconnect();
+            setPhase('idle');
+            return;
+          }
+          publish();
+        }, 1200),
+      };
+      publish();
     } catch (e) {
       if (e instanceof MatchCancelledError) {
         setPhase('idle');
@@ -170,6 +239,7 @@ export const VersusScreen = () => {
   };
 
   const cancel = () => {
+    stopHandshake();
     networkManager.cancel();
     setPhase('idle');
   };
@@ -191,20 +261,16 @@ export const VersusScreen = () => {
       if (mistakes >= 3) {
         // A failed write costs you, rather than the opponent.
         const dmg = Math.round(BASE_DAMAGE * 0.75);
-        setMyHp((hp) => {
-          const next = Math.max(0, hp - dmg);
-          if (next === 0) finish(false);
-          return next;
-        });
+        const next = Math.max(0, myHpRef.current - dmg);
+        setMyHp(next);
+        if (next === 0) finish(false);
         setFlash(`3回(かい)いじょう まちがえた。${dmg} うけた`);
       } else {
         const accuracy = mistakes === 0 ? 1.5 : mistakes === 1 ? 1.1 : 0.8;
         const dmg = Math.max(1, Math.round(BASE_DAMAGE * accuracy * weaponBonus));
-        setTheirHp((hp) => {
-          const next = Math.max(0, hp - dmg);
-          if (next === 0) finish(true);
-          return next;
-        });
+        const next = Math.max(0, theirHpRef.current - dmg);
+        setTheirHp(next);
+        if (next === 0) finish(true);
         networkManager.send({
           type: BattleEventType.HIT,
           timestamp: Date.now(),

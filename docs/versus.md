@@ -3,75 +3,37 @@
 対戦は **Supabase Realtime** を中継に使います。データベースも認証も使いません。
 チャンネル（broadcast と presence）だけです。
 
-いまは **未設定なので、対戦のボタンは画面に出ません**。下の手順で設定すると出ます。
+中継は **kanji_go と 同じ Supabase プロジェクト**（`iyceaspukufevktabmvy`）です。
+2026-10-03 に「kanjigo と 同じ 環境を 使って いい」と 決まりました。URL と anon キーは
+`src/lib/versusConfig.ts` に 既定値として 入って いるので、**設定しなくても 対戦は 動きます**。
 
 ---
 
-## なぜ kanji_go の鍵をそのまま使わなかったか
+## 待合室は 混ざらない
 
-`kanji_go` には Supabase の URL と anon キーがソースに直書きされています。
-コピーすれば5分で動きますが、次の2つの理由でやめました。
+中継の チャンネルは 名前ごとに 別です。このゲームは `nexmax-kanji-lobby`、kanji_go は
+`kanjigo-lobby-all` で 待つので、相手を さがして いる 人どうしが 混ざる ことは ありません。
+anon キーは **公開前提の 鍵**（ブラウザの バンドルに 必ず 入る。kanji_go も そのまま 入れて いる）なので、
+ソースに あって 問題 ありません。
 
-1. **ロビーが混ざる。** 中継は1つのプロジェクトに1つのロビーです。kanji_go の鍵を使うと、
-   kanji_go で対戦相手を探している人と、このゲームで探している人が**同じ待合室に並びます**。
-   相性の合わない相手とマッチして、お互いに何が起きたか分からなくなります。
-2. **他プロジェクトの資源です。** 無料枠の同時接続数は共有されます。
+## 止まった とき
 
-anon キー自体は**公開前提の鍵**（ブラウザのバンドルに必ず入る）なので、秘密ではありません。
-問題は秘密かどうかではなく、**どのプロジェクトのものか**です。
+無料枠の プロジェクトは、しばらく 使われないと **一時停止** します（ホスト名が DNS から 消え、
+対戦の 画面は「つながりません」に なる）。2026-10-03 にも 止まって いたので 再開 しました。
+Supabase の ダッシュボード（または Supabase MCP の restore_project）で 再開 できます。
+kanji_go の リポジトリに 3日ごとの keep-alive（`.github/workflows/supabase-keepalive.yml`）が あります。
 
----
+## 別の プロジェクトに つなぐ とき
 
-## 手順
-
-### 1. Supabase のプロジェクトを作る
-
-1. https://supabase.com で新しいプロジェクトを作る（無料枠でよい）
-2. Project Settings → API から次の2つを控える
-   - **Project URL**（`https://xxxxx.supabase.co`）
-   - **anon public** キー
-
-テーブルは**1つも作らなくてよい**です。Realtime は既定で有効です。
-
-### 2. GitHub に入れる
-
-リポジトリの Settings → Secrets and variables → Actions → **Variables** タブで2つ追加:
+ビルド時に 2つの 変数を 渡すと、既定値の かわりに それを 使います（フォーク向け）。
 
 | 名前 | 中身 |
 | --- | --- |
 | `VITE_SUPABASE_URL` | `https://xxxxx.supabase.co` |
 | `VITE_SUPABASE_ANON_KEY` | anon public キー |
 
-> **Secrets ではなく Variables で構いません。**どちらもバンドルに literal で焼き込まれるので、
-> Secrets に入れても隠せません。Variables のほうが「公開鍵である」という意図が伝わります。
-
-### 3. ワークフローに渡す
-
-`.github/workflows/deploy.yml` の `npm run build` に env を足します。
-
-```yaml
-      - run: npm run build
-        env:
-          VITE_SUPABASE_URL: ${{ vars.VITE_SUPABASE_URL }}
-          VITE_SUPABASE_ANON_KEY: ${{ vars.VITE_SUPABASE_ANON_KEY }}
-```
-
-> **ビルド時に渡さないと効きません。** `VITE_` で始まる変数はビルドの時点でバンドルに
-> 埋め込まれます。あとから環境変数を変えても、出来上がったファイルは変わりません。
-
-### 4. main に入れて出す
-
-デプロイが走ると、マップの下メニューに「たいせん」が出ます。
-
-### ローカルで試すとき
-
-```
-echo 'VITE_SUPABASE_URL=https://xxxxx.supabase.co'  > .env.local
-echo 'VITE_SUPABASE_ANON_KEY=<anon key>'           >> .env.local
-npm run dev
-```
-
-`.env.local` は `.gitignore` に入っています（`*.local`）。
+`.github/workflows/deploy.yml` は リポジトリの Variables から 渡す ように なって います
+（未設定なら 空なので 既定値が 使われる）。ローカルでは `.env.local` に 書きます（`.gitignore` 済み）。
 
 ---
 

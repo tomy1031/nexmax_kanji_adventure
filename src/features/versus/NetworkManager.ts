@@ -63,6 +63,8 @@ class NetworkManager {
   private roleDecided = false;
   /** Bumped by cancel() so an in-flight match can never revive. */
   private matchToken = 0;
+  /** Waiting for the partner to show up on the pair channel (waitForPartner). */
+  private partnerWaiters: Array<() => void> = [];
 
   private constructor() {}
 
@@ -86,6 +88,11 @@ class NetworkManager {
       this.roleDecided = true;
     }
     this.otherPresent = others.length > 0;
+    if (this.otherPresent && this.partnerWaiters.length) {
+      const waiters = this.partnerWaiters;
+      this.partnerWaiters = [];
+      for (const w of waiters) w();
+    }
 
     if (wasPresent && !this.otherPresent) {
       this.connectionLost = true;
@@ -151,11 +158,17 @@ class NetworkManager {
 
   // ---- public API -------------------------------------------------------
 
+  /**
+   * Leave the lobby and the pair channel. The screen's event listeners stay:
+   * they belong to the screen (onEvent's unsubscribe). Clearing them here —
+   * as kanji_go, whose battle scene subscribes after matchmaking, could —
+   * dropped every HANDSHAKE, since this screen listens from the moment it opens.
+   */
   public cancel(): void {
     this.matchToken++;
     this.leaveLobby();
     this.closeBattleChannel();
-    this.eventCallbacks = [];
+    this.partnerWaiters = [];
   }
 
   /**
@@ -233,16 +246,20 @@ class NetworkManager {
     this.lobbyLingerTimer = setTimeout(() => this.leaveLobby(), LOBBY_LINGER_MS);
 
     const pairCode = [myKey, partnerKey].sort().join('~');
-    await this.joinPair(pairCode, token);
+    // The role is settled here, from the lobby keys both sides already agree on:
+    // waiting for the pair channel's presence to decide it raced the handshake
+    // (neither side yet knew it hosted, so nobody sent the round).
+    await this.joinPair(pairCode, token, myKey < partnerKey);
   }
 
-  private async joinPair(pairCode: string, token: number): Promise<void> {
+  private async joinPair(pairCode: string, token: number, host: boolean): Promise<void> {
     const supabase = getSupabase();
     if (!supabase) throw new RelayUnavailableError();
 
     this.closeBattleChannel();
     this.myKey = `p-${Math.random().toString(36).slice(2, 10)}`;
-    this.roleDecided = false;
+    this.isHost = host;
+    this.roleDecided = true;
 
     const channel = supabase.channel(`nexmax-kanji-pair-${pairCode}`, {
       config: { broadcast: { self: false }, presence: { key: this.myKey } },
@@ -267,6 +284,25 @@ class NetworkManager {
           reject(err || new Error('つながりませんでした'));
         }
       });
+    });
+  }
+
+  /**
+   * Resolves once the partner is on the pair channel (or after `timeoutMs`,
+   * with false), so the host does not publish the round into an empty room.
+   */
+  public waitForPartner(timeoutMs = 10000): Promise<boolean> {
+    if (this.otherPresent) return Promise.resolve(true);
+    return new Promise((resolve) => {
+      const timer = setTimeout(() => {
+        this.partnerWaiters = this.partnerWaiters.filter((w) => w !== done);
+        resolve(false);
+      }, timeoutMs);
+      const done = () => {
+        clearTimeout(timer);
+        resolve(true);
+      };
+      this.partnerWaiters.push(done);
     });
   }
 
