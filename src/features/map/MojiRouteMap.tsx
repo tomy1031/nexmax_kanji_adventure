@@ -16,7 +16,8 @@ import { MASTERY_REPS, starsOf } from '../../lib/mastery';
 import { assetPath } from '../../lib/assetPath';
 import { getKanaEpisode } from '../../data/kana';
 import { getMojiEpisode } from '../../data/mojiEpisodes';
-import { continuePath, episodePath, nextUp } from '../../data/mojiFlow';
+import { continuePathWithFinale, episodePath, nextUpWithFinale } from '../../data/mojiFlow';
+import { finaleNumber, finaleOf, getMojiFinale, isFinaleOpen, isFinaleReady, MOJI_FINALES } from '../../data/mojiFinale';
 import { useBgm } from '../../lib/bgm';
 import { preloadImages } from '../../lib/preload';
 import { episodeArt } from '../../data/episodeArt';
@@ -224,6 +225,74 @@ const FeatureTags = ({ cleared, showFurigana, onOpen }: { cleared: readonly stri
 };
 
 /** One episode of 0章 on a sheet. */
+/**
+ * まとめの ボス (data/mojiFinale.ts): a wide card under the chapter's
+ * episodes, once every kanji of the chapter has its episode. Dark like the
+ * boss's night, with its picture; it opens when the last episode is cleared.
+ */
+const FinaleCard = ({
+  chapterId,
+  chapterOrder,
+  cleared,
+  fresh,
+  perfect,
+  hard,
+  showFurigana,
+  onOpen,
+}: {
+  chapterId: string;
+  chapterOrder: number;
+  cleared: readonly string[];
+  fresh: string | null;
+  perfect: readonly string[];
+  hard: readonly string[];
+  showFurigana: boolean;
+  onOpen: (id: string) => void;
+}) => {
+  const f = finaleOf(chapterId);
+  if (!f || !isFinaleReady(f)) return null;
+  const done = cleared.includes(f.id);
+  const open = done || isFinaleOpen(f, cleared);
+  return (
+    <button
+      type="button"
+      data-tap
+      data-ep={f.id}
+      disabled={!open}
+      onClick={() => onOpen(f.id)}
+      className="relative col-span-2 flex items-center gap-3 overflow-hidden rounded-xl border-2 px-2 py-1.5 text-left text-[#f4f1ff] disabled:opacity-60"
+      style={{
+        borderColor: fresh === f.id ? '#e2453c' : done ? '#e8b64a' : '#8a6128',
+        background: 'linear-gradient(160deg,#2c1d55,#120c26)',
+      }}
+    >
+      {fresh === f.id && <span className="absolute top-0 right-0 rounded-bl bg-[#e2453c] px-1 text-[10px] font-black text-white">NEW</span>}
+      {f.boss.img && <img src={assetPath(f.boss.img)} alt="" aria-hidden className="h-16 w-16 shrink-0 object-contain" draggable={false} />}
+      <span className="min-w-0 flex-1">
+        <span className="block text-xs font-black text-[#ffd98a]">
+          <RubyText showFurigana={showFurigana}>{`${finaleNumber(f)}話(わ) ${done ? '✓' : open ? '' : '🔒'}`}</RubyText>
+          {perfect.includes(f.id) && (
+            <span className="ml-1" role="img" aria-label="かんぺき">
+              👑
+            </span>
+          )}
+          {hard.includes(f.id) && (
+            <span className="ml-1" role="img" aria-label="ハード クリア">
+              👹
+            </span>
+          )}
+        </span>
+        <span className="block text-base leading-[2] font-black">
+          <RubyText showFurigana={showFurigana}>{f.title}</RubyText>
+        </span>
+        <span className="block text-[11px] leading-[1.9] font-bold whitespace-nowrap text-[#d9d2f5]">
+          <RubyText showFurigana={showFurigana}>{`${chapterOrder}章(しょう)の 字(じ)から 苦手(にがて)な ${f.asks}字(じ)`}</RubyText>
+        </span>
+      </span>
+    </button>
+  );
+};
+
 const KanaEpisodeButton = ({ ep, known, cleared, fresh, onOpen }: { ep: KanaEpisode; known: ReadonlySet<string>; cleared: readonly string[]; fresh: string | null; onOpen: () => void }) => {
   const open = isKanaEpisodeUnlocked(ep, cleared);
   const done = cleared.includes(ep.id);
@@ -281,7 +350,13 @@ export const MojiRouteMap = () => {
 
   const starsOfEpisode = (chars: string[]) => chars.reduce((n, ch) => n + starsOf(progress[getKanjiByChar(ch)?.id ?? '']?.reps ?? 0), 0);
   const groupOf = (episodeId: string): GroupId | null =>
-    HIRAGANA_EPS.some((e) => e.id === episodeId) ? 'hiragana' : KATAKANA_EPS.some((e) => e.id === episodeId) ? 'katakana' : MOJI_EPISODES.some((e) => e.id === episodeId) ? 'n5' : null;
+    HIRAGANA_EPS.some((e) => e.id === episodeId)
+      ? 'hiragana'
+      : KATAKANA_EPS.some((e) => e.id === episodeId)
+        ? 'katakana'
+        : MOJI_EPISODES.some((e) => e.id === episodeId) || MOJI_FINALES.some((f) => f.id === episodeId)
+          ? 'n5'
+          : null;
 
   // Arriving from つぎの 話へ (?new=): its sheet is already open.
   const [sheet, setSheet] = useState<GroupId | null>(() => (fresh ? groupOf(fresh) : null));
@@ -308,7 +383,7 @@ export const MojiRouteMap = () => {
   const startPath = useGameStore((s) => s.startPath);
   const perfect = useGameStore((s) => s.perfectStages);
   const hard = useGameStore((s) => s.hardStages);
-  const next = nextUp(cleared, startPath);
+  const next = nextUpWithFinale(cleared, startPath);
   // The episode the つづき bubble points at: fetch its pictures while the player looks at the map.
   useEffect(() => {
     if (next) preloadImages(episodeArt(next));
@@ -316,6 +391,7 @@ export const MojiRouteMap = () => {
   const nextGroup: GroupId = next ? (groupOf(next) ?? 'n5') : 'n5';
   const nextKana = next ? getKanaEpisode(next) : undefined;
   const nextMoji = next ? getMojiEpisode(next) : undefined;
+  const nextFinale = next ? getMojiFinale(next) : undefined;
   // 1章 has eleven episodes, more than a phone's sheet shows: it opens on the
   // one to play (the new one, or つづき), not on 1話.
   const listRef = useRef<HTMLDivElement>(null);
@@ -333,7 +409,7 @@ export const MojiRouteMap = () => {
     return () => clearTimeout(t);
   }, [sheet, focusEp]);
   const playNext = () => {
-    const to = continuePath(cleared, startPath, progress);
+    const to = continuePathWithFinale(cleared, startPath, progress);
     if (to) navigate(to);
     else setSheet('n5');
   };
@@ -417,7 +493,9 @@ export const MojiRouteMap = () => {
                       ? `つぎの 話(はなし) ・ かな ${nextKana.order}`
                       : nextMoji
                         ? `つぎの 話(はなし) ・ ${MOJI_CHAPTERS.find((c) => c.id === nextMoji.chapter)?.order ?? 1}章(しょう) ${nextMoji.order}話(わ)`
-                        : 'つづきは じゅんび中(ちゅう)'}
+                        : nextFinale
+                          ? `つぎの 話(はなし) ・ ${MOJI_CHAPTERS.find((c) => c.id === nextFinale.chapter)?.order ?? 1}章(しょう) ${finaleNumber(nextFinale)}話(わ)`
+                          : 'つづきは じゅんび中(ちゅう)'}
                   </RubyText>
                 </span>
                 <span className="block truncate font-black" style={{ fontSize: cq(28) }}>
@@ -427,6 +505,8 @@ export const MojiRouteMap = () => {
                     </KanaText>
                   ) : nextMoji ? (
                     <KanjiBackText owned={owned}>{nextMoji.title}</KanjiBackText>
+                  ) : nextFinale ? (
+                    <RubyText showFurigana={showFurigana}>{`👾 ${nextFinale.title}`}</RubyText>
                   ) : (
                     <RubyText showFurigana={showFurigana}>★を ふやそう</RubyText>
                   )}
@@ -598,6 +678,7 @@ export const MojiRouteMap = () => {
                                     </button>
                                   );
                                 })}
+                                <FinaleCard chapterId={c.id} chapterOrder={c.order} cleared={cleared} fresh={fresh} perfect={perfect} hard={hard} showFurigana={showFurigana} onOpen={(id) => navigate(episodePath(id, cleared))} />
                               </div>
                             ) : (
                               <span className="text-xs font-black" style={{ color: 'var(--ink-3)' }}>

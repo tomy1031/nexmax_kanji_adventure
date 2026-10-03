@@ -3,6 +3,8 @@ import { SCENES } from '../features/picturebook/scenes';
 import { KANA_CAST, KANA_SCRIPTS } from './scripts/kana';
 import { MOJI1_CAST, MOJI1_PRELUDE, MOJI1_SCRIPTS } from './scripts/moji1';
 import { getMojiEpisode } from './mojiEpisodes';
+import { getMojiFinale } from './mojiFinale';
+import { MOJI_FINALE_SCRIPTS } from './mojiFinaleScripts';
 
 /** The battle screen's frame (features/battle/NaniwaBattleView.tsx); its sky is the episode's own scene. */
 const BATTLE_UI = ['frame_top', 'frame_bottom', 'nexmax_brush', 'btn_back'].map((n) => `img/battle/${n}.webp`);
@@ -32,6 +34,19 @@ const scriptArt = (scripts: NovelScript[], cast: CastMember[]): string[] => {
 export const episodeArt = (id: string): string[] => {
   const kana = KANA_SCRIPTS[id];
   if (kana) return [...new Set(scriptArt([kana.intro, kana.outro], KANA_CAST))];
+  const finale = getMojiFinale(id);
+  if (finale) {
+    const story = MOJI_FINALE_SCRIPTS[id];
+    const scene = SCENES[finale.bg]?.photo;
+    return [
+      ...new Set([
+        ...(story ? scriptArt([story.intro, story.outro], MOJI1_CAST) : []),
+        ...(scene ? [scene] : []),
+        ...(finale.boss.img ? [finale.boss.img] : []),
+        ...BATTLE_UI,
+      ]),
+    ];
+  }
   const moji = MOJI1_SCRIPTS[id];
   if (!moji) return [];
   const ep = getMojiEpisode(id);
