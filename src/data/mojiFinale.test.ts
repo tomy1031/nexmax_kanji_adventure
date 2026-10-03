@@ -14,7 +14,7 @@ import {
 } from './mojiFinale';
 import { MOJI_EPISODES, type MojiEpisode } from './mojiEpisodes';
 import { MOJI_CHAPTERS } from './mojiRoute';
-import { ROUTE_ORDER } from './mojiFlow';
+import { ROUTE_ORDER, afterEpisode, continuePath, continuePathWithFinale, episodePath, nextUp, nextUpWithFinale } from './mojiFlow';
 import { SCENES } from '../features/picturebook/scenes';
 import { unreadKanji } from '../lib/ruby';
 import { computeDamage } from '../lib/battle';
@@ -120,5 +120,28 @@ describe('まとめの ボス: which kanji', () => {
     const progress = { [id('日')]: { reps: 6 }, [id('月')]: { reps: 3 } };
     const pool = finalePool(FINALE, progress, NOW);
     expect(pickWeakest(pool, (k) => progress[k]?.reps ?? 0, {}, null)?.id).toBe(pool[0].id);
+  });
+});
+
+describe('まとめの ボス in the flow (as written today)', () => {
+  const allCleared = [...Array.from({ length: 10 }, (_, i) => `kana-${i + 1}`), ...MOJI_EPISODES.map((e) => e.id)];
+
+  it('leaves the plain route as it was', () => {
+    for (const id of ROUTE_ORDER) {
+      const i = ROUTE_ORDER.indexOf(id);
+      expect(afterEpisode(id), id).toBe(ROUTE_ORDER[i + 1] ?? null);
+    }
+    expect(episodePath(FINALE.id, [])).toBe(`/moji/${FINALE.id}`);
+    expect(episodePath(FINALE.id, [FINALE.id])).toBe(`/moji/${FINALE.id}?at=ready`);
+  });
+
+  it('adds the boss to つづき only while it is open and not beaten', () => {
+    const open = isFinaleOpen(FINALE, allCleared);
+    expect(nextUpWithFinale(allCleared, 'kana')).toBe(open ? FINALE.id : nextUp(allCleared, 'kana'));
+    if (!open) {
+      expect(continuePathWithFinale(allCleared, 'kana', {})).toBe(continuePath(allCleared, 'kana', {}));
+      expect(afterEpisode(lastEpisodeOf('moji-1')!.id, allCleared)).toBe(afterEpisode(lastEpisodeOf('moji-1')!.id));
+    }
+    expect(nextUpWithFinale([], 'kana')).toBe(nextUp([], 'kana'));
   });
 });
