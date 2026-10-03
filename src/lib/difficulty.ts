@@ -40,7 +40,8 @@ export const HARD_WRITES_PER_READ = 1;
 
 /** What a fight reads off the save to know how strong Nexmax is. */
 export interface LoadoutSave {
-  weapons: readonly { id: string; kanjiIds: readonly string[] }[];
+  /** Crafted weapons, with their 強化 points (lib/forge/recipe.ts). */
+  weapons: readonly { id: string; kanjiIds: readonly string[]; points?: number }[];
   equippedWeapon: string | null;
   activeIndividual: string | null;
   equippedGear: Readonly<Record<string, string | null>>;
