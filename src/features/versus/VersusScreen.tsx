@@ -4,8 +4,8 @@ import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import { useMapPath } from '../../lib/nav';
 import { RubyText } from '../../components/ui/Ruby';
 import { useGameStore } from '../../store/gameStore';
-import { getKanjiByChar, getKanjiById } from '../../lib/kanjiDb';
-import { weaponOf } from '../../lib/forge/weapon';
+import { getKanjiByChar } from '../../lib/kanjiDb';
+import { weaponFromRecipe } from '../../lib/forge/recipe';
 import { preloadCharData } from '../../lib/strokeLoader';
 import { preloadImages } from '../../lib/preload';
 import { assetPath } from '../../lib/assetPath';
@@ -24,7 +24,9 @@ import { VersusFight } from './VersusFight';
 import KanjiCard from '../zukan/KanjiCard';
 import { charRuby } from '../../lib/reading';
 import { CPU_LEVELS, cpuTurn, type CpuLevel } from './cpu';
-import { SELF_HIT } from './rules';
+import { SELF_HIT, SLIPS_TO_SELF_HIT, writeDamage } from './rules';
+import { SKILL_INFO, SKILL_OF, type SkillKind } from '../../lib/companionSkill';
+import { throughWard, versusSkill } from './versusSkill';
 
 /**
  * たいせん — two players, the same kanji, who writes them better.
@@ -126,7 +128,12 @@ export const VersusScreen = () => {
   const [error, setError] = useState<string | null>(null);
   const [round, setRound] = useState<string[]>([]);
   const [them, setThem] = useState<VersusProfile | null>(null);
-  const [incoming, setIncoming] = useState<{ n: number; damage: number; self?: boolean } | null>(null);
+  const [incoming, setIncoming] = useState<{ n: number; damage: number; self?: boolean; warded?: number } | null>(null);
+  /** The other side's latest わざ (versusSkill.ts). */
+  const [skillIn, setSkillIn] = useState<{ n: number; kind: SkillKind; card: string | null; ward?: number } | null>(null);
+  /** CPU: this side's wards waiting for its next hits, and what its own わざ holds for its next turn. */
+  const cpuWards = useRef<number[]>([]);
+  const cpuBuff = useRef<{ power: number; clean: boolean }>({ power: 1, clean: false });
   /** Characters the other side has finished, for its name plate. */
   const [theirDone, setTheirDone] = useState(0);
   /** Won because the other side left mid-match. */
@@ -157,9 +164,7 @@ export const VersusScreen = () => {
 
   const weapon = useMemo(() => {
     const recipe = weapons.find((w) => w.id === equippedId);
-    if (!recipe) return null;
-    const kanji = recipe.kanjiIds.map((id) => getKanjiById(id)).filter((k) => k != null);
-    return kanji.length === recipe.kanjiIds.length ? weaponOf(kanji) : null;
+    return recipe ? weaponFromRecipe(recipe) : null;
   }, [weapons, equippedId]);
   /** 1.0 with nothing equipped, at most 1.2 with the best weapon. */
   const weaponBonus = weapon ? 1 + Math.min(MAX_WEAPON_BONUS, (weapon.attack / 96) * MAX_WEAPON_BONUS) : 1;
@@ -311,9 +316,14 @@ export const VersusScreen = () => {
         case BattleEventType.HIT:
         case BattleEventType.MISS:
           hitNo.current += 1;
-          setIncoming({ n: hitNo.current, damage: e.data?.damage ?? 0, self: e.type === BattleEventType.MISS });
+          setIncoming({ n: hitNo.current, damage: e.data?.damage ?? 0, self: e.type === BattleEventType.MISS, warded: e.data?.warded });
           setTheirDone((d) => Math.max(d, (e.data?.index ?? d) + 1));
           break;
+        case BattleEventType.SKILL: {
+          const sk = e.data?.skill;
+          if (sk && sk.kind in SKILL_INFO) setSkillIn({ n: Date.now(), kind: sk.kind as SkillKind, card: sk.card, ward: sk.ward });
+          break;
+        }
         case BattleEventType.EMOTE:
           if (typeof e.data?.emote === 'number') setStampIn({ n: Date.now(), stamp: e.data.emote });
           break;
@@ -363,6 +373,9 @@ export const VersusScreen = () => {
     roundRef.current = null;
     hitNo.current = 0;
     setIncoming(null);
+    setSkillIn(null);
+    cpuWards.current = [];
+    cpuBuff.current = { power: 1, clean: false };
     setTheirDone(0);
     setWalkover(false);
     setWrites([]);
@@ -441,6 +454,9 @@ export const VersusScreen = () => {
     settled.current = false;
     hitNo.current = 0;
     setIncoming(null);
+    setSkillIn(null);
+    cpuWards.current = [];
+    cpuBuff.current = { power: 1, clean: false };
     setTheirDone(0);
     setWalkover(false);
     setWrites([]);
@@ -461,12 +477,33 @@ export const VersusScreen = () => {
   useEffect(() => {
     if (!cpu || phase !== 'fighting') return;
     let timer: ReturnType<typeof setTimeout>;
+    const avatar = CPU_LEVELS[cpuLevel].avatar;
+    const kind = SKILL_OF[avatar];
+    let gauge = 0;
     const next = () => {
       const turn = cpuTurn(versus.rating, Math.random, cpuLevel);
       timer = setTimeout(() => {
         hitNo.current += 1;
-        setIncoming(turn.damage > 0 ? { n: hitNo.current, damage: turn.damage } : { n: hitNo.current, damage: SELF_HIT, self: true });
+        // Its わざ's hold on this turn: written clean (おちつき・ヒント・コンボ), harder (ちから).
+        const mistakes = cpuBuff.current.clean ? 0 : turn.mistakes;
+        const power = cpuBuff.current.power;
+        cpuBuff.current = { power: 1, clean: false };
+        if (mistakes >= SLIPS_TO_SELF_HIT) {
+          setIncoming({ n: hitNo.current, damage: SELF_HIT, self: true });
+        } else {
+          const { damage, warded } = throughWard(writeDamage(mistakes, false, 1, 0, power), cpuWards.current.shift() ?? 0);
+          setIncoming({ n: hitNo.current, damage, warded: warded || undefined });
+          gauge += mistakes === 0 ? 2 : mistakes === 1 ? 1 : 0;
+        }
         setTheirDone((d) => d + 1);
+        // The CPU's なかま uses its わざ too, as soon as it can.
+        if (gauge >= 6) {
+          gauge = 0;
+          const e = versusSkill(kind);
+          if (e.power) cpuBuff.current.power = e.power;
+          if (e.slipsBack || e.freeLooks || e.comboAdd) cpuBuff.current.clean = true;
+          setSkillIn({ n: Date.now(), kind, card: avatar, ward: e.ward });
+        }
         next();
       }, turn.ms);
     };
@@ -520,8 +557,15 @@ export const VersusScreen = () => {
         opponentImg={artOf(them, true)}
         weaponBonus={weaponBonus}
         incoming={incoming}
-        onHit={(damage, index) => {
-          if (!cpu) networkManager.send({ type: BattleEventType.HIT, timestamp: Date.now(), data: { damage, index } });
+        onHit={(damage, index, warded) => {
+          if (!cpu) networkManager.send({ type: BattleEventType.HIT, timestamp: Date.now(), data: { damage, index, warded: warded || undefined } });
+        }}
+        myCard={activeIndividual ? (getIndividual(activeIndividual) ?? null) : null}
+        skillIn={skillIn}
+        onSkill={(kind, ward) => {
+          if (cpu) {
+            if (ward) cpuWards.current.push(ward);
+          } else networkManager.send({ type: BattleEventType.SKILL, timestamp: Date.now(), data: { skill: { kind, card: activeIndividual, ward } } });
         }}
         onSelfHit={(damage, index) => {
           if (!cpu) networkManager.send({ type: BattleEventType.MISS, timestamp: Date.now(), data: { damage, index } });

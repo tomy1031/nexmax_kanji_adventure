@@ -24,7 +24,17 @@ const cq = (px: number) => `${(px / 941) * 100}cqw`;
 /** The top tier cycles through these instead of holding one colour. */
 const RAINBOW = ['#ff6fa0', '#ffd36a', '#7be08a', '#6ac8ff', '#c58bff', '#ff6fa0'];
 
-export const ComboMeter = ({ combo, showPct = true, still }: { combo: number; showPct?: boolean; still: boolean }) => {
+export const ComboMeter = ({
+  combo,
+  showPct = true,
+  still,
+}: {
+  combo: number;
+  /** Show the bonus: true for the story's (lib/mastery comboMultiplier), or the bonus by count (たいせん's). */
+  showPct?: boolean | ((combo: number) => number);
+  still: boolean;
+}) => {
+  const pct = typeof showPct === 'function' ? showPct(combo) : comboMultiplier(combo) - 1;
   // The run that just ended, to drop it: derived from the previous count.
   const [prev, setPrev] = useState(combo);
   const [broke, setBroke] = useState<{ from: number; k: number } | null>(null);
@@ -57,7 +67,7 @@ export const ComboMeter = ({ combo, showPct = true, still }: { combo: number; sh
             </motion.span>
             <span style={{ fontSize: cq(30), color: tier.color }}>
               COMBO!
-              {showPct && <span className="ml-[1cqw]">+{Math.round((comboMultiplier(combo) - 1) * 100)}%</span>}
+              {showPct !== false && <span className="ml-[1cqw]">+{Math.round(pct * 100)}%</span>}
             </span>
           </motion.div>
         )}

@@ -218,7 +218,7 @@ export interface NaniwaBattleViewProps {
    * Show the COMBO's +% beside the count. Only where the bonus is really in
    * the damage (たいせん leaves it out until its rule counts the combo).
    */
-  comboPct?: boolean;
+  comboPct?: boolean | ((combo: number) => number);
   /** Where the last correct stroke ended (ComboFx StrokeSparks). */
   spark?: StrokeSpark | null;
   /** The companion beside Nexmax, its わざ gauge and line (CompanionFx). None before the first joins. */

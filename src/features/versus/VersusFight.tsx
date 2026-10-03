@@ -10,8 +10,13 @@ import { useGameStore } from '../../store/gameStore';
 import * as sfx from '../../lib/sfx';
 import { comboMilestone, comboTier, isComboBreak, strokeEnd, strokeLift } from '../../lib/combo';
 import type { StrokeSpark } from '../battle/ComboFx';
-import { SELF_HIT, SLIPS_TO_SELF_HIT, VS_MAX_HP, writeDamage } from './rules';
+import { SELF_HIT, SLIPS_TO_SELF_HIT, VS_MAX_HP, versusComboBonus, writeDamage } from './rules';
 import { STAMPS } from './types';
+import { SKILL_INFO, SKILL_OF, gaugeGain, skillGaugeFull, type SkillKind } from '../../lib/companionSkill';
+import { linesOf } from '../../data/companionLines';
+import { getIndividual, type Individual } from '../../data/individuals';
+import type { CompanionView, SkillCut } from '../battle/CompanionFx';
+import { throughWard, versusSkill, versusSkillSays } from './versusSkill';
 
 /** One stamp at a time: a moment between them, so they stay a greeting, not a flood. */
 const STAMP_COOLDOWN_MS = 1500;
@@ -40,9 +45,9 @@ interface Props {
    * The other side's latest write; `n` changes with each one. `self`: it
    * slipped three times and the hit turned back on it (its HP, not this side's).
    */
-  incoming: { n: number; damage: number; self?: boolean } | null;
-  /** This side landed a hit: send it. */
-  onHit: (damage: number, index: number) => void;
+  incoming: { n: number; damage: number; self?: boolean; warded?: number } | null;
+  /** This side landed a hit: send it (`warded`: how much of it the other side's ward took). */
+  onHit: (damage: number, index: number, warded: number) => void;
   /** This side slipped three times and took the hit itself: tell the other side. */
   onSelfHit: (damage: number, index: number) => void;
   onEnd: (won: boolean) => void;
@@ -53,6 +58,12 @@ interface Props {
   stampIn?: { n: number; stamp: number } | null;
   /** This side sent a stamp. */
   onStamp?: (stamp: number) => void;
+  /** This side's なかま (a card), with its わざ — none before the first joins. */
+  myCard?: Individual | null;
+  /** The other side's latest わざ; `n` changes with each one. */
+  skillIn?: { n: number; kind: SkillKind; card: string | null; ward?: number } | null;
+  /** This side used its わざ: tell the other side (and its ward, which the other side applies to its next hit). */
+  onSkill?: (kind: SkillKind, ward?: number) => void;
 }
 
 /** A stamp said by one side: a speech bubble that pops up and fades. */
@@ -75,7 +86,7 @@ const StampBubble = ({ said, className }: { said: { n: number; stamp: number } |
   </AnimatePresence>
 );
 
-export const VersusFight = ({ round, opponentName, opponentImg, weaponBonus, incoming, onHit, onSelfHit, onEnd, onForfeit, onWrite, stampIn, onStamp }: Props) => {
+export const VersusFight = ({ round, opponentName, opponentImg, weaponBonus, incoming, onHit, onSelfHit, onEnd, onForfeit, onWrite, stampIn, onStamp, myCard = null, skillIn = null, onSkill }: Props) => {
   const showFurigana = useGameStore((s) => s.settings.furigana);
   const progress = useGameStore((s) => s.progress);
   const recordReview = useGameStore((s) => s.recordReview);
@@ -100,6 +111,32 @@ export const VersusFight = ({ round, opponentName, opponentImg, weaponBonus, inc
   const [slips, setSlips] = useState(0);
   const [hinted, setHinted] = useState(false);
   const [combo, setCombo] = useState(0);
+  // なかまの わざ in a match (versusSkill.ts).
+  const myKind = myCard ? SKILL_OF[myCard.char] : undefined;
+  const gaugeFull = skillGaugeFull('normal');
+  const [gauge, setGauge] = useState(0);
+  const [power, setPower] = useState(1);
+  const [comboShield, setComboShield] = useState(0);
+  const [freeLooks, setFreeLooks] = useState(0);
+  const freeLookRef = useRef(false);
+  /** Slips that will not count (おちつき), and those already let off on this character. */
+  const forgiveRef = useRef(0);
+  const forgivenRef = useRef(0);
+  /** Wards of this side waiting for the other side's next hits (shown), and the other side's on this side's hits. */
+  const [myWards, setMyWards] = useState(0);
+  const theirWards = useRef<number[]>([]);
+  const [cut, setCut] = useState<SkillCut | null>(null);
+  const cutNo = useRef(0);
+  const [talk, setTalk] = useState<{ n: number; text: string } | null>(null);
+  const talkNo = useRef(0);
+  const companionSay = useCallback((text: string) => setTalk({ n: (talkNo.current += 1), text }), []);
+  useEffect(() => {
+    if (!myCard) return;
+    const t = setTimeout(() => companionSay(linesOf(myCard.char).start), 1200);
+    return () => clearTimeout(t);
+    // Once a match.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   const [spark, setSpark] = useState<StrokeSpark | null>(null);
   const sparkNo = useRef(0);
   const onStroke = (data: Record<string, unknown>, px: number) => {
@@ -161,9 +198,31 @@ export const VersusFight = ({ round, opponentName, opponentImg, weaponBonus, inc
       return;
     }
     void enemyCtl.start({ x: [0, -80, 0], transition: { duration: 0.45 } });
+    if (incoming.warded) {
+      // A ward of this side took (part of) it.
+      setMyWards((w) => Math.max(0, w - 1));
+      if (incoming.damage > 0) takeHit(incoming.damage);
+      else sfx.clang();
+      say(incoming.damage > 0 ? `💚 ${incoming.warded} へらした！ ${incoming.damage}` : '🛡️ まもった！ ダメージ 0');
+      companionSay('まもったよ！');
+      return;
+    }
     takeHit(incoming.damage);
     say(`あいての こうげき！ ${incoming.damage}`);
-  }, [incoming, enemyCtl, takeHit, say, end]);
+  }, [incoming, enemyCtl, takeHit, say, end, companionSay]);
+
+  // The other side's わざ: its cut-in, and its ward on this side's next hit.
+  const skillSeen = useRef(0);
+  useEffect(() => {
+    if (!skillIn || skillIn.n === skillSeen.current || ended.current) return;
+    skillSeen.current = skillIn.n;
+    const card = skillIn.card ? getIndividual(skillIn.card) : undefined;
+    const effect = versusSkill(skillIn.kind, card?.rarity ?? 3);
+    if (skillIn.ward) theirWards.current.push(skillIn.ward);
+    setCut({ n: (cutNo.current += 1), art: card?.art ?? opponentImg ?? '', name: `あいての ${card?.name ?? 'なかま'}`, kind: skillIn.kind, does: versusSkillSays(effect) });
+    sfx.skill();
+    say(`あいての わざ「${SKILL_INFO[skillIn.kind].name}」！`);
+  }, [skillIn, opponentImg, say]);
 
   // Stamps: the picker, the last one each side said (shown for a moment).
   const [stampMenu, setStampMenu] = useState(false);
@@ -193,14 +252,27 @@ export const VersusFight = ({ round, opponentName, opponentImg, weaponBonus, inc
   const target = getKanjiByChar(char)!;
   const targetStars = starsOf(progress[target.id]?.reps ?? 0);
 
-  const handleMistake = useCallback(() => setSlips((n) => Math.min(SLIPS_TO_SELF_HIT, n + 1)), []);
+  const handleMistake = useCallback(() => {
+    if (forgiveRef.current > 0) {
+      // おちつき: this slip does not count.
+      forgiveRef.current -= 1;
+      forgivenRef.current += 1;
+      return;
+    }
+    setSlips((n) => Math.min(SLIPS_TO_SELF_HIT, n + 1));
+  }, []);
 
   const handleComplete = useCallback(
     ({ totalMistakes }: { totalMistakes: number }) => {
       if (ended.current) return;
-      const mistakes = totalMistakes;
-      if (progress[target.id]?.obtainedAt != null) recordReview(target.id, mistakes);
-      onWrite?.(target.char, hinted ? Math.max(mistakes, 2) : mistakes);
+      // The review and the result's list keep the real count; the match counts the ones おちつき let off.
+      if (progress[target.id]?.obtainedAt != null) recordReview(target.id, totalMistakes);
+      onWrite?.(target.char, hinted ? Math.max(totalMistakes, 2) : totalMistakes);
+      const mistakes = Math.max(0, totalMistakes - forgivenRef.current);
+      forgivenRef.current = 0;
+      const lookedFree = freeLookRef.current;
+      freeLookRef.current = false;
+      if (myKind) setGauge((g) => Math.min(gaugeFull, g + gaugeGain(mistakes, hinted || lookedFree)));
       const n = index;
       setIndex(n + 1);
       setSlips(0);
@@ -216,13 +288,19 @@ export const VersusFight = ({ round, opponentName, opponentImg, weaponBonus, inc
         return;
       }
 
-      const damage = writeDamage(mistakes, hinted, weaponBonus);
       const clean = mistakes === 0 && !hinted;
-      const nextCombo = clean ? combo + 1 : 0;
+      // コンボ (わざ): a slip may pass without ending the run.
+      const shielded = !clean && combo > 0 && comboShield > 0;
+      const nextCombo = clean ? combo + 1 : shielded ? combo : 0;
+      if (shielded) setComboShield((c) => c - 1);
       setCombo(nextCombo);
+      // ちから (わざ) once, then the other side's ward, if it has one.
+      if (power !== 1) setPower(1);
+      const struck = writeDamage(mistakes, hinted, weaponBonus, nextCombo, power);
+      const { damage, warded } = throughWard(struck, theirWards.current.shift() ?? 0);
       if (comboMilestone(nextCombo)) later(() => sfx.combo(comboTier(nextCombo).level), 150);
       else if (isComboBreak(combo, nextCombo)) sfx.comboBreak();
-      onHit(damage, n);
+      onHit(damage, n, warded);
 
       // The light: from the board into Nexmax, then out at the other side.
       const centre = (el: HTMLElement | null, fy = 0.5) => {
@@ -246,10 +324,40 @@ export const VersusFight = ({ round, opponentName, opponentImg, weaponBonus, inc
         setTheirHpState(next);
         if (next === 0) end(true, 500);
       }, IMPACT_MS);
-      say(clean ? `かんぺき！ ${damage}` : `${damage} あたえた`);
+      say(
+        warded >= struck
+          ? '🛡️ あいてに ふせがれた！'
+          : `${power !== 1 ? `💥 ×${power}！ ` : ''}${clean ? 'かんぺき！ ' : ''}${damage}${warded ? `（${warded} ふせがれた）` : clean ? '' : ' あたえた'}`,
+      );
     },
-    [index, target.id, target.char, progress, recordReview, hinted, weaponBonus, onHit, onSelfHit, onWrite, takeHit, say, heroCtl, enemyCtl, end, later, combo],
+    [index, target.id, target.char, progress, recordReview, hinted, weaponBonus, onHit, onSelfHit, onWrite, takeHit, say, heroCtl, enemyCtl, end, later, combo, myKind, gaugeFull, comboShield, power],
   );
+
+  /** わざ: the gauge is full and this side's なかま is tapped. */
+  const fireSkill = () => {
+    if (!myKind || !myCard || gauge < gaugeFull || ended.current) return;
+    const e = versusSkill(myKind, myCard.rarity);
+    setGauge(0);
+    setCut({ n: (cutNo.current += 1), art: myCard.art, name: myCard.name, kind: myKind, does: versusSkillSays(e) });
+    companionSay(linesOf(myCard.char).skill);
+    sfx.skill();
+    if (e.power) setPower(e.power);
+    if (e.freeLooks) setFreeLooks((f) => f + e.freeLooks!);
+    if (e.comboAdd) setCombo((c) => c + e.comboAdd!);
+    if (e.comboShield) setComboShield((c) => c + e.comboShield!);
+    if (e.slipsBack) {
+      // The slips already on this character first, then the next ones.
+      const back = Math.min(e.slipsBack, slips);
+      forgivenRef.current += back;
+      forgiveRef.current += e.slipsBack - back;
+      setSlips((n) => n - back);
+    }
+    if (e.ward) setMyWards((w) => w + 1);
+    onSkill?.(myKind, e.ward);
+    say(`${SKILL_INFO[myKind].icon} ${SKILL_INFO[myKind].name}！ ${versusSkillSays(e)}`);
+  };
+  const companionView: CompanionView | null =
+    myKind && myCard ? { art: myCard.art, name: myCard.name, kind: myKind, gauge, full: gaugeFull, talk, onSkill: fireSkill } : null;
 
   return (
     <>
@@ -286,8 +394,10 @@ export const VersusFight = ({ round, opponentName, opponentImg, weaponBonus, inc
         idle={index === 0 && !flash ? '✍️ はやく 正(ただ)しく 書(か)いて こうげき！' : null}
         hit={hit}
         combo={combo}
-        // The versus rule has no combo term yet (docs/design/11 §7): no +% that is not there.
-        comboPct={false}
+        // たいせん's own COMBO bonus (rules.ts versusComboBonus), as the damage counts it.
+        comboPct={versusComboBonus}
+        companion={companionView}
+        cut={cut}
         still={still}
         heroCtl={heroCtl}
         enemyCtl={enemyCtl}
@@ -296,7 +406,14 @@ export const VersusFight = ({ round, opponentName, opponentImg, weaponBonus, inc
         heroRef={heroRef}
         enemyRef={enemyRef}
         onStrokeOrder={() => {
-          setHinted(true);
+          // ヒント (わざ): a free look for this character.
+          if (!hinted && (freeLookRef.current || freeLooks > 0)) {
+            if (!freeLookRef.current) {
+              freeLookRef.current = true;
+              setFreeLooks((f) => f - 1);
+              say('💡 ヒント！ 見(み)ても こうげきは へらない');
+            }
+          } else setHinted(true);
           writerRef.current?.animateStroke();
         }}
         onFlee={onForfeit}
@@ -304,6 +421,12 @@ export const VersusFight = ({ round, opponentName, opponentImg, weaponBonus, inc
           onStamp ? (
             <>
               {/* the other side, beside its なかま; this side, beside Nexmax */}
+              {/* this side's wards waiting for the other side's next hits */}
+              {myWards > 0 && (
+                <span className="pointer-events-none absolute top-[47%] left-[3cqw] z-20 rounded-full border-[0.3cqw] border-[#6ab0ff] bg-[#0e1a33]/85 px-[2cqw] text-[4cqw] leading-[1.7] font-black text-white">
+                  🛡️×{myWards}
+                </span>
+              )}
               <StampBubble said={theirs} className="top-[12%] left-[6%]" />
               <StampBubble said={mine} className="top-[40%] left-[36%]" />
               <div className="absolute top-[44%] right-[3cqw] z-20 flex flex-row items-center gap-[1.5cqw]">

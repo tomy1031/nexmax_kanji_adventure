@@ -16,6 +16,8 @@ export const BattleEventType = {
   PING: 'PING',
   /** A stamp (STAMPS index): the only thing players say to each other. */
   EMOTE: 'EMOTE',
+  /** A なかまの わざ was used (versusSkill.ts): the other side shows it, and applies its ward to its next hit. */
+  SKILL: 'SKILL',
 } as const;
 export type BattleEventType = (typeof BattleEventType)[keyof typeof BattleEventType];
 
@@ -39,6 +41,10 @@ export interface BattleEvent {
     profile?: VersusProfile;
     /** Which stamp, with EMOTE. */
     emote?: number;
+    /** With HIT: how much of it a ward of the receiver's took (the damage is what was left). */
+    warded?: number;
+    /** With SKILL: which わざ, the card that used it, and its ward (taken off the receiver's next hit). */
+    skill?: { kind: string; card: string | null; ward?: number };
   };
 }
 
