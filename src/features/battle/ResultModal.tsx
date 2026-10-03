@@ -11,6 +11,7 @@ import type { Stars } from '../../lib/mastery';
 import { NEXT_STAR_GAIN } from '../../data/starPerks';
 import { hpBonus, patienceBonus } from '../../lib/level';
 import * as sfx from '../../lib/sfx';
+import { playJingle } from '../../lib/bgm';
 
 /**
  * The end of a fight, as a game says it (2026-09-24「動線 その他の 動きに
@@ -110,7 +111,8 @@ export const ResultModal = ({
   useEffect(() => {
     const timers: ReturnType<typeof setTimeout>[] = [];
     if (win) {
-      sfx.fanfare();
+      // The win jingle over the music; the synth fanfare when music is off.
+      if (!playJingle()) sfx.fanfare();
       for (let i = 0; i < stars; i++) timers.push(setTimeout(() => sfx.star(i), 650 + i * 280));
       if (gems > 0 && !still) {
         const start = 650 + stars * 280;
