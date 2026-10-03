@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { cpuPace, cpuTurn } from './cpu';
+import { CPU_LEVELS, cpuPace, cpuTurn, type CpuLevel } from './cpu';
 import { VS_MAX_HP, writeDamage } from './rules';
 
 /** A fixed sequence of "random" numbers. */
@@ -45,5 +45,41 @@ describe('the CPU of たいせん', () => {
     const playerSeconds = Math.ceil(VS_MAX_HP / writeDamage(0, false, 1)) * 6;
     expect(cpuSeconds).toBeGreaterThan(playerSeconds);
     expect(cpuSeconds).toBeLessThan(playerSeconds * 2);
+  });
+});
+
+describe('the CPU’s levels', () => {
+  /** Average seconds a level needs to empty a full HP bar. */
+  const secondsToWin = (level: CpuLevel) => {
+    let seed = 7;
+    const random = () => ((seed = (seed * 16807) % 2147483647) - 1) / 2147483646;
+    let total = 0;
+    for (let f = 0; f < 300; f++) {
+      let hp = VS_MAX_HP;
+      while (hp > 0) {
+        const t = cpuTurn(1000, random, level);
+        total += t.ms;
+        hp -= t.damage;
+      }
+    }
+    return total / 300 / 1000;
+  };
+
+  it('gets faster from やさしい to つよい, with ふつう as it always was', () => {
+    const [easy, normal, hard] = ([0, 1, 2] as const).map(secondsToWin);
+    expect(easy).toBeGreaterThan(normal);
+    expect(normal).toBeGreaterThan(hard);
+    expect(cpuTurn(1000, () => 0.5)).toEqual(cpuTurn(1000, () => 0.5, 1));
+  });
+
+  it('leaves even つよい beatable by clean writing at a good pace', () => {
+    const playerSeconds = Math.ceil(VS_MAX_HP / writeDamage(0, false, 1)) * 4;
+    expect(secondsToWin(2)).toBeGreaterThan(playerSeconds);
+  });
+
+  it('gives each level a なかま of its own', async () => {
+    const { getIndividual } = await import('../../data/individuals');
+    for (const l of CPU_LEVELS) expect(getIndividual(l.avatar), l.name).toBeDefined();
+    expect(new Set(CPU_LEVELS.map((l) => l.avatar)).size).toBe(3);
   });
 });
