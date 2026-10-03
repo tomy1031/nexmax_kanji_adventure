@@ -101,6 +101,8 @@ interface BattleSceneProps {
    * pays its bonus. New route only.
    */
   difficulty?: Difficulty;
+  /** A line for the first win that closes something (まとめの ボス:「1章 クリア！」). */
+  clearLine?: string;
 }
 
 type Outcome = { kind: 'win'; stars: 1 | 2 | 3 } | { kind: 'lose' } | null;
@@ -162,6 +164,7 @@ export const BattleScene = ({
   patience: basePatienceValue,
   mastery = false,
   difficulty = 'normal',
+  clearLine,
 }: BattleSceneProps) => {
   // The new route's Mojikui fights have their own, bigger tune.
   useBgm(mastery ? 'boss' : 'battle');
@@ -636,6 +639,7 @@ export const BattleScene = ({
               gems={rewards.gems}
               perfect={rewards.perfect}
               hard={rewards.hard}
+              milestone={outcome.kind === 'win' && !clearedAtStart && !tutorial ? clearLine : undefined}
               // Gems show on the new route once the gacha gives them a use (1章 4話).
               showGems={!mastery || isFeatureUnlocked(Feature.GACHA, useGameStore.getState().clearedStages)}
               newFriend={!!rewards.individual}

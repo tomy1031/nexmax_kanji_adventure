@@ -19,7 +19,9 @@ import { getMojiEpisode, type MojiEpisode } from '../../data/mojiEpisodes';
 import { MOJI_CHAPTERS } from '../../data/mojiRoute';
 import { MOJI1_CAST, MOJI1_PRELUDE, MOJI1_SCRIPTS } from '../../data/scripts/moji1';
 import { afterEpisode, canForge, isForgeOpen } from '../../data/mojiFlow';
-import { hardFight, isHardOpen, type Difficulty, type HardFight } from '../../lib/difficulty';
+import { finaleNumber, finalePool, getMojiFinale, isFinaleOpen } from '../../data/mojiFinale';
+import { MOJI_FINALE_SCRIPTS } from '../../data/mojiFinaleScripts';
+import { hardFight, hardFinaleFight, isHardOpen, type Difficulty, type HardFight } from '../../lib/difficulty';
 import { assetPath } from '../../lib/assetPath';
 import { PhaseDoors } from '../../components/ui/Doors';
 import KanjiBackText from './KanjiBackText';
@@ -80,8 +82,11 @@ const ReadyScreen = ({
   difficulty = 'normal',
   onDifficulty,
   hard,
+  heading,
+  hardNote,
 }: {
-  ep: MojiEpisode;
+  /** The episode, or a まとめの ボス (data/mojiFinale.ts): what is fought, where. */
+  ep: Pick<MojiEpisode, 'id' | 'bg' | 'boss'>;
   kanji: KanjiData[];
   onPractice: (k: KanjiData) => void;
   onFight: () => void;
@@ -95,6 +100,10 @@ const ReadyScreen = ({
   onDifficulty?: (d: Difficulty) => void;
   /** Hard's opponent as it stands now — it grows with the player. */
   hard?: HardFight;
+  /** A line over the kanji, when they are not simply the episode's (the boss's targets). */
+  heading?: string;
+  /** What Hard adds, in place of the episode's line. */
+  hardNote?: string;
 }) => {
   const showFurigana = useGameStore((s) => s.settings.furigana);
   const progress = useGameStore((s) => s.progress);
@@ -172,9 +181,8 @@ const ReadyScreen = ({
               HP {isHard ? hard.boss.hp : ep.boss.hp} ・{' '}
               <RubyText showFurigana={showFurigana}>
                 {isHard
-                  ? hard.pool.length > kanji.length
-                    ? '前(まえ)の 話(はなし)の 字(じ)も 出(で)る'
-                    : '書(か)く たびに 読(よ)む ターン'
+                  ? (hardNote ??
+                    (hard.pool.length > kanji.length ? '前(まえ)の 話(はなし)の 字(じ)も 出(で)る' : '書(か)く たびに 読(よ)む ターン'))
                   : '手本(てほん)なしで 書(か)く'}
               </RubyText>
             </p>
@@ -204,6 +212,11 @@ const ReadyScreen = ({
         {/* ネクマックスの レベル: there from the start (09 §2). */}
         <NexmaxLevelPlate showFurigana={showFurigana} />
 
+        {heading && (
+          <p className="rt-light -mb-1 self-start rounded-full bg-[#1b1430]/75 px-3 text-xs leading-[2.2] font-black text-[#ffe9c2]">
+            <RubyText showFurigana={showFurigana}>{heading}</RubyText>
+          </p>
+        )}
         <ul className="grid grid-cols-2 gap-2">
           {kanji.map((k, i) => {
             const reps = repsOf(k);
@@ -383,8 +396,10 @@ const EpisodePlayer = ({ id }: { id: string }) => {
 
   // The win records the clear (BattleScene); the story's end moves on.
   const finish = () => {
-    const next = afterEpisode(ep.id);
-    if (next) navigate(`/map/moji?new=${next}`);
+    const next = afterEpisode(ep.id, useGameStore.getState().clearedStages);
+    // The chapter's last episode runs straight on into its まとめの ボス.
+    if (next && getMojiFinale(next)) navigate(`/moji/${next}`);
+    else if (next) navigate(`/map/moji?new=${next}`);
     else setPhase('end');
   };
 
@@ -505,8 +520,166 @@ const EpisodePlayer = ({ id }: { id: string }) => {
   return <PhaseDoors phase={phase}>{view}</PhaseDoors>;
 };
 
+type FinalePhase = 'intro' | 'ready' | 'practice' | 'battle' | 'outro' | 'end';
+
+/**
+ * まとめの ボス (data/mojiFinale.ts, docs/design/10 §3): お話 → じゅんび →
+ * たたかい → お話 → つづく. No new kanji, so no writing first: じゅんび shows
+ * the ten the boss will go for — the chapter's least known, live, so
+ * practising one moves the next one in — and the fight asks those ten,
+ * fixed as it starts. Without its story yet, it opens on じゅんび.
+ */
+const FinalePlayer = ({ id }: { id: string }) => {
+  const navigate = useNavigate();
+  const [params] = useSearchParams();
+  const f = getMojiFinale(id)!;
+  const script = MOJI_FINALE_SCRIPTS[id];
+  const chapter = MOJI_CHAPTERS.find((c) => c.id === f.chapter)!;
+  const owned = useOwnedKanji();
+  const showFurigana = useGameStore((s) => s.settings.furigana);
+  const progress = useGameStore((s) => s.progress);
+  const cleared = useGameStore((s) => s.clearedStages);
+  const [phase, setPhase] = useState<FinalePhase>(() => (params.get('at') === 'ready' || !script ? 'ready' : 'intro'));
+  const [practice, setPractice] = useState<KanjiData | null>(null);
+  const [battleKey, setBattleKey] = useState(0);
+  const shown = useMemo(() => finalePool(f, progress), [f, progress]);
+
+  const hardOpen = isHardOpen(f.id, cleared);
+  const [difficulty, setDifficulty] = useState<Difficulty>(() =>
+    params.get('mode') === 'hard' && isHardOpen(f.id, useGameStore.getState().clearedStages) ? 'hard' : 'normal',
+  );
+  const hard = hardOpen && difficulty === 'hard';
+  const weapons = useGameStore((s) => s.weapons);
+  const equippedWeapon = useGameStore((s) => s.equippedWeapon);
+  const activeIndividual = useGameStore((s) => s.activeIndividual);
+  const equippedGear = useGameStore((s) => s.equippedGear);
+  const exp = useGameStore((s) => s.exp);
+  const hardNow = useMemo(
+    () => (hard ? hardFinaleFight(f, { weapons, equippedWeapon, activeIndividual, equippedGear, exp, progress }) : undefined),
+    [hard, f, weapons, equippedWeapon, activeIndividual, equippedGear, exp, progress],
+  );
+  // What the fight asks, fixed as it starts: writing mid-fight must not move it.
+  const [fight, setFight] = useState<HardFight | null>(null);
+  const [pool, setPool] = useState<KanjiData[]>(shown);
+  const startFight = () => {
+    const s = useGameStore.getState();
+    setFight(hard ? hardFinaleFight(f, s) : null);
+    setPool(finalePool(f, s.progress));
+    setBattleKey((n) => n + 1);
+  };
+
+  useEffect(() => {
+    void preloadCharData(shown.map((k) => k.char));
+  }, [shown]);
+  useEffect(() => {
+    if (hardNow) void preloadCharData(hardNow.pool.slice(0, 20).map((k) => k.char));
+  }, [hardNow]);
+
+  const renderText = useCallback((text: string) => <KanjiBackText owned={owned}>{text}</KanjiBackText>, [owned]);
+  const label = { label: `${chapter.order}章(しょう) ${finaleNumber(f)}`, title: f.title };
+  const back = params.get('back');
+  const leave = () => navigate(back?.startsWith('/') ? back : '/map/moji');
+  const toReady = () => setPhase('ready');
+  const forgeHere = `/forge?back=${encodeURIComponent(`/moji/${f.id}?at=ready${hard ? '&mode=hard' : ''}`)}`;
+  const finish = () => {
+    const next = afterEpisode(f.id, useGameStore.getState().clearedStages);
+    if (next) navigate(`/map/moji?new=${next}`);
+    else setPhase('end');
+  };
+
+  const view = (() => {
+    switch (phase) {
+      case 'intro':
+        return script ? (
+          <NovelScene look="night" bgm="tension" key="intro" script={script.intro} cast={CAST} chapter={label} renderText={renderText} onFinish={toReady} />
+        ) : null;
+      case 'ready':
+        return (
+          <ReadyScreen
+            ep={f}
+            kanji={shown}
+            onExit={leave}
+            onFight={() => {
+              startFight();
+              setPhase('battle');
+            }}
+            onPractice={(k) => {
+              setPractice(k);
+              setPhase('practice');
+            }}
+            onForge={isForgeOpen(cleared) && canForge(progress) ? () => navigate(forgeHere) : undefined}
+            onStory={script && cleared.includes(f.id) ? () => setPhase('intro') : undefined}
+            difficulty={hard ? 'hard' : 'normal'}
+            onDifficulty={hardOpen ? setDifficulty : undefined}
+            hard={hardNow}
+            heading={`👾 ${f.boss.name}が ねらう 字(じ)`}
+            hardNote={`${chapter.order}章(しょう)の 字(じ)が ぜんぶ 出(で)る`}
+          />
+        );
+      case 'practice':
+        return (
+          <KanjiDrill
+            key={practice!.id}
+            kanji={practice!}
+            goal={MOJI_OWN_REPS}
+            look="sign"
+            scene={f.bg}
+            letters={shown.map((k) => k.char)}
+            onExit={toReady}
+            onDone={toReady}
+            nextLabel="じゅんびに もどる"
+            extra={
+              <button type="button" className="g-btn g-btn-accent w-full" onClick={toReady}>
+                <RubyText showFurigana={showFurigana}>じゅんびに もどる</RubyText>
+              </button>
+            }
+          />
+        );
+      case 'battle':
+        return (
+          <BattleScene
+            key={battleKey}
+            stage={{ id: f.id, bg: f.bg, boss: fight ? { ...f.boss, hp: fight.boss.hp, attack: fight.boss.attack } : f.boss, reward: f.reward }}
+            kanjiPool={fight ? fight.pool : pool}
+            patience={fight ? fight.patience : f.patience}
+            difficulty={fight ? 'hard' : 'normal'}
+            mastery
+            clearLine={`${chapter.order}章(しょう)「${chapter.title}」 クリア！`}
+            onFinish={leave}
+            onFlee={toReady}
+            onNext={fight ? toReady : script ? () => setPhase('outro') : finish}
+            onRetry={startFight}
+            onPractice={toReady}
+            onForge={() => navigate(forgeHere)}
+          />
+        );
+      case 'outro':
+        return script ? (
+          <NovelScene look="night" key="outro" script={script.outro} cast={CAST} chapter={label} renderText={renderText} onFinish={finish} />
+        ) : null;
+      case 'end':
+        return (
+          <ToBeContinued
+            scene={f.bg}
+            onPractice={(target) => navigate(`/moji/${target}?at=ready`)}
+            onForge={() => navigate(`/forge?back=${encodeURIComponent('/map/moji')}`)}
+            onStages={leave}
+          />
+        );
+    }
+  })();
+
+  return <PhaseDoors phase={phase}>{view}</PhaseDoors>;
+};
+
 export const MojiEpisodeScreen = () => {
   const { id = '' } = useParams<{ id: string }>();
+  const cleared = useGameStore((s) => s.clearedStages);
+  // A まとめの ボス: once its chapter is complete and its last episode cleared.
+  const finale = getMojiFinale(id);
+  if (finale) {
+    return isFinaleOpen(finale, cleared) || cleared.includes(id) ? <FinalePlayer key={id} id={id} /> : <Navigate to="/map/moji" replace />;
+  }
   if (!getMojiEpisode(id) || !SCRIPTS[id]) return <Navigate to="/map/moji" replace />;
   return <EpisodePlayer key={id} id={id} />;
 };
