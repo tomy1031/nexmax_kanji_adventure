@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type CSSProperties, type ReactNode } from 'react';
+import { useEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
 import { RubyText } from '../../components/ui/Ruby';
@@ -231,6 +231,7 @@ const KanaEpisodeButton = ({ ep, known, cleared, fresh, onOpen }: { ep: KanaEpis
     <button
       type="button"
       data-tap
+      data-ep={ep.id}
       disabled={!open}
       onClick={onOpen}
       className="relative w-full rounded-xl border-2 px-2 py-1.5 text-left disabled:opacity-50"
@@ -261,7 +262,7 @@ const readingOf = (ch: string): string => {
 };
 
 export const MojiRouteMap = () => {
-  useBgm('map');
+  useBgm('town');
   const navigate = useNavigate();
   const showFurigana = useGameStore((s) => s.settings.furigana);
   const setLastArc = useGameStore((s) => s.setLastArc);
@@ -315,6 +316,22 @@ export const MojiRouteMap = () => {
   const nextGroup: GroupId = next ? (groupOf(next) ?? 'n5') : 'n5';
   const nextKana = next ? getKanaEpisode(next) : undefined;
   const nextMoji = next ? getMojiEpisode(next) : undefined;
+  // 1章 has eleven episodes, more than a phone's sheet shows: it opens on the
+  // one to play (the new one, or つづき), not on 1話.
+  const listRef = useRef<HTMLDivElement>(null);
+  const focusEp = fresh ?? next;
+  useEffect(() => {
+    if (!sheet || !focusEp) return;
+    const t = setTimeout(() => {
+      const box = listRef.current;
+      const el = box?.querySelector<HTMLElement>(`[data-ep="${focusEp}"]`);
+      if (!box || !el) return;
+      const b = box.getBoundingClientRect();
+      const r = el.getBoundingClientRect();
+      box.scrollTop += r.top - b.top - Math.max(0, (b.height - r.height) / 2);
+    }, 60);
+    return () => clearTimeout(t);
+  }, [sheet, focusEp]);
   const playNext = () => {
     const to = continuePath(cleared, startPath, progress);
     if (to) navigate(to);
@@ -496,7 +513,7 @@ export const MojiRouteMap = () => {
                     ✕ <RubyText showFurigana={showFurigana}>とじる</RubyText>
                   </button>
                 </div>
-                <div className="min-h-0 flex-1 overflow-y-auto pr-1">
+                <div ref={listRef} className="min-h-0 flex-1 overflow-y-auto pr-1">
                   {sheet === 'hiragana' || sheet === 'katakana' ? (
                     <>
                       <p className="mb-2 text-xs font-bold" style={{ color: 'var(--ink-2)' }} lang="en">
@@ -541,6 +558,7 @@ export const MojiRouteMap = () => {
                                       key={ep.id}
                                       type="button"
                                       data-tap
+                                      data-ep={ep.id}
                                       disabled={!open}
                                       onClick={() => navigate(episodePath(ep.id, cleared))}
                                       className="relative rounded-xl border-2 px-2 py-1.5 text-left disabled:opacity-50"
