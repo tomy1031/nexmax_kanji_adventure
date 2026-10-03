@@ -4,8 +4,9 @@ import { Backdrop } from '../../components/ui/Backdrop';
 import { NightStreetBackdrop } from '../write/NightStreet';
 import { useNavigate } from 'react-router-dom';
 import { useGameStore } from '../../store/gameStore';
-import { getKanjiById } from '../../lib/kanjiDb';
-import { weaponOf, RARITY_LABEL } from '../../lib/forge/weapon';
+import { RARITY_LABEL } from '../../lib/forge/weapon';
+import { weaponArt, weaponFromRecipe } from '../../lib/forge/recipe';
+import { assetPath } from '../../lib/assetPath';
 import { ELEMENT_LABEL } from '../../lib/forge/elements';
 import { CARDS } from '../../data/individuals';
 import { CompanionBook } from './CompanionBook';
@@ -34,9 +35,7 @@ export const CollectionScreen = () => {
     () =>
       weapons
         .map((recipe) => {
-          const kanji = recipe.kanjiIds.map((id) => getKanjiById(id)).filter((k) => k != null);
-          if (kanji.length !== recipe.kanjiIds.length) return null;
-          const weapon = weaponOf(kanji);
+          const weapon = weaponFromRecipe(recipe);
           if (!weapon) return null;
           const rust = Math.max(...recipe.kanjiIds.map((id) => rustLevel(progress[id])), 0);
           return { weapon, rust };
@@ -128,7 +127,11 @@ export const CollectionScreen = () => {
                           filter: rust > 0.3 ? 'grayscale(0.6)' : undefined,
                         }}
                       >
-                        <GameIcon name={weapon.icon} size={28} />
+                        {moji ? (
+                          <img src={assetPath(weaponArt(weapon.weaponClass, weapon.rarity))} alt="" aria-hidden className="h-11 w-11 object-contain" />
+                        ) : (
+                          <GameIcon name={weapon.icon} size={28} />
+                        )}
                       </span>
                       <div className="min-w-0 flex-1">
                         <p className="g-title truncate text-sm">
@@ -140,6 +143,7 @@ export const CollectionScreen = () => {
                           </span>
                           <span className="mx-1.5" aria-hidden>·</span>
                           こうげき {weapon.attack}
+                          {(weapon.level ?? 0) > 0 && <span className="ml-1.5 font-black text-[#b0741a]">⚒{weapon.level}</span>}
                         </p>
                         {rust > 0.3 && (
                           <p className="text-[11px]" style={{ color: 'var(--color-danger)' }}>

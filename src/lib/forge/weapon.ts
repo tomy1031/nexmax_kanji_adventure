@@ -101,6 +101,8 @@ export interface Weapon {
   icon: string;
   /** One-line description shown in the inventory, furigana notation. */
   blurb: string;
+  /** 強化 level 0..5 (lib/forge/recipe.ts), when it came from a saved recipe. */
+  level?: number;
 }
 
 // ---------------------------------------------------------------------------

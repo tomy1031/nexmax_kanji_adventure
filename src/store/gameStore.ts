@@ -33,6 +33,10 @@ export interface WeaponRecipe {
   /** Kanji ids in slot order. Order matters: 火山 and 山火 differ. */
   kanjiIds: string[];
   craftedAt: number;
+  /** 強化 points: one per clean write of its kanji in 強化 (lib/forge/recipe.ts). */
+  points?: number;
+  /** The day it was last 強化'd — once a day (05 §2.2). */
+  trainedOn?: string;
 }
 
 export interface DailyState {

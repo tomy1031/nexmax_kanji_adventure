@@ -1,11 +1,12 @@
 import type { KanjiData } from '../types/kanji';
 import type { Element } from './forge/elements';
-import { weaponOf, type Weapon } from './forge/weapon';
+import { type Weapon } from './forge/weapon';
+import { weaponFromRecipe } from './forge/recipe';
 import { getIndividual, type Individual } from '../data/individuals';
 import { getGear } from '../data/equipment';
 import { episodesOf, type MojiBoss, type MojiEpisode } from '../data/mojiEpisodes';
 import { finaleOrder, type MojiFinale } from '../data/mojiFinale';
-import { getKanjiByChar, getKanjiById } from './kanjiDb';
+import { getKanjiByChar } from './kanjiDb';
 import { basePatience, computeDamage, statsFromGear, type PlayerStats } from './battle';
 import { MASTERY_REPS, masteryMultiplier, starsOf } from './mastery';
 import { applyLevel, levelOf, ownedCount } from './level';
@@ -57,8 +58,8 @@ export interface Loadout {
 /** Nexmax as the next new-route fight will field him (BattleScene's weapon, なかま and stats). */
 export const loadoutFromSave = (save: LoadoutSave): Loadout => {
   const recipe = save.weapons.find((w) => w.id === save.equippedWeapon);
-  const kanji = recipe ? recipe.kanjiIds.map((id) => getKanjiById(id)).filter((k) => k != null) : [];
-  const weapon = recipe && kanji.length === recipe.kanjiIds.length ? weaponOf(kanji) : null;
+  // The same recipe → weapon as the fight (強化 included): Hard keeps up with it.
+  const weapon = recipe ? weaponFromRecipe(recipe) : null;
   const individual = save.activeIndividual ? (getIndividual(save.activeIndividual) ?? null) : null;
   const gear = statsFromGear(
     Object.values(save.equippedGear)

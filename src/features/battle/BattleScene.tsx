@@ -9,7 +9,8 @@ import { useCanvasSize } from '../../hooks/useCanvasSize';
 import { useGameStore } from '../../store/gameStore';
 import { getKanjiById } from '../../lib/kanjiDb';
 import { getIndividual } from '../../data/individuals';
-import { weaponOf, type Weapon } from '../../lib/forge/weapon';
+import { type Weapon } from '../../lib/forge/weapon';
+import { weaponFromRecipe, weaponWord } from '../../lib/forge/recipe';
 import { ELEMENT_LABEL } from '../../lib/forge/elements';
 import { rustLevel } from '../../lib/srs';
 import { exampleWord, kanjiRuby } from '../../lib/reading';
@@ -221,9 +222,7 @@ export const BattleScene = ({
   const weapon = useMemo(() => {
     if (weaponOverride) return weaponOverride;
     const recipe = weapons.find((w) => w.id === equippedId);
-    if (!recipe) return null;
-    const kanji = recipe.kanjiIds.map((id) => getKanjiById(id)).filter((k) => k != null);
-    return kanji.length === recipe.kanjiIds.length ? weaponOf(kanji) : null;
+    return recipe ? weaponFromRecipe(recipe) : null;
   }, [weapons, equippedId, weaponOverride]);
 
   const individual = activeIndividualId ? (getIndividual(activeIndividualId) ?? null) : null;
@@ -822,6 +821,8 @@ export const BattleScene = ({
           spark={spark}
           companion={companionView}
           cut={cut}
+          mount={weapon ? { cls: weapon.weaponClass, element: weapon.element, rarity: weapon.rarity, level: weapon.level ?? 0, word: weaponWord(weapon) } : null}
+          fire={flow?.n}
           flash={flash}
           flashKey={flashNo}
           idle={turn === 0 && !flash ? '💡 書(か)いた 字(じ)の 光(ひかり)で こうげき！' : null}

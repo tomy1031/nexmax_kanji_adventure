@@ -8,8 +8,9 @@ import { assetPath } from '../../lib/assetPath';
 import { useGameStore } from '../../store/gameStore';
 import { ALL_KANJI } from '../../data/kanji.generated';
 import { GEAR, SLOT_LABEL, getGear, missingFor, type GearItem, type GearSlot } from '../../data/equipment';
-import { getKanjiById } from '../../lib/kanjiDb';
-import { weaponOf, RARITY_LABEL } from '../../lib/forge/weapon';
+import { RARITY_LABEL } from '../../lib/forge/weapon';
+import { weaponArt, weaponFromRecipe, weaponWord } from '../../lib/forge/recipe';
+import { WeaponMount } from '../battle/WeaponMount';
 import { statsFromGear } from '../../lib/battle';
 import { charRuby } from '../../lib/reading';
 import { REPS_TO_OBTAIN } from '../../types/kanji';
@@ -69,10 +70,7 @@ export const EquipScreen = () => {
   const forged = useMemo(
     () =>
       weapons
-        .map((r) => {
-          const ks = r.kanjiIds.map((id) => getKanjiById(id)).filter((k) => k != null);
-          return ks.length === r.kanjiIds.length ? weaponOf(ks) : null;
-        })
+        .map((r) => weaponFromRecipe(r))
         .filter((w) => w != null)
         .sort((a, b) => b.attack - a.attack),
     [weapons],
@@ -108,7 +106,18 @@ export const EquipScreen = () => {
           </LogoTitle>
 
           {/* ネクマックスと 4つの わく ----------------------------------- */}
-          <div className="relative mx-auto mt-2 h-[230px] w-full max-w-sm">
+          <div className="relative mx-auto mt-2 h-[230px] w-full max-w-sm [container-type:inline-size]">
+            {/* 新ルート: the weapon mounted on his back, as in the fight (11 §6) */}
+            {moji && weapon && (
+              <div className="absolute bottom-[78px] left-[calc(50%-122px)] h-[130px] w-[130px]">
+                <WeaponMount
+                  m={{ cls: weapon.weaponClass, element: weapon.element, rarity: weapon.rarity, level: weapon.level ?? 0, word: weaponWord(weapon) }}
+                  still={false}
+                  showFurigana={showFurigana}
+                  tag={false}
+                />
+              </div>
+            )}
             <motion.img
               src={assetPath(moji ? 'img/stageselect/nexmax_travel.webp' : 'img/chara/cut/guide.webp')}
               alt=""
@@ -135,9 +144,13 @@ export const EquipScreen = () => {
                     color: '#1b4f8a',
                   }}
                 >
-                  <span style={{ color: item ? '#7a4a26' : 'rgba(27,79,138,0.35)' }}>
-                    <GameIcon name={item?.icon ?? icon} size={34} />
-                  </span>
+                  {moji && s === 'weapon' && weapon ? (
+                    <img src={assetPath(weaponArt(weapon.weaponClass, weapon.rarity))} alt="" aria-hidden className="h-[42px] w-[42px] object-contain" />
+                  ) : (
+                    <span style={{ color: item ? '#7a4a26' : 'rgba(27,79,138,0.35)' }}>
+                      <GameIcon name={item?.icon ?? icon} size={34} />
+                    </span>
+                  )}
                   <RubyText showFurigana={showFurigana}>{SLOT_LABEL[s]}</RubyText>
                 </button>
               );
@@ -190,7 +203,11 @@ export const EquipScreen = () => {
                   return (
                     <li key={w.id} className="g-parchment flex items-center gap-3 p-2.5" style={on ? { borderColor: '#2f8fe0' } : undefined}>
                       <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-white/70" style={{ color: '#7a4a26' }}>
-                        <GameIcon name={w.icon} size={30} />
+                        {moji ? (
+                          <img src={assetPath(weaponArt(w.weaponClass, w.rarity))} alt="" aria-hidden className="h-10 w-10 object-contain" />
+                        ) : (
+                          <GameIcon name={w.icon} size={30} />
+                        )}
                       </span>
                       <div className="min-w-0 flex-1">
                         <p className="truncate text-sm font-black">
@@ -198,6 +215,7 @@ export const EquipScreen = () => {
                         </p>
                         <p className="text-[11px]">
                           <span style={{ color: RARITY_LABEL[w.rarity].color }}>{RARITY_LABEL[w.rarity].ja}</span> こうげき ＋{w.attack}
+                          {(w.level ?? 0) > 0 && <span className="ml-1 font-black text-[#b0741a]">⚒{w.level}</span>}
                         </p>
                       </div>
                       <button

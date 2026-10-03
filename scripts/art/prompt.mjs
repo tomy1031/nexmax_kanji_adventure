@@ -23,6 +23,7 @@ const done = (a) => existsSync(`public/${a.out}`);
 const SIZE = {
   chara: '1024x1536 縦・白背景 → 切り抜き',
   enemy: '1024x1024・白背景 → 切り抜き',
+  prop: '1024x1024・白背景 → 切り抜き（物だけ）',
   bg: '1024x1536 縦・背景あり',
   fg: '1024x1536 縦・透過（無理なら #00FF00）',
   'map-half': '1024x1536 縦（上下 2枚で 1枚の 地図）',
@@ -31,7 +32,7 @@ const SIZE = {
 
 /** The instruction handed to Codex: save path, one-shot rule, then the prompt verbatim. */
 const codexText = (a) => `image-gen-2 で画像を1枚生成してください。
-出力サイズ: ${a.kind === 'enemy' || a.kind === 'icon' ? '1024x1024' : '1024x1536'} PNG${a.kind === 'fg' ? '（透過背景）' : ''}。
+出力サイズ: ${a.kind === 'enemy' || a.kind === 'icon' || a.kind === 'prop' ? '1024x1024' : '1024x1536'} PNG${a.kind === 'fg' ? '（透過背景）' : ''}。
 保存先: art-src/${a.id}.png
 添付の参照画像の絵柄・色・形に合わせること。
 色ムラ・線のゆれ・大きさを理由に作り直さないこと。ちょうど1回だけ生成して保存する。

@@ -12,6 +12,7 @@ import { speak } from '../../lib/speech';
 import type { Stars } from '../../lib/mastery';
 import { ComboBanner, ComboEdge, ComboMeter, StrokeSparks, type StrokeSpark } from './ComboFx';
 import { CompanionStand, SkillCutIn, type CompanionView, type SkillCut } from './CompanionFx';
+import { WeaponMount, type MountView } from './WeaponMount';
 import { useGameStore } from '../../store/gameStore';
 
 /**
@@ -224,6 +225,9 @@ export interface NaniwaBattleViewProps {
   companion?: CompanionView | null;
   /** A わざ being used: its cut-in across the column. */
   cut?: SkillCut | null;
+  /** The equipped weapon, mounted on Nexmax's back (WeaponMount); `fire` changes with each write. */
+  mount?: MountView | null;
+  fire?: number;
   still: boolean;
   heroCtl: LegacyAnimationControls;
   enemyCtl: LegacyAnimationControls;
@@ -264,6 +268,8 @@ export const NaniwaBattleView = ({
   spark = null,
   companion = null,
   cut = null,
+  mount = null,
+  fire,
   still,
   heroCtl,
   enemyCtl,
@@ -421,6 +427,13 @@ export const NaniwaBattleView = ({
             draggable={false}
             className="absolute inset-0 h-full w-full select-none [@media(min-aspect-ratio:3/5)]:[mask-image:linear-gradient(90deg,transparent,#000_5%,#000_95%,transparent)]"
           />
+
+          {/* 武器 — mounted on Nexmax's back, behind him */}
+          {mount && (
+            <div className="absolute" style={onBottom(-20, 250, 260, 260)}>
+              <WeaponMount m={mount} fire={fire} still={still} showFurigana={showFurigana} />
+            </div>
+          )}
 
           {/* ネクマックス — stands on the deck, over the frame */}
           <motion.div className="absolute" style={onBottom(55, 374, 379, 505)} animate={heroCtl}>
