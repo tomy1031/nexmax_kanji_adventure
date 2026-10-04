@@ -324,7 +324,7 @@ export const EquipScreen = () => {
                           </>
                         ) : (
                           <p className="text-[11px]">
-                            <RubyText showFurigana={showFurigana}>{`${g.stage.replace('mukashi-', '')}話(わ)まで すすむと わかる`}</RubyText>
+                            <RubyText showFurigana={showFurigana}>{`${g.stage.replace('mukashi-', '')}話(わ)まで すすむ → わかる`}</RubyText>
                           </p>
                         )}
                       </div>
