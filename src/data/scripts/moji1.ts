@@ -180,7 +180,7 @@ export const MOJI1_SCRIPTS: Record<string, EpisodeScript> = {
       stageId: 'moji-1-3',
       lines: [
         { bg: 'naniwa_ropeway', fx: ['darkclouds'], sprite: 'mojikui_clock:normal', glyph: '⛰️ 💨', text: 'モジクイは 山(やま)の うえへ にげました。', en: 'The Mojikui fled up the mountain.' },
-        { fx: ['spring'], glyph: '一(いち) 二(に) 三(さん) 四(よん) 五(ご)', text: 'じこくひょうに すうじが もどりました！', en: 'The numbers came back to the timetable!' },
+        { fx: ['spring'], sprite: 'ropeway:happy', glyph: '一(いち) 二(に) 三(さん) 四(よん) 五(ご)', text: 'じこくひょうに すうじが もどりました！', en: 'The numbers came back to the timetable!' },
         { speaker: 'ropeway', sprite: 'ropeway:happy', glyph: '🕒 🚡', text: 'いま 三(さん)じです。ロープウェーが うごきます！', en: "It's three o'clock now. The ropeway runs again!" },
         { speaker: 'nexmax', sprite: 'nexmax:smile', glyph: '1️⃣ 2️⃣ 3️⃣ 4️⃣ 5️⃣', text: '一(いち)、二(に)、三(さん)、四(よん)、五(ご)！', en: 'One, two, three, four, five!' },
         { speaker: 'ropeway', sprite: 'ropeway:happy', glyph: '🎫 ✅⬜⬜⬜⬜', text: 'これを どうぞ。まいにち きて くださいね。', en: 'Here is a stamp card. Please come every day!' },
@@ -215,7 +215,7 @@ export const MOJI1_SCRIPTS: Record<string, EpisodeScript> = {
       stageId: 'moji-1-4',
       lines: [
         { bg: 'naniwa_factory', fx: ['darkclouds'], sprite: 'mojikui_gear:normal', glyph: '⬇️ 💨', text: 'モジクイは 山(やま)の したへ にげました。', en: 'The Mojikui fled down the mountain.' },
-        { fx: ['spring'], glyph: '🤖✨ 🤖✨ 🤖✨', text: 'ロボットたちが おきました！', en: 'The robots woke up!' },
+        { fx: ['spring'], sprite: 'worker:awake', glyph: '🤖✨ 🤖✨ 🤖✨', text: 'ロボットたちが おきました！', en: 'The robots woke up!' },
         { speaker: 'worker', sprite: 'worker:awake', text: 'おはようございます！ ぼくは 七(なな)ばんです。', en: "Good morning! I'm Number Seven." },
         { speaker: 'nexmax', sprite: 'nexmax:smile', text: 'ぼくは ネクマックスです。', en: "I'm Nexmax." },
         { speaker: 'worker', sprite: 'worker:awake', glyph: '🤖 ＝ 🤖', text: 'ぼくも ネクマックスです。まじめな ネクマックスです！', en: "I'm a Nexmax too — the serious one. I always finish what I start!" },
@@ -253,7 +253,7 @@ export const MOJI1_SCRIPTS: Record<string, EpisodeScript> = {
       stageId: 'moji-1-5',
       lines: [
         { bg: 'naniwa_market', fx: ['darkclouds'], sprite: 'mojikui_price:normal', glyph: '🌉 💨', text: 'モジクイは つぎの まちへ にげました。', en: 'The Mojikui fled to the next district.' },
-        { fx: ['spring'], glyph: '百(ひゃく) 千(せん) 万(まん) 円(えん)', text: 'ねふだが もどりました！', en: 'The price tags came back!' },
+        { fx: ['spring'], sprite: 'vendor:happy', glyph: '百(ひゃく) 千(せん) 万(まん) 円(えん)', text: 'ねふだが もどりました！', en: 'The price tags came back!' },
         { speaker: 'vendor', sprite: 'vendor:happy', glyph: '🍎 = 百(ひゃく)円(えん)', text: 'りんごは 百(ひゃく)円(えん)です！', en: 'Apples are 100 yen!' },
         { speaker: 'nexmax', sprite: 'nexmax:smile', text: 'いくらですか？ ……百(ひゃく)円(えん)！ よめました！ 🙆‍♂️', en: 'How much? …100 yen! I can read it!' },
         { speaker: 'nexmax', sprite: 'nexmax:guide', glyph: '📖 ✨', text: 'ずかんに、ぶきと なかまが あります！', en: 'The collection is open: your weapons and companions are in the picture book!' },
@@ -289,7 +289,7 @@ export const MOJI1_SCRIPTS: Record<string, EpisodeScript> = {
       stageId: 'moji-1-6',
       lines: [
         { bg: 'naniwa_school', fx: ['darkclouds'], sprite: 'mojikui_nametag:normal', glyph: '🏥 💨', text: 'モジクイは となりの びょういんへ にげました。', en: 'The Mojikui fled to the clinic next door.' },
-        { fx: ['spring'], glyph: '学(がく)生(せい) 先(せん)生(せい) 会(かい)社(しゃ)員(いん)', text: 'なふだが もどりました！', en: 'The name plates came back!' },
+        { fx: ['spring'], sprite: 'teacher:happy', glyph: '学(がく)生(せい) 先(せん)生(せい) 会(かい)社(しゃ)員(いん)', text: 'なふだが もどりました！', en: 'The name plates came back!' },
         { speaker: 'teacher', sprite: 'teacher:happy', glyph: '👩‍🏫', text: 'はじめまして。わたしは 先(せん)生(せい)です。', en: "Nice to meet you. I'm the teacher here." },
         { speaker: 'office', sprite: 'office:happy', glyph: '💼 🙇', text: 'はじめまして。わたしは 会(かい)社(しゃ)員(いん)です。よろしく おねがいします。', en: "Nice to meet you. I'm an office worker — I study here in the evenings." },
         { speaker: 'nexmax', sprite: 'nexmax:hello', glyph: '🧑‍🎓 🤖', text: 'はじめまして。ぼくは ネクマックスです。学(がく)生(せい)です！', en: "Nice to meet you. I'm Nexmax — a student!" },
@@ -326,7 +326,7 @@ export const MOJI1_SCRIPTS: Record<string, EpisodeScript> = {
       stageId: 'moji-1-7',
       lines: [
         { bg: 'naniwa_clinic', fx: ['darkclouds'], sprite: 'mojikui_book:normal', glyph: '🕰️ 💨', text: 'モジクイは まちの とけいだいへ にげました。', en: 'The Mojikui fled to the town clock tower.' },
-        { fx: ['spring'], glyph: '医(い)者(しゃ) 📕 本(ほん)', text: 'ふだと ほんの じが もどりました！', en: 'The door plate and the words in the books came back!' },
+        { fx: ['spring'], sprite: 'doctor:happy', glyph: '医(い)者(しゃ) 📕 本(ほん)', text: 'ふだと ほんの じが もどりました！', en: 'The door plate and the words in the books came back!' },
         { speaker: 'doctor', sprite: 'doctor:happy', glyph: '🩺 💊 🤖', text: 'わたしは 医(い)者(しゃ)です。この くすりを どうぞ。', en: "I'm the doctor. Here, take this medicine." },
         { fx: ['heal'], speaker: 'nexmax', sprite: 'nexmax:smile', glyph: '🤖 ✨', text: 'あたまが すっきり！ なおりました！', en: 'My head is clear! I feel better!' },
         { speaker: 'rin', sprite: 'rin:happy', glyph: '📕 💕', text: 'わたしの 本(ほん)です！ ありがとう ございます。', en: "That's my book! Thank you so much." },
@@ -363,7 +363,7 @@ export const MOJI1_SCRIPTS: Record<string, EpisodeScript> = {
       stageId: 'moji-1-8',
       lines: [
         { bg: 'naniwa_clocktower', fx: ['darkclouds'], sprite: 'mojikui_clocktower:normal', glyph: '🏪 💨', text: 'モジクイは しょうてんがいへ にげました。', en: 'The Mojikui fled to the shopping arcade.' },
-        { fx: ['spring'], glyph: '🕰️ ✨ 🌅', text: 'とけいが うごきました！ まちに 朝(あさ)が きました。', en: 'The clock moves again! Morning comes to the town.' },
+        { fx: ['spring'], sprite: 'keeper:happy', glyph: '🕰️ ✨ 🌅', text: 'とけいが うごきました！ まちに 朝(あさ)が きました。', en: 'The clock moves again! Morning comes to the town.' },
         { speaker: 'keeper', sprite: 'keeper:happy', glyph: '🕢', text: '今(いま) 七(しち)時(じ)半(はん)です！', en: "It's half past seven!" },
         { speaker: 'nexmax', sprite: 'nexmax:smile', glyph: '🌅 🍞', text: '朝(あさ)ですね！ おはようございます！', en: "It's morning! Good morning!" },
         { speaker: 'keeper', sprite: 'keeper:happy', glyph: '🌅 ☀️ 🌙', text: '朝(あさ)、昼(ひる)、晩(ばん)。もう だいじょうぶです。', en: 'Morning, noon and night — all back in order.' },
@@ -399,7 +399,7 @@ export const MOJI1_SCRIPTS: Record<string, EpisodeScript> = {
       stageId: 'moji-1-9',
       lines: [
         { bg: 'naniwa_shopstreet', fx: ['darkclouds'], sprite: 'mojikui_signboard:normal', glyph: '🚏 💨', text: 'モジクイは バスていの ほうへ にげました。', en: 'The Mojikui fled toward the bus stop.' },
-        { fx: ['spring'], glyph: '🏪 ✨ 🍞', text: 'ふだが もどって、おみせが あきました！', en: 'The signs came back, and the shops opened!' },
+        { fx: ['spring'], sprite: 'baker:happy', glyph: '🏪 ✨ 🍞', text: 'ふだが もどって、おみせが あきました！', en: 'The signs came back, and the shops opened!' },
         { speaker: 'baker', sprite: 'baker:happy', glyph: '🕗 ➡️ 🕕', text: '午(ご)前(ぜん) 八(はち)時(じ)から 午(ご)後(ご) 六(ろく)時(じ)までです。', en: "We're open from 8 a.m. to 6 p.m." },
         { speaker: 'baker', sprite: 'baker:happy', glyph: '📅 ✅', text: '毎(まい)日(にち) やって います。休(やす)みは ありません！', en: "We're open every day — no days off!" },
         { speaker: 'nexmax', sprite: 'nexmax:smile', glyph: '🍞 😋', text: 'これは 何(なん)ですか？ ……おいしい！', en: 'What is this? …Delicious!' },
@@ -434,7 +434,7 @@ export const MOJI1_SCRIPTS: Record<string, EpisodeScript> = {
       stageId: 'moji-1-10',
       lines: [
         { bg: 'naniwa_bus_stop', fx: ['darkclouds'], sprite: 'mojikui_bus:normal', glyph: '🚉 💨', text: 'モジクイは えきへ にげました。', en: 'The Mojikui fled to the station.' },
-        { fx: ['spring'], glyph: '🚌 ✨', text: 'いきさきが もどって、バスが うごきます！', en: 'The destination is back — the bus can run!' },
+        { fx: ['spring'], sprite: 'driver:happy', glyph: '🚌 ✨', text: 'いきさきが もどって、バスが うごきます！', en: 'The destination is back — the bus can run!' },
         { speaker: 'driver', sprite: 'driver:happy', glyph: '🚌 → 🏫', text: 'この バスは 学(がっ)校(こう)へ 行(い)きます！', en: 'This bus goes to the school!' },
         { speaker: 'rin', sprite: 'rin:happy', glyph: '🌏 → 🗾', text: 'わたしは 去(きょ)年(ねん) 日(に)本(ほん)へ 来(き)ました。', en: 'I came to Japan last year.' },
         { speaker: 'rin', sprite: 'rin:happy', glyph: '🧑‍🎓 🏫', text: '毎(まい)日(にち) 学(がっ)校(こう)へ 行(い)きます。', en: 'I go to school every day.' },
@@ -470,7 +470,7 @@ export const MOJI1_SCRIPTS: Record<string, EpisodeScript> = {
       stageId: 'moji-1-11',
       lines: [
         { bg: 'naniwa_station_deep', fx: ['darkclouds'], sprite: 'mojikui_station:normal', glyph: '🕳️ 💨', text: 'モジクイは トンネルの おくへ にげました。', en: 'The Mojikui fled deep into the tunnel.' },
-        { fx: ['spring'], glyph: '🚉 🚃 ✨', text: '駅(えき)の なまえが もどって、電(でん)車(しゃ)が うごきます！', en: "The station's name is back, and the trains run again!" },
+        { fx: ['spring'], sprite: 'staff:happy', glyph: '🚉 🚃 ✨', text: '駅(えき)の なまえが もどって、電(でん)車(しゃ)が うごきます！', en: "The station's name is back, and the trains run again!" },
         { speaker: 'staff', sprite: 'staff:happy', glyph: '🚲 🚲', text: 'トンネルの おくへは、この 自(じ)転(てん)車(しゃ)で 行(い)って ください！', en: 'Take these bicycles into the tunnel!' },
         { speaker: 'nexmax', sprite: 'nexmax:think', glyph: '🕳️ 👾👾👾', text: 'あの おくが、モジクイの すです。', en: "Deep in there is the Mojikui's nest." },
         { speaker: 'nexmax', sprite: 'nexmax:determined', glyph: '🚲 💨 🕳️', text: '自(じ)転(てん)車(しゃ)で 行(い)きましょう！ ✊', en: "Let's go by bicycle!" },
@@ -502,7 +502,7 @@ export const MOJI1_FINALE: FinaleScript = {
     lines: [
       { bg: 'naniwa_nest', fx: ['sparkle'], glyph: '🫧💥 ✨✨✨', text: 'あわが われました！ じが そとへ とびます！', en: 'The bubbles burst, and the letters fly out!' },
       { fx: ['darkclouds'], sprite: 'mojikui_boss:normal', glyph: '🌊 💨', text: '大(おお)モジクイは、うみの むこうへ にげました。', en: 'The Great Mojikui fled across the sea.' },
-      { bg: 'naniwa_lights_back', fx: ['spring'], glyph: '🏙️ 💡💡💡', text: 'ナニワタウンの あかりが、ぜんぶ もどりました！', en: "All of Naniwa Town's lights are back on!" },
+      { bg: 'naniwa_lights_back', fx: ['spring'], sprite: 'yamada:happy', glyph: '🏙️ 💡💡💡', text: 'ナニワタウンの あかりが、ぜんぶ もどりました！', en: "All of Naniwa Town's lights are back on!" },
       { speaker: 'yamada', sprite: 'yamada:happy', glyph: '💐', text: '山(やま)田(だ)です。ありがとう ございます！', en: "It's Yamada. Thank you so much!" },
       { speaker: 'rin', sprite: 'rin:happy', glyph: '🧑‍🎓 🏫', text: '来(らい)週(しゅう)も 学(がっ)校(こう)で あいましょう！', en: 'See you at school next week!' },
       { speaker: 'nexmax', sprite: 'nexmax:smile', glyph: '✍️ 🎉', text: 'ありがとう！ あなたの じで、まちが もどりました。', en: 'Thank you! Your writing brought the town back.' },
