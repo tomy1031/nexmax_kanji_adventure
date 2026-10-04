@@ -42,6 +42,8 @@ export const COMPANION_LINES: Record<string, CompanionLines> = {
   sora: { start: 'マルも いっしょです！ いきましょう！', skill: 'マル、まもって！ ワン！', win: 'やったね！ 写(しゃ)真(しん)を とりましょう！' },
   usher: { start: 'ショーの はじまりです！', skill: 'スポットライト！ つぎの 字(じ)が しゅやくです！', win: 'ブラボー！ だいせいこう！' },
   photographer: { start: 'はい、こちらを 見(み)て ください。', skill: '書(か)きじゅんの 写(しゃ)真(しん)です。どうぞ。', win: 'いい 写(しゃ)真(しん)ですね。' },
+  // 3章 マンプクタウン
+  hana: { start: 'おなか すいて いない？ いっしょに がんばろう！', skill: 'あったかい ラーメン、どうぞ！ げんきに なるよ！', win: 'やったね！ おいわいの ラーメンを 作(つく)ろう！' },
 };
 
 /** When Nexmax is struck: by わざ, so the line points at what it can do. */
@@ -89,6 +91,7 @@ export const CARD_LINES: Record<string, CompanionLines> = {
   'sora-4': { start: 'よーい、アクション！', skill: 'マル、まもって！ カット！', win: 'カット！ さいこうの えいがです！' },
   'photographer-4': { start: 'まず、お茶(ちゃ)を 一(いっ)ぱい どうぞ。', skill: 'おちついて。書(か)きじゅんは この とおりです。', win: 'けっこうな おてまえでした。' },
   'usher-4': { start: 'レッドカーペットへ ようこそ！', skill: 'スターの ひかり！ つぎの 字(じ)で きめて！', win: 'みんなが スターです！' },
+  'hana-4': { start: 'りょうり大(たい)会(かい)の チャンピオン、さんじょう！', skill: 'ひっさつ、まんぷく ラーメン！ げんき いっぱい！', win: 'ごちそうさまでした！' },
   // ★5
   'ISTJ-5': { start: 'いざ、まいる。字(じ)の 道(みち)を すすみます。', skill: 'この たて、くずれず！', win: 'みごと。よく 書(か)きました。' },
   'ESTP-5': { start: '3・2・1、はっしゃ！', skill: 'ブースター ぜんかい！ つぎで きめろ！', win: 'ゴールまで いっしゅん！' },

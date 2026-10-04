@@ -934,6 +934,8 @@ const CARDS = [
   card('sora', 5, "a grand harbor-captain outfit: a long navy captain's coat with gold epaulettes and gold braid, the big captain's cap with a shining gold anchor badge, a brass telescope raised in one hand, one foot on a small ship's wheel, her shiba puppy Maru in a sailor hat beside her, heroic and adventurous.", '★5 みなとの キャプテン ソラ'),
   card('usher', 4, 'a glittering red-carpet movie-star look: a sparkling deep-red gown with a stole made of golden film strip, sunglasses pushed up on her head, the star hairpin, waving to fans with a white-gloved hand, holding a golden star-topped flashlight like a wand.', '★4 スターの えいがかんの 人'),
   card('photographer', 4, 'a tea-master look: an elegant dark-green haori jacket with a crest-less pattern over his waistcoat, holding a tray with a steaming teapot and a teacup, the wooden box camera strapped on his back, a gentle bow.', '★4 おちゃの めいじん しゃしんやさん'),
+  // 3章の ともだち ハナ（docs/design/14）: 料理大会の チャンピオン。
+  card('hana', 4, 'a cooking-contest champion look: a tall shining white chef toque with a small gold star badge, a red-and-gold champion sash across her white chef jacket with pink piping, her mint-green flower apron, holding up a big golden trophy shaped like a noodle bowl in one hand and a long ladle in the other, confetti and steam swirls around her, a proud beaming smile. Modest and cute.', '★4 りょうりたいかいの ハナ'),
   card('keeper', 5, 'a time wizard outfit: a long midnight-blue robe with golden clock-gear patterns, a staff topped with an hourglass, a ring of small golden gears floating around him.', '★5 じかんの まほうつかい'),
 ];
 
