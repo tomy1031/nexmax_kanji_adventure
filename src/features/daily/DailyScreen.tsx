@@ -8,6 +8,8 @@ import { kanjiRuby } from '../../lib/reading';
 import { RubyText } from '../../components/ui/Ruby';
 import { getDueKanjiIds } from '../../lib/srs';
 import { getKanjiById } from '../../lib/kanjiDb';
+import { continuePathWithFinale } from '../../data/mojiFlow';
+import { episodeOfKanji } from '../../data/kanjiCard';
 
 /** Today's tasks, and the review queue that feeds one of them. */
 export const DailyScreen = () => {
@@ -20,11 +22,22 @@ export const DailyScreen = () => {
   const gems = useGameStore((s) => s.gems);
   const progress = useGameStore((s) => s.progress);
   const claimDailyTask = useGameStore((s) => s.claimDailyTask);
+  const cleared = useGameStore((s) => s.clearedStages);
+  const startPath = useGameStore((s) => s.startPath);
 
   const due = getDueKanjiIds(progress)
     .map((id) => getKanjiById(id))
     .filter((k) => k != null);
 
+  // Where each task is done (2026-10-05): the next episode, or a rusty kanji's own episode, on じゅんび.
+  const back = `back=${encodeURIComponent('/daily')}`;
+  const practiceOf = (char: string) => {
+    const ep = episodeOfKanji(char);
+    return ep && cleared.includes(ep.id) ? `/moji/${ep.id}?at=ready&${back}` : null;
+  };
+  const firstRusty = due.map((k) => practiceOf(k.char)).find((p) => p != null) ?? null;
+  const goNext = moji ? continuePathWithFinale(cleared, startPath, progress) : null;
+  const pathFor = (taskId: string) => (!moji ? null : taskId === 'review-5' ? firstRusty : goNext);
   const earned = DAILY_TASKS.filter((t) => daily.claimed.includes(t.id)).reduce((n, t) => n + t.reward, 0);
 
   return (
@@ -91,8 +104,13 @@ export const DailyScreen = () => {
                         }}
                       />
                     </div>
-                    <p className="mt-0.5 text-[11px] tabular-nums" style={{ color: 'var(--ink-2)' }}>
+                    <p className="mt-0.5 flex items-center gap-2 text-[11px] tabular-nums" style={{ color: 'var(--ink-2)' }}>
                       {value} / {task.goal}
+                      {!complete && pathFor(task.id) && (
+                        <button type="button" data-tap className="rounded-full border-2 border-[#caa468] bg-white px-2.5 py-0.5 text-[11px] font-black" style={{ color: 'var(--accent-2)' }} onClick={() => navigate(pathFor(task.id)!)}>
+                          ▶ <RubyText showFurigana={showFurigana}>いく</RubyText>
+                        </button>
+                      )}
                     </p>
                   </div>
                   <button
@@ -128,15 +146,22 @@ export const DailyScreen = () => {
                 </RubyText>
               </p>
               <div className="mt-2 flex flex-wrap gap-1.5">
-                {due.slice(0, 20).map((k) => (
-                  <span key={k.id} className="g-chip !px-2.5 !py-0 text-lg leading-[1.9] font-black">
-                    <RubyText showFurigana={showFurigana}>{kanjiRuby(k)}</RubyText>
-                  </span>
-                ))}
+                {due.slice(0, 20).map((k) => {
+                  const path = moji ? practiceOf(k.char) : null;
+                  return path ? (
+                    <button key={k.id} type="button" data-tap className="g-chip !px-2.5 !py-0 text-lg leading-[1.9] font-black" onClick={() => navigate(path)}>
+                      <RubyText showFurigana={showFurigana}>{kanjiRuby(k)}</RubyText>
+                    </button>
+                  ) : (
+                    <span key={k.id} className="g-chip !px-2.5 !py-0 text-lg leading-[1.9] font-black">
+                      <RubyText showFurigana={showFurigana}>{kanjiRuby(k)}</RubyText>
+                    </span>
+                  );
+                })}
               </div>
               <p className="mt-2 text-xs" style={{ color: 'var(--ink-3)' }}>
                 <RubyText showFurigana={showFurigana}>
-                  ステージで たたかうと、その 漢字(かんじ)の 復習(ふくしゅう)に なります。
+                  {moji ? '字(じ)を おすと、その 話(わ)で もう一度(いちど) 書(か)きます。たたかうと 復習(ふくしゅう)に なります。' : 'ステージで たたかうと、その 漢字(かんじ)の 復習(ふくしゅう)に なります。'}
                 </RubyText>
               </p>
             </>

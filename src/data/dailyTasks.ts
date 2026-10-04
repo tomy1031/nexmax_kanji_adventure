@@ -47,7 +47,8 @@ export const DAILY_TASKS: DailyTask[] = [
   },
   {
     id: 'stage-1',
-    label: 'ステージを 1(ひと)つ すすめる',
+    // A replay counts too: the words say so (2026-10-05).
+    label: '話(わ)を 1(ひと)つ クリアする',
     goal: 1,
     reward: 20,
     progress: (d) => d.stagesToday,
