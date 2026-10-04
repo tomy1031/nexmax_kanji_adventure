@@ -50,3 +50,21 @@ describe('？ことば — the words of a line', () => {
     expect(words.map((w) => w.word)).toEqual(['日(ひ)', '月(つき)']);
   });
 });
+
+describe('？ことば — kana words a learner may not know yet', () => {
+  it('finds a kana word alone or with its particle, after the kanji words', () => {
+    const words = wordsOfLine('いちばの ねふだが ありません。日(ひ)の ガリガリ');
+    expect(words.map((w) => w.word)).toEqual(['日(ひ)', 'いちば', 'ねふだ', 'ガリガリ']);
+    expect(words.find((w) => w.word === 'ねふだ')?.gloss).toBe('price tag');
+  });
+
+  it('does not find one inside another word', () => {
+    // すっきり holds きり (fog), はりきって holds はり (clock hand): neither is that word.
+    expect(wordsOfLine('すっきり はりきって いきましょう').map((w) => w.word)).toEqual([]);
+  });
+
+  it('reads no furigana as a kana word', () => {
+    // 日(ひ) — the ひ in the reading is not a word of the line.
+    expect(wordsOfLine('木(き)の かげ').map((w) => w.word)).toEqual(['木(き)', 'かげ']);
+  });
+});
