@@ -8,6 +8,7 @@ import { useGameStore } from '../../store/gameStore';
 import { HIRAGANA, KATAKANA, ROMAJI } from '../../data/kana';
 import { MOJI_CHAPTERS } from '../../data/mojiRoute';
 import { isForgeOpen } from '../../data/mojiFlow';
+import { Feature, isFeatureUnlocked } from '../../data/unlocks';
 import { useKnownKana } from '../kana/useKnownKana';
 import { getKanjiByChar } from '../../lib/kanjiDb';
 import { kanjiRuby } from '../../lib/reading';
@@ -87,12 +88,22 @@ export const ZukanScreen = () => {
               <RubyText showFurigana={showFurigana}>{label}</RubyText>
             </button>
           ))}
-          {isForgeOpen(cleared) && (
-            <button type="button" className="g-btn g-btn-accent flex-1 !min-h-[42px] !px-2 text-sm" onClick={() => navigate('/words')}>
-              <RubyText showFurigana={showFurigana}>ことば図鑑(ずかん)</RubyText>
-            </button>
-          )}
         </div>
+        {/* What else ずかん holds, as it opens: the words (1章 2話) and the weapons and companions (1章 5話「ずかんに、ぶきと なかまが あります」). */}
+        {(isForgeOpen(cleared) || isFeatureUnlocked(Feature.COLLECTION, cleared)) && (
+          <div className="flex gap-2">
+            {isForgeOpen(cleared) && (
+              <button type="button" className="g-btn g-btn-accent flex-1 !min-h-[42px] !px-2 text-sm" onClick={() => navigate('/words')}>
+                <RubyText showFurigana={showFurigana}>ことば図鑑(ずかん)</RubyText>
+              </button>
+            )}
+            {isFeatureUnlocked(Feature.COLLECTION, cleared) && (
+              <button type="button" className="g-btn g-btn-accent flex-1 !min-h-[42px] !px-2 text-sm" onClick={() => navigate('/collection')}>
+                ⚔️ <RubyText showFurigana={showFurigana}>ぶき・なかま</RubyText>
+              </button>
+            )}
+          </div>
+        )}
 
         {tab === 'kana' ? (
           <section className="g-parchment p-3">
