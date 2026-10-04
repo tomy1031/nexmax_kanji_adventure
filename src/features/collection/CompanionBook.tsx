@@ -4,6 +4,7 @@ import { RubyText } from '../../components/ui/Ruby';
 import { assetPath } from '../../lib/assetPath';
 import { useGameStore, BOND_MAX } from '../../store/gameStore';
 import { CARDS, CHARACTERS, cardsOf, type Individual } from '../../data/individuals';
+import { isMet } from '../../lib/gacha';
 import { CLASS_LABEL } from '../../lib/forge/weapon';
 import { ELEMENT_LABEL } from '../../lib/forge/elements';
 import { SKILL_INFO, SKILL_OF, skillEffect } from '../../lib/companionSkill';
@@ -36,15 +37,19 @@ export const CompanionBook = ({ showFurigana }: { showFurigana: boolean }) => {
   const active = useGameStore((s) => s.activeIndividual);
   const setActive = useGameStore((s) => s.setActiveIndividual);
   const bonds = useGameStore((s) => s.bonds);
+  const cleared = useGameStore((s) => s.clearedStages);
   const [open, setOpen] = useState<string | null>(null);
 
   const has = (c: Individual) => owned.includes(c.id);
+  // Only the friends the story has met (or already in hand): the gacha keeps the rest back too (lib/gacha.ts isMet).
+  const reachable = CARDS.filter((c) => has(c) || isMet(c, cleared));
+  const characters = CHARACTERS.filter((char) => reachable.some((c) => c.char === char));
   const opened = open ? cardsOf(open) : [];
 
   return (
     <>
       <ul className="grid grid-cols-3 gap-2">
-        {CHARACTERS.map((char) => {
+        {characters.map((char) => {
           const cards = cardsOf(char);
           const mine = cards.filter(has);
           const best = mine.at(-1);
@@ -91,7 +96,7 @@ export const CompanionBook = ({ showFurigana }: { showFurigana: boolean }) => {
         })}
       </ul>
       <p className="mt-3 text-center text-xs" style={{ color: 'var(--ink-2)' }}>
-        <RubyText showFurigana={showFurigana}>{`カード ${owned.length} / ${CARDS.length} ・ 同(おな)じ なかまでも ★の ちがう すがたが あります`}</RubyText>
+        <RubyText showFurigana={showFurigana}>{`カード ${owned.length} / ${reachable.length} ・ 同(おな)じ なかまでも ★の ちがう すがたが あります`}</RubyText>
       </p>
 
       <AnimatePresence>

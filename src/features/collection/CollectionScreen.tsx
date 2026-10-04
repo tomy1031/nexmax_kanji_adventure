@@ -1,8 +1,8 @@
 import { useMemo, useState } from 'react';
-import { useMapPath } from '../../lib/nav';
+import { useMapPath, useSafeBack } from '../../lib/nav';
 import { Backdrop } from '../../components/ui/Backdrop';
 import { NightStreetBackdrop } from '../write/NightStreet';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useGameStore } from '../../store/gameStore';
 import { RARITY_LABEL } from '../../lib/forge/weapon';
 import { weaponArt, weaponFromRecipe } from '../../lib/forge/recipe';
@@ -17,6 +17,7 @@ import { useCompoundsVersion } from '../../data/compounds';
 import { sortWeapons, useWeaponSort } from '../../lib/forge/weaponSort';
 import { WeaponSortBar, WeaponTags } from '../equip/WeaponSortBar';
 import { HIDDEN_WEAPONS } from '../../data/hiddenWeapons';
+import { isMet } from '../../lib/gacha';
 import { getMojiEpisode } from '../../data/mojiEpisodes';
 import { isChapterOpen } from '../../data/mojiFlow';
 
@@ -36,7 +37,10 @@ export const CollectionScreen = () => {
   const progress = useGameStore((s) => s.progress);
   const cleared = useGameStore((s) => s.clearedStages);
 
-  const [tab, setTab] = useState<Tab>('weapons');
+  // Opened from もちもの's なかま button on the なかま tab (?tab=individuals); back goes where it came from (戻り先は 来た ところ).
+  const [params] = useSearchParams();
+  const [tab, setTab] = useState<Tab>(() => (params.get('tab') === 'individuals' ? 'individuals' : 'weapons'));
+  const goBack = useSafeBack(mapPath);
 
   // The forge's words beyond the core arrive just after start (data/compounds.ts): read again then.
   const wordsV = useCompoundsVersion();
@@ -68,7 +72,7 @@ export const CollectionScreen = () => {
         className="g-header sticky top-0 z-20 px-4 pt-[max(12px,env(safe-area-inset-top))] pb-3"
       >
         <div className="flex items-center justify-between">
-          <button type="button" className="g-btn g-btn-accent !min-h-[38px] !gap-1 !px-3.5 text-sm" onClick={() => navigate(mapPath)}>
+          <button type="button" className="g-btn g-btn-accent !min-h-[38px] !gap-1 !px-3.5 text-sm" onClick={goBack}>
             <span aria-hidden>◀</span>もどる
           </button>
           <h1 className="g-title text-center text-base leading-tight">
@@ -83,7 +87,7 @@ export const CollectionScreen = () => {
           {(
             [
               ['weapons', '武器(ぶき)', forged.length],
-              ['individuals', 'なかま', `${ownedIndividuals.length}/${CARDS.length}`],
+              ['individuals', 'なかま', `${ownedIndividuals.length}/${CARDS.filter((c) => ownedIndividuals.includes(c.id) || isMet(c, cleared)).length}`],
             ] as const
           ).map(([id, label, count]) => (
             <button
