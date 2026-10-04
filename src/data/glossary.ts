@@ -13,6 +13,7 @@ import { ALL_KANJI } from './kanji.generated';
  * uses some the game does not teach (生命草, 異空間); those are here.
  */
 const STORY_WORDS: Record<string, string> = {
+  山田: 'Yamada (a family name)',
   農業: 'farming',
   農作: 'growing crops',
   手伝: 'help',

@@ -30,7 +30,7 @@ export const MOJI1_CAST: CastMember[] = [
     // Her name was eaten: ？？？ until 山 and 田 are written (1章2話).
     nameChars: '山(やま)田(だ)',
     color: '#e2799a',
-    sprites: { normal: 'img/chara/cut/ESFJ_f.webp', sad: 'img/chara/naniwa/folk_yamada_sad.webp', happy: 'img/chara/naniwa/folk_yamada_happy.webp' },
+    sprites: { normal: 'img/chara/naniwa/folk_yamada_normal.webp', sad: 'img/chara/naniwa/folk_yamada_sad.webp', happy: 'img/chara/naniwa/folk_yamada_happy.webp' },
   },
   { id: 'mojikui_kid', name: 'モジクイの こども', color: '#7b4bb3', sprites: { normal: 'img/battle/mojikui_kid.webp' } },
   { id: 'mojikui', name: 'モジクイ', color: '#5a2d8c', sprites: { normal: 'img/battle/mojikui.webp' } },
