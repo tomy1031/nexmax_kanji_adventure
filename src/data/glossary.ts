@@ -257,7 +257,7 @@ export const wordsOfLine = (text: string): { word: string; gloss: string }[] => 
     i += take;
   }
   // The kana words, in the order they come.
-  for (const token of text.replace(/\([^)]*\)/g, '').split(/[\s、。！？!?…「」『』（）()・〜—💡✍️🪧]+/u)) {
+  for (const token of text.replace(/\([^)]*\)/g, '').split(/[\s、。！？!?…「」『』（）()・〜—]+/u)) {
     const word = kanaWordOf(token.replace(/[^\p{L}ー]/gu, ''));
     if (word && !seen.has(word)) {
       seen.add(word);
