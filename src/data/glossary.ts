@@ -175,7 +175,7 @@ export const KANA_WORDS: Readonly<Record<string, string>> = {
   ほんだな: 'bookshelf',
   じしょ: 'dictionary',
   くすり: 'medicine',
-  ほうせき: 'gem',
+  ジェム: 'gem (◆)',
   スタンプ: 'stamp',
   ずかん: 'collection book',
   なかま: 'friend, teammate',
