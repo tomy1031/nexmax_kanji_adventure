@@ -364,7 +364,7 @@ export const EquipScreen = () => {
           )}
 
           {isFeatureUnlocked(Feature.COLLECTION, cleared) && (
-            <button type="button" className="g-btn g-btn-slate mt-4 w-full" onClick={() => navigate('/collection')}>
+            <button type="button" className="g-btn g-btn-slate mt-4 w-full" onClick={() => navigate('/collection?tab=individuals')}>
               <RubyText showFurigana={showFurigana}>図鑑(ずかん)（なかま）を 見(み)る</RubyText>
             </button>
           )}
