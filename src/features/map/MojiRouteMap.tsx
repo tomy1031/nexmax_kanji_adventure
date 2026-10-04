@@ -607,6 +607,14 @@ export const MojiRouteMap = () => {
                 <div ref={listRef} className="min-h-0 flex-1 overflow-y-auto pr-1">
                   {sheet === 'hiragana' || sheet === 'katakana' ? (
                     <>
+                      {/* Kana first, English under it (constraints 2026-10-02「ひらがなの ところも 日本語訳 ほしい」). */}
+                      <p className="text-sm leading-[2.1] font-bold">
+                        <KanaText known={known}>
+                          {sheet === 'hiragana'
+                            ? 'くうこうに ついた ゆうがたの おはなし。かなが よめる ひとは とばしても いいです。'
+                            : 'あさの くうこうの えき。ナニワタウンへ いく でんしゃの おはなし。'}
+                        </KanaText>
+                      </p>
                       <p className="mb-2 text-xs font-bold" style={{ color: 'var(--ink-2)' }} lang="en">
                         {sheet === 'hiragana'
                           ? 'The airport, the evening you land — before the train to Naniwa Town. Optional: if you can read kana, Chapter 1 does not need it.'
@@ -716,8 +724,11 @@ export const MojiRouteMap = () => {
                     </ol>
                   )}
                   <div className="mt-3 flex items-center justify-center gap-4 text-sm font-black">
-                    <button type="button" className="rounded-full border-2 border-[#caa468] bg-white/70 px-4 py-1" onClick={() => navigate('/prologue')} lang="en">
-                      ▶ Prologue
+                    <button type="button" className="rounded-full border-2 border-[#caa468] bg-white/70 px-4 py-1 leading-tight" onClick={() => navigate('/prologue')}>
+                      ▶ <KanaText known={known}>プロローグ</KanaText>
+                      <span lang="en" className="block text-[10px] font-bold opacity-70">
+                        Prologue
+                      </span>
                     </button>
                     {/* The picture-book worlds are closing (2026-09-30): kept reachable, but only as a quiet link. */}
                     <button type="button" className="px-2 py-1 text-[11px] font-bold text-[#5a4630]/70 underline underline-offset-2" onClick={() => navigate('/map')}>
