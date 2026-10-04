@@ -84,6 +84,8 @@ export interface GameState {
   perfectStages: string[];
   /** Stages won once in Hard (lib/difficulty.ts): its bonus is paid once. */
   hardStages: string[];
+  /** The fight's rules told one at a time (data/fightRules.ts FIGHT_TIPS), each once. */
+  tipsSeen: string[];
   /** Nexmax individuals owned, by id. */
   individuals: string[];
   /** The individual currently deployed. */
@@ -182,6 +184,7 @@ export interface GameActions {
   resetPity: () => void;
   setSetting: <K extends keyof GameState['settings']>(key: K, value: GameState['settings'][K]) => void;
   markTutorialSeen: (key: keyof GameState['tutorials']) => void;
+  markTipSeen: (id: string) => void;
   setLastArc: (arc: GameState['lastArc']) => void;
   setStartPath: (path: GameState['startPath']) => void;
   recordVersusResult: (won: boolean, ratingDelta: number) => void;
@@ -215,6 +218,7 @@ const initialState: GameState = {
   clearedStages: [],
   perfectStages: [],
   hardStages: [],
+  tipsSeen: [],
   individuals: [],
   activeIndividual: null,
   weapons: [],
@@ -479,6 +483,8 @@ export const useGameStore = create<GameState & GameActions>()(
       setSetting: (key, value) => set((s) => ({ settings: { ...s.settings, [key]: value } })),
 
       markTutorialSeen: (key) => set((s) => ({ tutorials: { ...s.tutorials, [key]: true } })),
+
+      markTipSeen: (id) => set((s) => (s.tipsSeen.includes(id) ? s : { tipsSeen: [...s.tipsSeen, id] })),
 
       setLastArc: (arc) => set((s) => (s.lastArc === arc ? s : { lastArc: arc })),
       setStartPath: (path) => set({ startPath: path }),

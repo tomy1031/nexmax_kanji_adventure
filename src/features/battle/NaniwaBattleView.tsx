@@ -215,6 +215,8 @@ export interface NaniwaBattleViewProps {
   /** What the last write did; `flashKey` changes with every new one. Shown for a moment. */
   flash: string | null;
   flashKey: number;
+  /** A rule told the first time it happens (BattleScene tellTip): a banner across the top, `n` new each time. */
+  tip?: { n: number; icons: string; text: string } | null;
   /** Said while nothing has happened yet (the first turn). */
   idle: string | null;
   hit: { n: number; damage: number; critical?: boolean } | null;
@@ -269,6 +271,7 @@ export const NaniwaBattleView = ({
   renderWriter,
   flash,
   flashKey,
+  tip,
   idle,
   hit,
   combo,
@@ -384,6 +387,31 @@ export const NaniwaBattleView = ({
             <ComboMeter combo={combo} showPct={comboPct} still={still} />
           </div>
           <ComboBanner combo={combo} still={still} />
+          {/* A rule told the first time it happens: across the sky, clear of the COMBO count and the line of what a write did. */}
+          <AnimatePresence>
+            {tip && (
+              <motion.div
+                key={`tip${tip.n}`}
+                role="status"
+                initial={still ? { opacity: 0 } : { opacity: 0, y: -16, scale: 0.9 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: -10 }}
+                transition={{ type: 'spring', stiffness: 380, damping: 22 }}
+                className="pointer-events-none absolute inset-x-[5%] z-20 flex items-center gap-[2cqw] rounded-[3cqw] border-[0.4cqw] border-[#ffd36a] px-[3cqw] py-[1.6cqw] text-left leading-snug font-black text-white"
+                style={{ top: pct(250 / TOP_H), background: 'linear-gradient(180deg, rgba(58,32,110,0.95), rgba(28,16,60,0.95))', boxShadow: '0 0 18px rgba(255,211,106,0.45)', fontSize: cq(28) }}
+              >
+                <span aria-hidden className="shrink-0" style={{ fontSize: cq(52) }}>
+                  {tip.icons}
+                </span>
+                <span className="min-w-0">
+                  <span className="block font-black text-[#ffd36a]" style={{ fontSize: cq(20) }}>
+                    💡 ひみつ
+                  </span>
+                  <RubyText showFurigana={showFurigana}>{tip.text}</RubyText>
+                </span>
+              </motion.div>
+            )}
+          </AnimatePresence>
 
           {/* 上の わく: corner posts, the opponent's plate and bar */}
           <div className="absolute inset-x-0 top-0 aspect-[941/660] [@media(min-aspect-ratio:3/5)]:[mask-image:linear-gradient(90deg,transparent,#000_5%,#000_95%,transparent)]">

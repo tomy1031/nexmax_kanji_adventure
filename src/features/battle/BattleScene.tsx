@@ -23,6 +23,7 @@ import { comboMilestone, comboTier, isComboBreak, strokeEnd, strokeLift } from '
 import type { StrokeSpark } from './ComboFx';
 import { SKILL_INFO, SKILL_OF, gaugeGain, skillEffect, skillGaugeFull } from '../../lib/companionSkill';
 import { HURT_LINE, linesFor } from '../../data/companionLines';
+import { tipDue, tipOf, type TipId } from '../../data/fightRules';
 import type { CompanionView, SkillCut } from './CompanionFx';
 import {
   computeDamage,
@@ -47,6 +48,9 @@ import { isReadTurn, readDamage, readQuestion } from '../../lib/readTurn';
 import { nextStarGoal } from '../../data/starPerks';
 import { EXP_BOSS_FIRST, EXP_BOSS_REPEAT, EXP_READ, applyLevel, levelInfo, levelOf, ownedCount } from '../../lib/level';
 import { useCompoundsVersion } from '../../data/compounds';
+
+/** How long a fight tip stays up. */
+const TIP_MS = 4200;
 
 /**
  * The fight.
@@ -258,6 +262,27 @@ export const BattleScene = ({
     setFlash(text);
     setFlashNo((n) => n + 1);
   }, []);
+  /**
+   * A rule of the fight, told the first time it happens here — the miss that
+   * brings a strike, the first COMBO, the first reading turn — once, then never
+   * again (data/fightRules.ts BATTLE_TIPS, 2026-10-04「1つずつ」).
+   */
+  const [tip, setTip] = useState<{ n: number; icons: string; text: string } | null>(null);
+  const tipTimer = useRef(0);
+  const tellTip = useCallback(
+    (id: TipId) => {
+      if (!mastery || tutorial) return;
+      const st = useGameStore.getState();
+      if (!tipDue(id, st.tipsSeen, st.tutorials.stars)) return;
+      st.markTipSeen(id);
+      const r = tipOf(id);
+      setTip((t) => ({ n: (t?.n ?? 0) + 1, icons: r.icons, text: r.text }));
+      window.clearTimeout(tipTimer.current);
+      tipTimer.current = window.setTimeout(() => setTip(null), TIP_MS);
+    },
+    [mastery, tutorial],
+  );
+  useEffect(() => () => window.clearTimeout(tipTimer.current), []);
   const [hit, setHit] = useState<{ n: number; damage: number; critical?: boolean } | null>(null);
   /** Clean writes in a row (新ルート). */
   const [combo, setCombo] = useState(0);
@@ -409,6 +434,7 @@ export const BattleScene = ({
       return;
     }
     setRage(0);
+    tellTip('counter');
     if (buffs.guards > 0) {
       // まもり: the strike is blocked.
       setBuffs((b) => ({ ...b, guards: b.guards - 1 }));
@@ -429,7 +455,7 @@ export const BattleScene = ({
     say(`ミスが ${patience}こ たまった。${back} ダメージを うけた`);
     if (skillKind && nextPlayerHp > 0) companionSay(HURT_LINE[skillKind]);
     if (nextPlayerHp <= 0) settle('lose', totalMistakes, 0);
-  }, [rage, patience, stage.boss, individual, stats.defense, playerHp, enemyCtl, fieldCtl, settle, totalMistakes, say, buffs.guards, skillKind, companionSay]);
+  }, [rage, patience, stage.boss, individual, stats.defense, playerHp, enemyCtl, fieldCtl, settle, totalMistakes, say, buffs.guards, skillKind, companionSay, tellTip]);
 
   const handleMistake = useCallback(() => {
     if (settledRef.current || bossDownRef.current) return;
@@ -491,6 +517,7 @@ export const BattleScene = ({
       const shielded = mastery && !clean && combo > 0 && buffs.comboShield > 0;
       const nextCombo = mastery && clean ? combo + 1 : shielded ? combo : 0;
       setCombo(nextCombo);
+      if (nextCombo >= 3) tellTip('combo');
       // ちから (わざ): this write hits harder, once.
       const power = buffs.power;
       if (shielded || power !== 1) setBuffs((b) => ({ ...b, power: 1, comboShield: shielded ? b.comboShield - 1 : b.comboShield }));
@@ -585,6 +612,7 @@ export const BattleScene = ({
             lastThrownRef.current = q.kanji.id;
             setReadPicked(null);
             setReadQ(q);
+            tellTip('read');
           }
         }
       }
@@ -593,7 +621,7 @@ export const BattleScene = ({
     [
       tutorial, totalMistakes, target, progress, recordReview, recordRep, weapon, individual, stage.boss,
       rust, bossHp, playerHp, settle, heroCtl, enemyCtl, turn, stats.attackPct, ownsTarget, hinted,
-      mastery, targetStars, kanjiPool, combo, say, difficulty, skillKind, gaugeFull, buffs, companionSay,
+      mastery, targetStars, kanjiPool, combo, say, difficulty, skillKind, gaugeFull, buffs, companionSay, tellTip,
     ],
   );
 
@@ -835,6 +863,7 @@ export const BattleScene = ({
           fire={flow?.n}
           flash={flash}
           flashKey={flashNo}
+          tip={tip}
           idle={turn === 0 && !flash ? '💡 書(か)いた 字(じ)の 光(ひかり)で こうげき！' : null}
           hit={hit}
           combo={combo}
