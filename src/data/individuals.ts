@@ -346,6 +346,7 @@ export const DRESSED: readonly Individual[] = [
   dressed('sora', 4, 'えいがかんとくの'),
   dressed('sora', 5, 'みなとの キャプテン'),
   dressed('photographer', 4, 'おちゃの めいじん'),
+  dressed('usher', 4, 'スターの'),
 ];
 
 /** Every card there is. */
