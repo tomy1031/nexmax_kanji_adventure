@@ -15,6 +15,7 @@ import {
 } from './mojiFlow';
 import { KANA_EPISODES } from './kana';
 import { MOJI_EPISODES, getMojiEpisode } from './mojiEpisodes';
+import type { MojiFinale } from './mojiFinale';
 import { getKanjiByChar } from '../lib/kanjiDb';
 
 const kana = (n: number) => Array.from({ length: n }, (_, i) => `kana-${i + 1}`);
@@ -107,7 +108,7 @@ describe('章の 鍵 (docs/design/12 §5)', () => {
   const ch1 = MOJI_EPISODES.filter((e) => e.chapter === 'moji-1');
   const ch2 = [1, 2].map((order) => ({ ...ch1[0], id: `moji-2-${order}`, chapter: 'moji-2', order }));
   const episodes = [...ch1, ...ch2];
-  const boss = { id: 'moji-1-boss', chapter: 'moji-1' } as Parameters<typeof isChapterOpen>[3][number];
+  const boss = { id: 'moji-1-boss', chapter: 'moji-1' } as MojiFinale;
 
   it('always opens 1章', () => {
     expect(isChapterOpen('moji-1', [], episodes, [boss])).toBe(true);
