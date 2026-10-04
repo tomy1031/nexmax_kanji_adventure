@@ -21,6 +21,7 @@ import {
 } from '../../lib/forge/discovery';
 import { charRuby } from '../../lib/reading';
 import { RubyText } from '../../components/ui/Ruby';
+import { useCompoundsVersion } from '../../data/compounds';
 
 /**
  * ことば図鑑 — the treasure map.
@@ -63,7 +64,10 @@ export const WordBook = () => {
   );
   const foundSet = useMemo(() => new Set(Object.keys(foundWords)), [foundWords]);
 
-  const all = useMemo(() => wordsFor(owned), [owned]);
+  // The forge's words beyond the core arrive just after start (data/compounds.ts): read again then.
+  const wordsV = useCompoundsVersion();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const all = useMemo(() => wordsFor(owned), [owned, wordsV]);
   const cards = useMemo(() => all.map(cardFor), [all]);
   const chars = useMemo(() => charProgress(owned, foundSet), [owned, foundSet]);
 

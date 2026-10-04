@@ -1,5 +1,5 @@
 import type { Compound } from '../../types/forge';
-import { getCompounds } from '../../data/compounds.generated';
+import { compoundsVersion, getCompounds } from '../../data/compounds';
 
 /**
  * Turning the compound table into a treasure hunt.
@@ -46,8 +46,12 @@ let byReading: Map<string, Compound[]> | null = null;
 /** How many words in the whole table each character appears in. */
 let charFrequency: Map<string, number> | null = null;
 
+let indexedVersion = -1;
+
 const buildIndexes = () => {
-  if (byWord) return;
+  // Rebuilt once the rest of the words has loaded (data/compounds.ts).
+  if (byWord && indexedVersion === compoundsVersion()) return;
+  indexedVersion = compoundsVersion();
   byWord = new Map();
   byReading = new Map();
   charFrequency = new Map();

@@ -20,6 +20,7 @@ import { isForgeOpen, mastersOf } from '../../data/mojiFlow';
 import * as sfx from '../../lib/sfx';
 import PictureBook from '../picturebook/PictureBook';
 import { NightStreetBackdrop } from '../write/NightStreet';
+import { useCompoundsVersion } from '../../data/compounds';
 
 /**
  * そうび (public/img/design/ネクマックスのそうび画面.png).
@@ -70,13 +71,16 @@ export const EquipScreen = () => {
     [progress],
   );
 
+  // The forge's words beyond the core arrive just after start (data/compounds.ts): read again then.
+  const wordsV = useCompoundsVersion();
   const forged = useMemo(
     () =>
       weapons
         .map((r) => weaponFromRecipe(r))
         .filter((w) => w != null)
         .sort((a, b) => b.attack - a.attack),
-    [weapons],
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [weapons, wordsV],
   );
 
   const weapon = forged.find((w) => w.id === equippedWeapon) ?? null;

@@ -1,4 +1,4 @@
-import { getCompounds } from './compounds.generated';
+import { compoundsVersion, getCompounds } from './compounds';
 import { ALL_KANJI } from './kanji.generated';
 
 /**
@@ -124,6 +124,7 @@ const STORY_WORDS: Record<string, string> = {
 };
 
 let index: Map<string, string> | null = null;
+let indexedVersion = -1;
 
 const build = () => {
   const m = new Map<string, string>();
@@ -135,6 +136,9 @@ const build = () => {
 
 /** The English for a word as written in the text (the base under the ruby). */
 export const glossFor = (word: string): string | undefined => {
-  if (!index) index = build();
+  if (!index || indexedVersion !== compoundsVersion()) {
+    index = build();
+    indexedVersion = compoundsVersion();
+  }
   return index.get(word);
 };

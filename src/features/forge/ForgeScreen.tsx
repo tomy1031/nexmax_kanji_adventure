@@ -35,6 +35,7 @@ import { REPS_TO_OBTAIN } from '../../types/kanji';
 import { Feature, isFeatureUnlocked } from '../../data/unlocks';
 import { isForgeOpen, practiceTarget } from '../../data/mojiFlow';
 import { useBgm } from '../../lib/bgm';
+import { useCompoundsVersion } from '../../data/compounds';
 
 /**
  * The forge — 漢字やさん (the layout example delivered with the parts,
@@ -264,7 +265,10 @@ export const ForgeScreen = () => {
   );
   const foundSet = useMemo(() => new Set(Object.keys(foundWords)), [foundWords]);
 
-  const preview = useMemo(() => (slots.length >= 2 ? forgeWeapon(slots) : null), [slots]);
+  // The forge's words beyond the core arrive just after start (data/compounds.ts): read again then.
+  const wordsV = useCompoundsVersion();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const preview = useMemo(() => (slots.length >= 2 ? forgeWeapon(slots) : null), [slots, wordsV]);
   /** A word already found costs nothing to remake. */
   const previewKnown = preview ? Boolean(foundWords[preview.word]) : false;
   const cost = preview && !previewKnown ? tryCost(slots.length) : 0;

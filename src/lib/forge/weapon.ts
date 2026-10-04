@@ -1,6 +1,6 @@
 import type { KanjiData } from '../../types/kanji';
 import type { Compound } from '../../types/forge';
-import { getCompounds } from '../../data/compounds.generated';
+import { compoundsVersion, getCompounds } from '../../data/compounds';
 import { Element, elementOf, ELEMENT_LABEL } from './elements';
 import { primaryStem } from '../reading';
 
@@ -110,10 +110,13 @@ export interface Weapon {
 // ---------------------------------------------------------------------------
 
 let compoundIndex: Map<string, Compound> | null = null;
+let indexedVersion = -1;
 
 const compoundFor = (word: string): Compound | null => {
-  if (!compoundIndex) {
+  // Rebuilt once the rest of the words has loaded (data/compounds.ts).
+  if (!compoundIndex || indexedVersion !== compoundsVersion()) {
     compoundIndex = new Map(getCompounds().map((c) => [c.word, c]));
+    indexedVersion = compoundsVersion();
   }
   return compoundIndex.get(word) ?? null;
 };

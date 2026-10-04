@@ -1,0 +1,1292 @@
+# word|reading|gloss — the learner-level core: JLPT N5–N2 vocabulary (open-anki-jlpt-decks) and EVERYDAY words, as built by build_compounds.mjs up to 2026-10-04.
+愛情|あいじょう|love
+悪口|わるくち|abuse
+安易|あんい|easy-going
+安心|あんしん|peace of mind
+安全|あんぜん|safety
+安定|あんてい|stability
+暗記|あんき|memorization
+案外|あんがい|unexpectedly
+案内|あんない|information
+以下|いか|less than
+以外|いがい|other than
+以後|いご|after this
+以降|いこう|on and after
+以上|いじょう|more than
+以前|いぜん|in the past
+以内|いない|within
+以来|いらい|since
+位置|いち|place
+偉大|いだい|greatness
+意外|いがい|unexpected
+意見|いけん|opinion
+意思|いし|intention
+意識|いしき|consciousness
+意地|いじ|disposition
+意味|いみ|meaning
+違反|いはん|violation
+医院|いいん|doctor's office
+医学|いがく|medical science
+医師|いし|doctor
+医者|いしゃ|doctor
+一家|いっか|family
+一月|ひとつき|one month
+一言|ひとこと|one word
+一時|いちじ|for a time
+一種|いっしゅ|species
+一緒|いっしょ|together
+一人|ひとり|one person
+一生|いっしょう|throughout life
+一体|いったい|one object
+一定|いってい|fixed
+一度|いちど|once
+一日|いちにち|one day
+一杯|いっぱい|full
+一番|いちばん|best
+一方|いっぽう|on the other hand
+一流|いちりゅう|first class
+引退|いんたい|retirement
+引用|いんよう|quotation
+引力|いんりょく|gravity
+雨水|あまみず|rain water
+運転|うんてん|driving
+運動|うんどう|exercise
+営業|えいぎょう|business
+映画|えいが|movie
+英語|えいご|English
+英文|えいぶん|sentence in English
+英和|えいわ|English-Japanese
+演説|えんぜつ|speech
+煙突|えんとつ|chimney
+遠足|えんそく|trip
+横断|おうだん|crossing
+王子|おうじ|prince
+王女|おうじょ|princess
+王様|おうさま|king
+屋外|おくがい|outdoors
+屋上|おくじょう|rooftop
+音楽|おんがく|Music
+下降|かこう|decline
+下車|げしゃ|alighting
+下手|へた|unskillful
+下宿|げしゅく|lodging
+下水|げすい|drainage
+下着|したぎ|underwear
+下町|したまち|old parts of town
+下品|げひん|vulgar
+化学|かがく|chemistry
+加速|かそく|acceleration
+加熱|かねつ|heating
+加味|かみ|seasoning
+可決|かけつ|approval
+可能|かのう|possible
+家屋|かおく|house
+家具|かぐ|furniture
+家事|かじ|household matters
+家主|やぬし|landlord
+家族|かぞく|family
+家賃|やちん|rent
+家庭|かてい|home
+家内|かない|wife
+科学|かがく|science
+科目|かもく|subject
+果実|かじつ|fruit
+果物|くだもの|fruit
+歌手|かしゅ|singer
+火口|かこう|crater
+火山|かざん|volcano
+火事|かじ|fire
+花火|はなび|fireworks
+花見|はなみ|cherry-blossom viewing
+荷物|にもつ|luggage
+菓子|かし|confectionery
+過去|かこ|past
+過失|かしつ|error
+過程|かてい|process
+画家|がか|painter
+会員|かいいん|member
+会館|かいかん|meeting hall
+会議|かいぎ|business meeting
+会計|かいけい|account
+会合|かいごう|meeting
+会社|かいしゃ|company
+会場|かいじょう|venue
+会話|かいわ|conversation
+解決|かいけつ|settlement
+解散|かいさん|breakup
+解説|かいせつ|explanation
+解答|かいとう|answer
+解放|かいほう|release
+回数|かいすう|number of times
+回転|かいてん|rotation
+回答|かいとう|reply
+回復|かいふく|recovery
+海外|かいがい|foreign
+海岸|かいがん|coast
+海洋|かいよう|ocean
+絵画|かいが|picture
+開会|かいかい|opening of a meeting
+開始|かいし|start
+開通|かいつう|opening
+開放|かいほう|open
+階段|かいだん|stairs
+外科|げか|surgical department
+外交|がいこう|diplomacy
+外国|がいこく|foreign country
+外出|がいしゅつ|outing
+外食|がいしょく|eating out
+外部|がいぶ|outside
+格好|かっこう|appearance
+格別|かくべつ|exceptional
+確実|かくじつ|certainty
+確認|かくにん|affirmation
+学科|がっか|study subject
+学会|がっかい|academic conference
+学期|がっき|term
+学校|がっこう|school
+学者|がくしゃ|scholar
+学習|がくしゅう|study
+学術|がくじゅつ|science
+学生|がくせい|student
+学年|がくねん|year in school
+学部|がくぶ|department of a university undergraduate
+学問|がくもん|scholarship
+学力|がくりょく|scholarship
+割引|わりびき|discount
+割合|わりあい|rate
+活気|かっき|vigor
+活字|かつじ|printing type
+活動|かつどう|action
+活用|かつよう|conjugation
+活力|かつりょく|vitality
+乾杯|かんぱい|Cheers!
+完成|かんせい|complete
+完全|かんぜん|perfection
+感覚|かんかく|sense
+感情|かんじょう|emotion
+感心|かんしん|admiration
+感想|かんそう|impressions
+感動|かんどう|being deeply moved
+慣行|かんこう|customary practice
+換気|かんき|ventilation
+漢字|かんじ|kanji
+漢和|かんわ|Chinese Character-Japanese
+観客|かんきゃく|audience
+観光|かんこう|sightseeing
+観察|かんさつ|observation
+観念|かんねん|idea
+関係|かんけい|relation
+関心|かんしん|concern
+関西|かんさい|south-western half of Japan
+関東|かんとう|eastern half of Japan
+関連|かんれん|relation
+危険|きけん|danger
+寄付|きふ|contribution
+幾分|いくぶん|somewhat
+期間|きかん|period
+期限|きげん|deadline
+期待|きたい|expectation
+機会|きかい|chance
+機関|きかん|engine
+機構|きこう|mechanism
+機能|きのう|function
+帰宅|きたく|returning home
+気候|きこう|climate
+気体|きたい|vapor
+気配|けはい|indication
+気分|きぶん|feeling
+気味|きみ|-like
+規制|きせい|regulation
+規律|きりつ|order
+記号|きごう|symbol
+記事|きじ|article
+記者|きしゃ|reporter
+記入|きにゅう|entry
+記念|きねん|commemoration
+疑問|ぎもん|question
+議員|ぎいん|member of the Diet
+議会|ぎかい|Diet
+議長|ぎちょう|chairman
+議論|ぎろん|argument
+客間|きゃくま|parlor
+客席|きゃくせき|guest seating
+休業|きゅうぎょう|closure
+休息|きゅうそく|rest
+休日|きゅうじつ|holiday
+吸収|きゅうしゅう|absorption
+急行|きゅうこう|express train or bus
+急速|きゅうそく|rapid
+給与|きゅうよ|salary
+給料|きゅうりょう|salary
+牛肉|ぎゅうにく|beef
+牛乳|ぎゅうにゅう|milk
+去年|きょねん|last year
+居間|いま|living room
+許可|きょか|permission
+供給|きょうきゅう|supply
+共通|きょうつう|commonness
+共同|きょうどう|cooperation
+強引|ごういん|forcible
+強化|きょうか|strengthen
+強気|つよき|firm
+強調|きょうちょう|emphasis
+強盗|ごうとう|robbery
+強力|きょうりょく|powerful
+恐怖|きょうふ|fear
+教育|きょういく|education
+教会|きょうかい|church
+教室|きょうしつ|classroom
+禁煙|きんえん|No Smoking
+禁止|きんし|prohibition
+近所|きんじょ|neighborhood
+近代|きんだい|modern times
+金魚|きんぎょ|goldfish
+銀行|ぎんこう|bank
+苦手|にがて|poor
+苦情|くじょう|complaint
+苦心|くしん|pain
+苦痛|くつう|pain
+苦労|くろう|hardship
+具合|ぐあい|condition
+具体|ぐたい|concrete
+空気|くうき|air
+空港|くうこう|airport
+空想|くうそう|daydream
+空中|くうちゅう|sky
+偶数|ぐうすう|even number
+偶然|ぐうぜん|chance
+靴下|くつした|socks
+兄弟|きょうだい|siblings
+形式|けいしき|form
+景気|けいき|condition
+景色|けしき|scenery
+経営|けいえい|management
+経験|けいけん|experience
+経済|けいざい|economics
+経度|けいど|longitude
+経由|けいゆ|go by the way
+計画|けいかく|plan
+警官|けいかん|police officer
+警告|けいこく|warning
+警察|けいさつ|police
+警備|けいび|defense
+欠席|けっせき|absence
+欠点|けってん|faults
+決心|けっしん|determination
+決定|けってい|decision
+結果|けっか|result
+結局|けっきょく|after all
+結構|けっこう|splendid
+結論|けつろん|conclusion
+月給|げっきゅう|monthly salary
+月日|つきひ|time
+月末|げつまつ|end of the month
+建物|たてもの|building
+権利|けんり|right
+研究|けんきゅう|study
+研修|けんしゅう|training
+見解|けんかい|opinion
+見学|けんがく|tour
+見事|みごと|splendid
+見当|けんとう|estimate
+見物|けんぶつ|sightseeing
+見本|みほん|sample
+元気|げんき|health
+元日|がんじつ|New Year's Day
+原因|げんいん|cause
+原産|げんさん|place of origin
+原始|げんし|origin
+原理|げんり|principle
+原料|げんりょう|raw materials
+現金|げんきん|cash
+現在|げんざい|now )
+現実|げんじつ|reality
+現場|げんば|actual spot
+現状|げんじょう|present condition
+現代|げんだい|today
+言語|げんご|language
+言葉|ことば|language
+限界|げんかい|limit
+限度|げんど|limit
+呼吸|こきゅう|breath
+午後|ごご|afternoon
+午前|ごぜん|morning
+後者|こうしゃ|latter
+御中|おんちゅう|Messrs.
+語学|ごがく|language study
+誤解|ごかい|misunderstanding
+交換|こうかん|exchange
+交差|こうさ|cross
+交際|こうさい|friendship
+交代|こうたい|alternation
+交通|こうつう|traffic
+交番|こうばん|police box
+交流|こうりゅう|exchange
+光景|こうけい|scene
+公園|こうえん|park
+公演|こうえん|public performance
+公害|こうがい|public nuisance
+公共|こうきょう|public
+公式|こうしき|formula
+公正|こうせい|justice
+公表|こうひょう|official announcement
+公平|こうへい|fairness
+公務|こうむ|official business
+口実|こうじつ|excuse
+工員|こういん|factory worker
+工業|こうぎょう|industry
+工事|こうじ|construction work
+工場|こうじょう|factory
+工夫|くふう|device
+幸運|こううん|good luck
+幸福|こうふく|happiness
+広告|こうこく|advertisement
+広場|ひろば|plaza
+校長|こうちょう|principal
+校庭|こうてい|school yard
+構成|こうせい|organization
+行事|ぎょうじ|event
+行動|こうどう|action
+行方|ゆくえ|one's whereabouts
+行列|ぎょうれつ|line
+高速|こうそく|high speed
+高度|こうど|altitude
+高等|こうとう|high class
+合格|ごうかく|success
+合計|ごうけい|sum total
+合図|あいず|sign
+合同|ごうどう|combination
+合理|ごうり|rational
+合流|ごうりゅう|confluence
+国王|こくおう|king
+国家|こっか|state
+国会|こっかい|National Diet
+国語|こくご|national language
+国際|こくさい|international
+国民|こくみん|national
+国立|こくりつ|national
+今回|こんかい|now
+今月|こんげつ|this month
+今後|こんご|from now on
+今週|こんしゅう|this week
+今朝|けさ|this morning
+今度|こんど|now
+今日|きょう|today
+今年|ことし|this year
+今晩|こんばん|tonight
+今夜|こんや|this evening
+困難|こんなん|difficulty
+婚約|こんやく|engagement
+左右|さゆう|left and right
+差別|さべつ|discrimination
+座席|ざせき|seat
+最近|さいきん|recently
+最後|さいご|last
+最高|さいこう|highest
+最終|さいしゅう|last
+最初|さいしょ|beginning
+最中|さいちゅう|in the middle of
+最低|さいてい|least
+才能|さいのう|talent
+祭日|さいじつ|national holiday
+在学|ざいがく|in school
+財産|ざいさん|property
+作家|さっか|author
+作業|さぎょう|work
+作曲|さっきょく|composition
+作者|さくしゃ|author
+作成|さくせい|creation
+作製|さくせい|manufacture
+作品|さくひん|work
+作物|さくもつ|produce
+作文|さくぶん|essay
+作法|さほう|manners
+昨日|きのう|yesterday
+昨夜|ゆうべ|last night
+雑音|ざつおん|noise
+雑誌|ざっし|magazine
+参加|さんか|participation
+参考|さんこう|reference
+山道|やまみち|mountain road
+産業|さんぎょう|industry
+産地|さんち|producing area
+賛成|さんせい|approval
+残念|ざんねん|regret
+仕事|しごと|work
+仕方|しかた|way
+仕様|しよう|way
+使用|しよう|use )
+始終|しじゅう|continuously
+姉妹|しまい|sisters
+子供|こども|child
+市場|いちば|market
+市民|しみん|citizen
+思想|しそう|thought
+指定|してい|designation
+支給|しきゅう|payment
+支出|ししゅつ|expenditure
+支店|してん|branch store
+支度|したく|preparation
+支配|しはい|rule
+死体|したい|corpse
+死亡|しぼう|death
+私鉄|してつ|private railway
+私用|しよう|personal use
+私立|しりつ|private
+試験|しけん|exam
+試合|しあい|match
+資格|しかく|qualifications
+資本|しほん|funds
+資料|しりょう|materials
+歯車|はぐるま|gear
+事件|じけん|event
+事実|じじつ|fact
+事情|じじょう|circumstances
+字引|じびき|dictionary
+字体|じたい|font
+寺院|じいん|temple
+持参|じさん|bringing
+時間|じかん|time
+時期|じき|time
+時計|とけい|watch
+時刻|じこく|time
+時速|じそく|speed
+時代|じだい|age
+自殺|じさつ|suicide
+自治|じち|self-government
+自習|じしゅう|self-study
+自身|じしん|oneself
+自然|しぜん|nature
+自宅|じたく|one's own home )
+自動|じどう|automatic
+自由|じゆう|freedom
+辞書|じしょ|dictionary
+辞退|じたい|refusal
+失業|しつぎょう|unemployment
+失敗|しっぱい|failure
+失望|しつぼう|disappointment
+失礼|しつれい|discourtesy
+質問|しつもん|question
+実感|じっかん|feelings
+実験|じっけん|lab work
+実現|じつげん|implementation
+実行|じっこう|practice
+実際|じっさい|in fact
+実習|じっしゅう|practice
+実物|じつぶつ|actual thing
+実用|じつよう|practical use
+実力|じつりょく|ability
+実例|じつれい|example
+写真|しゃしん|picture
+写生|しゃせい|sketching
+社会|しゃかい|society
+社説|しゃせつ|editorial
+社長|しゃちょう|president of a company
+借金|しゃっきん|debt
+弱点|じゃくてん|weak point
+主語|しゅご|subject
+主人|しゅじん|husband
+主張|しゅちょう|claim
+主婦|しゅふ|housewife
+主役|しゅやく|leading part
+主要|しゅよう|chief
+手間|てま|time
+手紙|てがみ|letter
+手首|てくび|wrist
+手術|しゅじゅつ|surgical operation
+手前|てまえ|before
+手袋|てぶくろ|glove
+手段|しゅだん|means
+手品|てじな|conjuring trick
+種類|しゅるい|variety
+酒場|さかば|bar
+首相|しゅしょう|Prime Minister
+首都|しゅと|capital city
+受験|じゅけん|taking an examination
+受付|うけつけ|reception desk
+収入|しゅうにゅう|income
+修正|しゅうせい|amendment
+修理|しゅうり|repairing
+終点|しゅうてん|terminus
+習慣|しゅうかん|custom
+習字|しゅうじ|penmanship
+集会|しゅうかい|meeting
+集金|しゅうきん|money collection
+集合|しゅうごう|gathering
+集中|しゅうちゅう|concentration
+住居|じゅうきょ|dwelling
+住所|じゅうしょ|address
+住宅|じゅうたく|resident
+住民|じゅうみん|inhabitants
+十分|じゅうぶん|enough
+柔道|じゅうどう|judo
+重体|じゅうたい|seriously ill
+重大|じゅうだい|serious
+重点|じゅうてん|important point
+重役|じゅうやく|director
+重要|じゅうよう|important
+重力|じゅうりょく|gravity
+宿題|しゅくだい|homework
+宿泊|しゅくはく|lodging
+祝日|しゅくじつ|national holiday
+出勤|しゅっきん|going to work
+出口|でぐち|exit
+出場|しゅつじょう|participation
+出身|しゅっしん|come from
+出席|しゅっせき|attendance
+出前|でまえ|home delivery
+出張|しゅっちょう|official tour
+出発|しゅっぱつ|departure
+準備|じゅんび|prepare
+処理|しょり|processing
+初歩|しょほ|elements
+書店|しょてん|bookshop
+書道|しょどう|calligraphy
+書物|しょもつ|books
+書留|かきとめ|registered mail
+書類|しょるい|documents
+助手|じょしゅ|helper
+女王|じょおう|queen
+女子|じょし|woman
+女性|じょせい|woman
+女優|じょゆう|actress
+勝敗|しょうはい|victory or defeat
+勝負|しょうぶ|victory or defeat
+商業|しょうぎょう|commerce
+商社|しょうしゃ|trading company
+商人|しょうにん|trader
+商店|しょうてん|shop
+商売|しょうばい|trade
+商品|しょうひん|commodity
+将来|しょうらい|future
+小雨|こさめ|light rain
+小屋|こや|hut
+小指|こゆび|little finger
+小数|しょうすう|fraction
+小説|しょうせつ|novel
+小川|おがわ|stream
+小鳥|ことり|small bird
+小便|しょうべん|urine
+小包|こづつみ|parcel
+少女|しょうじょ|young girl
+少年|しょうねん|boys
+招待|しょうたい|invitation
+消化|しょうか|digestion
+消費|しょうひ|consumption
+笑顔|えがお|smile
+上下|じょうげ|high and low
+上京|じょうきょう|proceeding to the capital
+上手|じょうず|be good at
+上達|じょうたつ|improvement
+上着|うわぎ|coat
+上等|じょうとう|first class
+上品|じょうひん|refined
+乗客|じょうきゃく|passenger
+乗車|じょうしゃ|taking a train
+場合|ばあい|case
+場所|ばしょ|place
+場面|ばめん|scene
+常識|じょうしき|common sense
+情報|じょうほう|information
+職業|しょくぎょう|occupation
+職場|しょくば|workplace
+職人|しょくにん|artisan
+食事|しょくじ|meal
+食堂|しょくどう|cafeteria
+食品|しょくひん|foodstuff
+食物|しょくもつ|food
+食欲|しょくよく|appetite
+食料|しょくりょう|food
+信号|しんごう|traffic lights
+信用|しんよう|confidence
+信頼|しんらい|reliance
+寝台|しんだい|bed
+心身|しんしん|mind and body
+心配|しんぱい|worry
+心理|しんり|mentality
+新聞|しんぶん|newspaper
+深刻|しんこく|serious
+深夜|しんや|late at night
+申告|しんこく|report
+真空|しんくう|vacuum
+真似|まね|mimicry
+真理|しんり|truth
+神経|しんけい|nerve
+神社|じんじゃ|Shinto shrine
+神様|かみさま|god
+神話|しんわ|myth
+親指|おやゆび|thumb
+親切|しんせつ|kindness
+親友|しんゆう|close friend
+親類|しんるい|relative )
+身体|しんたい|body
+身長|しんちょう|height
+身分|みぶん|position
+進学|しんがく|going on to university
+進行|しんこう|advance
+進歩|しんぽ|improvement
+人間|にんげん|human being
+人気|にんき|popularity
+人形|にんぎょう|doll
+人口|じんこう|population
+人工|じんこう|artificial
+人事|じんじ|human resources
+人種|じんしゅ|race
+人生|じんせい|life
+人物|じんぶつ|character
+人命|じんめい|life
+人類|じんるい|mankind
+図形|ずけい|figure
+図書|としょ|books
+図表|ずひょう|chart
+吹雪|ふぶき|snow storm
+水泳|すいえい|swimming
+水産|すいさん|marine products
+水準|すいじゅん|level
+水洗|すいせん|flushing
+水着|みずぎ|bathing suit
+水中|すいちゅう|underwater
+水道|すいどう|water service
+水分|すいぶん|moisture
+水平|すいへい|level
+水面|すいめん|water's surface
+水曜|すいよう|Wednesday
+数学|すうがく|mathematics
+数字|すうじ|numeral
+世界|せかい|world
+世間|せけん|world
+世話|せわ|looking after
+制限|せいげん|restriction
+制作|せいさく|work
+制度|せいど|system
+性格|せいかく|character
+性質|せいしつ|nature
+性能|せいのう|ability
+性別|せいべつ|sex
+成人|せいじん|adult
+成長|せいちょう|growth
+成年|せいねん|majority
+成分|せいぶん|ingredient
+成立|せいりつ|formation
+政治|せいじ|politics
+正確|せいかく|accurate
+正規|せいき|regular
+正月|しょうがつ|New Year
+正午|しょうご|noon
+正式|せいしき|official
+正体|しょうたい|natural shape
+正直|しょうじき|honesty
+正味|しょうみ|net
+正面|しょうめん|front
+生活|せいかつ|living
+生産|せいさん|production
+生存|せいぞん|existence
+生地|きじ|fabric
+生長|せいちょう|growth
+生徒|せいと|student
+生物|せいぶつ|living thing
+生命|せいめい|life
+生理|せいり|physiology
+精神|せいしん|mind
+声明|せいめい|declaration
+製作|せいさく|manufacture
+製品|せいひん|manufactured goods
+西口|にしぐち|west entrance
+西洋|せいよう|West
+青年|せいねん|youth
+石油|せきゆ|oil
+責任|せきにん|duty
+赤道|せきどう|equator
+切手|きって|postal stamps
+切符|きっぷ|ticket
+説明|せつめい|explanation
+絶対|ぜったい|definitely
+先月|せんげつ|last month
+先行|せんこう|preceding
+先週|せんしゅう|last week
+先生|せんせい|teacher
+先祖|せんぞ|ancestor
+先頭|せんとう|head
+先日|せんじつ|other day
+戦争|せんそう|war
+洗面|せんめん|wash up
+船便|ふなびん|surface mail
+選考|せんこう|selection
+選手|せんしゅ|player selected for a team
+前後|ぜんご|front and back
+前者|ぜんしゃ|former
+前進|ぜんしん|advance
+全員|ぜんいん|all members
+全国|ぜんこく|entire nation
+全集|ぜんしゅう|complete works
+全身|ぜんしん|whole body
+全体|ぜんたい|whole
+全部|ぜんぶ|all
+全力|ぜんりょく|all one's power
+祖先|そせん|ancestor
+祖父|そふ|grandfather
+祖母|そぼ|grandmother
+組合|くみあい|association
+早口|はやくち|fast-talking
+相違|そうい|difference
+相互|そうご|mutual
+相手|あいて|partner
+相続|そうぞく|succession
+相談|そうだん|consultation
+相当|そうとう|considerably
+窓口|まどぐち|window
+送別|そうべつ|farewell
+送料|そうりょう|postage
+増加|ぞうか|increase
+増大|ぞうだい|increase
+息子|むすこ|son
+足元|あしもと|at one's feet
+足袋|たび|Japanese socks
+速達|そくたつ|express
+速度|そくど|speed
+速力|そくりょく|speed
+卒業|そつぎょう|graduation
+存在|そんざい|existence
+他人|たにん|unrelated person
+多少|たしょう|little )
+多分|たぶん|perhaps
+太陽|たいよう|sun
+体育|たいいく|physical education
+体重|たいじゅう|weight
+体制|たいせい|order
+体積|たいせき|capacity
+対立|たいりつ|confrontation
+貸家|かしや|house for rent
+貸間|かしま|room to let
+退院|たいいん|leaving hospital
+退学|たいがく|dropping out of school
+代金|だいきん|price
+代表|だいひょう|representative
+代理|だいり|representation
+台所|だいどころ|kitchen
+台風|たいふう|typhoon
+大雨|おおあめ|heavy rain
+大家|おおや|landlord
+大会|たいかい|convention
+大学|だいがく|college
+大気|たいき|atmosphere
+大工|だいく|carpenter
+大使|たいし|ambassador
+大事|だいじ|important
+大小|だいしょう|size
+大人|おとな|adult
+大勢|おおぜい|great number of people
+大切|たいせつ|important
+大戦|たいせん|great war
+大体|だいたい|approximately
+大半|たいはん|most of
+大変|たいへん|very
+大木|たいぼく|large tree
+題名|だいめい|title
+単位|たんい|credit
+単語|たんご|word
+単数|たんすう|singular
+短期|たんき|short term
+短所|たんしょ|defect
+断水|だんすい|water outage
+断定|だんてい|conclusion
+段階|だんかい|gradation
+男子|だんし|young man
+男女|だんじょ|men and women
+男性|だんせい|man
+値段|ねだん|price
+知事|ちじ|prefectural governor
+知識|ちしき|knowledge
+知人|ちじん|friend
+知能|ちのう|intelligence
+地位|ちい|position
+地下|ちか|basement
+地球|ちきゅう|earth
+地質|ちしつ|geological features
+地震|じしん|earthquake
+地図|ちず|map
+地点|ちてん|site
+地方|ちほう|area
+地味|じみ|quiet
+地名|ちめい|place name
+地面|じめん|ground
+地理|ちり|geography
+遅刻|ちこく|lateness
+茶色|ちゃいろ|brown
+着物|きもの|kimono
+中学|ちゅうがく|middle school
+中間|ちゅうかん|middle
+中古|ちゅうこ|used
+中国|ちゅうごく|China
+中指|なかゆび|middle finger
+中止|ちゅうし|suspension
+中心|ちゅうしん|center
+中身|なかみ|content
+中世|ちゅうせい|Middle Ages
+中性|ちゅうせい|neuter gender
+中途|ちゅうと|in the middle
+中年|ちゅうねん|middle-aged
+昼間|ひるま|daytime
+昼食|ちゅうしょく|lunch )
+昼寝|ひるね|nap
+注意|ちゅうい|caution
+注文|ちゅうもん|order
+注目|ちゅうもく|notice
+虫歯|むしば|cavity
+駐車|ちゅうしゃ|parking
+調子|ちょうし|condition
+長期|ちょうき|long time period
+長所|ちょうしょ|strong point
+長女|ちょうじょ|eldest daughter
+長短|ちょうたん|length
+長男|ちょうなん|eldest son
+頂上|ちょうじょう|top
+頂点|ちょうてん|top
+直後|ちょくご|immediately following
+直前|ちょくぜん|just before
+直通|ちょくつう|direct connection
+追加|ついか|addition
+通過|つうか|passage through
+通学|つうがく|commuting to school
+通勤|つうきん|commuting to work
+通行|つうこう|passage
+通信|つうしん|correspondence
+通知|つうち|notice
+通用|つうよう|popular use
+通路|つうろ|passage
+低下|ていか|fall
+定員|ていいん|fixed number of regular personnel
+定期|ていき|fixed term
+定規|じょうぎ|ruler
+弟子|でし|pupil
+程度|ていど|degree
+的確|てきかく|precise
+適切|てきせつ|appropriate
+適度|てきど|moderate
+適当|てきとう|fitness
+適用|てきよう|applying
+鉄橋|てっきょう|iron bridge
+鉄道|てつどう|railway
+天気|てんき|weather
+天候|てんこう|weather
+天然|てんねん|nature
+店員|てんいん|clerk
+点数|てんすう|marks
+伝記|でんき|biography
+伝言|でんごん|verbal message
+電気|でんき|electricity
+電球|でんきゅう|light bulb
+電子|でんし|electron
+電車|でんしゃ|electric train
+電池|でんち|battery
+電波|でんぱ|electro-magnetic wave
+電報|でんぽう|telegram
+電流|でんりゅう|electric current
+電力|でんりょく|electric power
+電話|でんわ|telephone
+登山|とざん|mountain-climbing
+登場|とうじょう|entry
+途中|とちゅう|on the way
+都会|とかい|city
+都合|つごう|circumstances
+都市|とし|town
+都心|としん|heart
+努力|どりょく|great effort
+土地|とち|plot of land
+倒産|とうさん|bankruptcy
+投書|とうしょ|letter to the editor
+東口|ひがしぐち|east entrance
+東西|とうざい|East and West
+東洋|とうよう|Orient
+盗難|とうなん|theft
+湯気|ゆげ|steam
+当時|とうじ|at that time
+当然|とうぜん|obvious
+当日|とうじつ|appointed day
+当番|とうばん|being on duty
+等分|とうぶん|division into equal parts
+答案|とうあん|examination paper
+到着|とうちゃく|arrival
+頭痛|ずつう|headache
+動作|どうさ|action
+動物|どうぶつ|animal
+同一|どういつ|identity
+同時|どうじ|simultaneous
+同様|どうよう|identical
+道具|どうぐ|tool
+道路|どうろ|road
+得意|とくい|pride
+特急|とっきゅう|limited express
+特色|とくしょく|characteristic
+特長|とくちょう|forte
+特定|とくてい|specific
+特売|とくばい|special sale
+特別|とくべつ|special
+読書|どくしょ|reading
+突然|とつぜん|abruptly
+内科|ないか|internist clinic
+内容|ないよう|subject
+南口|みなみぐち|south entrance
+南米|なんべい|South America
+南北|なんぼく|south and north
+二人|ふたり|two people
+日記|にっき|diary
+日光|にっこう|sunlight
+日時|にちじ|date and time
+日常|にちじょう|ordinary
+日中|にっちゅう|daytime
+日程|にってい|schedule
+日付|ひづけ|date
+日本|にほん|Japan
+入院|にゅういん|hospitalization
+入学|にゅうがく|entry to school or university
+入社|にゅうしゃ|entry to a company
+入場|にゅうじょう|entrance
+熱心|ねっしん|enthusiasm
+熱中|ねっちゅう|enthusiasm
+年間|ねんかん|year
+年月|としつき|months and years
+年代|ねんだい|age
+年中|ねんじゅう|whole year
+年度|ねんど|year
+能力|のうりょく|ability
+破産|はさん|bankruptcy
+破片|はへん|fragment
+拝見|はいけん|seeing
+背広|せびろ|men's suit
+背中|せなか|back
+配達|はいたつ|delivery
+売店|ばいてん|shop
+売買|ばいばい|trade
+白髪|しらが|white or grey hair
+発音|はつおん|pronunciation
+発見|はっけん|discovery
+発行|はっこう|issue
+発車|はっしゃ|departure of a vehicle
+発想|はっそう|idea
+発達|はったつ|development
+発電|はつでん|generation
+発売|はつばい|sale
+発表|はっぴょう|announcement
+発明|はつめい|invention
+判子|はんこ|seal
+判事|はんじ|judge
+判断|はんだん|judgment
+半島|はんとう|peninsula
+半分|はんぶん|half
+反映|はんえい|reflection
+反対|はんたい|oppose
+犯罪|はんざい|crime
+犯人|はんにん|offender
+番号|ばんごう|number
+番組|ばんぐみ|broadcast program
+番地|ばんち|house number
+否定|ひてい|negation
+彼女|かのじょ|girlfriend
+費用|ひよう|cost
+非行|ひこう|delinquency
+非常|ひじょう|emergency
+飛行|ひこう|aviation
+美人|びじん|beautiful person
+美容|びよう|beauty of figure or form
+必死|ひっし|desperation
+必要|ひつよう|necessary
+表現|ひょうげん|expression
+表紙|ひょうし|front cover
+表示|ひょうじ|display
+表情|ひょうじょう|facial expression
+表面|ひょうめん|surface
+病院|びょういん|hospital
+病気|びょうき|illness
+品物|しなもの|goods
+不安|ふあん|anxiety
+不運|ふうん|unlucky
+不可|ふか|wrong
+不幸|ふこう|unhappiness
+不正|ふせい|injustice
+不足|ふそく|insufficiency
+不通|ふつう|blockade
+不平|ふへい|complaint
+不便|ふべん|inconvenience
+不満|ふまん|dissatisfaction
+不利|ふり|disadvantage
+付近|ふきん|neighborhood
+夫妻|ふさい|man and wife
+夫人|ふじん|wife
+夫婦|ふうふ|married couple
+婦人|ふじん|woman 、女の人 )
+父親|ちちおや|father
+父母|ふぼ|father and mother
+符号|ふごう|sign
+舞台|ぶたい|stage
+部屋|へや|room
+部首|ぶしゅ|radical
+部長|ぶちょう|department manager
+部品|ぶひん|parts
+部分|ぶぶん|portion
+風景|ふうけい|scenery
+風船|ふうせん|balloon
+復習|ふくしゅう|review
+複雑|ふくざつ|complexity
+複写|ふくしゃ|copy
+複数|ふくすう|plural
+物音|ものおと|sounds
+物語|ものがたり|tale
+物事|ものごと|things
+物質|ぶっしつ|material
+物置|ものおき|storage room
+物理|ぶつり|physics
+分解|ぶんかい|analysis
+分数|ぶんすう|fraction
+分野|ぶんや|field
+分類|ぶんるい|classification
+文化|ぶんか|culture
+文学|ぶんがく|literature
+文字|もじ|letter
+文体|ぶんたい|literary style
+文法|ぶんぽう|grammar
+文明|ぶんめい|civilization
+平気|へいき|coolness
+平等|びょうどう|equality
+平日|へいじつ|weekday
+平野|へいや|plain
+平和|へいわ|peace
+並行|へいこう|side by side
+並木|なみき|roadside tree
+閉会|へいかい|closure
+変化|へんか|change
+変更|へんこう|change
+片道|かたみち|one-way
+返事|へんじ|reply
+便所|べんじょ|toilet
+便利|べんり|convenient
+歩道|ほどう|walkway
+母親|ははおや|mother
+報告|ほうこく|report
+放送|ほうそう|broadcasting
+方言|ほうげん|dialect
+方向|ほうこう|direction
+方法|ほうほう|method
+方面|ほうめん|direction
+法律|ほうりつ|law
+訪問|ほうもん|call
+帽子|ぼうし|hat
+北口|きたぐち|north entrance
+本人|ほんにん|person himself
+本当|ほんとう|real
+本日|ほんじつ|today
+本部|ほんぶ|headquarters
+本物|ほんもの|genuine article
+本来|ほんらい|essentially
+枚数|まいすう|number of flat things
+毎週|まいしゅう|every week
+毎朝|まいあさ|every morning
+毎度|まいど|each time
+毎日|まいにち|every day
+毎晩|まいばん|every night
+万一|まんいち|by some chance
+万歳|ばんざい|banzai
+満員|まんいん|full house
+満足|まんぞく|satisfaction
+満点|まんてん|perfect score
+味方|みかた|ally
+未満|みまん|less than
+未来|みらい|future
+民間|みんかん|private
+夢中|むちゅう|crush
+無限|むげん|infinite
+無事|ぶじ|safety
+無数|むすう|countless number
+無地|むじ|plain
+無理|むり|unreasonable
+無料|むりょう|free
+名作|めいさく|masterpiece
+名所|めいしょ|famous place
+名人|めいじん|master
+名前|なまえ|name
+名物|めいぶつ|famous product
+明確|めいかく|clear
+明日|あした|tomorrow
+迷子|まいご|lost child
+迷信|めいしん|superstition
+面積|めんせき|area
+面倒|めんどう|trouble
+目安|めやす|criterion
+目下|めした|at present
+目次|もくじ|table of contents
+目上|めうえ|person of higher status
+目的|もくてき|purpose
+問題|もんだい|problem
+問答|もんどう|questions and answers
+夜間|やかん|at night
+夜行|やこう|night train
+夜中|よなか|midnight
+野菜|やさい|vegetable
+役割|やくわり|assigning parts
+役者|やくしゃ|actor
+役所|やくしょ|government office
+役人|やくにん|government official
+役目|やくめ|duty
+約束|やくそく|arrangement
+薬局|やっきょく|pharmacy
+薬指|くすりゆび|ring finger
+薬品|やくひん|medicine
+油断|ゆだん|negligence
+輸出|ゆしゅつ|export
+輸送|ゆそう|transport
+輸入|ゆにゅう|import
+優勝|ゆうしょう|overall victory
+友好|ゆうこう|friendship
+友情|ゆうじょう|friendship
+友人|ゆうじん|friend
+友達|ともだち|friend
+有機|ゆうき|organic
+有能|ゆうのう|able
+有無|うむ|yes or no
+有名|ゆうめい|famous
+有利|ゆうり|advantageous
+有料|ゆうりょう|admission-paid
+夕日|ゆうひ|the evening sun
+夕飯|ゆうはん|dinner
+夕方|ゆうがた|late afternoon
+夕立|ゆうだち|evening shower
+予期|よき|expectation
+予習|よしゅう|preparation of lessons
+予想|よそう|expectation
+予定|よてい|plans
+予備|よび|preparation
+予報|よほう|forecast
+予約|よやく|reservation
+余計|よけい|too much
+余所|よそ|another place
+余分|よぶん|extra
+容易|ようい|easy
+容積|ようせき|capacity
+曜日|ようび|day of the week
+様子|ようす|aspect
+洋服|ようふく|Western-style clothes
+用意|ようい|preparation
+用語|ようご|term
+用事|ようじ|business to take care of
+用心|ようじん|care
+用途|ようと|use
+葉書|はがき|postcard
+要求|ようきゅう|request
+要点|ようてん|gist
+陽気|ようき|season
+来月|らいげつ|next month
+来週|らいしゅう|next week
+来日|らいにち|coming to Japan
+来年|らいねん|next year
+利害|りがい|advantages and disadvantages
+利口|りこう|clever
+利用|りよう|use
+理科|りか|science
+理解|りかい|understanding
+理想|りそう|ideal
+理由|りゆう|reason
+立場|たちば|standpoint
+流行|りゅうこう|fashionable
+流石|さすが|indeed
+留学|りゅうがく|studying abroad
+留守|るす|absence
+旅館|りょかん|Japanese inn
+旅行|りょこう|travel
+両親|りょうしん|parents
+両側|りょうがわ|both sides
+両替|りょうがえ|change
+両方|りょうほう|both sides
+料金|りょうきん|fee
+料理|りょうり|cooking
+例外|れいがい|exception
+冷静|れいせい|calm
+列車|れっしゃ|train
+列島|れっとう|chain of islands
+連合|れんごう|union
+連想|れんそう|association
+連続|れんぞく|consecutive
+連絡|れんらく|communication
+労働|ろうどう|labor
+老人|ろうじん|aged
+論争|ろんそう|controversy
+論文|ろんぶん|thesis
+和英|わえい|Japanese-English
+和服|わふく|Japanese clothes
+話題|わだい|topic
+決行|けっこう|doing
+御飯|ごはん|rice
+真中|まんなか|middle
+大分|だいぶ|fairly well
+直流|ちょくりゅう|direct current
+店屋|みせや|store
+転校|てんこう|change schools
+土産|みやげ|souvenir
+同格|どうかく|same rank
+意地悪|いじわる|malicious
+一昨日|おととい|day before yesterday
+一昨年|いっさくねん|year before last
+運転手|うんてんしゅ|driver
+映画館|えいがかん|movie theater
+火曜日|かようび|Tuesday
+過半数|かはんすう|majority
+会議室|かいぎしつ|conference room
+海水浴|かいすいよく|sea bathing
+外国人|がいこくじん|foreigner
+乾電池|かんでんち|dry cell
+機関車|きかんしゃ|locomotive
+教科書|きょうかしょ|textbook
+金曜日|きんようび|Friday
+月曜日|げつようび|Monday
+研究室|けんきゅうしつ|professor's office
+五十音|ごじゅうおん|Japanese syllabary
+交差点|こうさてん|intersection
+公務員|こうむいん|government worker
+高校生|こうこうせい|high school student
+三日月|みかづき|crescent moon
+歯医者|はいしゃ|dentist
+事務所|じむしょ|office
+時間割|じかんわり|timetable
+自転車|じてんしゃ|bicycle
+自動車|じどうしゃ|automobile
+出来事|できごと|incident happening
+小学校|しょうがっこう|elementary school
+小学生|しょうがくせい|elementary school pupil
+食料品|しょくりょうひん|foodstuff
+新聞社|しんぶんしゃ|newspaper company
+真面目|まじめ|diligent
+図書館|としょかん|library
+水曜日|すいようび|Wednesday
+正方形|せいほうけい|square
+生意気|なまいき|impertinent
+青少年|せいしょうねん|youth
+待合室|まちあいしつ|waiting room
+大学院|だいがくいん|graduate school
+大学生|だいがくせい|college student
+大使館|たいしかん|embassy
+大部分|だいぶぶん|most part
+地下水|ちかすい|underground water
+地下鉄|ちかてつ|underground train
+中学校|ちゅうがっこう|junior high school pupil
+駐車場|ちゅうしゃじょう|parking lot
+調味料|ちょうみりょう|condiment
+長方形|ちょうほうけい|rectangle
+定休日|ていきゅうび|regular holiday
+土曜日|どようび|Saturday
+動物園|どうぶつえん|zoo
+日本語|にほんご|Japanese
+日曜日|にちようび|Sunday
+日用品|にちようひん|daily necessities
+八百屋|やおや|greengrocer
+晩御飯|ばんごはん|dinner
+飛行機|ひこうき|airplane
+飛行場|ひこうじょう|airport
+美術館|びじゅつかん|art gallery
+不思議|ふしぎ|mystery
+不自由|ふじゆう|discomfort
+方程式|ほうていしき|equation
+明後日|あさって|day after tomorrow
+木曜日|もくようび|Thursday
+遊園地|ゆうえんち|amusement park
+留学生|りゅうがくせい|international student
+留守番|るすばん|care-taking
+加速度|かそくど|acceleration
