@@ -264,7 +264,7 @@ const ReadyScreen = ({
 
         {/* On the painted station: a dark pill, so the line reads over any picture. */}
         <p className="rt-light mx-auto rounded-full bg-[#1b1430]/75 px-4 text-center text-xs leading-[2.2] font-black text-[#ffe9c2]">
-          <RubyText showFurigana={showFurigana}>{`★ ${total} / ${kanji.length * 3} ・ 字(じ)を タップすると もっと 書(か)ける`}</RubyText>
+          <RubyText showFurigana={showFurigana}>{`★ ${total} / ${kanji.length * 3} ・ 字(じ)を タップ → もっと 書(か)く`}</RubyText>
         </p>
         {onStory && (
           <button
