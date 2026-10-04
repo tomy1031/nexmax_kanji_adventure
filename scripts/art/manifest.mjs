@@ -608,6 +608,7 @@ const human = (person, mood, first, diff, used) => {
 
 const FOLK = [
   human('yamada', 'happy', 'happy', 'overjoyed: both hands clasped beside her cheek, eyes closed in a big happy smile, a few small sparkles around her.', '1章 2話 山田さん（名前が 戻った）'),
+  human('yamada', 'normal', 'happy', 'calm and friendly: standing upright with a gentle smile, one hand raised palm-up to the side as if showing the way, the other hand resting at her side.', '1章 2話 山田さん（あいさつ・案内。旧い ロボットの 絵の かわり）'),
   human('yamada', 'sad', 'happy', 'worried and sad: both hands pressed to her cheeks, eyes looking down with a small tear, a wobbly little frown.', '1章 2話 山田さん（名前の 漢字が 消えた）'),
   human('girl', 'happy', 'happy', 'overjoyed: hugging a small fluffy white puppy (a cute real dog) in her arms, eyes closed in a big smile.', 'かな編 3話 犬が 戻った 女の子'),
   human('girl', 'sad', 'happy', 'sad and worried: holding an empty red dog collar with a small blank tag in both hands against her chest, teary eyes, looking down. No dog in the picture.', 'かな編 3話 犬を さがす 女の子'),
