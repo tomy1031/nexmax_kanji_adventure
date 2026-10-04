@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { RubyText } from '../../components/ui/Ruby';
 import { useGameStore } from '../../store/gameStore';
+import { getCompounds, useCompoundsVersion } from '../../data/compounds';
 
 /**
  * First visit to the forge.
@@ -12,22 +13,30 @@ import { useGameStore } from '../../store/gameStore';
  * three junk pairs first concludes the mechanic is a slot machine.
  */
 
-const CARDS: { title: string; body: string }[] = [
+/**
+ * Said in 1冊目 grammar and arrows (docs/constraints.md 2026-10-04); the
+ * English sits behind EN, as on ★の ひみつ. `{words}` is the dictionary's size.
+ */
+const CARDS: { title: string; body: string; en: string }[] = [
   {
     title: '漢字(かんじ)を あわせて 武器(ぶき)を 作(つく)る',
-    body: '10回(かい) 書(か)いた 漢字(かんじ)（★3）を 2(ふた)つ えらぶと、武器(ぶき)に なります。',
+    body: '10回(かい) 書(か)いた 漢字(かんじ)（★3）を 2(ふた)つ えらぶ → 武器(ぶき)！',
+    en: 'Pick two kanji you have written ten times (★3): they become a weapon.',
   },
   {
     title: '本当(ほんとう)に ある 言葉(ことば)は 強(つよ)い',
-    body: '「火(ひ)」＋「山(やま)」＝「火山(かざん)」。\nこれは 本当(ほんとう)に ある 言葉(ことば)なので、とても 強(つよ)い 武器(ぶき)に なります。',
+    body: '「火(ひ)」＋「山(やま)」＝「火山(かざん)」。\n本当(ほんとう)に ある 言葉(ことば)です。とても 強(つよ)い 武器(ぶき)です。',
+    en: 'Fire + mountain = kazan, "volcano" — a real word, so a strong weapon.',
   },
   {
-    title: '言葉(ことば)に ならない 組(く)み合(あ)わせは 弱(よわ)い',
-    body: '「山(やま)」＋「火(ひ)」＝「山火(やまひ)」。\nこれは 言葉(ことば)では ありません。武器(ぶき)は できますが、弱(よわ)いです。\nじゅんばんが 大事(だいじ)です。',
+    title: '言葉(ことば)で ない ものは 弱(よわ)い',
+    body: '「山(やま)」＋「火(ひ)」＝「山火(やまひ)」。\nこれは 言葉(ことば)では ありません。弱(よわ)い 武器(ぶき)です。\nじゅんばんが 大事(だいじ)です。',
+    en: 'Mountain + fire is not a word: the weapon is weak. The order matters.',
   },
   {
-    title: 'たくさん 見(み)つけよう',
-    body: 'この ゲームには 本当(ほんとう)に ある 言葉(ことば)が 1174(せんひゃくななじゅうよん) あります。\n漢字(かんじ)が ふえると、作(つく)れる 言葉(ことば)も ふえます。',
+    title: 'たくさん 見(み)つけましょう',
+    body: '本当(ほんとう)に ある 言葉(ことば)は {words}。\n新(あたら)しい 話(わ)の 字(じ) → もっと 強(つよ)い 武器(ぶき)。\nどの 話(わ)にも、かくし武器(ぶき)が 1(ひと)つ あります。',
+    en: 'There are {words} real words to find. Kanji from later episodes make stronger weapons, and every episode hides one secret weapon.',
   },
 ];
 
@@ -36,10 +45,14 @@ export const ForgeTutorial = () => {
   const markSeen = useGameStore((s) => s.markTutorialSeen);
   const showFurigana = useGameStore((s) => s.settings.furigana);
   const [index, setIndex] = useState(0);
+  const [en, setEn] = useState(false);
+  // The rest of the dictionary arrives just after start (data/compounds.ts).
+  useCompoundsVersion();
 
   if (seen) return null;
 
-  const card = CARDS[index];
+  const words = getCompounds().length.toLocaleString('en-US');
+  const card = { ...CARDS[index], body: CARDS[index].body.replace('{words}', words), en: CARDS[index].en.replace('{words}', words) };
   const last = index === CARDS.length - 1;
 
   return (
@@ -57,12 +70,22 @@ export const ForgeTutorial = () => {
           transition={{ type: 'spring', stiffness: 300, damping: 24 }}
           className="g-panel-solid w-full max-w-sm p-6"
         >
-          <p className="g-eyebrow">
-            <RubyText showFurigana={showFurigana}>漢字(かんじ)やさんの つかいかた</RubyText>
-            <span className="ml-2 tabular-nums">
-              {index + 1} / {CARDS.length}
-            </span>
-          </p>
+          <div className="flex items-center justify-between gap-2">
+            <p className="g-eyebrow">
+              <RubyText showFurigana={showFurigana}>漢字(かんじ)やさんの つかいかた</RubyText>
+              <span className="ml-2 tabular-nums">
+                {index + 1} / {CARDS.length}
+              </span>
+            </p>
+            <button
+              type="button"
+              aria-pressed={en}
+              className="rounded-full border-2 border-[#caa468] bg-white/80 px-2.5 py-0.5 text-[12px] font-bold whitespace-nowrap"
+              onClick={() => setEn(!en)}
+            >
+              EN
+            </button>
+          </div>
 
           <h2 className="g-title mt-2 text-lg leading-snug">
             <RubyText showFurigana={showFurigana}>{card.title}</RubyText>
@@ -70,6 +93,11 @@ export const ForgeTutorial = () => {
           <p className="mt-2 text-sm whitespace-pre-line" style={{ color: 'var(--ink-2)' }}>
             <RubyText showFurigana={showFurigana}>{card.body}</RubyText>
           </p>
+          {en && (
+            <p lang="en" className="mt-2 text-[13px] leading-snug font-bold" style={{ color: '#1b4f8f' }}>
+              {card.en}
+            </p>
+          )}
 
           {/* 2枚目と3枚目は、実物を見せたほうが早い */}
           {index === 1 && (
@@ -117,7 +145,7 @@ export const ForgeTutorial = () => {
               onClick={() => (last ? markSeen('forge') : setIndex((i) => i + 1))}
             >
               {last ? (
-                <RubyText showFurigana={showFurigana}>やってみる</RubyText>
+                <RubyText showFurigana={showFurigana}>つくる！</RubyText>
               ) : (
                 <RubyText showFurigana={showFurigana}>つぎへ</RubyText>
               )}
