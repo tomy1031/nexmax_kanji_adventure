@@ -345,6 +345,8 @@ export const MojiRouteMap = () => {
   const owned = useOwnedKanji();
   const [params] = useSearchParams();
   const fresh = params.get('new');
+  // Back from a replay (?at=): the sheet opens on the episode just played, with no NEW.
+  const at = params.get('at');
   const prefersReduced = useReducedMotion();
   const settingReduced = useGameStore((s) => s.settings.reducedMotion);
   const still = Boolean(prefersReduced || settingReduced);
@@ -361,8 +363,8 @@ export const MojiRouteMap = () => {
           ? 'n5'
           : null;
 
-  // Arriving from つぎの 話へ (?new=): its sheet is already open.
-  const [sheet, setSheet] = useState<GroupId | null>(() => (fresh ? groupOf(fresh) : null));
+  // Arriving from つぎの 話へ (?new=) or a replay (?at=): its sheet is already open.
+  const [sheet, setSheet] = useState<GroupId | null>(() => (fresh || at ? groupOf((fresh ?? at)!) : null));
   const [record, setRecord] = useState(false);
   const [locked, setLocked] = useState<string | null>(null);
   useEffect(() => {
@@ -398,7 +400,7 @@ export const MojiRouteMap = () => {
   // 1章 has eleven episodes, more than a phone's sheet shows: it opens on the
   // one to play (the new one, or つづき), not on 1話.
   const listRef = useRef<HTMLDivElement>(null);
-  const focusEp = fresh ?? next;
+  const focusEp = fresh ?? at ?? next;
   useEffect(() => {
     if (!sheet || !focusEp) return;
     const t = setTimeout(() => {

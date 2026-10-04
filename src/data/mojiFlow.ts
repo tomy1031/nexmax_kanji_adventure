@@ -60,8 +60,8 @@ export const isEpisodeOpen = (ep: MojiEpisode, cleared: readonly string[]): bool
 /**
  * The episode after this one, or null when the story has not been written
  * that far yet. Given the clears, a chapter's last episode leads to its
- * まとめの ボス once that is open (data/mojiFinale.ts), and the boss to
- * whatever follows the chapter.
+ * まとめの ボス once that is open and not yet beaten (data/mojiFinale.ts),
+ * and the boss to whatever follows the chapter.
  */
 export const afterEpisode = (id: string, cleared?: readonly string[]): string | null => {
   const finale = getMojiFinale(id);
@@ -72,7 +72,7 @@ export const afterEpisode = (id: string, cleared?: readonly string[]): string | 
   if (cleared) {
     const ep = getMojiEpisode(id);
     const f = ep && MOJI_FINALES.find((x) => x.chapter === ep.chapter);
-    if (f && lastEpisodeOf(f.chapter)?.id === id && isFinaleOpen(f, cleared)) return f.id;
+    if (f && lastEpisodeOf(f.chapter)?.id === id && isFinaleOpen(f, cleared) && !cleared.includes(f.id)) return f.id;
   }
   const i = ROUTE_ORDER.indexOf(id);
   return i >= 0 && i + 1 < ROUTE_ORDER.length ? ROUTE_ORDER[i + 1] : null;
@@ -152,6 +152,20 @@ export const practiceTarget = (progress: Progress, cleared: readonly string[]): 
  * cleared, its じゅんび — a player comes back for more ★ or a rematch, and
  * the story is one tap away there (おはなしを もう一度).
  */
+/**
+ * Where the end of an episode's story goes, or null when nothing is written
+ * after it (つづく). A chapter's last episode runs straight on into its
+ * unbeaten まとめの ボス; a new episode is shown on the map with NEW; a
+ * replay (the next one is already cleared) goes back to the map at the
+ * episode just played, its sheet open, with no NEW on an old episode.
+ */
+export const afterEpisodePath = (id: string, cleared: readonly string[]): string | null => {
+  const next = afterEpisode(id, cleared);
+  if (!next) return null;
+  if (getMojiFinale(next)) return `/moji/${next}`;
+  return cleared.includes(next) ? `/map/moji?at=${id}` : `/map/moji?new=${next}`;
+};
+
 export const episodePath = (id: string, cleared: readonly string[]): string =>
   id.startsWith('kana-') ? `/kana/${id}` : cleared.includes(id) ? `/moji/${id}?at=ready` : `/moji/${id}`;
 

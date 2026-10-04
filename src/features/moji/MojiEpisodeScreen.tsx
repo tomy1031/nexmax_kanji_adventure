@@ -20,7 +20,7 @@ import { getMojiEpisode, type MojiEpisode } from '../../data/mojiEpisodes';
 import { MOJI_CHAPTERS } from '../../data/mojiRoute';
 import { MOJI1_PRELUDE } from '../../data/scripts/moji1';
 import { MOJI_CAST, MOJI_SCRIPTS } from '../../data/mojiScripts';
-import { afterEpisode, canForge, isChapterOpen, isForgeOpen } from '../../data/mojiFlow';
+import { afterEpisodePath, canForge, isChapterOpen, isForgeOpen } from '../../data/mojiFlow';
 import { finaleNumber, finalePool, getMojiFinale, isFinaleOpen } from '../../data/mojiFinale';
 import { MOJI_FINALE_SCRIPTS } from '../../data/mojiFinaleScripts';
 import { hardFight, hardFinaleFight, isHardOpen, type Difficulty, type HardFight } from '../../lib/difficulty';
@@ -429,10 +429,9 @@ const EpisodePlayer = ({ id }: { id: string }) => {
 
   // The win records the clear (BattleScene); the story's end moves on.
   const finish = () => {
-    const next = afterEpisode(ep.id, useGameStore.getState().clearedStages);
-    // The chapter's last episode runs straight on into its まとめの ボス.
-    if (next && getMojiFinale(next)) navigate(`/moji/${next}`);
-    else if (next) navigate(`/map/moji?new=${next}`);
+    // The chapter's last episode runs straight on into its まとめの ボス; a replay goes back to the map.
+    const path = afterEpisodePath(ep.id, useGameStore.getState().clearedStages);
+    if (path) navigate(path);
     else setPhase('end');
   };
 
@@ -615,8 +614,8 @@ const FinalePlayer = ({ id }: { id: string }) => {
   const toReady = () => setPhase('ready');
   const forgeHere = `/forge?back=${encodeURIComponent(`/moji/${f.id}?at=ready${hard ? '&mode=hard' : ''}`)}`;
   const finish = () => {
-    const next = afterEpisode(f.id, useGameStore.getState().clearedStages);
-    if (next) navigate(`/map/moji?new=${next}`);
+    const path = afterEpisodePath(f.id, useGameStore.getState().clearedStages);
+    if (path) navigate(path);
     else setPhase('end');
   };
 
