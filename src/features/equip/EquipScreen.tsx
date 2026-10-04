@@ -12,6 +12,8 @@ import { RARITY_LABEL } from '../../lib/forge/weapon';
 import { weaponArt, weaponFromRecipe, weaponWord } from '../../lib/forge/recipe';
 import { WeaponMount } from '../battle/WeaponMount';
 import { WeaponTrain } from './WeaponTrain';
+import { GearBehind, GearFront } from '../battle/GearOn';
+import { LAYOUT_TRAVEL, gearArt } from '../battle/gearLayout';
 import { statsFromGear } from '../../lib/battle';
 import { charRuby } from '../../lib/reading';
 import { REPS_TO_OBTAIN } from '../../types/kanji';
@@ -125,15 +127,28 @@ export const EquipScreen = () => {
                 />
               </div>
             )}
-            <motion.img
-              src={assetPath(moji ? 'img/stageselect/nexmax_travel.webp' : 'img/chara/cut/guide.webp')}
-              alt=""
-              aria-hidden
-              className="absolute bottom-3 left-1/2 h-[190px] -translate-x-1/2"
-              style={moji ? undefined : { filter: 'drop-shadow(3px 0 0 #fff) drop-shadow(-3px 0 0 #fff) drop-shadow(0 8px 10px rgba(0,0,0,0.3))' }}
-              animate={{ y: [0, -5, 0] }}
-              transition={{ duration: 2.6, repeat: Infinity }}
-            />
+            {moji ? (
+              // 新ルート: Nexmax wearing what is equipped — armour behind, shield and charm in front (GearOn).
+              <motion.div
+                className="absolute bottom-3 left-1/2 aspect-[520/780] h-[190px] -translate-x-1/2"
+                animate={{ y: [0, -5, 0] }}
+                transition={{ duration: 2.6, repeat: Infinity }}
+              >
+                <GearBehind worn={equippedGear} layout={LAYOUT_TRAVEL} still={false} />
+                <img src={assetPath('img/stageselect/nexmax_travel.webp')} alt="" aria-hidden className="relative h-full w-full" />
+                <GearFront worn={equippedGear} layout={LAYOUT_TRAVEL} still={false} />
+              </motion.div>
+            ) : (
+              <motion.img
+                src={assetPath('img/chara/cut/guide.webp')}
+                alt=""
+                aria-hidden
+                className="absolute bottom-3 left-1/2 h-[190px] -translate-x-1/2"
+                style={{ filter: 'drop-shadow(3px 0 0 #fff) drop-shadow(-3px 0 0 #fff) drop-shadow(0 8px 10px rgba(0,0,0,0.3))' }}
+                animate={{ y: [0, -5, 0] }}
+                transition={{ duration: 2.6, repeat: Infinity }}
+              />
+            )}
             {SLOTS.map(({ slot: s, icon, pos }) => {
               const item = slotItem(s);
               const on = s === slot;
@@ -153,6 +168,8 @@ export const EquipScreen = () => {
                 >
                   {moji && s === 'weapon' && weapon ? (
                     <img src={assetPath(weaponArt(weapon.weaponClass, weapon.rarity))} alt="" aria-hidden className="h-[42px] w-[42px] object-contain" />
+                  ) : moji && s !== 'weapon' && equippedGear[s] ? (
+                    <img src={assetPath(gearArt(equippedGear[s]!))} alt="" aria-hidden className="h-[42px] w-[42px] object-contain" />
                   ) : (
                     <span style={{ color: item ? '#7a4a26' : 'rgba(27,79,138,0.35)' }}>
                       <GameIcon name={item?.icon ?? icon} size={34} />
@@ -259,7 +276,12 @@ export const EquipScreen = () => {
                         className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-white/70"
                         style={{ color: made ? '#7a4a26' : 'rgba(122,74,38,0.35)' }}
                       >
-                        <GameIcon name={g.icon} size={30} />
+                        {moji ? (
+                          // Not made yet: its outline only.
+                          <img src={assetPath(gearArt(g.id))} alt="" aria-hidden className="h-10 w-10 object-contain" style={made ? undefined : { filter: 'brightness(0) opacity(0.25)' }} />
+                        ) : (
+                          <GameIcon name={g.icon} size={30} />
+                        )}
                       </span>
                       <div className="min-w-0 flex-1">
                         <p className="text-sm font-black">

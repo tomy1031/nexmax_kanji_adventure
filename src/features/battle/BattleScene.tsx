@@ -284,6 +284,8 @@ export const BattleScene = ({
   const [outcome, setOutcome] = useState<Outcome>(null);
   /** わざ: the gauge, what a used one still holds for the coming writes, the cut-in and the companion's bubble. */
   const [gauge, setGauge] = useState(0);
+  /** Strikes the shield took — the worn shield kicks with each (GearFront). */
+  const [guardNo, setGuardNo] = useState(0);
   const [buffs, setBuffs] = useState({ guards: 0, freeLooks: 0, power: 1, comboShield: 0 });
   const [cut, setCut] = useState<SkillCut | null>(null);
   const [talk, setTalk] = useState<{ n: number; text: string } | null>(null);
@@ -417,6 +419,8 @@ export const BattleScene = ({
       return;
     }
     const back = strikeDamage(counterDamage(stage.boss.attack, individual, stage.boss.element), stats.defense);
+    // The shield takes the blow: it kicks (GearFront).
+    if (stats.defense > 0) setGuardNo((n) => n + 1);
     const nextPlayerHp = Math.max(0, playerHp - back);
     setPlayerHp(nextPlayerHp);
     sfx.hurt();
@@ -825,6 +829,8 @@ export const BattleScene = ({
           spark={spark}
           companion={companionView}
           cut={cut}
+          worn={tutorial ? {} : equippedGear}
+          guard={guardNo}
           mount={weapon ? { cls: weapon.weaponClass, element: weapon.element, rarity: weapon.rarity, level: weapon.level ?? 0, word: weaponWord(weapon) } : null}
           fire={flow?.n}
           flash={flash}
