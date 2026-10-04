@@ -17,6 +17,7 @@ import { WeaponTrain } from './WeaponTrain';
 import { GearBehind, GearFront } from '../battle/GearOn';
 import { LAYOUT_TRAVEL, gearArt } from '../battle/gearLayout';
 import { statsFromGear } from '../../lib/battle';
+import { applyLevel, levelOf, ownedCount } from '../../lib/level';
 import { charRuby } from '../../lib/reading';
 import { REPS_TO_OBTAIN } from '../../types/kanji';
 import { Feature, isFeatureUnlocked } from '../../data/unlocks';
@@ -62,6 +63,7 @@ export const EquipScreen = () => {
   const progress = useGameStore((s) => s.progress);
   const cleared = useGameStore((s) => s.clearedStages);
   const moji = useGameStore((s) => s.lastArc) === 'moji';
+  const exp = useGameStore((s) => s.exp);
   const forgeOpen = isForgeOpen(cleared);
   const masters = mastersOf(progress);
 
@@ -92,7 +94,9 @@ export const EquipScreen = () => {
   const worn = Object.values(equippedGear)
     .map((id) => getGear(id))
     .filter((g) => g != null);
-  const stats = statsFromGear(worn);
+  // What the fight will use: on the new route the level adds HP and がまん (lib/level.ts, BattleScene).
+  const level = moji ? levelOf(exp, ownedCount(progress)) : 1;
+  const stats = moji ? applyLevel(statsFromGear(worn), level) : statsFromGear(worn);
 
   // A stage's gear is shown once the learner has reached that stage.
   const reached = new Set(['mukashi-1', ...cleared, ...cleared.map((id) => id.replace(/\d+$/, (n) => String(Number(n) + 1)))]);
@@ -186,6 +190,7 @@ export const EquipScreen = () => {
 
           {/* ステータス ---------------------------------------------------- */}
           <div className="g-parchment grid grid-cols-2 gap-x-4 px-4 py-2 text-sm font-black">
+            {moji && <span className="col-span-2 text-xs" style={{ color: 'var(--ink-2)' }}>⭐ Lv {level}</span>}
             <span>❤ HP {stats.maxHp}</span>
             <span>
               ⚔ <RubyText showFurigana={showFurigana}>こうげき</RubyText> {weapon?.attack ?? 5}
