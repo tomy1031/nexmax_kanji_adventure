@@ -96,7 +96,7 @@ export const MOJI2_SCRIPTS: Record<string, EpisodeScript> = {
       stageId: 'moji-2-1',
       lines: [
         { bg: 'port_market', fx: ['darkclouds'], sprite: 'mojikui_scale:normal', glyph: '👕 💨', text: 'モジクイは となりの ふくやへ にげました。', en: 'The Mojikui fled into the clothes shop next door.' },
-        { fx: ['spring'], glyph: '高(たか) 安(やす) 大(おお) 小(ちい) 新(あたら)', text: 'ねふだが もどりました！ きりが すこし はれました。', en: 'The price tags came back! The fog lifted a little.' },
+        { fx: ['spring'], sprite: 'fishmonger:happy', glyph: '高(たか) 安(やす) 大(おお) 小(ちい) 新(あたら)', text: 'ねふだが もどりました！ きりが すこし はれました。', en: 'The price tags came back! The fog lifted a little.' },
         { speaker: 'fishmonger', sprite: 'fishmonger:happy', glyph: '🐟 = 百(ひゃく)円(えん)', text: 'この さかなは 安(やす)いですよ！ 百(ひゃく)円(えん)です。', en: 'This fish is cheap! 100 yen.' },
         { speaker: 'nexmax', sprite: 'nexmax:smile', glyph: '🚢 ⛵', text: '大(おお)きい ふねと 小(ちい)さい ふねですね。', en: 'A big ship and a small boat.' },
         { speaker: 'fishmonger', sprite: 'fishmonger:happy', glyph: '👕 ⬜', text: 'となりの ふくやも、いろが ありません。', en: 'The clothes shop next door has lost its colours too.' },
@@ -130,7 +130,7 @@ export const MOJI2_SCRIPTS: Record<string, EpisodeScript> = {
       stageId: 'moji-2-2',
       lines: [
         { bg: 'port_clothes', fx: ['darkclouds'], sprite: 'mojikui_paint:normal', glyph: '🪜 💨', text: 'モジクイは いしだんの ほうへ にげました。', en: 'The Mojikui fled toward the stone stairs.' },
-        { fx: ['spring'], glyph: '🟥 🟦 ⬜ ⬛', text: 'いろが もどりました！ まちが あかるいです。', en: 'The colours came back! The town is bright.' },
+        { fx: ['spring'], sprite: 'tailor:happy', glyph: '🟥 🟦 ⬜ ⬛', text: 'いろが もどりました！ まちが あかるいです。', en: 'The colours came back! The town is bright.' },
         { speaker: 'tailor', sprite: 'tailor:happy', glyph: '👕 = 赤(あか)', text: 'これは 赤(あか)い ふくです。あれは 青(あお)い ぼうしです。', en: 'This is a red shirt. That is a blue hat.' },
         { speaker: 'tailor', sprite: 'tailor:happy', glyph: '🧥 ✨', text: 'この 黒(くろ)い コートは 古(ふる)いですが、すてきです。', en: 'This black coat is old, but lovely.' },
         { speaker: 'nexmax', sprite: 'nexmax:think', glyph: '🪜 ⬆️', text: 'いしだんの 上(うえ)に、おみせが ありますね。', en: "There's a shop at the top of the stone stairs." },
@@ -165,7 +165,7 @@ export const MOJI2_SCRIPTS: Record<string, EpisodeScript> = {
       stageId: 'moji-2-3',
       lines: [
         { bg: 'port_stairs', fx: ['darkclouds'], sprite: 'mojikui_stairs:normal', glyph: '🍽️ 💨', text: 'モジクイは みなとの しょくどうへ にげました。', en: 'The Mojikui fled to the harbour eatery.' },
-        { fx: ['spring'], glyph: '⬆️ 上(うえ) ⬇️ 下(した)', text: 'ふだが もどりました！ ソラの うちは 上(うえ)です！', en: "The signs came back! Sora's house is at the top!" },
+        { fx: ['spring'], sprite: 'sora_papa:happy', glyph: '⬆️ 上(うえ) ⬇️ 下(した)', text: 'ふだが もどりました！ ソラの うちは 上(うえ)です！', en: "The signs came back! Sora's house is at the top!" },
         { speaker: 'sora_papa', sprite: 'sora_papa:happy', text: 'ソラ！ わたしは ソラの 父(ちち)です。', en: "Sora! I'm Sora's father." },
         { speaker: 'sora_mama', sprite: 'sora_mama:happy', text: 'わたしは 母(はは)です。ありがとう ございます！', en: "I'm her mother. Thank you so much!" },
         { speaker: 'sora', sprite: 'sora:happy', glyph: '👧 🤖', text: 'はじめまして。わたしは ソラです。この うちの 子(こ)です！', en: "Nice to meet you. I'm Sora — the child of this house!" },
@@ -201,7 +201,7 @@ export const MOJI2_SCRIPTS: Record<string, EpisodeScript> = {
       stageId: 'moji-2-4',
       lines: [
         { bg: 'port_foodhall', fx: ['darkclouds'], sprite: 'mojikui_hungry:normal', glyph: '🛤️ 💨', text: 'モジクイは いしだんの こみちへ にげました。', en: 'The Mojikui fled into the narrow stone alleys.' },
-        { fx: ['spring'], glyph: '📋 ✨', text: 'メニューが もどりました！', en: 'The menu came back!' },
+        { fx: ['spring'], sprite: 'cook:happy', glyph: '📋 ✨', text: 'メニューが もどりました！', en: 'The menu came back!' },
         { speaker: 'cook', sprite: 'cook:happy', glyph: '🍖 🐟 🍵', text: '肉(にく)と 魚(さかな)が あります。なにを 食(た)べますか？', en: 'We have meat and fish. What will you eat?' },
         { speaker: 'sora', sprite: 'sora:happy', glyph: '🐟 😋', text: '魚(さかな)を 食(た)べます！ それから、おちゃを 飲(の)みます。', en: "I'll have fish! And then I'll drink tea." },
         { speaker: 'cook', sprite: 'cook:happy', glyph: '🍚 = 主(しゅ)食(しょく)', text: '主(しゅ)食(しょく)は ごはんです。たくさん どうぞ！', en: 'The staple is rice. Have plenty!' },
@@ -237,7 +237,7 @@ export const MOJI2_SCRIPTS: Record<string, EpisodeScript> = {
       stageId: 'moji-2-5',
       lines: [
         { bg: 'port_alley', fx: ['darkclouds'], sprite: 'mojikui_arrow:normal', glyph: '🌳 💨', text: 'モジクイは みなとの こうえんへ にげました。', en: 'The Mojikui fled to the harbour park.' },
-        { fx: ['spring'], glyph: '⬅️ 左(ひだり) ➡️ 右(みぎ)', text: 'みちしるべが もどりました！', en: 'The signposts came back!' },
+        { fx: ['spring'], sprite: 'sora:happy', glyph: '⬅️ 左(ひだり) ➡️ 右(みぎ)', text: 'みちしるべが もどりました！', en: 'The signposts came back!' },
         { speaker: 'sora', sprite: 'sora:happy', glyph: '🏠 ⬅️ 🍽️ ➡️', text: 'うちは 左(ひだり)です。しょくどうは 右(みぎ)です！', en: 'Home is to the left. The eatery is to the right!' },
         { speaker: 'nexmax', sprite: 'nexmax:guide', glyph: '🚉 🌳 ⚓', text: 'こうえんは、えきと みなとの 間(あいだ)です。近(ちか)くですね。', en: "The park is between the station and the harbour. It's close by." },
         { speaker: 'sora', sprite: 'sora:trouble', glyph: '🐕 ❓', text: 'わたしの いぬも、こうえんに いますか？', en: 'Is my dog in the park too?' },
@@ -271,7 +271,7 @@ export const MOJI2_SCRIPTS: Record<string, EpisodeScript> = {
       stageId: 'moji-2-6',
       lines: [
         { bg: 'port_park', fx: ['darkclouds'], sprite: 'mojikui_park:normal', glyph: '📚 💨', text: 'モジクイは さかの 上(うえ)の としょかんへ にげました。', en: 'The Mojikui fled to the library at the top of the hill.' },
-        { fx: ['spring'], glyph: '🚹 男(おとこ) 🚺 女(おんな)', text: 'ふだが もどりました！', en: 'The signs came back!' },
+        { fx: ['spring'], sprite: 'sora:dog', glyph: '🚹 男(おとこ) 🚺 女(おんな)', text: 'ふだが もどりました！', en: 'The signs came back!' },
         { glyph: '🐕 ❗', text: '……ワン！ 犬(いぬ)は こうえんの 外(そと)に います！', en: 'Woof! The dog is outside the park!' },
         { speaker: 'sora', sprite: 'sora:dog', glyph: '👧 🐕 💕', text: 'マル！ ここに いますね！ ありがとう！', en: "Maru! There you are! Thank you!" },
         { speaker: 'nexmax', sprite: 'nexmax:think', glyph: '📚 👾', text: 'としょかんに、大(おお)モジクイの 本(ほん)が ありますか？', en: 'Is there a book about the Great Mojikui in the library?' },
@@ -305,7 +305,7 @@ export const MOJI2_SCRIPTS: Record<string, EpisodeScript> = {
       stageId: 'moji-2-7',
       lines: [
         { bg: 'port_library', fx: ['darkclouds'], sprite: 'mojikui_newspaper:normal', glyph: '🌊 💨', text: 'モジクイは うみぞいの みちへ にげました。', en: 'The Mojikui fled to the seaside path.' },
-        { fx: ['spring'], glyph: '📚 ✨', text: '本(ほん)の じが もどりました！', en: 'The letters came back to the books!' },
+        { fx: ['spring'], sprite: 'librarian:happy', glyph: '📚 ✨', text: '本(ほん)の じが もどりました！', en: 'The letters came back to the books!' },
         { speaker: 'librarian', sprite: 'librarian:happy', glyph: '📖 😊', text: 'どうぞ、本(ほん)を 読(よ)んで ください。', en: 'Please, read the books.' },
         { speaker: 'sora', sprite: 'sora:happy', glyph: '🎭 ✨', text: 'かみしばいの 話(はなし)を 聞(き)きましょう！', en: "Let's listen to the picture-story!" },
         { speaker: 'librarian', sprite: 'librarian:happy', glyph: '🖼️ 💡', text: 'この えを 見(み)て ください。みさきの とうだいです。', en: 'Look at this picture. It is the lighthouse on the cape.' },
@@ -341,7 +341,7 @@ export const MOJI2_SCRIPTS: Record<string, EpisodeScript> = {
       stageId: 'moji-2-8',
       lines: [
         { bg: 'port_seaside', fx: ['darkclouds'], sprite: 'mojikui_diary:normal', glyph: '📷 💨', text: 'モジクイは しゃしんやへ にげました。', en: 'The Mojikui fled to the photo studio.' },
-        { fx: ['spring'], glyph: '📔 ✨', text: 'にっきの じが もどりました！', en: "The diary's letters came back!" },
+        { fx: ['spring'], sprite: 'sora:diary', glyph: '📔 ✨', text: 'にっきの じが もどりました！', en: "The diary's letters came back!" },
         { speaker: 'sora', sprite: 'sora:diary', glyph: '📔 ✏️', text: '「七(しち)時(じ)に 起(お)きます。いちばで 買(か)います。うちへ 帰(かえ)ります。」', en: '"I wake up at seven. I shop at the market. I go home."' },
         { speaker: 'sora', sprite: 'sora:diary', glyph: '✏️ 友(とも)達(だち)', text: 'それから……「友(とも)達(だち)」。', en: 'And then… "friends".' },
         { speaker: 'sora', sprite: 'sora:happy', glyph: '👧 🤝 🤖', text: 'あなたと ネクマックスは、わたしの 友(とも)達(だち)です！', en: 'You and Nexmax are my friends!' },
@@ -376,7 +376,7 @@ export const MOJI2_SCRIPTS: Record<string, EpisodeScript> = {
       stageId: 'moji-2-9',
       lines: [
         { bg: 'port_photo', fx: ['darkclouds'], sprite: 'mojikui_camera:normal', glyph: '🎬 💨', text: 'モジクイは えいがかんの とおりへ にげました。', en: 'The Mojikui fled to the cinema street.' },
-        { fx: ['spring'], glyph: '🖼️ ✨', text: '写(しゃ)真(しん)が もどりました！', en: 'The photographs came back!' },
+        { fx: ['spring'], sprite: 'photographer:happy', glyph: '🖼️ ✨', text: '写(しゃ)真(しん)が もどりました！', en: 'The photographs came back!' },
         { speaker: 'photographer', sprite: 'photographer:happy', glyph: '🖼️ 💡 ☀️', text: 'これは むかしの 写(しゃ)真(しん)です。きりが ありません。とうだいも あかるいです。', en: 'This is an old photo. No fog. The lighthouse is bright.' },
         { speaker: 'photographer', sprite: 'photographer:happy', glyph: '🍵', text: 'となりは お茶(ちゃ)の おみせです。どうぞ、お茶(ちゃ)を 飲(の)んで ください。', en: 'Next door is the tea shop. Please, have some tea.' },
         { speaker: 'sora', sprite: 'sora:happy', glyph: '📷 👧 🤖', text: 'みんなで 写(しゃ)真(しん)を とりましょう！ はい、チーズ！', en: "Let's all take a photo! Say cheese!" },
@@ -410,7 +410,7 @@ export const MOJI2_SCRIPTS: Record<string, EpisodeScript> = {
       stageId: 'moji-2-10',
       lines: [
         { bg: 'port_cinema', fx: ['darkclouds'], sprite: 'mojikui_film:normal', glyph: '💡 💨', text: 'モジクイは みさきの とうだいへ にげました。', en: 'The Mojikui fled to the lighthouse on the cape.' },
-        { fx: ['spring'], glyph: '🎬 ✨', text: 'ポスターと おみせの なまえが もどりました！', en: 'The posters and the shop names came back!' },
+        { fx: ['spring'], sprite: 'usher:happy', glyph: '🎬 ✨', text: 'ポスターと おみせの なまえが もどりました！', en: 'The posters and the shop names came back!' },
         { speaker: 'usher', sprite: 'usher:happy', glyph: '🎟️ 🎬', text: '映(えい)画(が)を 見(み)ませんか？ きょうは ふねの 映(えい)画(が)です！', en: "Won't you watch a movie? Today it's a ship movie!" },
         { speaker: 'sora', sprite: 'sora:happy', glyph: '🔤 ✨', text: '「シネマ」は 英(えい)語(ご)です。日(に)本(ほん)語(ご)で「映(えい)画(が)」です！', en: '"Cinema" is English. In Japanese it is "eiga"!' },
         { glyph: '🎬 💡 👾', text: '……スクリーンに、とうだいの かげが うつります。', en: '…On the screen, the shadow of the lighthouse appears.' },
@@ -443,7 +443,7 @@ export const MOJI2_FINALE: FinaleScript = {
     lines: [
       { bg: 'port_lighthouse', fx: ['sparkle'], glyph: '🫧💥 ✨✨✨', text: 'あわが われました！ じが そとへ とびます！', en: 'The bubbles burst! The letters fly out!' },
       { fx: ['darkclouds'], sprite: 'mojikui_boss:normal', glyph: '🍜 💨', text: '大(おお)モジクイは、うみの むこうの たべものの まちへ にげました。', en: 'The Great Mojikui fled across the sea to the city of food.' },
-      { bg: 'port_lights_back', fx: ['spring'], glyph: '💡 🏙️ ✨', text: 'きりが はれました！ とうだいの ひかりが まちを てらします。', en: 'The fog has cleared! The lighthouse light shines over the town.' },
+      { bg: 'port_lights_back', fx: ['spring'], sprite: 'sora_papa:happy', glyph: '💡 🏙️ ✨', text: 'きりが はれました！ とうだいの ひかりが まちを てらします。', en: 'The fog has cleared! The lighthouse light shines over the town.' },
       { speaker: 'sora_papa', sprite: 'sora_papa:happy', glyph: '👨‍👩‍👧 ✨', text: 'ありがとう ございます。まちが あかるいです。', en: 'Thank you so much. The town is bright.' },
       { speaker: 'sora', sprite: 'sora:happy', glyph: '👧 🤝 🤖', text: 'あなたたちは、ずっと わたしの 友(とも)達(だち)です！', en: 'You will always be my friends!' },
       { speaker: 'sora', sprite: 'sora:normal', glyph: '📷 💌', text: 'また いっしょに あそびましょう！', en: "Let's play together again!" },
