@@ -127,7 +127,7 @@ export const MOJI1_SCRIPTS: Record<string, EpisodeScript> = {
       lines: [
         { bg: 'naniwa_station_square', glyph: '山(やま)田(だ)', text: 'なまえが ひかります。💡', en: "Yamada-san's name lights up." },
         { fx: ['darkclouds'], speaker: 'mojikui', sprite: 'mojikui:normal', text: 'その なまえ、たべます！ 😈', en: "That name — I'll eat it!" },
-        { speaker: 'nexmax', sprite: 'nexmax:determined', text: 'でんしゃの モジクイです！', en: 'The Mojikui from the train!' },
+        { speaker: 'nexmax', sprite: 'nexmax:determined', text: 'ちずの うしろの かげ……モジクイです！', en: 'The shadow behind the map — a Mojikui!' },
         { speaker: 'yamada', sprite: 'yamada:sad', text: '……！ 😱', en: 'Yamada-san freezes.' },
         { speaker: 'nexmax', sprite: 'nexmax:guide', glyph: '✍️ → 💡 → 🤖', text: 'あなたは かきます。ぼくが たたかいます！', en: "You write. I'll fight — I'll protect you!" },
       ],
