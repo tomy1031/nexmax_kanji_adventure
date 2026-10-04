@@ -4,7 +4,7 @@ import { getCompounds, loadMoreCompounds } from '../../data/compounds';
 import { HIDDEN_WEAPONS } from '../../data/hiddenWeapons';
 import { getKanjiByChar } from '../kanjiDb';
 import { forgeWeapon } from './weapon';
-import { stageGrowth, stageOfKanji, stageOfWord } from './stage';
+import { episodeOfStep, stageGrowth, stageOfKanji, stageOfWord } from './stage';
 
 const EPISODES = MOJI_EPISODES.filter((e) => e.kanji.length > 0);
 const forge = (word: string) => forgeWeapon([...word].map((c) => getKanjiByChar(c)!))!;
@@ -29,6 +29,18 @@ describe('武器の 段 — weapons grow with the route', () => {
     expect(stageGrowth(11)).toBeCloseTo(1.8);
     for (let s = 1; s < 120; s++) expect(stageGrowth(s + 1)).toBeGreaterThanOrEqual(stageGrowth(s));
     expect(stageGrowth(1000)).toBe(3);
+  });
+
+  it('turns at the end of 1章: +8% an episode there, +2% after, whatever chapters follow', () => {
+    expect(stageGrowth(12)).toBeCloseTo(1.82);
+    expect(stageGrowth(21)).toBeCloseTo(2.0);
+  });
+
+  it('names a step by its chapter and episode, and nothing past the written ones', () => {
+    expect(episodeOfStep(3)).toEqual({ chapter: 1, episode: 3 });
+    expect(episodeOfStep(11)).toEqual({ chapter: 1, episode: 11 });
+    expect(episodeOfStep(0)).toBeNull();
+    expect(episodeOfStep(500)).toBeNull();
   });
 
   it('makes the words of a later episode stronger than those of an early one, on average', () => {

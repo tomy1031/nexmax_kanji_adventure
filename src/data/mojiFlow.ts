@@ -1,6 +1,6 @@
 import { KANA_EPISODES } from './kana';
-import { MOJI_EPISODES, getMojiEpisode, isMojiEpisodeUnlocked } from './mojiEpisodes';
-import { MOJI_FINALES, getMojiFinale, isFinaleOpen, lastEpisodeOf } from './mojiFinale';
+import { MOJI_EPISODES, getMojiEpisode, isMojiEpisodeUnlocked, type MojiEpisode } from './mojiEpisodes';
+import { MOJI_FINALES, getMojiFinale, isFinaleOpen, lastEpisodeOf, type MojiFinale } from './mojiFinale';
 import { MOJI_CHAPTERS } from './mojiRoute';
 import { Feature, isFeatureUnlocked, UNLOCKED_ON_MOJI } from './unlocks';
 import { MASTERY_REPS } from '../lib/mastery';
@@ -31,6 +31,31 @@ export const ROUTE_ORDER: string[] = [
 
 const isKana = (id: string) => id.startsWith('kana-');
 const isMoji = (id: string) => id.startsWith('moji-');
+
+/**
+ * A chapter opens once the one before it is over (docs/design/12 §5): its
+ * まとめの ボス cleared, or — for a chapter without one — its last episode.
+ * The first chapter is always open. Without this, a chapter's 1話 would be
+ * open from the start (isMojiEpisodeUnlocked opens every 1話).
+ */
+export const isChapterOpen = (
+  chapterId: string,
+  cleared: readonly string[],
+  episodes: readonly MojiEpisode[] = MOJI_EPISODES,
+  finales: readonly MojiFinale[] = MOJI_FINALES,
+): boolean => {
+  const order = MOJI_CHAPTERS.find((c) => c.id === chapterId)?.order ?? 1;
+  const before = MOJI_CHAPTERS.find((c) => c.order === order - 1);
+  if (!before) return true;
+  const boss = finales.find((f) => f.chapter === before.id);
+  if (boss) return cleared.includes(boss.id);
+  const last = episodes.filter((e) => e.chapter === before.id).sort((a, b) => b.order - a.order)[0];
+  return last ? cleared.includes(last.id) : false;
+};
+
+/** An episode is open: its chapter is, and the episode before it in the chapter is cleared. */
+export const isEpisodeOpen = (ep: MojiEpisode, cleared: readonly string[]): boolean =>
+  isChapterOpen(ep.chapter, cleared) && isMojiEpisodeUnlocked(ep, cleared);
 
 /**
  * The episode after this one, or null when the story has not been written
@@ -112,7 +137,7 @@ export const canForge = (progress: Progress): boolean => mastersOf(progress) >= 
 export const practiceTarget = (progress: Progress, cleared: readonly string[]): { episode: string; char: string; left: number } | null => {
   let best: { episode: string; char: string; left: number; reps: number } | null = null;
   for (const ep of MOJI_EPISODES) {
-    if (!isMojiEpisodeUnlocked(ep, cleared)) continue;
+    if (!isEpisodeOpen(ep, cleared)) continue;
     for (const ch of ep.kanji) {
       const reps = progress[getKanjiByChar(ch)?.id ?? '']?.reps ?? 0;
       if (reps >= MASTERY_REPS[2]) continue;

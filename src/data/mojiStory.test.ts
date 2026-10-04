@@ -2,7 +2,8 @@ import { existsSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { MOJI_EPISODES } from './mojiEpisodes';
 import { MOJI_UNLOCKED_BY } from './mojiFlow';
-import { MOJI1_CAST, MOJI1_PRELUDE, MOJI1_SCRIPTS } from './scripts/moji1';
+import { MOJI1_PRELUDE } from './scripts/moji1';
+import { MOJI_CAST, MOJI_SCRIPTS } from './mojiScripts';
 import { SCENES, fxNamesOf } from '../features/picturebook/scenes';
 import { unreadKanji } from '../lib/ruby';
 import { MASTERY_REPS } from '../lib/mastery';
@@ -17,13 +18,13 @@ import type { NovelScript } from '../types/novel';
  */
 
 const plain = (furigana: string) => furigana.replace(/\(([^)]*)\)/g, '');
-const cast = new Map(MOJI1_CAST.map((c) => [c.id, c]));
-const added: NovelScript[] = [...Object.values(MOJI1_SCRIPTS).map((s) => s.encounter), MOJI1_PRELUDE];
+const cast = new Map(MOJI_CAST.map((c) => [c.id, c]));
+const added: NovelScript[] = [...Object.values(MOJI_SCRIPTS).map((s) => s.encounter), MOJI1_PRELUDE];
 
 describe('1章: the opponent is met before the fight', () => {
   it('has an encounter for every episode, where the opponent itself speaks', () => {
     for (const ep of MOJI_EPISODES) {
-      const enc = MOJI1_SCRIPTS[ep.id]?.encounter;
+      const enc = MOJI_SCRIPTS[ep.id]?.encounter;
       expect(enc, ep.id).toBeDefined();
       const speakers = enc.lines.flatMap((l) => (l.speaker ? [cast.get(l.speaker)] : [])).filter((c) => c != null);
       expect(speakers.some((c) => plain(c.name) === plain(ep.boss.name)), `${ep.id}: ${ep.boss.name} speaks`).toBe(true);
@@ -32,14 +33,14 @@ describe('1章: the opponent is met before the fight', () => {
 
   it('shows it fleeing at the start of the closing scene', () => {
     for (const ep of MOJI_EPISODES) {
-      const first = MOJI1_SCRIPTS[ep.id].outro.lines[0];
+      const first = MOJI_SCRIPTS[ep.id].outro.lines[0];
       expect(`${first.text}${first.glyph ?? ''}`, ep.id).toMatch(/にげ|💨/);
     }
   });
 
   it('draws the opponents it names', () => {
     for (const ep of MOJI_EPISODES) if (ep.boss.img) expect(existsSync(`public/${ep.boss.img}`), ep.boss.img).toBe(true);
-    for (const c of MOJI1_CAST) for (const src of Object.values(c.sprites)) expect(existsSync(`public/${src}`), src).toBe(true);
+    for (const c of MOJI_CAST) for (const src of Object.values(c.sprites)) expect(existsSync(`public/${src}`), src).toBe(true);
   });
 });
 
@@ -79,7 +80,7 @@ describe('1章: the added scenes follow the script rules', () => {
 
 describe('1章: 漢字やさん is shown before it opens', () => {
   it('ends the episode that opens it with a visit, and says what it needs', () => {
-    const lines = MOJI1_SCRIPTS[MOJI_UNLOCKED_BY.forge].outro.lines;
+    const lines = MOJI_SCRIPTS[MOJI_UNLOCKED_BY.forge].outro.lines;
     expect(lines.some((l) => l.bg === 'naniwa_kanjiyasan')).toBe(true);
     // The rule the story states is the rule the forge keeps: ten writes, ★3.
     expect(lines.some((l) => l.text.includes(`${MASTERY_REPS[2]}かい`) && l.text.includes('⭐⭐⭐'))).toBe(true);
