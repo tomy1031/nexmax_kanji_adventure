@@ -502,6 +502,12 @@ const CREATURES = [
   mojikui('mojikui_diary', 'secretive, loves secrets and whispers.', 'a soft heart-shaped body, a tendril held up to its lips going "shh".', 'one eye winking, the other big and twinkling, a mouth shaped like a little zipper, pink cheeks.', 'lilac and pink.', 'hugging a small diary notebook with a tiny brass lock, blank pages flapping, a pencil stuck in it.', '2章 8話の あいて（日記の モジクイ）'),
   mojikui('mojikui_camera', 'a show-off who loves the spotlight and posing.', 'a body built around an old wooden box camera, striking a pose with one tendril in a peace sign.', 'ONE big single eye that is the camera lens, with an iris-shutter pupil, a flash bulb on its head like an antenna, a big toothy show-off grin below the lens.', 'magenta.', 'a strip of blank photographs trailing from it, a teacup in one tendril.', '2章 9話の あいて（カメラの モジクイ）'),
   mojikui('mojikui_film', 'a dramatic actor who overacts everything.', 'a swirling body wrapped in a long reel of movie film like a flowing cape, one tendril flung up dramatically.', 'large expressive eyes with long dramatic lashes, a wide open theatrical mouth mid-gasp, one tear of drama.', 'cinema red and gold.', 'a beam of projector light, blank cinema tickets and a blank poster swirling around.', '2章 10話の あいて（フィルムの モジクイ）'),
+  // 3章（docs/design/14）
+  mojikui('mojikui_post', 'forgetful and scatterbrained, never remembers where anything should go.', 'a short, round, barrel-shaped body like an old red pillar postbox with a domed cap, two stubby arms.', 'its MOUTH is the wide mail slot, stuffed with crumpled envelopes; big round blank-staring eyes with tiny pupils, eyebrows raised in a puzzled "huh?", a string tied in a bow around one finger as a reminder.', 'postbox red.', 'blank envelopes and blank postage stamps stuck all over it and fluttering around, a parcel tied with string.', '3章 1話の あいて（ポストの モジクイ）'),
+  mojikui('mojikui_pot', 'a fussy picky eater who turns up its nose at everything.', 'a round body that IS a cooking pot, its lid worn tilted like a hat, two short legs, one tendril holding a ladle.', 'half-closed disdainful eyes looking down its nose, a wrinkled nose, its tongue stuck out in a "bleh!", one eyebrow raised high.', 'copper orange.', 'blank recipe cards and a blank cookbook tucked under its arm, a wisp of steam.', '3章 2話の あいて（なべの モジクイ）'),
+  mojikui('mojikui_queue', 'a sneaky line-cutter who squeezes in front of everyone.', 'a long, thin, wiggly body like a stretchy noodle, squeezing sideways through a narrow gap, very bendy.', 'sly eyes glancing sideways, a toothy sneaky grin, one tendril held up to its mouth as if whispering "shh, just me".', 'noodle yellow.', 'a snapped queue rope with brass posts, a few blank numbered waiting tickets (no numbers), a flower in its teeth.', '3章 3話の あいて（わりこみの モジクイ）'),
+  mojikui('mojikui_umbrella', 'a contrarian who always does the opposite of what you say.', 'its body is an OPEN umbrella turned upside down like a bowl, the curved handle sticking up out of the top like a tail, small ink feet underneath; rain falls and collects in it.', 'its face is UPSIDE DOWN on the canopy: the cheeky grin with a stuck-out tongue at the top, the two eyes below it, one winking — so it looks like it is standing on its head.', 'rain blue and violet.', 'raindrops all around, two blank arrow signs pointing in opposite directions.', '3章 4話の あいて（かさの モジクイ）'),
+  mojikui('mojikui_chef', 'a sneaky nibbler who snacks on the food while cooking.', 'a plump, pear-shaped body in a stolen chef\'s apron, a far-too-big tall white chef\'s toque slipping down over one eye.', 'cheeks puffed out and stuffed with food like a hamster, crumbs around its mouth, the one visible eye glancing guiltily sideways, a tiny sweat drop.', 'cream white and tomato red.', 'a fork in one tendril and a spoon in the other, a half-eaten blank menu card, a blank "sold out" board.', '3章 5話の あいて（コックの モジクイ）'),
 ];
 
 const NANIWA = [
@@ -542,6 +548,23 @@ const port = (id, desc, used) => ({
   group: 'bg_port',
   out: `img/port/${id}.webp`,
 });
+
+/** 3章 マンプクタウン（docs/design/14）: 雨の やまない たべものの 町。字を 取り戻すと 雨が やむ。 */
+const food = (id, desc, used) => ({
+  ...naniwa(id, `${desc} The town is a big lively food city across the sea from the harbour town: narrow streets packed with small restaurants and food stalls, paper lanterns and plain cloth shop curtains, steam rising from kitchens, little canals with arched bridges. Leave the upper part of the picture fairly open (sky, eaves or plain wall) for hanging signs.`, used),
+  group: 'bg_food',
+  out: `img/food/${id}.webp`,
+});
+
+const FOOD = [
+  food('food_post', 'a small old post office on a canal street in the RAIN at dusk: a red pillar postbox by the door, a wooden counter with scales and parcels seen through the open door, an umbrella-lending stand under the eaves holding a few umbrellas with a BLANK wooden sign, wet stone paving reflecting lantern light; every sign BLANK. Steady rain. No people.', '3章 1話「きってを 3まい ください」（雨の 町の ゆうびんきょく）'),
+  food('food_school', 'inside a bright cooking classroom on the second floor: rows of cooking stations with pots and pans, a big blackboard with an empty recipe frame, a world map on the wall with pins and little souvenir plates from many countries, shelves of spices in jars with BLANK labels, rain streaking the big window. No people.', '3章 2話「どちらが おいしいですか」（りょうりきょうしつ）'),
+  food('food_line', 'a narrow food street in the RAIN at night: a famous little noodle restaurant with a glowing lantern and a plain cloth curtain, a long empty waiting lane marked by brass posts and a red rope along the wall, a BLANK standing board by the door; on the corner a small flower shop with buckets of colourful flowers and a BLANK sign. No people.', '3章 3話「なにが たべたいですか」（ならぶ みせと 花や）'),
+  food('food_arcade', 'the entrance of a long covered shopping arcade in HEAVY RAIN at night: a tall arched glass roof, two BLANK boards over the entrance and the exit, a street crossing in front with a BLANK octagonal stop sign and blank road markings, a delivery bicycle with a wooden food box parked, puddles reflecting warm shop lights inside. No people.', '3章 4話「あめが ふって います」（しょうてんがいの いりぐち）'),
+  food('food_kitchen', 'the busy market kitchen behind a big cooking-contest hall, after the rain: stalls of fresh vegetables, fish and spices with BLANK sold-out boards, racks of shiny pots, ladles and knives on the wall, long steel worktables, a BLANK rules board; through a doorway the edge of a big stage with lights. No people.', '3章 5話「つかっても いいですか」（りょうり大会の だいどころ）'),
+  food('food_contest', 'the grand cooking-contest hall at night, taken over: a big stage with cooking counters and a HUGE BLANK menu board hanging over it, spotlights, black-violet ink mist pooling across the floor, heaps of eaten BLANK menus, recipe cards and shop signs, thousands of tiny golden letter-motes trapped in floating ink bubbles glowing faintly. Spooky but kid-friendly. No people.', '3章 6話 まとめの ボス（りょうり大会の かいじょう・大モジクイ）'),
+  food('food_lights_back', 'the food city at night just after the rain has stopped: a clear starry sky, the wet streets and canals reflecting every lantern, shop sign and food-stall light glowing warmly, steam rising from kitchens, a faint moon rainbow over the rooftops; far away on the horizon, the lights of an even bigger city. Hopeful and calm. No people.', '3章 クリア（雨が やみ、町の 明かりが 戻る）'),
+];
 
 const PORT = [
   port('port_market', 'the early-morning fish market on the pier of the harbor town: rows of stalls with fish on ice, crates of fruit and vegetables, a big brass hanging weighing scale, a white ferry and fishing boats moored behind, gulls, lanterns still lit in the fog; every price card and stall sign BLANK. No people.', '2章 1話「たかい？ やすい？」（霧の 港の 朝市）'),
@@ -635,6 +658,13 @@ const PEOPLE = {
   librarian: { ref: 'INTJ_f', who: 'a calm librarian in her thirties: long dark hair in a side braid, thin round glasses, a deep-green cardigan over a cream blouse, a brown skirt, a stack of books in her arm' },
   photographer: { ref: 'INTP', who: 'a kind old photographer who also runs the tea shop: white hair and a fluffy white beard, round amber-tinted spectacles, a flat cap with a small feather, a brown tweed waistcoat with a gold pocket-watch chain, a red bow tie, an old wooden box camera on a tall tripod he carries like a staff, a tiny brass teapot hanging from his belt' },
   usher: { ref: 'ESFP_f', who: 'a glamorous young cinema usher in her twenties who once dreamed of being a movie star: wavy auburn hair with a gold star hairpin, a red velvet usher jacket with gold braid and gold buttons, a small red pillbox hat, white gloves, a sparkling flashlight, a red-and-white striped popcorn box' },
+  // 3章 マンプクタウン（docs/design/14）。ハナは 3章の ともだち: 絵本の 主役らしく 作りこむ。
+  hana: { ref: 'ESTJ_f', who: "Hana, a cheerful, hard-working twelve-year-old girl who dreams of becoming a chef: shoulder-length black hair in two short bunches tied with pink flower hair ties, a small white chef's toque worn slightly tilted, a pink cherry-blossom-patterned neckerchief, a white double-breasted chef jacket with pink piping and rolled-up sleeves, a mint-green apron with a big flower-shaped pocket with a wooden spoon tucked in it, dark-green cropped trousers, red clogs, a small sticking plaster on one finger. Bright, determined eyes" },
+  chef: { ref: 'ESTJ', who: 'a jolly cooking teacher in his fifties who has cooked all over the world: a tall white chef\'s toque, a big curled grey moustache, a round belly, a white chef jacket covered with colourful round travel pins and patches (pictures only, no letters), a red neckerchief, an apron printed with a world map, a big copper ladle' },
+  clerk: { ref: 'ISFJ_f', who: 'a kind young post-office clerk in her twenties: short wavy brown hair, a dark-green postal cap and a dark-green uniform with brass buttons, a leather mail bag across her body, a yellow raincoat cape over her shoulders' },
+  ramen: { ref: 'ISTP_f', who: 'a strong, proud noodle-shop master in her forties: a black twisted towel headband over short black hair, a black work jacket with rolled sleeves, a dark-indigo apron, thick confident eyebrows, a noodle strainer in her hand' },
+  delivery: { ref: 'ESTP', who: 'a speedy food-delivery boy about eighteen: a red bicycle helmet with goggles pushed up, a clear rain poncho over a yellow jacket, black shorts and long socks, carrying a stacked wooden food-delivery box by its handle' },
+  grocer: { ref: 'ESFJ', who: 'a cheerful old market grocer in his sixties who sells to the cooks of the contest: a round bald head with a white headband, a big white moustache, a purple apron with many pockets over a striped shirt, rubber boots, a basket of fresh vegetables' },
   cook: { ref: 'ENTJ_f', who: 'a warm eatery cook in her fifties: a white bandana over grey-streaked hair, a white cook\'s coat with rolled sleeves and a red apron, a wooden ladle' },
   yamada: { ref: 'ESFJ_f', who: 'Yamada-san, a gentle woman in her forties who lives in the town: short wavy brown hair with a pink cherry-blossom hairpin, a sky-blue cardigan over a white blouse, a navy pleated skirt, a small pink rosette pinned on the cardigan' },
 };
@@ -714,6 +744,21 @@ const FOLK = [
   human('photographer', 'trouble', 'happy', 'troubled: holding up a blank faded photograph, scratching his white beard, puzzled, a sweat drop.', '2章 9話 写真屋の 人（写真の 字が 消えた）'),
   human('usher', 'happy', 'happy', 'happy: holding up two cinema tickets with a big wink and a grin, the flashlight in her other hand, sparkles.', '2章 10話 映画館の 人（ポスターが 戻った）'),
   human('usher', 'trouble', 'happy', 'troubled: pointing her flashlight at a blank poster, mouth open in surprise, eyebrows up, a sweat drop.', '2章 10話 映画館の 人（ポスターの 字が 消えた）'),
+  // 3章 マンプクタウン（docs/design/14）。1枚目（happy）を 先に 作り、2枚目からは それを 参照。
+  human('hana', 'happy', 'happy', 'overjoyed: holding up a bowl of steaming noodles in both hands, eyes squeezed shut in a big grin, a few sparkles and a flower petal floating.', '3章 ハナ（よろこぶ。3話で 名前が 戻る）'),
+  human('hana', 'trouble', 'happy', 'troubled: hugging a blank recipe notebook to her chest, eyebrows tilted up, teary eyes, biting her lip, a sweat drop.', '3章 ハナ（こまる。レシピが 読めない・名前が ない）'),
+  human('hana', 'normal', 'happy', 'friendly and keen: one hand on her hip, the other giving a little thumbs-up with the wooden spoon, a bright open smile.', '3章 ハナ（ふだん）'),
+  human('hana', 'cook', 'happy', 'cooking with all her heart: stirring a big steaming pot with a long ladle, sleeves rolled up, a confident proud smile, steam swirls and sparkles.', '3章 6話 ハナ（りょうり大会で 作る）'),
+  human('clerk', 'happy', 'happy', 'happy: holding up a sheet of postage stamps (pictures only, no letters) with a bright smile, a letter in her other hand.', '3章 1話 ゆうびんきょくの 人（切手が 戻った）'),
+  human('clerk', 'trouble', 'happy', 'troubled: holding a parcel with a blank label in both arms, staring at it in confusion, a sweat drop.', '3章 1話 ゆうびんきょくの 人（どこへ 送るか わからない）'),
+  human('chef', 'happy', 'happy', 'happy: raising the copper ladle like a conductor, a big hearty laugh, eyes curved, steam swirls.', '3章 2話 りょうりの 先生（教えられる）'),
+  human('chef', 'trouble', 'happy', 'troubled: holding up a cookbook with blank pages, scratching his toque, puzzled frown, a sweat drop.', '3章 2話 りょうりの 先生（レシピが 消えた）'),
+  human('ramen', 'happy', 'happy', 'happy: holding out a steaming bowl of noodles toward the viewer, a proud wide grin.', '3章 3話 ラーメンやの 人（ならぶ ふだが 戻った）'),
+  human('ramen', 'trouble', 'happy', 'troubled: holding a blank standing board in one hand, the other hand raised as if to say "wait!", frowning, a sweat drop.', '3章 3話 ラーメンやの 人（ならぶ 人が ばらばら）'),
+  human('delivery', 'happy', 'happy', 'happy: giving a thumbs-up with the food-delivery box held high, a big grin, sparkles.', '3章 4話 出前の 人（止まれ・入口が 戻った）'),
+  human('delivery', 'trouble', 'happy', 'troubled: soaked by rain, holding the food-delivery box, looking left and right in confusion, water drops flying.', '3章 4話 出前の 人（入口が わからない）'),
+  human('grocer', 'happy', 'happy', 'happy: holding up a big fresh daikon radish and a cabbage, laughing, eyes crinkled, sparkles.', '3章 5話 いちばの 人（売る ふだが 戻った）'),
+  human('grocer', 'trouble', 'happy', 'troubled: holding a blank board, scratching his bald head, puzzled frown, a sweat drop.', '3章 5話 いちばの 人（売り場が わからない）'),
 ];
 
 // ---------------------------------------------------------------------------
@@ -911,7 +956,7 @@ const GEAR_ART = [
   gear('charm-tomo', 'a friendship knot charm: two colorful braided cords (pink and sky-blue) tied together in a heart-shaped knot, with small beads.'),
 ];
 
-export const ASSETS = [...NEXMAX, ...GENDAI, ...MUKASHI_FOLK, ...ENEMIES, ...CREATURES, ...BG, ...NANIWA, ...PORT, ...NEXMAX_NANIWA, ...FOLK, ...PROLOGUE_ART, ...PROLOGUE_EATEN, ...MAPS, ...ICONS, ...CARDS, ...WEAPONS, ...GEAR_ART];
+export const ASSETS = [...NEXMAX, ...GENDAI, ...MUKASHI_FOLK, ...ENEMIES, ...CREATURES, ...BG, ...NANIWA, ...PORT, ...FOOD, ...NEXMAX_NANIWA, ...FOLK, ...PROLOGUE_ART, ...PROLOGUE_EATEN, ...MAPS, ...ICONS, ...CARDS, ...WEAPONS, ...GEAR_ART];
 
 export const GROUPS = {
   nexmax: 'ネクマックス（表情・ポーズ）',
@@ -923,6 +968,7 @@ export const GROUPS = {
   bg_naniwa: '背景 — 0章「はじまりの 空港」（ナニワタウン）',
   bg_prologue: 'プロローグの 1枚絵',
   bg_port: '背景 — 2章 ミナトタウン（海の むこうの 港町）',
+  bg_food: '背景 — 3章 マンプクタウン（雨の たべものの 町）',
   nexmax_naniwa: 'ナニワタウンの ネクマックス（新ルートの 立ち絵）',
   folk_naniwa: '町の 人の 表情（困る・よろこぶ）',
   companion_cards: 'なかまの カード ★4・★5',

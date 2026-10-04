@@ -1,8 +1,9 @@
 import { describe, it, expect } from 'vitest';
-import { MOJI_EPISODES, episodesOf, isMojiEpisodeUnlocked } from './mojiEpisodes';
+import { MOJI_EPISODES, episodesOf, getMojiEpisode, isMojiEpisodeUnlocked } from './mojiEpisodes';
 import { MOJI_CHAPTERS } from './mojiRoute';
 import { MOJI1_CAST, MOJI1_SCRIPTS } from './scripts/moji1';
 import { MOJI2_CAST, MOJI2_SCRIPTS } from './scripts/moji2';
+import { MOJI3_CAST, MOJI3_FINALE, MOJI3_SCRIPTS } from './scripts/moji3';
 import { MOJI_FINALES } from './mojiFinale';
 import { getKanjiByChar } from '../lib/kanjiDb';
 import { unreadKanji } from '../lib/ruby';
@@ -148,6 +149,69 @@ describe('2章 scripts (docs/design/12)', () => {
     const PAST_LEVEL = /(られ|れます|れません|えば|けば|れば|なら|かもしれ|ていきます|ていく|[くすつぬむるうぐぶ]と、|たいです|かったです)/;
     const bad = scripts.flatMap((s) => s.lines.filter((l) => PAST_LEVEL.test(l.text.replace(/\([^)]*\)/g, ''))).map((l) => `${s.stageId}: ${l.text}`));
     expect(bad).toEqual([]);
+  });
+});
+
+describe('3章 scripts (docs/design/14)', () => {
+  const scripts = [...Object.values(MOJI3_SCRIPTS).flatMap((s) => [s.intro, s.encounter, s.outro]), MOJI3_FINALE.intro, MOJI3_FINALE.outro];
+  const cast = new Map(MOJI3_CAST.map((c) => [c.id, c.sprites]));
+
+  it('exist for every 3章 episode, each opening on a scene', () => {
+    expect(Object.keys(MOJI3_SCRIPTS).sort()).toEqual(episodesOf('moji-3').map((e) => e.id).sort());
+    for (const s of scripts) expect(s.lines[0].bg, s.stageId).toBeTruthy();
+  });
+
+  it('give every kanji a reading, keep English behind EN, and use pictures', () => {
+    const bad: string[] = [];
+    for (const s of scripts) {
+      for (const l of s.lines) {
+        for (const c of [...unreadKanji(l.text), ...unreadKanji(l.glyph ?? '')]) bad.push(`${s.stageId}: ${c} in "${l.text}"`);
+        if (/[A-Za-z]/.test(l.text)) bad.push(`${s.stageId}: English on screen "${l.text}"`);
+      }
+      if (!s.lines.some((l) => /\p{Extended_Pictographic}/u.test(l.text + (l.glyph ?? '')))) bad.push(`${s.stageId}: no pictures`);
+    }
+    for (const c of MOJI3_CAST) for (const k of unreadKanji(c.name)) bad.push(`${c.id}: ${k}`);
+    expect(bad).toEqual([]);
+  });
+
+  it('use real scenes, effects, speakers and sprites', () => {
+    const bad: string[] = [];
+    for (const s of scripts) {
+      let scene = '';
+      for (const l of s.lines) {
+        if (l.bg) scene = l.bg;
+        if (!SCENES[scene]) bad.push(`${s.stageId}: scene ${scene}`);
+        for (const fx of l.fx ?? []) if (!fxNamesOf(scene).includes(fx)) bad.push(`${s.stageId}: fx ${fx}`);
+        if (l.speaker && !cast.has(l.speaker)) bad.push(`${s.stageId}: speaker ${l.speaker}`);
+        // 'none' clears the picture: the Mojikui that just ran away is not left standing.
+        if (l.sprite && l.sprite !== 'none') {
+          const [who, expr] = l.sprite.split(':');
+          if (!cast.get(who)?.[expr ?? 'normal']) bad.push(`${s.stageId}: sprite ${l.sprite}`);
+        }
+      }
+    }
+    expect(bad).toEqual([]);
+  });
+
+  it('rains until 4話 brings back 止 and 雨, and not after', () => {
+    const rainy = (id: string) => [MOJI3_SCRIPTS[id].intro, MOJI3_SCRIPTS[id].outro].some((s) => s.lines.some((l) => l.fx?.includes('rain')));
+    for (const id of ['moji-3-1', 'moji-3-2', 'moji-3-3', 'moji-3-4']) expect(rainy(id), id).toBe(true);
+    expect(rainy('moji-3-5')).toBe(false);
+    // The effects carry over: the last one set in 4話's outro is the town after the rain.
+    expect(MOJI3_SCRIPTS['moji-3-4'].outro.lines.filter((l) => l.fx).at(-1)?.fx).not.toContain('rain');
+  });
+
+  it('stays within lesson 15 (docs/constraints.md 2026-10-04)', () => {
+    // 12〜15課 (〜より・〜かったです・〜たい・て形) are open here; passive, potential, ば, なら, かもしれません,
+    // 〜ていく and the と-conditional are later lessons.
+    const PAST_LEVEL = /(られ|れます|れません|えば|けば|れば|なら、|かもしれ|ていきます|ていく|[くすつぬむるうぐぶ]と、)/;
+    const bad = scripts.flatMap((s) => s.lines.filter((l) => PAST_LEVEL.test(l.text.replace(/\([^)]*\)/g, ''))).map((l) => `${s.stageId}: ${l.text}`));
+    expect(bad).toEqual([]);
+  });
+
+  it('hides Hana’s name until 花 is written, in 3話', () => {
+    expect(MOJI3_CAST.find((c) => c.id === 'hana')?.nameChars).toBe('花(はな)');
+    expect(getMojiEpisode('moji-3-3')?.kanji).toContain('花');
   });
 });
 

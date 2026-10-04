@@ -662,6 +662,8 @@ const photoScene = (photo: string, signs?: SceneSignSet): SceneDef => ({
     heal: wildpath.fx.heal,
     // Falling petals only — the paper cherry trees of 現代編's street would sit oddly on a painting.
     spring: GENDAI_SCENES.gendai_city.fx.spring.slice(1),
+    // 3章 マンプクタウン: 雨の やまない 町（docs/design/14）。4話で 雨が やむまで 降らせる。
+    rain: [rainLayer('photo-rain')],
   },
 });
 
@@ -754,6 +756,15 @@ export const PHOTO_SCENES: Record<string, SceneDef> = {
   // 2章 11話 まとめの ボス: 霧の 灯台と、霧が 晴れた 町。
   port_lighthouse: photoScene('img/port/port_lighthouse.webp'),
   port_lights_back: photoScene('img/port/port_lights_back.webp'),
+  // 3章 マンプクタウン（docs/design/14）: ゆうびんきょく・りょうりきょうしつ・ならぶ 店と 花や・しょうてんがい・だいどころ。
+  food_post: photoScene('img/food/food_post.webp', boardRows([...'送切貸借'])),
+  food_school: photoScene('img/food/food_school.webp', boardRows([...'旅教習勉強'])),
+  food_line: photoScene('img/food/food_line.webp', boardRows([...'花歩待立'])),
+  food_arcade: photoScene('img/food/food_arcade.webp', boardRows([...'止雨入出'])),
+  food_kitchen: photoScene('img/food/food_kitchen.webp', boardRows([...'売使作'])),
+  // 3章 6話 まとめの ボス: 料理大会の 会場と、雨が やんだ 町。
+  food_contest: photoScene('img/food/food_contest.webp'),
+  food_lights_back: photoScene('img/food/food_lights_back.webp'),
 };
 
 export const SCENES: Record<string, SceneDef> = {
