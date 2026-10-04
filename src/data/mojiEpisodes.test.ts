@@ -3,6 +3,7 @@ import { MOJI_EPISODES, episodesOf, isMojiEpisodeUnlocked } from './mojiEpisodes
 import { MOJI_CHAPTERS } from './mojiRoute';
 import { MOJI1_CAST, MOJI1_SCRIPTS } from './scripts/moji1';
 import { MOJI2_CAST, MOJI2_SCRIPTS } from './scripts/moji2';
+import { MOJI_FINALES } from './mojiFinale';
 import { getKanjiByChar } from '../lib/kanjiDb';
 import { unreadKanji } from '../lib/ruby';
 import { SCENES, fxNamesOf } from '../features/picturebook/scenes';
@@ -164,5 +165,19 @@ describe('なかまを くれる 話 (09 §3 A)', () => {
   it('brings a なかま on 1章 4話, where the gacha opens', async () => {
     const { getMojiEpisode } = await import('./mojiEpisodes');
     expect(getMojiEpisode('moji-1-4')?.grants).toBe('ISTJ');
+  });
+});
+
+describe('モジクイの 個性 (docs/design/13)', () => {
+  it('gives every opponent its own nature, read, with English', () => {
+    const bosses = [...MOJI_EPISODES.map((e) => [e.id, e.boss] as const), ...MOJI_FINALES.map((f) => [f.id, f.boss] as const)];
+    for (const [id, b] of bosses) {
+      expect(b.trait, id).toBeDefined();
+      expect(unreadKanji(b.trait!.ja), id).toEqual([]);
+      expect(b.trait!.en, id).toMatch(/[a-z]/);
+    }
+    // Each kind of Mojikui is someone different; the 大モジクイ is the same one in both chapters.
+    const byImg = new Map(bosses.map(([, b]) => [b.img, b.trait!.ja]));
+    expect(new Set(byImg.values()).size).toBe(byImg.size);
   });
 });
