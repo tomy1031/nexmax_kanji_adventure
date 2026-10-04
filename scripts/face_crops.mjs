@@ -37,6 +37,9 @@ const OVERRIDES = {
   'img/chara/naniwa/folk_grocer_happy.webp': [0.56, 0.24, 0.38],
   'img/chara/naniwa/folk_grocer_trouble.webp': [0.53, 0.2, 0.38],
   'img/chara/naniwa/folk_ramen_happy.webp': [0.5, 0.22, 0.38],
+  // 4章: 屋台の 人（白い ひげと はちまき）
+  'img/chara/naniwa/folk_yatai_happy.webp': [0.55, 0.2, 0.4],
+  'img/chara/naniwa/folk_yatai_trouble.webp': [0.5, 0.22, 0.4],
   // モジクイ（docs/design/13）: 肌色が なく、お札や 煙が 顔の 上に ある。1体ずつ 顔の 形が ちがう ので 手で。
   'img/battle/mojikui.webp': [0.43, 0.43, 0.4],
   'img/battle/mojikui_kid.webp': [0.34, 0.42, 0.5],
@@ -66,6 +69,14 @@ const OVERRIDES = {
   'img/battle/mojikui_queue.webp': [0.43, 0.32, 0.36],
   'img/battle/mojikui_umbrella.webp': [0.6, 0.62, 0.42],
   'img/battle/mojikui_chef.webp': [0.45, 0.42, 0.42],
+  // 4章（docs/design/15）
+  'img/battle/mojikui_bulb.webp': [0.37, 0.4, 0.4],
+  'img/battle/mojikui_escalator.webp': [0.4, 0.22, 0.36],
+  'img/battle/mojikui_vending.webp': [0.42, 0.4, 0.42],
+  'img/battle/mojikui_mole.webp': [0.47, 0.4, 0.42],
+  'img/battle/mojikui_map.webp': [0.5, 0.33, 0.4],
+  'img/battle/mojikui_mouth.webp': [0.48, 0.45, 0.6],
+  'img/battle/mojikui_telescope.webp': [0.33, 0.3, 0.32],
 };
 
 // Bright peach: cream paper (r ≈ g) and wood (dark, very orange) are left out.

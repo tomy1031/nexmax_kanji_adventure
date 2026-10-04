@@ -765,6 +765,17 @@ export const PHOTO_SCENES: Record<string, SceneDef> = {
   // 3章 6話 まとめの ボス: 料理大会の 会場と、雨が やんだ 町。
   food_contest: photoScene('img/food/food_contest.webp'),
   food_lights_back: photoScene('img/food/food_lights_back.webp'),
+  // 4章 京(みやこ)タウン（docs/design/15）: 暗い 駅・エスカレーター・コンビニ・地下鉄・駅前の ひろば・屋台・タワーの 中。
+  miyako_station: photoScene('img/miyako/miyako_station.webp', boardRows([...'明暗広多少'])),
+  miyako_escalator: photoScene('img/miyako/miyako_escalator.webp', boardRows([...'長短悪重軽早'])),
+  miyako_konbini: photoScene('img/miyako/miyako_konbini.webp', boardRows([...'便利元気親'])),
+  miyako_subway: photoScene('img/miyako/miyako_subway.webp', boardRows([...'有名地鉄仕事'])),
+  miyako_exit: photoScene('img/miyako/miyako_exit.webp', boardRows([...'東西南北京'])),
+  miyako_yatai: photoScene('img/miyako/miyako_yatai.webp', boardRows([...'夜料理口'])),
+  miyako_tower: photoScene('img/miyako/miyako_tower.webp', boardRows([...'目足曜'])),
+  // 4章 8話 まとめの ボス: タワーの 上と、明かりが 戻った 町。
+  miyako_tower_top: photoScene('img/miyako/miyako_tower_top.webp'),
+  miyako_lights_back: photoScene('img/miyako/miyako_lights_back.webp'),
 };
 
 export const SCENES: Record<string, SceneDef> = {
