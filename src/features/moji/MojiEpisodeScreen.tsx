@@ -28,6 +28,8 @@ import { PhaseDoors } from '../../components/ui/Doors';
 import KanjiBackText from './KanjiBackText';
 import ToBeContinued from './ToBeContinued';
 import StarSecrets from './StarSecrets';
+import { TipCard } from './TipCard';
+import { nextReadyTip, type TipId } from '../../data/fightRules';
 import NexmaxLevelPlate from './NexmaxLevel';
 import { useOwnedKanji } from './useOwnedKanji';
 
@@ -122,12 +124,23 @@ const ReadyScreen = ({
       ? pickWeakest(kanji, (id) => progress[id]?.reps ?? 0, {}, null)?.id
       : undefined;
   const hardWon = useGameStore((s) => s.hardStages.includes(ep.id));
-  // What the stars are for and how the fight goes: shown by itself on the first じゅんび, then a tap away.
+  // What the stars are for and how the fight goes: told one at a time, a rule a
+  // visit (2026-10-04「じゅんびの 説明も 1つずつ」, data/fightRules.ts); the
+  // whole of it a tap away. Reading it all counts as told.
   const markTutorialSeen = useGameStore((s) => s.markTutorialSeen);
-  const [secrets, setSecrets] = useState(() => !useGameStore.getState().tutorials.stars);
+  const markTipSeen = useGameStore((s) => s.markTipSeen);
+  const [secrets, setSecrets] = useState(false);
   const closeSecrets = () => {
     setSecrets(false);
     markTutorialSeen('stars');
+  };
+  const [tip, setTip] = useState<TipId | null>(() => {
+    const st = useGameStore.getState();
+    return nextReadyTip(st.tipsSeen, st.tutorials.stars);
+  });
+  const closeTip = () => {
+    if (tip) markTipSeen(tip);
+    setTip(null);
   };
 
   return (
@@ -135,6 +148,7 @@ const ReadyScreen = ({
       {/* The town behind, its signs faint: the cards sit over them (they peeked out and cluttered it). */}
       <PictureBook scene={ep.bg} className="!fixed -z-10" still signsFaint />
       {secrets && <StarSecrets showFurigana={showFurigana} onClose={closeSecrets} />}
+      {tip && !secrets && <TipCard id={tip} showFurigana={showFurigana} onClose={closeTip} />}
       <TopBar onBack={onExit} />
       <div className="flex w-full max-w-md flex-1 flex-col gap-3 px-3 pt-3">
         {/* The opponent, so the writing has a reason. */}

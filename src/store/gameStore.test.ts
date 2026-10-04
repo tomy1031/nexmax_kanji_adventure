@@ -176,3 +176,15 @@ describe('英語の 意味 (settings.english)', () => {
     expect(off.settings.english).toBe(false);
   });
 });
+
+describe('ひみつを 1つずつ (store)', () => {
+  it('remembers each tip once, and a save from before the tips has none', () => {
+    const s = useGameStore.getState();
+    s.markTipSeen('noModel');
+    s.markTipSeen('noModel');
+    expect(useGameStore.getState().tipsSeen.filter((t) => t === 'noModel')).toHaveLength(1);
+    const merge = useGameStore.persist.getOptions().merge!;
+    const old = merge({ clearedStages: ['moji-1-1'] }, { ...useGameStore.getState(), tipsSeen: [] }) as ReturnType<typeof useGameStore.getState>;
+    expect(old.tipsSeen).toEqual([]);
+  });
+});
