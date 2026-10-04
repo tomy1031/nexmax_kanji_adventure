@@ -245,6 +245,53 @@ export const MOJI_EPISODES: MojiEpisode[] = [
     bg: 'port_cinema',
     boss: { name: 'フィルムの モジクイ', img: 'img/battle/mojikui_film.webp', trait: { icon: '🎭', ja: 'おおげさ', en: 'dramatic' }, hp: 96, attack: 52, element: Element.AN, icon: 'GiShadowFollower' },
   },
+  // 3章「読めない メニュー」（docs/design/14）: 雨の やまない たべものの 町 マンプクタウン。1課 1話、字は 本の 順。
+  // HP は 同じ 決まり（★1・武器なしで 1字 約2回）。こうげきは 2章の 終わり（55）から 少しずつ。
+  {
+    id: 'moji-3-1',
+    chapter: 'moji-3',
+    order: 1,
+    title: 'きってを 3まい ください',
+    kanji: [...'送切貸借'],
+    bg: 'food_post',
+    boss: { name: 'ポストの モジクイ', img: 'img/battle/mojikui_post.webp', trait: { icon: '📮', ja: 'わすれんぼう', en: 'forgetful' }, hp: 80, attack: 56, element: Element.AN, icon: 'GiShadowFollower' },
+  },
+  {
+    id: 'moji-3-2',
+    chapter: 'moji-3',
+    order: 2,
+    title: 'どちらが おいしいですか',
+    kanji: [...'旅教習勉強'],
+    bg: 'food_school',
+    boss: { name: 'なべの モジクイ', img: 'img/battle/mojikui_pot.webp', trait: { icon: '😒', ja: 'すききらいが おおい', en: 'picky eater' }, hp: 96, attack: 57, element: Element.AN, icon: 'GiShadowFollower' },
+  },
+  {
+    id: 'moji-3-3',
+    chapter: 'moji-3',
+    order: 3,
+    title: 'なにが たべたいですか',
+    kanji: [...'花歩待立'],
+    bg: 'food_line',
+    boss: { name: 'わりこみの モジクイ', img: 'img/battle/mojikui_queue.webp', trait: { icon: '✋', ja: 'わりこみや', en: 'line-cutter' }, hp: 80, attack: 58, element: Element.AN, icon: 'GiShadowFollower' },
+  },
+  {
+    id: 'moji-3-4',
+    chapter: 'moji-3',
+    order: 4,
+    title: 'あめが ふって います',
+    kanji: [...'止雨入出'],
+    bg: 'food_arcade',
+    boss: { name: 'かさの モジクイ', img: 'img/battle/mojikui_umbrella.webp', trait: { icon: '🙃', ja: 'あまのじゃく', en: 'contrarian' }, hp: 80, attack: 59, element: Element.AN, icon: 'GiShadowFollower' },
+  },
+  {
+    id: 'moji-3-5',
+    chapter: 'moji-3',
+    order: 5,
+    title: 'つかっても いいですか',
+    kanji: [...'売使作'],
+    bg: 'food_kitchen',
+    boss: { name: 'コックの モジクイ', img: 'img/battle/mojikui_chef.webp', trait: { icon: '🤭', ja: 'つまみぐい', en: 'sneaky nibbler' }, hp: 48, attack: 60, element: Element.AN, icon: 'GiShadowFollower' },
+  },
 ];
 
 export const episodesOf = (chapterId: string): MojiEpisode[] =>

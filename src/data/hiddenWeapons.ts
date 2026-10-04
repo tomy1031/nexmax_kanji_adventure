@@ -30,6 +30,12 @@ export const HIDDEN_WEAPONS: Readonly<Record<string, string>> = {
   友達: 'moji-2-8',
   手紙: 'moji-2-9',
   物語: 'moji-2-10',
+  // 3章 マンプクタウン（docs/design/14）: すぐ 作る 言葉（切手・旅行・花火・大雨・作物）でなく、さがすと 見つかる 言葉
+  小切手: 'moji-3-1',
+  一人旅: 'moji-3-2',
+  火花: 'moji-3-3',
+  五月雨: 'moji-3-4',
+  大作: 'moji-3-5',
 };
 
 export const isHiddenWeapon = (word: string): boolean => word in HIDDEN_WEAPONS;

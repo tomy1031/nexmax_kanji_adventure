@@ -1,6 +1,7 @@
 import type { CastMember } from '../types/novel';
 import { MOJI1_CAST, MOJI1_SCRIPTS, type EpisodeScript } from './scripts/moji1';
 import { MOJI2_CAST, MOJI2_SCRIPTS } from './scripts/moji2';
+import { MOJI3_CAST, MOJI3_SCRIPTS } from './scripts/moji3';
 
 /**
  * 新ルートの 台本 — every chapter's episode scripts and everyone who appears,
@@ -8,7 +9,7 @@ import { MOJI2_CAST, MOJI2_SCRIPTS } from './scripts/moji2';
  * (docs/design/12 §5). A chapter's own file (scripts/moji1.ts, …) keeps its
  * scripts; this only joins them.
  */
-export const MOJI_SCRIPTS: Readonly<Record<string, EpisodeScript>> = { ...MOJI1_SCRIPTS, ...MOJI2_SCRIPTS };
+export const MOJI_SCRIPTS: Readonly<Record<string, EpisodeScript>> = { ...MOJI1_SCRIPTS, ...MOJI2_SCRIPTS, ...MOJI3_SCRIPTS };
 
 /** One cast for the route: the same id is the same person in every chapter, so each appears once. */
 const joinCast = (...casts: CastMember[][]): CastMember[] => {
@@ -17,6 +18,6 @@ const joinCast = (...casts: CastMember[][]): CastMember[] => {
   return [...byId.values()];
 };
 
-export const MOJI_CAST: readonly CastMember[] = joinCast(MOJI1_CAST, MOJI2_CAST);
+export const MOJI_CAST: readonly CastMember[] = joinCast(MOJI1_CAST, MOJI2_CAST, MOJI3_CAST);
 
 export type { EpisodeScript };

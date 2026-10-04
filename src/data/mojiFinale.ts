@@ -65,6 +65,19 @@ export const MOJI_FINALES: MojiFinale[] = [
     // Ten kanji at about two clean ★1 writes each, a little more than 1章's; it hits harder.
     boss: { name: '大(おお)モジクイ', img: 'img/battle/mojikui_boss.webp', trait: { icon: '👑', ja: 'じぶんが おうさま', en: 'self-made king' }, hp: 176, attack: 55, element: Element.AN, icon: 'GiShadowFollower' },
   },
+  {
+    // 3章「読めない メニュー」の 終わり（docs/design/14）: 料理大会の 会場に 逃げた 大モジクイ。
+    id: 'moji-3-boss',
+    chapter: 'moji-3',
+    title: 'まとめの ボス',
+    asks: 10,
+    patience: 2,
+    reward: 100,
+    // The contest hall (5話 ends pointing at its stage).
+    bg: 'food_contest',
+    // Ten of the chapter's twenty kanji, as 2章's finale; it hits a little harder.
+    boss: { name: '大(おお)モジクイ', img: 'img/battle/mojikui_boss.webp', trait: { icon: '👑', ja: 'じぶんが おうさま', en: 'self-made king' }, hp: 176, attack: 62, element: Element.AN, icon: 'GiShadowFollower' },
+  },
 ];
 
 export const getMojiFinale = (id: string): MojiFinale | undefined => MOJI_FINALES.find((f) => f.id === id);

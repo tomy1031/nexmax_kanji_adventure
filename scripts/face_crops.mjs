@@ -31,6 +31,12 @@ const OVERRIDES = {
   'img/chara/naniwa/folk_vendor_happy.webp': [0.54, 0.26, 0.4],
   'img/chara/naniwa/folk_vendor_trouble.webp': [0.53, 0.23, 0.38],
   'img/chara/naniwa/folk_keeper_trouble.webp': [0.52, 0.3, 0.38],
+  // 3章: 高い コック帽・はちまき・白い ひげで 顔の 見つけ方が ずれる 人
+  'img/chara/naniwa/folk_chef_happy.webp': [0.5, 0.3, 0.38],
+  'img/chara/naniwa/folk_chef_trouble.webp': [0.5, 0.27, 0.36],
+  'img/chara/naniwa/folk_grocer_happy.webp': [0.56, 0.24, 0.38],
+  'img/chara/naniwa/folk_grocer_trouble.webp': [0.53, 0.2, 0.38],
+  'img/chara/naniwa/folk_ramen_happy.webp': [0.5, 0.22, 0.38],
   // モジクイ（docs/design/13）: 肌色が なく、お札や 煙が 顔の 上に ある。1体ずつ 顔の 形が ちがう ので 手で。
   'img/battle/mojikui.webp': [0.43, 0.43, 0.4],
   'img/battle/mojikui_kid.webp': [0.34, 0.42, 0.5],
@@ -39,7 +45,7 @@ const OVERRIDES = {
   'img/battle/mojikui_price.webp': [0.5, 0.38, 0.4],
   'img/battle/mojikui_nametag.webp': [0.52, 0.28, 0.36],
   'img/battle/mojikui_book.webp': [0.28, 0.33, 0.4],
-  'img/battle/mojikui_clocktower.webp': [0.53, 0.17, 0.34],
+  'img/battle/mojikui_clocktower.webp': [0.52, 0.24, 0.42],
   'img/battle/mojikui_signboard.webp': [0.43, 0.47, 0.42],
   'img/battle/mojikui_bus.webp': [0.53, 0.44, 0.42],
   'img/battle/mojikui_station.webp': [0.42, 0.22, 0.36],
@@ -54,6 +60,12 @@ const OVERRIDES = {
   'img/battle/mojikui_diary.webp': [0.43, 0.33, 0.4],
   'img/battle/mojikui_camera.webp': [0.47, 0.32, 0.4],
   'img/battle/mojikui_film.webp': [0.58, 0.32, 0.4],
+  // 3章（docs/design/14）
+  'img/battle/mojikui_post.webp': [0.38, 0.33, 0.45],
+  'img/battle/mojikui_pot.webp': [0.46, 0.58, 0.5],
+  'img/battle/mojikui_queue.webp': [0.43, 0.32, 0.36],
+  'img/battle/mojikui_umbrella.webp': [0.6, 0.62, 0.42],
+  'img/battle/mojikui_chef.webp': [0.45, 0.42, 0.42],
 };
 
 // Bright peach: cream paper (r ≈ g) and wood (dark, very orange) are left out.
