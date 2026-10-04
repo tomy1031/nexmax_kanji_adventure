@@ -475,6 +475,12 @@ const CREATURES = [
     ['mojikui_signboard', 'the Mojikui hiding behind a big blank wooden shop signboard held like a shield, a blank hanging open/closed board around its neck, a half-lowered metal shop shutter for a jaw, a loaf of bread in one tendril; same size and shape as the reference.', '1章 9話の あいて（看板の モジクイ）'],
     ['mojikui_bus', 'the Mojikui gripping a big brass bus steering wheel, two round bus headlights glowing on its body, a bent bus-stop pole with a blank round sign as a staff, small rubber wheels under its inky skirt, a torn blank bus timetable in its mouth; same size and shape as the reference.', '1章 10話の あいて（バスの モジクイ）'],
     ['mojikui_station', 'the Mojikui coiled around a blank station name board, curls of train track and sleepers for tendrils, a small station clock (blank dial) on its head like a hat, puffs of steam, blank paper train tickets swirling around; same size and shape as the reference.', '1章 11話の あいて（駅の モジクイ）'],
+    // 2章 ミナトタウン 1〜5話（docs/design/12）
+    ['mojikui_scale', 'the Mojikui hugging a big brass hanging fish-market weighing scale with a BLANK dial, a fish tail sticking out of its grinning mouth, blank paper price cards stuck to its inky body, a few drops of sea water; same size and shape as the reference.', '2章 1話の あいて（はかりの モジクイ）'],
+    ['mojikui_paint', 'the Mojikui splashed with dull grey paint, slurping a rainbow of colour out of a tipped paint pot through a long straw, a few colour-drained cloth scraps and blank colour cards floating around it; same size and shape as the reference.', '2章 2話の あいて（色の モジクイ）'],
+    ['mojikui_stairs', 'a long Mojikui coiled down a short flight of stone steps like a spring toy, a blank wooden shop sign clamped in its grinning mouth, small handmade wooden toys and a little clay pot caught in its tendrils; same overall size as the reference.', '2章 3話の あいて（石だんの モジクイ）'],
+    ['mojikui_hungry', 'an extra-chubby round Mojikui wearing a napkin bib, holding a fork in one tendril and chopsticks in another, chewing a blank wooden menu board, a teacup and a grilled-fish skewer floating around it; same size as the reference.', '2章 4話の あいて（はらぺこ モジクイ）'],
+    ['mojikui_arrow', 'the Mojikui stuck all over with BLANK arrow-shaped signpost boards pointing in every direction like a pincushion, dizzy swirl eyes, spinning on the spot, a brass compass in one tendril; same size and shape as the reference.', '2章 5話の あいて（道しるべの モジクイ）'],
   ].map(([id, diff, used]) => ({
     id,
     group: 'enemy',
@@ -516,6 +522,25 @@ const NANIWA = [
     ...naniwa('naniwa_last_car', 'the last car of the blue commuter train on the bridge over the bay at sunset, the connecting door thrown open: inside, the whole car has become a swirling whirlpool of tiny glowing golden motes of light and blank cream paper slips spinning in a vortex between the brass handrails and hanging straps; at the center of the whirlpool the ink-shadow creature from the second reference image (black-violet ink smoke, glowing amber eyes, paper talismans) slurps a long ribbon of golden motes into its mouth like noodles; the windows on both sides show the sea glowing orange. Exciting but kid-friendly.', 'かな編 10話（最後の 車両・字の 渦）'),
     refs: ['art-src/naniwa_train.png', 'art-src/battle/04_敵_モジクイ.png'],
   },
+];
+
+// ---------------------------------------------------------------------------
+// 2章「市場の ともだち」— 海の むこうの 港町 ミナトタウン（docs/design/12）。霧の 町。
+// 看板・札は ぜんぶ 空っぽ（字は scenes.ts の boardRows で 上に 掛かる。上の 4割は 掛け札の 場所）。
+// ---------------------------------------------------------------------------
+
+const port = (id, desc, used) => ({
+  ...naniwa(id, `${desc} The town is a hillside harbor town across the sea from Naniwa Town: Western-style stone and stucco houses with balconies, steep stone stairs, a lighthouse on the cape, soft white sea fog drifting through the streets. Leave the upper part of the picture fairly open (sky, fog or plain wall) for hanging signs.`, used),
+  group: 'bg_port',
+  out: `img/port/${id}.webp`,
+});
+
+const PORT = [
+  port('port_market', 'the early-morning fish market on the pier of the harbor town: rows of stalls with fish on ice, crates of fruit and vegetables, a big brass hanging weighing scale, a white ferry and fishing boats moored behind, gulls, lanterns still lit in the fog; every price card and stall sign BLANK. No people.', '2章 1話「たかい？ やすい？」（霧の 港の 朝市）'),
+  port('port_clothes', 'inside a small clothing shop next to the harbor market: racks of shirts, dresses, scarves and hats all faded to dull grey as if their colours were drained, a tall mirror, bolts of grey cloth on shelves, brass lamps, an open door onto the foggy street; small BLANK tags hang on the clothes. No people.', '2章 2話「いろの ない ふく」（色が 消えた ふく屋）'),
+  port('port_stairs', 'a steep stone staircase street climbing the hillside in the afternoon: at the top of the stairs a tiny handmade-goods shop with pottery, wooden toys and woven baskets in the window, at the bottom another small shop door, a brass handrail, potted flowers on the steps, the foggy sea and pier far below; every shop sign BLANK. No people.', '2章 3話「かいだんの 上の おみせ」（石だんの 上と 下）'),
+  port('port_foodhall', 'a busy-looking harbor eatery hall at lunchtime: long wooden counters and stools, steaming pots and a grill with fish and meat skewers, teapots and cups, a big BLANK wooden menu board with empty slots on the back wall, brass lamps, a window onto the foggy harbor. No people.', '2章 4話「なにが すきですか」（メニューが 消えた 食堂）'),
+  port('port_alley', 'a maze of narrow stone alleys between old brick and stucco houses on the hillside at dusk: a small crossroads with a tall brass signpost whose arrow boards are all BLANK, steps going up and down in different directions, lanterns, a cat sleeping on a wall, laundry lines overhead, fog creeping in. No people.', '2章 5話「みぎ？ ひだり？」（道しるべが 消えた 小道）'),
 ];
 
 // ---------------------------------------------------------------------------
@@ -585,6 +610,13 @@ const PEOPLE = {
   keeper: { ref: 'ENTJ', who: 'an elderly clock-tower keeper: a white walrus moustache, small round spectacles, a brown bowler hat, a dark-green waistcoat with a gold pocket-watch chain, brown trousers' },
   baker: { ref: 'ENFJ_f', who: 'a warm bakery owner in her thirties: wavy orange hair under a tall white baker\'s hat, a white baker\'s jacket and a pink apron with a little flour on it' },
   driver: { ref: 'ENTP', who: 'a cheerful bus driver in his forties: a navy driver\'s cap, a light-blue short-sleeved uniform shirt with a navy tie, white gloves, a neat short beard' },
+  // 2章 ミナトタウン（docs/design/12）
+  sora: { ref: 'ENFP_f', who: 'Sora, a cheerful ten-year-old girl who lives in the harbor town: a short tousled dark-brown bob with a teal bandana, a navy-and-white sailor-collar top, denim overall shorts, white sneakers, a small toy camera on a strap around her neck' },
+  sora_papa: { ref: 'INFJ', who: "Sora's father, a gentle craftsman in his forties who makes handmade goods: short black hair, a short neat beard, round glasses, a brown canvas work apron over a light-blue shirt with rolled sleeves, a pencil behind his ear" },
+  sora_mama: { ref: 'INFJ_f', who: "Sora's mother, a cheerful woman in her forties: dark-brown hair in a low ponytail, a mustard cardigan over a white blouse, a long teal skirt, a measuring tape around her neck" },
+  fishmonger: { ref: 'ESTP_f', who: 'a lively harbor fish-market seller in her thirties: hair tied up in a blue headscarf, a navy rubber apron over a blue-and-white striped shirt, tall rubber boots' },
+  tailor: { ref: 'ISFP', who: 'a stylish young clothes-shop owner in his twenties: wavy chestnut hair, a grey waistcoat over a white shirt, a yellow tape measure draped over his shoulders, a pin cushion on his wrist' },
+  cook: { ref: 'ENTJ_f', who: 'a warm eatery cook in her fifties: a white bandana over grey-streaked hair, a white cook\'s coat with rolled sleeves and a red apron, a wooden ladle' },
   yamada: { ref: 'ESFJ_f', who: 'Yamada-san, a gentle woman in her forties who lives in the town: short wavy brown hair with a pink cherry-blossom hairpin, a sky-blue cardigan over a white blouse, a navy pleated skirt, a small pink rosette pinned on the cardigan' },
 };
 
@@ -640,6 +672,20 @@ const FOLK = [
   human('baker', 'trouble', 'happy', 'troubled: holding a blank hanging open/closed board in both hands, tilting her head in confusion, a sweat drop.', '1章 9話 パンやの 人（店が 開いて いるか わからない）'),
   human('driver', 'happy', 'happy', 'happy: giving a big thumbs-up with a wide grin, the other hand waving people aboard.', '1章 10話 バスの 運転手（バスが 動く）'),
   human('driver', 'trouble', 'happy', 'troubled: holding a blank folded route map, scratching his head under the cap with a confused frown, a sweat drop.', '1章 10話 バスの 運転手（行き先が 読めない）'),
+  // 2章 ミナトタウン 1〜5話（docs/design/12）。1枚目（happy）を 先に 作り、2枚目は それを 参照。
+  human('sora', 'happy', 'happy', 'overjoyed: jumping with one fist raised high, the other hand holding her toy camera, eyes squeezed shut in a big grin, a few sparkles.', '2章 ソラ（よろこぶ。3話で 家族に 会える・8話 ともだち）'),
+  human('sora', 'trouble', 'happy', 'worried and lost: hugging herself, looking around anxiously with teary eyes, eyebrows tilted up, a small wobbly mouth, a sweat drop.', '2章 ソラ（こまる。父と 母が わからない・犬が いない・日記が 書けない）'),
+  human('sora', 'normal', 'happy', 'friendly and curious: standing with hands behind her back, leaning forward a little, head tilted, a bright open smile.', '2章 ソラ（ふだん）'),
+  human('sora_papa', 'happy', 'happy', 'happy: holding up a small handmade wooden toy boat with a proud warm smile, eyes curved behind his glasses, a little sparkle.', '2章 3話 ソラの 父（家族の 札が 戻った）'),
+  human('sora_papa', 'trouble', 'happy', 'troubled: holding a blank wooden name sign in both hands, scratching his head, puzzled frown, a sweat drop.', '2章 3話 ソラの 父（札が 読めない）'),
+  human('sora_mama', 'happy', 'happy', 'happy: clapping her hands together beside her cheek, eyes closed in a big warm smile, a few sparkles.', '2章 3話 ソラの 母（家族に 会えた）'),
+  human('sora_mama', 'trouble', 'happy', 'troubled: one hand over her mouth, the other holding a blank shop sign, looking up and down the stairs anxiously.', '2章 3話 ソラの 母（上か 下か わからない）'),
+  human('fishmonger', 'happy', 'happy', 'happy: holding up a big shiny fish with both hands, laughing with her mouth wide open, a wink, sparkles.', '2章 1話 朝市の 人（ねふだが 戻った）'),
+  human('fishmonger', 'trouble', 'happy', 'troubled: holding a blank price card in one hand and a fish in the other, mouth open as if asking "expensive? cheap?", a sweat drop.', '2章 1話 朝市の 人（高い？ 安い？）'),
+  human('tailor', 'happy', 'happy', 'happy: holding up a bright red shirt on a hanger with a delighted grin, a little bow, sparkles.', '2章 2話 ふく屋（色が 戻った）'),
+  human('tailor', 'trouble', 'happy', 'troubled: holding up a shirt drained to plain grey, staring at it in dismay, a hand on his forehead.', '2章 2話 ふく屋（色が ない）'),
+  human('cook', 'happy', 'happy', 'happy: holding a steaming bowl and the ladle, a big hearty laugh, eyes curved, steam swirls.', '2章 4話 食堂の 人（メニューが 戻った）'),
+  human('cook', 'trouble', 'happy', 'troubled: pointing at a blank menu card with the ladle, puzzled, mouth open as if asking "what will you eat?", a sweat drop.', '2章 4話 食堂の 人（メニューが 読めない）'),
 ];
 
 // ---------------------------------------------------------------------------
@@ -832,7 +878,7 @@ const GEAR_ART = [
   gear('charm-tomo', 'a friendship knot charm: two colorful braided cords (pink and sky-blue) tied together in a heart-shaped knot, with small beads.'),
 ];
 
-export const ASSETS = [...NEXMAX, ...GENDAI, ...MUKASHI_FOLK, ...ENEMIES, ...CREATURES, ...BG, ...NANIWA, ...NEXMAX_NANIWA, ...FOLK, ...PROLOGUE_ART, ...PROLOGUE_EATEN, ...MAPS, ...ICONS, ...CARDS, ...WEAPONS, ...GEAR_ART];
+export const ASSETS = [...NEXMAX, ...GENDAI, ...MUKASHI_FOLK, ...ENEMIES, ...CREATURES, ...BG, ...NANIWA, ...PORT, ...NEXMAX_NANIWA, ...FOLK, ...PROLOGUE_ART, ...PROLOGUE_EATEN, ...MAPS, ...ICONS, ...CARDS, ...WEAPONS, ...GEAR_ART];
 
 export const GROUPS = {
   nexmax: 'ネクマックス（表情・ポーズ）',
@@ -843,6 +889,7 @@ export const GROUPS = {
   bg_gendai: '背景 — 現代編',
   bg_naniwa: '背景 — 0章「はじまりの 空港」（ナニワタウン）',
   bg_prologue: 'プロローグの 1枚絵',
+  bg_port: '背景 — 2章 ミナトタウン（海の むこうの 港町）',
   nexmax_naniwa: 'ナニワタウンの ネクマックス（新ルートの 立ち絵）',
   folk_naniwa: '町の 人の 表情（困る・よろこぶ）',
   companion_cards: 'なかまの カード ★4・★5',
