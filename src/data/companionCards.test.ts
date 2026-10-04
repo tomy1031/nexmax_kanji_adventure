@@ -59,6 +59,20 @@ describe('★5 の ひとこと', () => {
       expect([l.start, l.skill, l.win].flatMap((t) => unreadKanji(t)), c.id).toEqual([]);
       expect(linesFor(c)).toBe(l);
     }
-    expect(linesFor(getIndividual('ISTJ-4')!)).toBe(COMPANION_LINES.ISTJ);
+    expect(linesFor(getIndividual('ISTJ')!)).toBe(COMPANION_LINES.ISTJ);
+  });
+});
+
+describe('★4 の ひとこと', () => {
+  it('gives every dressed-up ★4 card its own lines, read', () => {
+    const dressed4 = CARDS.filter((x) => x.rarity === 4 && x.id !== x.char);
+    expect(dressed4.length).toBeGreaterThanOrEqual(19);
+    for (const c of dressed4) {
+      const l = CARD_LINES[c.id];
+      expect(l, c.id).toBeDefined();
+      expect([l.start, l.skill, l.win].flatMap((t) => unreadKanji(t)), c.id).toEqual([]);
+      expect(linesFor(c)).toBe(l);
+      expect(l, c.id).not.toEqual(COMPANION_LINES[c.char]);
+    }
   });
 });
