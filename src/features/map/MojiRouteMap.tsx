@@ -16,7 +16,7 @@ import { MASTERY_REPS, starsOf } from '../../lib/mastery';
 import { assetPath } from '../../lib/assetPath';
 import { getKanaEpisode } from '../../data/kana';
 import { getMojiEpisode } from '../../data/mojiEpisodes';
-import { continuePathWithFinale, episodePath, isChapterOpen, isEpisodeOpen, nextUpWithFinale } from '../../data/mojiFlow';
+import { chapterProgress, continuePathWithFinale, episodePath, isChapterOpen, isEpisodeOpen, nextUpWithFinale } from '../../data/mojiFlow';
 import { finaleNumber, finaleOf, getMojiFinale, isFinaleOpen, isFinaleReady, MOJI_FINALES } from '../../data/mojiFinale';
 import { useBgm } from '../../lib/bgm';
 import { preloadImages } from '../../lib/preload';
@@ -373,6 +373,8 @@ export const MojiRouteMap = () => {
   const [sheet, setSheet] = useState<GroupId | null>(() => (fresh || at ? groupOf((fresh ?? at)!) : null));
   const [record, setRecord] = useState(false);
   const [locked, setLocked] = useState<string | null>(null);
+  // Finished chapters fold to their header (2026-10-05): the ones opened again by hand.
+  const [unfolded, setUnfolded] = useState<ReadonlySet<string>>(() => new Set());
   useEffect(() => {
     if (!locked) return;
     const t = setTimeout(() => setLocked(null), 1800);
@@ -632,6 +634,10 @@ export const MojiRouteMap = () => {
                     <ol className="flex flex-col gap-2">
                       {N5_CHAPTERS.map((c) => {
                         const ready = isChapterReady(c);
+                        const prog = chapterProgress(c.id, cleared, owned);
+                        const holdsFocus = focusEp != null && (getMojiEpisode(focusEp)?.chapter ?? getMojiFinale(focusEp)?.chapter) === c.id;
+                        const folded = prog.done && !holdsFocus && !unfolded.has(c.id);
+                        const toggle = () => setUnfolded((u) => (u.has(c.id) ? new Set([...u].filter((x) => x !== c.id)) : new Set([...u, c.id])));
                         return (
                           <li key={c.id} className="rounded-xl border-2 border-[#caa468] bg-white/80 px-3 py-2" style={{ opacity: ready ? 1 : 0.8 }}>
                             <div className="flex items-baseline justify-between gap-2">
@@ -642,15 +648,30 @@ export const MojiRouteMap = () => {
                                 <RubyText showFurigana={showFurigana}>{`${c.lessons.from}〜${c.lessons.to}課(か)`}</RubyText>
                               </span>
                             </div>
-                            <p className="text-[13px] leading-[1.95]">
-                              <RubyText showFurigana={showFurigana}>{c.summary}</RubyText>
-                            </p>
+                            {ready && (
+                              // How far the chapter is: its 話 cleared and its letters back (2026-10-05).
+                              <div className="mt-0.5 flex items-center gap-2 text-xs font-black tabular-nums">
+                                <span style={{ color: prog.done ? '#4f9a3c' : 'var(--ink-2)' }}>
+                                  <RubyText showFurigana={showFurigana}>{`${prog.done ? '✓ クリア' : '✓'} ${prog.cleared}/${prog.total}話(わ) ・ 字(じ) ${prog.kanji}/${prog.kanjiTotal}`}</RubyText>
+                                </span>
+                                {prog.done && !holdsFocus && (
+                                  <button type="button" data-tap aria-expanded={!folded} className="ml-auto rounded-full border-2 border-[#caa468] bg-white px-2.5 py-0.5 text-[11px]" onClick={toggle}>
+                                    {folded ? '▼ ひらく' : '▲ とじる'}
+                                  </button>
+                                )}
+                              </div>
+                            )}
+                            {!folded && (
+                              <p className="text-[13px] leading-[1.95]">
+                                <RubyText showFurigana={showFurigana}>{c.summary}</RubyText>
+                              </p>
+                            )}
                             {ready && !isChapterOpen(c.id, cleared) && (
                               <p className="text-xs font-black" style={{ color: 'var(--ink-2)' }}>
                                 🔒 <RubyText showFurigana={showFurigana}>{`${c.order - 1}章(しょう)の まとめの ボスの あとで ひらきます`}</RubyText>
                               </p>
                             )}
-                            {ready ? (
+                            {folded ? null : ready ? (
                               <div className="mt-2 grid grid-cols-2 gap-2">
                                 {episodesOf(c.id).map((ep) => {
                                   const open = isEpisodeOpen(ep, cleared);

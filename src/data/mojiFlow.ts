@@ -194,3 +194,22 @@ export const continuePathWithFinale = (
   const next = nextUpWithFinale(cleared, startPath);
   return next && getMojiFinale(next) ? episodePath(next, cleared) : continuePath(cleared, startPath, progress);
 };
+
+/**
+ * How far a chapter is done, for its header on the stage select: its
+ * episodes and まとめの ボス cleared, and its kanji the player owns (★1).
+ * `done` once every one of them is cleared.
+ */
+export const chapterProgress = (
+  chapterId: string,
+  cleared: readonly string[],
+  owned: ReadonlySet<string>,
+): { cleared: number; total: number; kanji: number; kanjiTotal: number; done: boolean } => {
+  const chapter = MOJI_CHAPTERS.find((c) => c.id === chapterId);
+  const finale = MOJI_FINALES.find((f) => f.chapter === chapterId);
+  const ids = [...MOJI_EPISODES.filter((e) => e.chapter === chapterId).map((e) => e.id), ...(finale ? [finale.id] : [])];
+  const n = ids.filter((id) => cleared.includes(id)).length;
+  const kanji = chapter?.kanji ?? [];
+  return { cleared: n, total: ids.length, kanji: kanji.filter((k) => owned.has(k)).length, kanjiTotal: kanji.length, done: ids.length > 0 && n === ids.length };
+};
+
