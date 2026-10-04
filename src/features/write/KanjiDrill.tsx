@@ -18,7 +18,11 @@ import { TownBackdrop, TownShot } from './TownBackdrop';
 import { hasSign } from '../picturebook/hasSign';
 import { streetOf } from '../../lib/signStreet';
 import * as sfx from '../../lib/sfx';
+import { useOwnedKanji } from '../moji/useOwnedKanji';
 import { jinglePlaying, useBgm } from '../../lib/bgm';
+
+/** The ★1 cards that still explain ★★ and ★★★: 1話's five kanji. */
+const STAR_EXPLAINED_FOR = 5;
 
 /**
  * The writing drill: write the character, and it cuts a rock. Each rock
@@ -76,23 +80,23 @@ type VerdictKind = 'perfect' | 'clean' | 'close';
 const COPY: Record<'rock' | 'sign', { verdict: Record<VerdictKind, { head: string; next: string }>; first: string; idle: string }> = {
   rock: {
     verdict: {
-      perfect: { head: '正(せい)かい — かんぺき', next: '岩(いわ)が 割(わ)れた。この ちょうしで つづけよう。' },
-      clean: { head: '正(せい)かい', next: '岩(いわ)が 割(わ)れた。つぎは まちがえずに 書(か)いてみよう。' },
+      perfect: { head: '正(せい)かい — かんぺき', next: '岩(いわ)が 割(わ)れた。この ちょうしで！' },
+      clean: { head: '正(せい)かい', next: '岩(いわ)が 割(わ)れた。つぎは ミス なしで 書(か)きましょう。' },
       // Not a pass. Say so, then say what to do about it.
-      close: { head: 'まだ 正(せい)かいでは ない', next: '岩(いわ)は 割(わ)れない。「書(か)きじゅん」を 見(み)てから もう一度(いちど)。' },
+      close: { head: 'おしい！', next: '岩(いわ)は 割(わ)れません。「書(か)きじゅん」を 見(み)ましょう。もう一度(いちど)！' },
     },
-    first: '手本(てほん)の 上(うえ)を なぞると、線(せん)が 刀(かたな)に なる。',
-    idle: '書(か)ききると 岩(いわ)が 割(わ)れる。',
+    first: '手本(てほん)の 上(うえ)を なぞる → 線(せん)が 刀(かたな)に なる。',
+    idle: '書(か)ききる → 岩(いわ)が 割(わ)れる。',
   },
   // N5 words: あかりが つく / ひかる (08 §3.6), not 灯す.
   sign: {
     verdict: {
-      perfect: { head: '正(せい)かい — かんぺき', next: '看板(かんばん)に あかりが ついた。この ちょうしで つづけよう。' },
-      clean: { head: '正(せい)かい', next: '看板(かんばん)に あかりが ついた。つぎは まちがえずに 書(か)いてみよう。' },
-      close: { head: 'まだ 正(せい)かいでは ない', next: 'あかりが つかない。「書(か)きじゅん」を 見(み)てから もう一度(いちど)。' },
+      perfect: { head: '正(せい)かい — かんぺき', next: '看板(かんばん)に あかりが ついた。この ちょうしで！' },
+      clean: { head: '正(せい)かい', next: '看板(かんばん)に あかりが ついた。つぎは ミス なしで 書(か)きましょう。' },
+      close: { head: 'おしい！', next: 'あかりが つきません。「書(か)きじゅん」を 見(み)ましょう。もう一度(いちど)！' },
     },
-    first: '手本(てほん)の 上(うえ)を なぞると、線(せん)が ひかる。',
-    idle: '書(か)ききると 看板(かんばん)に あかりが つく。',
+    first: '手本(てほん)の 上(うえ)を なぞる → 線(せん)が ひかる。',
+    idle: '書(か)ききる → 看板(かんばん)に あかりが つく。',
   },
 };
 
@@ -128,6 +132,9 @@ export const KanjiDrill = ({ kanji, onObtained, onExit, onDone, nextLabel = 'つ
   const [obtained, setObtained] = useState(false);
   /** The goal (★1) was reached on this write: the card offers つぎへ / もっと 書く. */
   const [goalCard, setGoalCard] = useState(false);
+  // What ★★ and ★★★ buy is said on the first episode's cards only: after five
+  // kanji the learner has read it five times, and じゅんび says it again.
+  const explainStars = useOwnedKanji().size <= STAR_EXPLAINED_FOR;
   /** A star gained without a card (★2), shown for a moment. */
   const [starUp, setStarUp] = useState<number | null>(null);
   /** Each write that lights the sign sends a glow over the town. */
@@ -242,7 +249,7 @@ export const KanjiDrill = ({ kanji, onObtained, onExit, onDone, nextLabel = 'つ
             <div className="min-w-0 text-sm leading-relaxed">
               <Readings kanji={kanji} size="sm" />
               <p className="truncate" style={{ color: 'var(--ink-2)' }}>
-                meaning: <b>{kanji.meanings.slice(0, 2).join(' / ')}</b>
+                meaning: <b lang="en" className="text-[15px]" style={{ color: '#1b4f8f' }}>{kanji.meanings.slice(0, 2).join(' / ')}</b>
               </p>
             </div>
           </div>
@@ -371,7 +378,7 @@ export const KanjiDrill = ({ kanji, onObtained, onExit, onDone, nextLabel = 'つ
                 <RubyText showFurigana={showFurigana}>{copy.verdict[verdict.kind].head}</RubyText>
                 {verdict.mistakes > 0 && (
                   <span className="ml-2 text-sm font-normal" style={{ color: 'var(--ink-2)' }}>
-                    まちがえた ところ {verdict.mistakes}
+                    ミス {verdict.mistakes}
                   </span>
                 )}
               </motion.p>
@@ -385,7 +392,7 @@ export const KanjiDrill = ({ kanji, onObtained, onExit, onDone, nextLabel = 'つ
                 {reps === 0
                   ? copy.first
                   : sampleOverride === null && reps === SAMPLE_REPS
-                    ? 'ここからは 手本(てほん)なしで 書(か)いてみよう。'
+                    ? 'ここからは 手本(てほん)なしで 書(か)きましょう。'
                     : strokeMistakes > 0
                       ? `いま ${strokeMistakes} かい まちがえています`
                       : copy.idle}
@@ -544,6 +551,7 @@ export const KanjiDrill = ({ kanji, onObtained, onExit, onDone, nextLabel = 'つ
                 <RubyText showFurigana={showFurigana}>{`「${ruby}」が 町(まち)に 戻(もど)った！`}</RubyText>
               </p>
               {/* Why write more: said as what it buys, in the fight to come. */}
+              {explainStars && (
               <ul className="mt-2 space-y-0.5 text-left text-[13px] font-bold" style={{ color: 'var(--ink-2)' }}>
                 <li>
                   <span style={{ color: '#e8a317' }}>★★</span>{' '}
@@ -554,6 +562,7 @@ export const KanjiDrill = ({ kanji, onObtained, onExit, onDone, nextLabel = 'つ
                   <RubyText showFurigana={showFurigana}>{`${MASTERY_REPS[2]}回(かい)：漢字(かんじ)マスター（字(じ)の わざ・武器(ぶき)）`}</RubyText>
                 </li>
               </ul>
+              )}
               <button type="button" className="g-btn g-btn-primary mt-5 w-full text-lg" onClick={onDone ?? onExit}>
                 <RubyText showFurigana={showFurigana}>{nextLabel}</RubyText>
               </button>

@@ -148,3 +148,31 @@ describe('きずな (docs/design/11 §4.2)', () => {
     expect(useGameStore.getState().bondFromWin('rin')).toBe(2);
   });
 });
+
+describe('武器の 強化 (docs/design/11 §6)', () => {
+  it('adds the points once a day per weapon', () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date(2026, 9, 4, 9));
+    useGameStore.setState({ weapons: [{ id: 'a+b', kanjiIds: ['a', 'b'], craftedAt: 1 }] });
+    const { trainWeapon, canTrainToday } = useGameStore.getState();
+    expect(canTrainToday('a+b')).toBe(true);
+    expect(trainWeapon('a+b', 2)).toEqual({ before: 0, after: 2 });
+    expect(useGameStore.getState().canTrainToday('a+b')).toBe(false);
+    expect(useGameStore.getState().trainWeapon('a+b', 2)).toBeNull();
+    vi.setSystemTime(new Date(2026, 9, 5, 9));
+    expect(useGameStore.getState().trainWeapon('a+b', 1)).toEqual({ before: 2, after: 3 });
+    expect(useGameStore.getState().weapons[0].points).toBe(3);
+  });
+});
+
+describe('英語の 意味 (settings.english)', () => {
+  it('starts on, also for a save from before the setting, and keeps a player who turned it off', () => {
+    const merge = useGameStore.persist.getOptions().merge!;
+    const current = useGameStore.getState();
+    expect(current.settings.english).toBe(true);
+    const old = merge({ settings: { furigana: false, muted: true, reducedMotion: false, bgmOff: false } }, current) as typeof current;
+    expect(old.settings).toEqual({ furigana: false, muted: true, reducedMotion: false, bgmOff: false, english: true });
+    const off = merge({ settings: { ...current.settings, english: false } }, current) as typeof current;
+    expect(off.settings.english).toBe(false);
+  });
+});

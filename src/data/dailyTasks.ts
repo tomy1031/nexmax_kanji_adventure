@@ -54,7 +54,7 @@ export const DAILY_TASKS: DailyTask[] = [
   },
   {
     id: 'review-5',
-    label: 'わすれかけた 漢字(かんじ)を 5(いつ)つ 復習(ふくしゅう)する',
+    label: 'さびた 漢字(かんじ)を 5(いつ)つ もう一度(いちど) 書(か)く',
     goal: 5,
     reward: 20,
     progress: (d) => d.reviewsToday,

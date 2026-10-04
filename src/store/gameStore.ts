@@ -108,7 +108,8 @@ export interface GameState {
   daily: DailyState;
   /** Consecutive days played. */
   streak: { count: number; lastDate: string };
-  settings: { furigana: boolean; muted: boolean; reducedMotion: boolean; bgmOff: boolean };
+  /** `english`: word meanings in English start shown (EN on the kanji card, ？ことば in the story). */
+  settings: { furigana: boolean; muted: boolean; reducedMotion: boolean; bgmOff: boolean; english: boolean };
   /** One-off explainers the player has already been shown. */
   /** intro: むかし編の 0話. prologue: 文字が 消えた 町の プロローグ (08 §10.2). stars: じゅんびの ★の ひみつ. */
   tutorials: { forge: boolean; intro: boolean; prologue: boolean; stars: boolean; tools: boolean };
@@ -160,6 +161,13 @@ export interface GameActions {
   grantIndividual: (id: string) => boolean;
   setActiveIndividual: (id: string | null) => void;
   craftWeapon: (kanjiIds: string[]) => WeaponRecipe | null;
+  /**
+   * 強化 (docs/design/11 §6): add the points earned writing this weapon's
+   * kanji, once a day per weapon. Null if it was already done today.
+   */
+  trainWeapon: (recipeId: string, gained: number) => { before: number; after: number } | null;
+  /** Whether this weapon can still be 強化'd today. */
+  canTrainToday: (recipeId: string) => boolean;
   equipWeapon: (recipeId: string | null) => void;
   /** Make a piece of gear. False unless every character it needs is owned. */
   makeGear: (gearId: string) => boolean;
@@ -219,7 +227,7 @@ const initialState: GameState = {
   bondDays: {},
   daily: freshDaily(),
   streak: { count: 0, lastDate: '' },
-  settings: { furigana: true, muted: false, reducedMotion: false, bgmOff: false },
+  settings: { furigana: true, muted: false, reducedMotion: false, bgmOff: false, english: true },
   tutorials: { forge: false, intro: false, prologue: false, stars: false, tools: false },
   // A new player starts on the new route (08 §10.2).
   lastArc: 'moji',
@@ -373,6 +381,20 @@ export const useGameStore = create<GameState & GameActions>()(
       },
 
       setActiveIndividual: (id) => set({ activeIndividual: id }),
+
+      trainWeapon: (recipeId, gained) => {
+        const recipe = get().weapons.find((w) => w.id === recipeId);
+        const today = todayKey();
+        if (!recipe || recipe.trainedOn === today) return null;
+        const before = recipe.points ?? 0;
+        const after = before + Math.max(0, Math.round(gained));
+        set((s) => ({ weapons: s.weapons.map((w) => (w.id === recipeId ? { ...w, points: after, trainedOn: today } : w)) }));
+        return { before, after };
+      },
+      canTrainToday: (recipeId) => {
+        const recipe = get().weapons.find((w) => w.id === recipeId);
+        return recipe != null && recipe.trainedOn !== todayKey();
+      },
 
       craftWeapon: (kanjiIds) => {
         const state = get();

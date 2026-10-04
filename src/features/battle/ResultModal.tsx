@@ -187,18 +187,18 @@ export const ResultModal = ({
 
         <p className="mt-2 text-lg font-black">
           <RubyText showFurigana={showFurigana}>
-            {win ? (tutorial ? `${bossName}は にげて いった！` : `${bossName} に かった！`) : 'たおされて しまった。'}
+            {win ? (tutorial ? `${bossName}は にげた！` : `${bossName} に かった！`) : 'まけました……'}
           </RubyText>
         </p>
         <p className="mt-0.5 text-sm" style={{ color: 'var(--ink-2)' }}>
           <RubyText showFurigana={showFurigana}>
             {win
-              ? `まちがえた ところ ${mistakes}`
+              ? `ミス ${mistakes}`
               : loseHint
                 ? loseHint
                 : moji
-                ? '★が 少(すく)ない 字(じ)を もっと 書(か)くと、つよく なる。'
-                : 'まだ 持(も)って いない 字(じ)を れんしゅうすると、つよく なる。'}
+                ? '★が 少(すく)ない 字(じ)を 書(か)きましょう。つよく なります！'
+                : 'まだ 持(も)って いない 字(じ)を 書(か)きましょう。つよく なります！'}
           </RubyText>
         </p>
 
@@ -271,7 +271,7 @@ export const ResultModal = ({
 
         {perfect && (
           <p className="mt-2 text-sm font-black" style={{ color: '#b0741a' }}>
-            <RubyText showFurigana={showFurigana}>👑 かんぺき！ はじめて まちがえずに 勝(か)った</RubyText>
+            <RubyText showFurigana={showFurigana}>👑 かんぺき！ はじめて ミス なしで 勝(か)ちました</RubyText>
           </p>
         )}
         {hard && (
@@ -303,7 +303,7 @@ export const ResultModal = ({
         {opened.map((f) => (
           <div key={f} className="mt-3 rounded-xl px-3 py-2.5 text-left" style={{ background: 'rgba(255,207,74,0.22)', border: '2px dashed #e0a93a' }}>
             <p className="text-sm font-black" style={{ color: '#b0741a' }}>
-              <RubyText showFurigana={showFurigana}>{`「${FEATURE_INTRO[f].label}」が つかえるように なりました`}</RubyText>
+              <RubyText showFurigana={showFurigana}>{`「${FEATURE_INTRO[f].label}」が つかえます！`}</RubyText>
             </p>
             <p className="mt-0.5 text-xs" style={{ color: 'var(--ink-2)' }}>
               <RubyText showFurigana={showFurigana}>{FEATURE_INTRO[f].line}</RubyText>

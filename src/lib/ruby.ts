@@ -22,8 +22,10 @@ export interface RubySegment {
 // A run of kanji (plus 々) — or a run of digits, for 「2(ふた)つ」 — immediately
 // followed by a parenthesised reading. Both ASCII and full-width parens are
 // accepted, because both get typed. Digits and kanji are separate runs, so
-// 「10回(かい)」 puts かい over 回 only.
-const RUBY_RE = /([一-龯々]+|[0-9０-９]+)[（(]([^）)]+)[）)]/g;
+// 「10回(かい)」 puts かい over 回 only. A reading is kana only: in
+// 「◆800（毎日(まいにち)の …）」 the （ opens an aside, not 800's reading
+// (2026-10-04, the gacha's gem line).
+const RUBY_RE = /([一-龯々]+|[0-9０-９]+)[（(]([ぁ-ゖァ-ヺー・]+)[）)]/g;
 
 export const parseRuby = (source: string): RubySegment[] => {
   const segments: RubySegment[] = [];

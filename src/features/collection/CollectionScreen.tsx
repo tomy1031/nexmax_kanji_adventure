@@ -13,6 +13,10 @@ import { CompanionBook } from './CompanionBook';
 import { RubyText } from '../../components/ui/Ruby';
 import { rustLevel } from '../../lib/srs';
 import { GameIcon } from '../../components/ui/GameIcon';
+import { useCompoundsVersion } from '../../data/compounds';
+import { sortWeapons, useWeaponSort } from '../../lib/forge/weaponSort';
+import { WeaponSortBar, WeaponTags } from '../equip/WeaponSortBar';
+import { HIDDEN_WEAPONS } from '../../data/hiddenWeapons';
 
 /** Inventory: what has been forged, and who is in the party. */
 
@@ -31,19 +35,22 @@ export const CollectionScreen = () => {
 
   const [tab, setTab] = useState<Tab>('weapons');
 
-  const forged = useMemo(
-    () =>
-      weapons
-        .map((recipe) => {
-          const weapon = weaponFromRecipe(recipe);
-          if (!weapon) return null;
-          const rust = Math.max(...recipe.kanjiIds.map((id) => rustLevel(progress[id])), 0);
-          return { weapon, rust };
-        })
-        .filter((w) => w != null)
-        .sort((a, b) => b.weapon.rarity - a.weapon.rarity || b.weapon.attack - a.weapon.attack),
-    [weapons, progress],
-  );
+  // The forge's words beyond the core arrive just after start (data/compounds.ts): read again then.
+  const wordsV = useCompoundsVersion();
+  const [weaponSort, setWeaponSort] = useWeaponSort();
+  const forged = useMemo(() => {
+    const rustOf = new Map<string, number>();
+    const list = weapons
+      .map((recipe) => {
+        const weapon = weaponFromRecipe(recipe);
+        if (weapon) rustOf.set(weapon.id, Math.max(...recipe.kanjiIds.map((id) => rustLevel(progress[id])), 0));
+        return weapon;
+      })
+      .filter((w) => w != null);
+    return sortWeapons(list, weaponSort, new Map(weapons.map((r) => [r.id, r.craftedAt]))).map((weapon) => ({ weapon, rust: rustOf.get(weapon.id) ?? 0 }));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [weapons, progress, wordsV, weaponSort]);
+  const hiddenFound = forged.filter((f) => f.weapon.hidden).length;
 
   return (
     <div className="g-stage min-h-dvh pb-8">
@@ -109,6 +116,13 @@ export const CollectionScreen = () => {
             </div>
           ) : (
             <ul className="flex flex-col gap-2">
+              <li className="flex flex-col gap-2">
+                <WeaponSortBar sort={weaponSort} onSort={setWeaponSort} showFurigana={showFurigana} />
+                {/* かくし武器: how many there are is told, which words is not (data/hiddenWeapons.ts). */}
+                <p className="g-panel self-start px-3 py-1 text-[12px] font-black" style={{ color: 'var(--ink)' }}>
+                  🔑 <RubyText showFurigana={showFurigana}>{`かくし武器(ぶき) ${hiddenFound} / ${Object.keys(HIDDEN_WEAPONS).length} ・ どの 話(わ)にも 1(ひと)つ あります`}</RubyText>
+                </p>
+              </li>
               {forged.map(({ weapon, rust }) => {
                 const isEquipped = equipped === weapon.id;
                 return (
@@ -144,6 +158,7 @@ export const CollectionScreen = () => {
                           <span className="mx-1.5" aria-hidden>·</span>
                           こうげき {weapon.attack}
                           {(weapon.level ?? 0) > 0 && <span className="ml-1.5 font-black text-[#b0741a]">⚒{weapon.level}</span>}
+                          <WeaponTags w={weapon} showFurigana={showFurigana} />
                         </p>
                         {rust > 0.3 && (
                           <p className="text-[11px]" style={{ color: 'var(--color-danger)' }}>

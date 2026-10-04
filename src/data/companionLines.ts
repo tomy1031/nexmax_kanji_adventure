@@ -54,3 +54,44 @@ export const HURT_LINE: Record<SkillKind, string> = {
 export const DEFAULT_LINES: CompanionLines = { start: 'いっしょに がんばろう！', skill: 'いくよ！', win: 'やったね！' };
 
 export const linesOf = (id: string): CompanionLines => COMPANION_LINES[id] ?? DEFAULT_LINES;
+
+/**
+ * Dressed-up cards (★4・★5) speak in their own costume's voice (docs/design/11
+ * §4.1): the station master calls the departure, the samurai is formal, the
+ * captain gives orders. The わざ line still says what the わざ does. A
+ * character's first card uses the character's lines.
+ */
+export const CARD_LINES: Record<string, CompanionLines> = {
+  // ★4
+  'ISTJ-4': { start: 'しゅっぱつ しんこう！ 字(じ)の 電車(でんしゃ)、まいります。', skill: 'あんぜん だいいち！ ここで まもります。', win: 'じこく どおり、とうちゃく です。' },
+  'ISFJ-4': { start: 'けんこう チェック、ばっちりです。', skill: 'てあて します。すぐ よく なりますよ。', win: 'げんきで 勝(か)てましたね。' },
+  'ESTP-4': { start: 'よーい、ドン！', skill: 'ラストスパート！ つぎの 字(じ)で きめるぞ！', win: 'いちばんで ゴール！' },
+  'ESTJ-4': { start: 'では、かいぎを はじめます。', skill: 'みんなを まもるのが せいとかいです！', win: 'ぎだい、ぶじ かいけつ です。' },
+  'ESFJ-4': { start: 'いらっしゃいませ！ きょうも がんばろうね。', skill: 'あたたかい ココア、どうぞ。ほっと するよ。', win: 'おいわいに ケーキを やこうかな。' },
+  'INTP-4': { start: 'じっけん かいし。あいてを かんさつ します。', skill: 'データでは、あいては まだ うごきません。', win: 'じっけん せいこう！ ノートに 書(か)こう。' },
+  'ENTP-4': { start: 'あたらしい はつめい、ためして みよう！', skill: 'スイッチ オン！ つぎの 字(じ)が パワーアップ！', win: 'はつめい だいせいこう！' },
+  'INFJ-4': { start: 'しずかに……でも、おうえん して います。', skill: '本(ほん)の ことばで、げんきを わけます。', win: 'この 勝(か)ちは、本(ほん)に のこしましょう。' },
+  'INFP-4': { start: 'きょうの 字(じ)は どんな 色(いろ)かな。', skill: 'ふでを おいて、ひと いき。ゆっくりで いいよ。', win: 'すてきな 絵(え)に なったね。' },
+  'ENFP-4': { start: 'たんけん しゅっぱつ！ どんな 字(じ)に あえるかな。', skill: 'このまま すすもう！ コンボを つなげて！', win: 'たから 見(み)つけた！ つぎの たんけんへ！' },
+  'ISTP-4': { start: 'せいび かんりょう。いつでも いける。', skill: 'シールド そうち、オン。', win: 'ちょうし いい。ねじ 一(ひと)つ ゆるんで ない。' },
+  'ISFP-4': { start: 'なつの よる、きれいな 字(じ)を 書(か)こう。', skill: 'うちわで ひと あおぎ。すずしく いこう。', win: 'はなびみたいに きれいだったね。' },
+  'ESFP-4': { start: 'みんな〜！ きょうも 書(か)いて いくよ〜！', skill: 'アンコール！ つぎの 字(じ)で きめちゃって！', win: 'ステージ だいせいこう！ ありがとう〜！' },
+  'rin-4': { start: 'ゆかた、にあう？ なつの 字(じ)を 書(か)こう！', skill: 'たいこの リズムで、どんどん つなげよう！', win: 'なつの 字(じ)、ぜんぶ 読(よ)めたね！' },
+  'yamada-4': { start: 'はなびを 見(み)ながら、おうえん しますね。', skill: 'はい、ラムネ どうぞ。げんきが 出(で)ますよ。', win: 'たまや〜！ よく がんばりました。' },
+  'teacher-4': { start: 'すみを すって、こころを しずかに。', skill: 'ふでの うごきを 見(み)て。書(か)きじゅんですよ。', win: 'りっぱな 字(じ)です。はなまる！' },
+  'doctor-4': { start: 'さくらの きせつも、けんこう だいいち。', skill: 'さくらの かおりで、いたいのが きえますよ。', win: 'まんかいの 勝(か)ちですね。' },
+  'baker-4': { start: 'メリー クリスマス！ ケーキの ちからで いこう！', skill: 'とくせい ケーキで、ちから いっぱい！', win: 'おいわいの ケーキを きりましょう！' },
+  'keeper-4': { start: 'ほしの 時間(じかん)です。ゆっくり いきましょう。', skill: 'ほしを 見(み)て、ひと いき。あいては まだ ねて います。', win: 'ながれぼしに ねがいが とどきましたな。' },
+  // ★5
+  'ISTJ-5': { start: 'いざ、まいる。字(じ)の 道(みち)を すすみます。', skill: 'この たて、くずれず！', win: 'みごと。よく 書(か)きました。' },
+  'ESTP-5': { start: '3・2・1、はっしゃ！', skill: 'ブースター ぜんかい！ つぎで きめろ！', win: 'ゴールまで いっしゅん！' },
+  'ENFP-5': { start: 'わっしょい！ おまつりだ！', skill: 'みんなで つなげよう、わっしょい！', win: 'さいこうの おまつりだったね！' },
+  'INTJ-5': { start: 'じけんの 字(じ)は、もう 見(み)えて います。', skill: '書(か)きじゅんの てがかりを どうぞ。', win: 'なぞは すべて とけました。' },
+  'ENTJ-5': { start: 'しゅっこう！ ゴールは あの 字(じ)だ！', skill: 'かじを とる。書(か)きじゅんを 見(み)よ！', win: 'ぶじ 着(つ)いた！ よく やった！' },
+  'ENFJ-5': { start: 'ネオン ぜんかいで おうえん するよ！', skill: 'ひかれ！ コンボを まもるよ！', win: 'きみが いちばん かがやいてた！' },
+  'rin-5': { start: 'おまつりの 字(じ)、いっしょに 書(か)こう！', skill: 'ちょうちんの ひかりで、どんどん いこう！', win: 'こんな おまつり、はじめて！' },
+  'keeper-5': { start: 'じかんよ、ゆっくり すすめ……。', skill: 'とけいを もどそう。おちついて。', win: 'ちょうど いい 時間(じかん)に、勝(か)ちましたな。' },
+};
+
+/** A card's lines: its own (★4・★5), else its character's. */
+export const linesFor = (card: { id: string; char: string }): CompanionLines => CARD_LINES[card.id] ?? linesOf(card.char);

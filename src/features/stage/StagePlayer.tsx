@@ -167,7 +167,7 @@ const StageRun = () => {
                   <span className="text-[38px] leading-[1.55] font-black">
                     <KanjiWord kanji={k} showFurigana={showFurigana} />
                   </span>
-                  <span className="truncate text-[11px]" style={{ color: 'var(--ink-2)' }}>
+                  <span lang="en" className="w-full truncate text-[12px] font-bold" style={{ color: '#1b4f8f' }}>
                     {k.meanings[0]}
                   </span>
                   <div className="mt-1 h-2 w-full overflow-hidden rounded-full bg-[#e3d3ad]">

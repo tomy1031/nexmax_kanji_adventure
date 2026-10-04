@@ -1,8 +1,10 @@
 import type { KanjiData } from '../../types/kanji';
 import type { Compound } from '../../types/forge';
-import { getCompounds } from '../../data/compounds.generated';
+import { compoundsVersion, getCompounds } from '../../data/compounds';
 import { Element, elementOf, ELEMENT_LABEL } from './elements';
 import { primaryStem } from '../reading';
+import { HIDDEN_BOOST, stageGrowth, stageOfKanji, stageOfWord } from './stage';
+import { isHiddenWeapon } from '../../data/hiddenWeapons';
 
 /**
  * The forge.
@@ -103,6 +105,10 @@ export interface Weapon {
   blurb: string;
   /** 強化 level 0..5 (lib/forge/recipe.ts), when it came from a saved recipe. */
   level?: number;
+  /** How far along the route its kanji are (lib/forge/stage.ts): 1話 = 1. */
+  stage?: number;
+  /** A かくし武器 (data/hiddenWeapons.ts). */
+  hidden?: boolean;
 }
 
 // ---------------------------------------------------------------------------
@@ -110,10 +116,13 @@ export interface Weapon {
 // ---------------------------------------------------------------------------
 
 let compoundIndex: Map<string, Compound> | null = null;
+let indexedVersion = -1;
 
 const compoundFor = (word: string): Compound | null => {
-  if (!compoundIndex) {
+  // Rebuilt once the rest of the words has loaded (data/compounds.ts).
+  if (!compoundIndex || indexedVersion !== compoundsVersion()) {
     compoundIndex = new Map(getCompounds().map((c) => [c.word, c]));
+    indexedVersion = compoundsVersion();
   }
   return compoundIndex.get(word) ?? null;
 };
@@ -258,10 +267,15 @@ export const forgeWeapon = (kanji: KanjiData[]): Weapon | null => {
   const compound = compoundFor(word);
   const element = elementOf(kanji[0]);
   const weaponClass = CLASS_OF_ELEMENT[element];
-  const rarity = rarityFor(compound, kanji, seed);
+  const hidden = compound != null && isHiddenWeapon(word);
+  const rarity = hidden ? (5 as Rarity) : rarityFor(compound, kanji, seed);
+  const stage = stageOfWord(kanji.map((k) => k.char));
 
   const weight = kanji.reduce((n, k) => n + k.strokes, 0);
-  const attack = attackFor(rarity, kanji);
+  // A real word grows with the route: the later its kanji, the harder it hits
+  // (lib/forge/stage.ts). A non-word stays in its ★1–★2 band, so a real word
+  // still always beats one.
+  const attack = compound ? Math.round(attackFor(rarity, kanji) * stageGrowth(stage) * (hidden ? HIDDEN_BOOST : 1)) : attackFor(rarity, kanji);
 
   const pool = ICON_POOL[weaponClass];
   const icon = pool[seed % pool.length];
@@ -278,7 +292,7 @@ export const forgeWeapon = (kanji: KanjiData[]): Weapon | null => {
     // moment the vocabulary actually lands.
     plainName = `${compound.word}の${classLabel.ja}`;
     name = `${compound.word}(${compound.reading})の ${classLabel.ja}(${classLabel.reading})`;
-    blurb = `「${compound.word}」は ${compound.gloss}。本当(ほんとう)に ある 言葉(ことば)。`;
+    blurb = `${hidden ? 'かくし武器(ぶき)！ ' : ''}「${compound.word}」は ${compound.gloss}。本当(ほんとう)に ある 言葉(ことば)。`;
   } else {
     // Not a word. Still a weapon — named by reading the characters aloud.
     const reading = kanji.map(nameReading).join('');
@@ -300,6 +314,8 @@ export const forgeWeapon = (kanji: KanjiData[]): Weapon | null => {
     weight,
     icon,
     blurb,
+    stage,
+    hidden,
   };
 };
 
@@ -339,6 +355,7 @@ export const forgeSingleBlade = (k: KanjiData): Weapon => {
     weight: k.strokes,
     icon: 'GiKatana',
     blurb: `字(じ) 1(ひと)つで 作(つく)った、はじめの 太刀(たち)。字(じ)を 2(ふた)つ あわせると、もっと 強(つよ)い 武器(ぶき)に なる。`,
+    stage: stageOfKanji(k.char),
   };
 };
 

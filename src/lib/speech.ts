@@ -10,11 +10,22 @@ import { useGameStore } from '../store/gameStore';
  */
 export const canSpeak = (): boolean => typeof window !== 'undefined' && 'speechSynthesis' in window;
 
+/**
+ * What is said for a line: its kana, without the pictures — a voice reads 😰
+ * or 🪧 out as words ("face with…"), which a learner cannot tell from the line.
+ */
+export const spokenText = (text: string): string =>
+  toKana(text)
+    .replace(/[\p{Extended_Pictographic}\u{FE0F}\u{200D}]/gu, '')
+    .replace(/\n/g, ' ')
+    .replace(/\s{2,}/g, ' ')
+    .trim();
+
 export const speak = (text: string): void => {
   if (!canSpeak() || useGameStore.getState().settings.muted) return;
   const synth = window.speechSynthesis;
   synth.cancel();
-  const u = new SpeechSynthesisUtterance(toKana(text).replace(/\n/g, ' '));
+  const u = new SpeechSynthesisUtterance(spokenText(text));
   u.lang = 'ja-JP';
   u.rate = 0.85;
   const voice = synth.getVoices().find((v) => v.lang.startsWith('ja'));

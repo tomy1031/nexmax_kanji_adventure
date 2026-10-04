@@ -10,7 +10,12 @@ import { ALL_KANJI } from '../../data/kanji.generated';
 import { GEAR, SLOT_LABEL, getGear, missingFor, type GearItem, type GearSlot } from '../../data/equipment';
 import { RARITY_LABEL } from '../../lib/forge/weapon';
 import { weaponArt, weaponFromRecipe, weaponWord } from '../../lib/forge/recipe';
+import { sortWeapons, useWeaponSort } from '../../lib/forge/weaponSort';
+import { WeaponSortBar, WeaponTags } from './WeaponSortBar';
 import { WeaponMount } from '../battle/WeaponMount';
+import { WeaponTrain } from './WeaponTrain';
+import { GearBehind, GearFront } from '../battle/GearOn';
+import { LAYOUT_TRAVEL, gearArt } from '../battle/gearLayout';
 import { statsFromGear } from '../../lib/battle';
 import { charRuby } from '../../lib/reading';
 import { REPS_TO_OBTAIN } from '../../types/kanji';
@@ -19,6 +24,7 @@ import { isForgeOpen, mastersOf } from '../../data/mojiFlow';
 import * as sfx from '../../lib/sfx';
 import PictureBook from '../picturebook/PictureBook';
 import { NightStreetBackdrop } from '../write/NightStreet';
+import { useCompoundsVersion } from '../../data/compounds';
 
 /**
  * そうび (public/img/design/ネクマックスのそうび画面.png).
@@ -61,20 +67,26 @@ export const EquipScreen = () => {
 
   const [slot, setSlot] = useState<Slot>('weapon');
   const [showAll, setShowAll] = useState(false);
+  /** 強化 (11 §6): the weapon being worked on, by recipe id. */
+  const [training, setTraining] = useState<string | null>(null);
 
   const owned = useMemo(
     () => new Set(ALL_KANJI.filter((k) => (progress[k.id]?.reps ?? 0) >= REPS_TO_OBTAIN).map((k) => k.char)),
     [progress],
   );
 
+  // The forge's words beyond the core arrive just after start (data/compounds.ts): read again then.
+  const wordsV = useCompoundsVersion();
   const forged = useMemo(
     () =>
       weapons
         .map((r) => weaponFromRecipe(r))
-        .filter((w) => w != null)
-        .sort((a, b) => b.attack - a.attack),
-    [weapons],
+        .filter((w) => w != null),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [weapons, wordsV],
   );
+  const [weaponSort, setWeaponSort] = useWeaponSort();
+  const sortedWeapons = useMemo(() => sortWeapons(forged, weaponSort, new Map(weapons.map((r) => [r.id, r.craftedAt]))), [forged, weaponSort, weapons]);
 
   const weapon = forged.find((w) => w.id === equippedWeapon) ?? null;
   const worn = Object.values(equippedGear)
@@ -118,15 +130,28 @@ export const EquipScreen = () => {
                 />
               </div>
             )}
-            <motion.img
-              src={assetPath(moji ? 'img/stageselect/nexmax_travel.webp' : 'img/chara/cut/guide.webp')}
-              alt=""
-              aria-hidden
-              className="absolute bottom-3 left-1/2 h-[190px] -translate-x-1/2"
-              style={moji ? undefined : { filter: 'drop-shadow(3px 0 0 #fff) drop-shadow(-3px 0 0 #fff) drop-shadow(0 8px 10px rgba(0,0,0,0.3))' }}
-              animate={{ y: [0, -5, 0] }}
-              transition={{ duration: 2.6, repeat: Infinity }}
-            />
+            {moji ? (
+              // 新ルート: Nexmax wearing what is equipped — armour behind, shield and charm in front (GearOn).
+              <motion.div
+                className="absolute bottom-3 left-1/2 aspect-[520/780] h-[190px] -translate-x-1/2"
+                animate={{ y: [0, -5, 0] }}
+                transition={{ duration: 2.6, repeat: Infinity }}
+              >
+                <GearBehind worn={equippedGear} layout={LAYOUT_TRAVEL} still={false} />
+                <img src={assetPath('img/stageselect/nexmax_travel.webp')} alt="" aria-hidden className="relative h-full w-full" />
+                <GearFront worn={equippedGear} layout={LAYOUT_TRAVEL} still={false} />
+              </motion.div>
+            ) : (
+              <motion.img
+                src={assetPath('img/chara/cut/guide.webp')}
+                alt=""
+                aria-hidden
+                className="absolute bottom-3 left-1/2 h-[190px] -translate-x-1/2"
+                style={{ filter: 'drop-shadow(3px 0 0 #fff) drop-shadow(-3px 0 0 #fff) drop-shadow(0 8px 10px rgba(0,0,0,0.3))' }}
+                animate={{ y: [0, -5, 0] }}
+                transition={{ duration: 2.6, repeat: Infinity }}
+              />
+            )}
             {SLOTS.map(({ slot: s, icon, pos }) => {
               const item = slotItem(s);
               const on = s === slot;
@@ -146,6 +171,8 @@ export const EquipScreen = () => {
                 >
                   {moji && s === 'weapon' && weapon ? (
                     <img src={assetPath(weaponArt(weapon.weaponClass, weapon.rarity))} alt="" aria-hidden className="h-[42px] w-[42px] object-contain" />
+                  ) : moji && s !== 'weapon' && equippedGear[s] ? (
+                    <img src={assetPath(gearArt(equippedGear[s]!))} alt="" aria-hidden className="h-[42px] w-[42px] object-contain" />
                   ) : (
                     <span style={{ color: item ? '#7a4a26' : 'rgba(27,79,138,0.35)' }}>
                       <GameIcon name={item?.icon ?? icon} size={34} />
@@ -198,7 +225,13 @@ export const EquipScreen = () => {
                   )}
                 </li>
               ) : (
-                forged.map((w) => {
+                <>
+                {forged.length > 1 && (
+                  <li>
+                    <WeaponSortBar sort={weaponSort} onSort={setWeaponSort} showFurigana={showFurigana} />
+                  </li>
+                )}
+                {sortedWeapons.map((w) => {
                   const on = w.id === equippedWeapon;
                   return (
                     <li key={w.id} className="g-parchment flex items-center gap-3 p-2.5" style={on ? { borderColor: '#2f8fe0' } : undefined}>
@@ -216,19 +249,28 @@ export const EquipScreen = () => {
                         <p className="text-[11px]">
                           <span style={{ color: RARITY_LABEL[w.rarity].color }}>{RARITY_LABEL[w.rarity].ja}</span> こうげき ＋{w.attack}
                           {(w.level ?? 0) > 0 && <span className="ml-1 font-black text-[#b0741a]">⚒{w.level}</span>}
+                          <WeaponTags w={w} showFurigana={showFurigana} />
                         </p>
                       </div>
-                      <button
-                        type="button"
-                        disabled={on}
-                        className="g-btn g-btn-accent !min-h-[36px] !px-3 text-xs"
-                        onClick={() => equipWeapon(w.id)}
-                      >
-                        <RubyText showFurigana={showFurigana}>{on ? 'そうび中(ちゅう)' : 'そうびする'}</RubyText>
-                      </button>
+                      <div className="flex shrink-0 flex-col gap-1">
+                        <button
+                          type="button"
+                          disabled={on}
+                          className="g-btn g-btn-accent !min-h-[34px] !px-3 text-xs"
+                          onClick={() => equipWeapon(w.id)}
+                        >
+                          <RubyText showFurigana={showFurigana}>{on ? 'そうび中(ちゅう)' : 'そうびする'}</RubyText>
+                        </button>
+                        {moji && (
+                          <button type="button" className="g-btn g-btn-ghost !min-h-[30px] !px-3 text-[11px]" onClick={() => setTraining(w.id)}>
+                            ⚒ <RubyText showFurigana={showFurigana}>強化(きょうか)</RubyText>
+                          </button>
+                        )}
+                      </div>
                     </li>
                   );
-                })
+                })}
+                </>
               ))}
 
             {slot !== 'weapon' &&
@@ -245,7 +287,12 @@ export const EquipScreen = () => {
                         className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-white/70"
                         style={{ color: made ? '#7a4a26' : 'rgba(122,74,38,0.35)' }}
                       >
-                        <GameIcon name={g.icon} size={30} />
+                        {moji ? (
+                          // Not made yet: its outline only.
+                          <img src={assetPath(gearArt(g.id))} alt="" aria-hidden className="h-10 w-10 object-contain" style={made ? undefined : { filter: 'brightness(0) opacity(0.25)' }} />
+                        ) : (
+                          <GameIcon name={g.icon} size={30} />
+                        )}
                       </span>
                       <div className="min-w-0 flex-1">
                         <p className="text-sm font-black">
@@ -277,7 +324,7 @@ export const EquipScreen = () => {
                           </>
                         ) : (
                           <p className="text-[11px]">
-                            <RubyText showFurigana={showFurigana}>{`${g.stage.replace('mukashi-', '')}話(わ)まで すすむと わかる`}</RubyText>
+                            <RubyText showFurigana={showFurigana}>{`${g.stage.replace('mukashi-', '')}話(わ)まで すすむ → わかる`}</RubyText>
                           </p>
                         )}
                       </div>
@@ -319,6 +366,7 @@ export const EquipScreen = () => {
         </div>
       </div>
       {!moji && <BottomTabs current="items" />}
+      {training && <WeaponTrain recipeId={training} onClose={() => setTraining(null)} />}
     </div>
   );
 };

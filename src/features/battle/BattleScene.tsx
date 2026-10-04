@@ -22,7 +22,7 @@ import * as sfx from '../../lib/sfx';
 import { comboMilestone, comboTier, isComboBreak, strokeEnd, strokeLift } from '../../lib/combo';
 import type { StrokeSpark } from './ComboFx';
 import { SKILL_INFO, SKILL_OF, gaugeGain, skillEffect, skillGaugeFull } from '../../lib/companionSkill';
-import { HURT_LINE, linesOf } from '../../data/companionLines';
+import { HURT_LINE, linesFor } from '../../data/companionLines';
 import type { CompanionView, SkillCut } from './CompanionFx';
 import {
   computeDamage,
@@ -46,6 +46,7 @@ import { useBgm } from '../../lib/bgm';
 import { isReadTurn, readDamage, readQuestion } from '../../lib/readTurn';
 import { nextStarGoal } from '../../data/starPerks';
 import { EXP_BOSS_FIRST, EXP_BOSS_REPEAT, EXP_READ, applyLevel, levelInfo, levelOf, ownedCount } from '../../lib/level';
+import { useCompoundsVersion } from '../../data/compounds';
 
 /**
  * The fight.
@@ -219,11 +220,14 @@ export const BattleScene = ({
   }, [equippedGear, tutorial, mastery, level]);
   const patience = basePatienceValue + stats.patience;
 
+  // The forge's words beyond the core arrive just after start (data/compounds.ts): read again then.
+  const wordsV = useCompoundsVersion();
   const weapon = useMemo(() => {
     if (weaponOverride) return weaponOverride;
     const recipe = weapons.find((w) => w.id === equippedId);
     return recipe ? weaponFromRecipe(recipe) : null;
-  }, [weapons, equippedId, weaponOverride]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [weapons, equippedId, weaponOverride, wordsV]);
 
   const individual = activeIndividualId ? (getIndividual(activeIndividualId) ?? null) : null;
   // なかまの わざ (docs/design/11 §3.2): on the new route, once a companion has joined.
@@ -280,6 +284,8 @@ export const BattleScene = ({
   const [outcome, setOutcome] = useState<Outcome>(null);
   /** わざ: the gauge, what a used one still holds for the coming writes, the cut-in and the companion's bubble. */
   const [gauge, setGauge] = useState(0);
+  /** Strikes the shield took — the worn shield kicks with each (GearFront). */
+  const [guardNo, setGuardNo] = useState(0);
   const [buffs, setBuffs] = useState({ guards: 0, freeLooks: 0, power: 1, comboShield: 0 });
   const [cut, setCut] = useState<SkillCut | null>(null);
   const [talk, setTalk] = useState<{ n: number; text: string } | null>(null);
@@ -338,7 +344,7 @@ export const BattleScene = ({
   // The companion says hello once the intro band has gone.
   useEffect(() => {
     if (!skillKind || !individual) return;
-    const t = setTimeout(() => companionSay(linesOf(individual.char).start), 1600);
+    const t = setTimeout(() => companionSay(linesFor(individual).start), 1600);
     return () => clearTimeout(t);
     // Once per fight.
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -413,6 +419,8 @@ export const BattleScene = ({
       return;
     }
     const back = strikeDamage(counterDamage(stage.boss.attack, individual, stage.boss.element), stats.defense);
+    // The shield takes the blow: it kicks (GearFront).
+    if (stats.defense > 0) setGuardNo((n) => n + 1);
     const nextPlayerHp = Math.max(0, playerHp - back);
     setPlayerHp(nextPlayerHp);
     sfx.hurt();
@@ -561,7 +569,7 @@ export const BattleScene = ({
 
       if (nextBossHp <= 0) {
         bossDownRef.current = true;
-        if (skillKind && individual) companionSay(linesOf(individual.char).win);
+        if (skillKind && individual) companionSay(linesFor(individual).win);
         settleTimer.current = setTimeout(() => settle('win', nextMistakes, playerHp), mastery ? WIN_DELAY_MASTERY_MS : 650);
         return;
       }
@@ -768,7 +776,7 @@ export const BattleScene = ({
     const does = info.says(e);
     setGauge(0);
     setCut({ n: talkNo.current + 1, art: individual.art, name: individual.name, kind: skillKind, does });
-    companionSay(linesOf(individual.char).skill);
+    companionSay(linesFor(individual).skill);
     sfx.skill();
     if (e.heal) setPlayerHp((h) => Math.min(stats.maxHp, h + e.heal!));
     if (e.calm) setRage((r) => Math.max(0, r - e.calm!));
@@ -821,6 +829,8 @@ export const BattleScene = ({
           spark={spark}
           companion={companionView}
           cut={cut}
+          worn={tutorial ? {} : equippedGear}
+          guard={guardNo}
           mount={weapon ? { cls: weapon.weaponClass, element: weapon.element, rarity: weapon.rarity, level: weapon.level ?? 0, word: weaponWord(weapon) } : null}
           fire={flow?.n}
           flash={flash}
@@ -990,7 +1000,7 @@ export const BattleScene = ({
               )}
               <Readings kanji={target} hideKanji={!tutorial} />
               <p className="truncate" style={{ color: 'var(--ink-2)' }}>
-                meaning: <b className="text-base">{target.meanings.slice(0, 2).join(' / ')}</b>
+                meaning: <b lang="en" className="text-base" style={{ color: '#1b4f8f' }}>{target.meanings.slice(0, 2).join(' / ')}</b>
               </p>
             </div>
           </div>
@@ -1004,8 +1014,8 @@ export const BattleScene = ({
               </span>
               <RubyText showFurigana={showFurigana}>
                 {targetStars === 3
-                  ? 'マスター。まちがえずに 書(か)くと「字(じ)の わざ」'
-                  : `こうげき ×${masteryMultiplier(targetStars, false)}。まちがえずに 書(か)くと ★が ふえる（${MASTERY_REPS[targetStars]}回(かい)で ★${targetStars + 1}）`}
+                  ? 'マスター。ミス なしで 書(か)く →「字(じ)の わざ」'
+                  : `こうげき ×${masteryMultiplier(targetStars, false)}。ミス なしで 書(か)く → ★が ふえる（${MASTERY_REPS[targetStars]}回(かい)で ★${targetStars + 1}）`}
               </RubyText>
             </p>
           )}

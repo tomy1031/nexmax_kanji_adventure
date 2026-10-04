@@ -180,6 +180,14 @@ background with nothing else on it, no shadow on the ground, no text, no letters
 gems, the glass core glows warm gold. Still no glow or light effects outside the weapon itself — keep the plain white
 background right up to its outline.`,
 
+  // そうび（盾・よろい・おまもり）を ネクマックスに 着せる（2026-10-04「盾・よろい・おまもりも 絵に して、ネクマックスに 着せて」）。
+  GEAR: `One equipment part for the small sky-blue robot in the reference image — draw ONLY the item, not the robot,
+no hands, no person. Cute, chunky and toy-like, in the same polished, glossy 3D-like Japanese anime game rendering as
+the reference, soft shading and a clean dark outline. It belongs with the robot: rounded edges and a few light
+sky-blue (#A9D6F5), white and navy (#004F8D) mecha details where it clips on, besides its own main colors described
+below. Shown alone, front view, centered. Output: 1024x1024 PNG, plain pure white (#FFFFFF) background with nothing
+else on it, no shadow on the ground, no text, no letters, no numbers, no kanji, no logo.`,
+
   ICON: `Output: 1024x1024 PNG. App icon for a kids' kanji learning game. Keep all important shapes inside the
 central 80% circle (the edges are cropped into a circle or rounded square on phones). Bold, simple, readable at 48px.
 No text, no letters, no kanji.`,
@@ -782,7 +790,7 @@ const WEAPON_SHAPES = {
   SWORD: 'a mecha sword — a broad straight blade with a light-blue energy edge and a chunky hilt with the mounting joint.',
   AXE: 'a mecha battle axe — a big crescent axe head on a short thick haft.',
   SPEAR: 'a mecha lance — a long shaft ending in a drill-like spiral spearhead.',
-  BOW: 'a mecha bow — a curved bow with a glowing energy string and the mounting joint at the grip.',
+  BOW: 'a mecha bow — a curved bow with a thin glowing energy string and the mounting joint at the grip. The space between the string and the bow is empty: the plain white background shows through it, nothing is drawn there.',
   STAFF: 'a mecha staff — a slim staff topped with a ring that holds a floating round orb.',
   HAMMER: 'a mecha hammer — a big round-ended hammer head with two little thrusters on its back, on a short handle.',
   DAGGER: 'a pair of mecha daggers — two short curved blades crossed over each other, joined at one mounting joint.',
@@ -791,7 +799,39 @@ const WEAPON_SHAPES = {
 
 const WEAPONS = Object.entries(WEAPON_SHAPES).flatMap(([cls, shape]) => [weapon(cls, false, shape), weapon(cls, true, shape)]);
 
-export const ASSETS = [...NEXMAX, ...GENDAI, ...MUKASHI_FOLK, ...ENEMIES, ...CREATURES, ...BG, ...NANIWA, ...NEXMAX_NANIWA, ...FOLK, ...PROLOGUE_ART, ...PROLOGUE_EATEN, ...MAPS, ...ICONS, ...CARDS, ...WEAPONS];
+// ---------------------------------------------------------------------------
+// そうび（data/equipment.ts）: 盾は 体の 前、よろいは 背中、おまもりは 頭の そば。
+// ---------------------------------------------------------------------------
+
+const gear = (id, what) => ({
+  id: `gear_${id.replace(/-/g, '_')}`,
+  group: 'gear',
+  prio: 'A',
+  out: `img/gear/${id}.webp`,
+  kind: 'prop',
+  bgmode: 'white',
+  refs: ['public/img/battle/nexmax_brush.webp'],
+  style: ['GEAR'],
+  diff: `The item: ${what}`,
+  used: `そうび ${id}（data/equipment.ts）。ネクマックスに 着せる・もちもの`,
+  note: '白い 背景を import.mjs が 切り抜く（prop）',
+});
+
+const GEAR_ART = [
+  gear('shield-oo', 'a large round buckler of white and sky-blue plating with a navy rim and a big bold round boss in the middle; sturdy and friendly. A small clip on its back edge.'),
+  gear('shield-yama', 'a kite shield shaped like a mountain: a mossy grey-green stone face with a snowy white peak at the top, a sky-blue mecha rim around it, sturdy.'),
+  gear('shield-shiho', 'a round shield with a large four-pointed compass star across its face (pointing up, down, left, right — no letters on it), deep navy and gold, a sky-blue mecha rim.'),
+  gear('body-ki', 'a back unit of armor made of polished wooden plates shaped like two small leaf wings with green leaves sprouting at the tips, joined by a sky-blue mecha back plate and two shoulder straps — seen from the front, as it would peek out from behind the robot.'),
+  gear('body-tsukiyo', 'a flowing midnight-blue cape with a crescent moon and small stars sewn on it and a warm orange sunset-colored lining, a round sky-blue clasp at the collar — spread open, seen from the front, as it would hang behind the robot.'),
+  gear('body-kin', 'a back unit of shining golden mecha armor with two short golden wings and white trim, joined by a back plate and two shoulder straps — seen from the front, as it would peek out from behind the robot.'),
+  gear('charm-me', 'a round amulet charm with a big friendly eye design on it (just a drawn eye shape, no letters), a red tassel and a small sky-blue ring at the top.'),
+  gear('charm-ki', 'a red and white Japanese headband (hachimaki) tied in a knot with its two ends fluttering, drawn as a loop seen from the front — no letters on it.'),
+  gear('charm-toki', 'a small brass pocket-watch amulet with a clock face showing only tick marks (no numbers), a red tassel and a sky-blue chain.'),
+  gear('charm-hon', 'a bookmark charm: a slim decorated bookmark with a little open-book emblem at the top (blank pages, no letters) and a red ribbon tassel.'),
+  gear('charm-tomo', 'a friendship knot charm: two colorful braided cords (pink and sky-blue) tied together in a heart-shaped knot, with small beads.'),
+];
+
+export const ASSETS = [...NEXMAX, ...GENDAI, ...MUKASHI_FOLK, ...ENEMIES, ...CREATURES, ...BG, ...NANIWA, ...NEXMAX_NANIWA, ...FOLK, ...PROLOGUE_ART, ...PROLOGUE_EATEN, ...MAPS, ...ICONS, ...CARDS, ...WEAPONS, ...GEAR_ART];
 
 export const GROUPS = {
   nexmax: 'ネクマックス（表情・ポーズ）',
@@ -806,6 +846,7 @@ export const GROUPS = {
   folk_naniwa: '町の 人の 表情（困る・よろこぶ）',
   companion_cards: 'なかまの カード ★4・★5',
   weapons: '武器（ネクマックスに 積む）',
+  gear: 'そうび（盾・よろい・おまもり。ネクマックスに 着せる）',
   map: 'ステージ選択の 地図',
   icon: 'アプリの アイコン',
 };

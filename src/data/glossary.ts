@@ -1,4 +1,5 @@
-import { getCompounds } from './compounds.generated';
+import { compoundsVersion, getCompounds } from './compounds';
+import { parseRuby } from '../lib/ruby';
 import { ALL_KANJI } from './kanji.generated';
 
 /**
@@ -124,6 +125,7 @@ const STORY_WORDS: Record<string, string> = {
 };
 
 let index: Map<string, string> | null = null;
+let indexedVersion = -1;
 
 const build = () => {
   const m = new Map<string, string>();
@@ -135,6 +137,132 @@ const build = () => {
 
 /** The English for a word as written in the text (the base under the ruby). */
 export const glossFor = (word: string): string | undefined => {
-  if (!index) index = build();
+  if (!index || indexedVersion !== compoundsVersion()) {
+    index = build();
+    indexedVersion = compoundsVersion();
+  }
   return index.get(word);
+};
+
+/**
+ * Kana words of the story a learner at this level may not know yet — words
+ * past N5 that the story writes in kana (ねふだ, じこくひょう), the verbs of
+ * the action, and the sounds. Listed in the forms the lines use; a word is
+ * found when it stands alone or with a particle after it (ねふだが).
+ */
+export const KANA_WORDS: Readonly<Record<string, string>> = {
+  モジクイ: 'Mojikui (letter-eater)',
+  ふだ: 'sign, card',
+  ねふだ: 'price tag',
+  なふだ: 'name tag',
+  かんばん: 'shop sign',
+  じこくひょう: 'timetable',
+  よていひょう: 'schedule',
+  いきさき: 'destination',
+  しょうてんがい: 'shopping street',
+  とけいだい: 'clock tower',
+  もじばん: 'clock face',
+  はり: 'clock hand',
+  はぐるま: 'gear wheel',
+  こうば: 'workshop',
+  ふもと: 'foot of a hill',
+  ひろば: 'town square',
+  いちば: 'market',
+  バスてい: 'bus stop',
+  ロープウェー: 'cable car',
+  トンネル: 'tunnel',
+  カレンダー: 'calendar',
+  ほんだな: 'bookshelf',
+  じしょ: 'dictionary',
+  くすり: 'medicine',
+  ジェム: 'gem (◆)',
+  スタンプ: 'stamp',
+  ずかん: 'collection book',
+  なかま: 'friend, teammate',
+  ぶき: 'weapon',
+  ばんごう: 'number',
+  すうじ: 'number, digit',
+  かげ: 'shadow',
+  けむり: 'smoke',
+  あわ: 'bubble',
+  きり: 'fog',
+  くうこう: 'airport',
+  ごちそう: 'a treat, feast',
+  にがて: 'weak at',
+  まじめ: 'serious, hard-working',
+  しょうぶ: 'match, contest',
+  たいせん: 'battle (versus)',
+  かじる: 'gnaw, bite',
+  にげました: 'ran away',
+  にげます: 'run away',
+  のこって: 'is left (remaining)',
+  ひかります: 'shines',
+  たたかいます: 'fight',
+  もどりました: 'came back',
+  もどって: 'come back',
+  うごきます: 'moves',
+  うごきません: "doesn't move",
+  うごきました: 'moved',
+  おいかけましょう: "let's chase",
+  きそう: 'compete',
+  ガリガリ: 'crunch, crunch',
+  カリカリ: 'nibble, nibble',
+  ガブッ: 'chomp!',
+  バリッ: 'crack!',
+  ギギギ: 'creak…',
+  ブルルン: 'vroom',
+  ペラペラ: 'flip, flip (pages)',
+  ぐるぐる: 'round and round',
+};
+
+/** What may follow a kana word in a line and still leave it that word. */
+const PARTICLE = /^(?:が|を|に|へ|で|と|の|は|も|や|から|まで|です|ですか|でした|だ)?$/;
+
+/** A kana word of the line, if the token is one (ねふだが → ねふだ). */
+const kanaWordOf = (token: string): string | undefined => {
+  for (let n = token.length; n >= 2; n--) {
+    const head = token.slice(0, n);
+    if (KANA_WORDS[head] && PARTICLE.test(token.slice(n))) return head;
+  }
+  return undefined;
+};
+
+/**
+ * The annotated words of a story line, each with its English — what ？ことば
+ * shows. Scripts write a word a character at a time (学(がく)生(せい)), so
+ * runs of annotated characters with nothing between them are joined into the
+ * longest word that has a meaning of its own: 学生 is "student", not "study"
+ * and "life". Words without English are left out.
+ */
+export const wordsOfLine = (text: string): { word: string; gloss: string }[] => {
+  const segs = parseRuby(text);
+  const seen = new Set<string>();
+  const out: { word: string; gloss: string }[] = [];
+  for (let i = 0; i < segs.length; ) {
+    if (!segs[i].reading || /^[0-9０-９]/.test(segs[i].text)) {
+      i++;
+      continue;
+    }
+    let run = 1;
+    while (i + run < segs.length && run < 4 && segs[i + run].reading && !/^[0-9０-９]/.test(segs[i + run].text)) run++;
+    let take = run;
+    for (; take > 1; take--) if (glossFor(segs.slice(i, i + take).map((s) => s.text).join(''))) break;
+    const part = segs.slice(i, i + take);
+    const base = part.map((s) => s.text).join('');
+    const gloss = glossFor(base);
+    if (gloss && !seen.has(base)) {
+      seen.add(base);
+      out.push({ word: part.map((s) => `${s.text}(${s.reading})`).join(''), gloss });
+    }
+    i += take;
+  }
+  // The kana words, in the order they come.
+  for (const token of text.replace(/\([^)]*\)/g, '').split(/[\s、。！？!?…「」『』（）()・〜—]+/u)) {
+    const word = kanaWordOf(token.replace(/[^\p{L}ー]/gu, ''));
+    if (word && !seen.has(word)) {
+      seen.add(word);
+      out.push({ word, gloss: KANA_WORDS[word] });
+    }
+  }
+  return out;
 };

@@ -24,7 +24,7 @@ import { RubyText } from '../../components/ui/Ruby';
 import { assetPath } from '../../lib/assetPath';
 import { DAILY_TOTAL } from '../../data/dailyTasks';
 import { SKILL_INFO, SKILL_OF } from '../../lib/companionSkill';
-import { linesOf } from '../../data/companionLines';
+import { linesFor } from '../../data/companionLines';
 import { useBgm } from '../../lib/bgm';
 import * as sfx from '../../lib/sfx';
 
@@ -257,7 +257,7 @@ export const GachaScreen = () => {
             <p className="mt-2 text-xs" style={{ color: 'var(--ink-2)' }}>
               <RubyText showFurigana={showFurigana}>
                 {daysToMulti > 0
-                  ? `10回(かい)ぶんまで あと ◆${banner.multi - gems}。毎日(まいにち)の やることを 全部(ぜんぶ) おわらせると、あと ${daysToMulti}日(にち)。`
+                  ? `10回(かい)ぶんまで あと ◆${banner.multi - gems}。毎日(まいにち)の やること 全部(ぜんぶ)で あと ${daysToMulti}日(にち)。`
                   : 'ジェムが たりません。'}
               </RubyText>
             </p>
@@ -287,13 +287,13 @@ export const GachaScreen = () => {
             {banner.ceiling && (
               <li>
                 <RubyText showFurigana={showFurigana}>
-                  {`★5は ${STAR5_CEILING}回(かい)で かならず。あと ${pullsUntilStar5(pity)}回(かい)（いつもの・ピックアップ で 数(かぞ)える）`}
+                  {`★5は ${STAR5_CEILING}回(かい)で かならず 出(で)ます。あと ${pullsUntilStar5(pity)}回(かい)（いつもの と ピックアップ）`}
                 </RubyText>
               </li>
             )}
             <li>
               <RubyText showFurigana={showFurigana}>
-                {`同(おな)じ カードが 出(で)たら きずな ＋1。きずなが いっぱいなら ◆${BOND_REFUND[3]}／${BOND_REFUND[4]}／${BOND_REFUND[5]}（★3／★4／★5）`}
+                {`同(おな)じ カード → きずな ＋1。きずなが いっぱい → ◆が もどる（★3 ◆${BOND_REFUND[3]}・★4 ◆${BOND_REFUND[4]}・★5 ◆${BOND_REFUND[5]}）`}
               </RubyText>
             </li>
             <li>
@@ -425,7 +425,7 @@ const SingleCard = ({ r, face, showFurigana, onClose }: { r: Shown; face: boolea
             <RubyText showFurigana={showFurigana}>{r.card.name}</RubyText>
           </p>
           <p className="mt-1 rounded-2xl bg-white/70 px-3 py-1.5 text-sm leading-snug font-bold">
-            「<RubyText showFurigana={showFurigana}>{linesOf(r.card.char).start}</RubyText>」
+            「<RubyText showFurigana={showFurigana}>{linesFor(r.card).start}</RubyText>」
           </p>
           <p className="mt-2 text-xs" style={{ color: 'var(--ink-2)' }}>
             {info.icon} <RubyText showFurigana={showFurigana}>{`わざ「${info.name}」`}</RubyText>

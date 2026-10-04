@@ -16,6 +16,8 @@ export interface Compound {
   gloss: string;
   /** The hardest JLPT level among its characters. */
   level: JlptLevel;
-  /** True for words EDICT marks high-frequency — worth a bigger reward. */
+  /** A word of the learner-level core (JLPT N5–N2 vocabulary) — the first a card shows. */
   common: boolean;
+  /** 0 core, 1 common (JMdict), 2 more (newspaper frequency) — scripts/build_compounds.mjs. */
+  tier?: 0 | 1 | 2;
 }

@@ -14,6 +14,15 @@ describe('parseRuby', () => {
     expect(parseRuby('生命草（せいめいそう）')).toEqual([{ text: '生命草', reading: 'せいめいそう' }]);
   });
 
+  it('reads only kana as a reading: a full-width aside after a number is not one', () => {
+    expect(parseRuby('◆800（毎日(まいにち)の やること）')).toEqual([
+      { text: '◆800（' },
+      { text: '毎日', reading: 'まいにち' },
+      { text: 'の やること）' },
+    ]);
+    expect(parseRuby('2(ふた)つ')[0]).toEqual({ text: '2', reading: 'ふた' });
+  });
+
   it('keeps unannotated text as one segment', () => {
     expect(parseRuby('ネクマックス')).toEqual([{ text: 'ネクマックス' }]);
   });
