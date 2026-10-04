@@ -68,3 +68,18 @@ describe('？ことば — kana words a learner may not know yet', () => {
     expect(wordsOfLine('木(き)の かげ').map((w) => w.word)).toEqual(['木(き)', 'かげ']);
   });
 });
+
+describe('？ことば — a kanji’s sense for the way it is read (2026-10-05)', () => {
+  beforeAll(() => loadMoreCompounds());
+
+  it('gives 回(まわ) "go round", not "-times", and 安(やす) "cheap"', () => {
+    expect(wordsOfLine('町(まち)を 回(まわ)りましょう').find((w) => w.word === '回(まわ)')?.gloss).toBe('go round');
+    expect(wordsOfLine('安(やす)いです').find((w) => w.word === '安(やす)')?.gloss).toBe('cheap');
+  });
+
+  it('keeps the dictionary sense for other readings and for words', () => {
+    expect(wordsOfLine('もう 一(いっ)回(かい)、回(かい)です').find((w) => w.word === '回(かい)')?.gloss).toBe(glossFor('回'));
+    expect(wordsOfLine('出(で)口(ぐち)').map((w) => w.gloss)).toEqual([glossFor('出口')]);
+  });
+});
+
