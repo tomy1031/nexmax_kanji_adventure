@@ -11,6 +11,9 @@ import {
   STAR5_CEILING,
   daysToNextPickup,
   pickupOf,
+  isMet,
+  type Banner,
+  type Met,
   pityAfter,
   pull,
   pullMany,
@@ -19,7 +22,7 @@ import {
   type BannerId,
   type PullResult,
 } from '../../lib/gacha';
-import { getIndividual, type Individual } from '../../data/individuals';
+import { CARDS, getIndividual, type Individual } from '../../data/individuals';
 import { RubyText } from '../../components/ui/Ruby';
 import { assetPath } from '../../lib/assetPath';
 import { DAILY_TOTAL } from '../../data/dailyTasks';
@@ -57,6 +60,13 @@ const Stars = ({ n }: { n: number }) => (
 );
 
 /** The banner's picture: its cards standing together. */
+/** The banner's three faces: the chosen ones the story has met, topped up with others it can give. */
+const showcase = (ids: string[], banner: Banner, met: Met): Individual[] => {
+  const chosen = ids.map((id) => getIndividual(id)!).filter(met);
+  const more = CARDS.filter((c) => banner.has(c) && met(c) && !chosen.includes(c)).sort((a, b) => b.rarity - a.rarity);
+  return [...chosen, ...more].slice(0, 3);
+};
+
 const BannerArt = ({ cards }: { cards: Individual[] }) => (
   <div className="relative mx-auto flex h-40 items-end justify-center" aria-hidden>
     <div className="absolute inset-x-6 bottom-2 h-24 rounded-full" style={{ background: 'radial-gradient(ellipse, rgba(255,214,110,0.55), transparent 70%)' }} />
@@ -81,6 +91,9 @@ export const GachaScreen = () => {
   const gems = useGameStore((s) => s.gems);
   const owned = useGameStore((s) => s.individuals);
   const pity = useGameStore((s) => s.pityCount);
+  // Town people come out only once the story has met them (Individual.meets).
+  const cleared = useGameStore((s) => s.clearedStages);
+  const met = (c: Individual) => isMet(c, cleared);
   const spendGems = useGameStore((s) => s.spendGems);
   const addGems = useGameStore((s) => s.addGems);
   const grantIndividual = useGameStore((s) => s.grantIndividual);
@@ -90,7 +103,7 @@ export const GachaScreen = () => {
   const banner = BANNERS[bannerId];
   const [week] = useState(() => weekOf());
   const [daysLeft] = useState(() => daysToNextPickup());
-  const pick = pickupOf(week);
+  const pick = pickupOf(week, met);
 
   const [results, setResults] = useState<Shown[] | null>(null);
   /** How many of the cards have been turned face-up. */
@@ -120,7 +133,7 @@ export const GachaScreen = () => {
   const doSingle = () => {
     if (!canSingle || !spendGems(banner.single)) return;
     setBusy(true);
-    const r = pull(bannerId, owned, pity, week);
+    const r = pull(bannerId, owned, pity, week, Math.random, false, met);
     setTimeout(() => {
       setResults(apply([r]));
       setPity(pityAfter(bannerId, pity, r));
@@ -133,7 +146,7 @@ export const GachaScreen = () => {
   const doMulti = () => {
     if (!canMulti || !spendGems(banner.multi)) return;
     setBusy(true);
-    const { results: rs, pityAfter: p } = pullMany(bannerId, owned, pity, week);
+    const { results: rs, pityAfter: p } = pullMany(bannerId, owned, pity, week, Math.random, met);
     setTimeout(() => {
       setResults(apply(rs));
       setPity(p);
@@ -173,9 +186,7 @@ export const GachaScreen = () => {
   const bannerCards =
     bannerId === 'pickup'
       ? [pick.five, ...pick.fours]
-      : bannerId === 'town'
-        ? ['rin-4', 'teacher', 'baker-4'].map((id) => getIndividual(id)!)
-        : ['ENTJ-5', 'ISTJ-5', 'rin-5'].map((id) => getIndividual(id)!);
+      : showcase(bannerId === 'town' ? ['rin-4', 'teacher', 'baker-4'] : ['ENTJ-5', 'ISTJ-5', 'rin-5'], banner, met);
 
   return (
     <div className="g-stage min-h-dvh pb-8">

@@ -7,6 +7,7 @@ import {
   PULL_COST,
   STAR5_CEILING,
   daysToNextPickup,
+  isMet,
   pickupOf,
   pityAfter,
   pull,
@@ -166,3 +167,48 @@ describe('duplicates', () => {
     expect(BOND_REFUND[4]).toBeLessThan(BOND_REFUND[5]);
   });
 });
+
+describe('町の 人は お話で 会ってから (2026-10-05)', () => {
+  const ch1 = (n: number) => Array.from({ length: n }, (_, i) => `moji-1-${i + 1}`);
+
+  it('meets each town person in the episode where they first speak', async () => {
+    const { MOJI_SCRIPTS } = await import('../data/mojiScripts');
+    const { MOJI_EPISODES } = await import('../data/mojiEpisodes');
+    const speaks = (ep: string, who: string) => {
+      const s = MOJI_SCRIPTS[ep];
+      return [s.intro, s.encounter, s.outro].some((part) => part.lines.some((l) => l.speaker === who));
+    };
+    for (const c of CARDS.filter((x) => x.kind === 'town')) {
+      expect(c.meets, c.id).toBeDefined();
+      const at = MOJI_EPISODES.findIndex((e) => e.id === c.meets);
+      expect(speaks(c.meets!, c.char), `${c.id} in ${c.meets}`).toBe(true);
+      for (const e of MOJI_EPISODES.slice(0, at)) expect(speaks(e.id, c.char), `${c.id} already in ${e.id}`).toBe(false);
+    }
+  });
+
+  it('keeps a town person out of every gacha until then', () => {
+    const cleared = ch1(4); // the gacha opens on 1章 4話: only 山田さん is met
+    const met = (c: (typeof CARDS)[number]) => isMet(c, cleared);
+    const rnd = seeded(7);
+    for (const id of ['standard', 'pickup', 'town'] as const) {
+      for (let i = 0; i < 300; i++) {
+        const { card } = pull(id, [], i % 29, i, rnd, false, met);
+        if (card.kind === 'town') expect(card.char, `${id}: ${card.id}`).toBe('yamada');
+      }
+    }
+    for (let w = 0; w < 60; w++) {
+      const p = pickupOf(w, met);
+      for (const c of [p.five, ...p.fours]) expect(met(c), `week ${w}: ${c.id}`).toBe(true);
+    }
+  });
+
+  it('lets them come once their episode is cleared', () => {
+    const met = (c: (typeof CARDS)[number]) => isMet(c, [...ch1(11), 'moji-1-boss', 'moji-2-1', 'moji-2-2', 'moji-2-3']);
+    const seen = new Set<string>();
+    const rnd = seeded(3);
+    for (let i = 0; i < 400; i++) seen.add(pull('town', [], 0, 0, rnd, false, met).card.char);
+    expect(seen.has('sora')).toBe(true);
+    expect(seen.has('usher')).toBe(false);
+  });
+});
+
