@@ -302,6 +302,8 @@ export const TOWN: readonly Individual[] = [
   town('sora', 'ソラ', 'ミナトタウンの 子(こ)。えいがと 英(えい)語(ご)が 好(す)き。', WeaponClass.BOW, Element.SUI, 'moji-2-3'),
   town('usher', 'えいがかんの 人(ひと)', 'むかしの ゆめは えいがスター。', WeaponClass.DAGGER, Element.KOU, 'moji-2-10'),
   town('photographer', 'しゃしんやさん', 'お茶(ちゃ)も 出(だ)す しゃしんやさん。', WeaponClass.STAFF, Element.AN, 'moji-2-9'),
+  // 3章 マンプクタウン（docs/design/14）: 料理人に なりたい ハナ。
+  town('hana', 'ハナ', 'りょうりにんが ゆめの 12さい。ラーメンが 好(す)き。', WeaponClass.DAGGER, Element.KA, 'moji-3-2'),
 ];
 
 /**
@@ -353,6 +355,7 @@ export const DRESSED: readonly Individual[] = [
   dressed('sora', 5, 'みなとの キャプテン'),
   dressed('photographer', 4, 'おちゃの めいじん'),
   dressed('usher', 4, 'スターの'),
+  dressed('hana', 4, 'りょうりたいかいの'),
 ];
 
 /** Every card there is. */
