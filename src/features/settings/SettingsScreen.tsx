@@ -57,6 +57,13 @@ export const SettingsScreen = () => {
       note: '漢字(かんじ)の 上(うえ)に 読(よ)みかたを 出(だ)します。',
       en: 'Show the reading above each kanji.',
     },
+    {
+      key: 'english' as const,
+      icon: 'EN',
+      label: '言葉(ことば)の 意味(いみ)を 英語(えいご)で 出(だ)す',
+      note: '図鑑(ずかん)と ストーリーの ことばに、はじめから 英語(えいご)を つけます。',
+      en: 'Show English meanings of words from the start.',
+    },
     { key: 'muted' as const, icon: '🔇', label: '音(おと)を 消(け)す', note: '', en: 'Mute all sound.' },
     {
       key: 'bgmOff' as const,

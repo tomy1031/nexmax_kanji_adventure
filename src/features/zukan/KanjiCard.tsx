@@ -48,7 +48,7 @@ export const KanjiCard = ({
   const reps = useGameStore((s) => s.progress[kanji.id]?.reps ?? 0);
   const cleared = useGameStore((s) => s.clearedStages);
   const owned = useOwnedKanji();
-  const [en, setEn] = useState(false);
+  const [en, setEn] = useState(() => useGameStore.getState().settings.english);
   const closeRef = useEscapeToClose(onClose);
   // Which kanji the stroke order is open for: turning the card starts it over.
   const [strokesFor, setStrokesFor] = useState<string | null>(null);
@@ -145,7 +145,7 @@ export const KanjiCard = ({
               <Readings kanji={kanji} hideKanji={!have} size="sm" />
             </div>
             {en && (
-              <p lang="en" className="mt-0.5 text-[12px] leading-snug font-bold" style={{ color: 'var(--ink-2)' }}>
+              <p lang="en" className="mt-1 text-[14px] leading-snug font-extrabold" style={{ color: '#1b4f8f' }}>
                 {kanji.meanings.slice(0, 3).join(', ')}
               </p>
             )}
@@ -176,7 +176,7 @@ export const KanjiCard = ({
               <li key={w.word} className="rounded-xl bg-white/70 px-3 py-1 text-[15px] leading-[2] font-black">
                 <KanjiBackText owned={owned}>{`${w.word}(${w.reading})`}</KanjiBackText>
                 {en && (
-                  <span lang="en" className="ml-2 text-[11px] font-bold" style={{ color: 'var(--ink-2)' }}>
+                  <span lang="en" className="ml-2 text-[13px] font-bold" style={{ color: '#1b4f8f' }}>
                     {w.gloss}
                   </span>
                 )}

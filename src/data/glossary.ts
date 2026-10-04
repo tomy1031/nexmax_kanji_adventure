@@ -1,4 +1,5 @@
 import { compoundsVersion, getCompounds } from './compounds';
+import { parseRuby } from '../lib/ruby';
 import { ALL_KANJI } from './kanji.generated';
 
 /**
@@ -141,4 +142,36 @@ export const glossFor = (word: string): string | undefined => {
     indexedVersion = compoundsVersion();
   }
   return index.get(word);
+};
+
+/**
+ * The annotated words of a story line, each with its English — what ？ことば
+ * shows. Scripts write a word a character at a time (学(がく)生(せい)), so
+ * runs of annotated characters with nothing between them are joined into the
+ * longest word that has a meaning of its own: 学生 is "student", not "study"
+ * and "life". Words without English are left out.
+ */
+export const wordsOfLine = (text: string): { word: string; gloss: string }[] => {
+  const segs = parseRuby(text);
+  const seen = new Set<string>();
+  const out: { word: string; gloss: string }[] = [];
+  for (let i = 0; i < segs.length; ) {
+    if (!segs[i].reading || /^[0-9０-９]/.test(segs[i].text)) {
+      i++;
+      continue;
+    }
+    let run = 1;
+    while (i + run < segs.length && run < 4 && segs[i + run].reading && !/^[0-9０-９]/.test(segs[i + run].text)) run++;
+    let take = run;
+    for (; take > 1; take--) if (glossFor(segs.slice(i, i + take).map((s) => s.text).join(''))) break;
+    const part = segs.slice(i, i + take);
+    const base = part.map((s) => s.text).join('');
+    const gloss = glossFor(base);
+    if (gloss && !seen.has(base)) {
+      seen.add(base);
+      out.push({ word: part.map((s) => `${s.text}(${s.reading})`).join(''), gloss });
+    }
+    i += take;
+  }
+  return out;
 };

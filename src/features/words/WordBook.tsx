@@ -167,7 +167,7 @@ export const WordBook = () => {
                     <span className="text-xl font-black tracking-wide">
                       {isFound ? word : card.masked}
                     </span>
-                    <span className="w-full truncate text-[10px]" style={{ color: 'var(--ink-3)' }}>
+                    <span lang="en" className="line-clamp-2 w-full text-[12px] leading-tight font-bold" style={{ color: '#1b4f8f' }}>
                       {card.compound.gloss}
                     </span>
                     {isFound && (
@@ -245,7 +245,7 @@ export const WordBook = () => {
                     </p>
 
                     {/* 段1: 意味 — いつでも 無料 */}
-                    <p className="text-sm" style={{ color: 'var(--ink-2)' }}>
+                    <p lang="en" className="text-base font-bold" style={{ color: '#1b4f8f' }}>
                       {open.compound.gloss}
                     </p>
 

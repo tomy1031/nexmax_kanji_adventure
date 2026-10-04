@@ -1000,7 +1000,7 @@ export const BattleScene = ({
               )}
               <Readings kanji={target} hideKanji={!tutorial} />
               <p className="truncate" style={{ color: 'var(--ink-2)' }}>
-                meaning: <b className="text-base">{target.meanings.slice(0, 2).join(' / ')}</b>
+                meaning: <b lang="en" className="text-base" style={{ color: '#1b4f8f' }}>{target.meanings.slice(0, 2).join(' / ')}</b>
               </p>
             </div>
           </div>
