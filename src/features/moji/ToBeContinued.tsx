@@ -32,9 +32,12 @@ export const ToBeContinued = ({
   const cleared = useGameStore((s) => s.clearedStages);
   const target = practiceTarget(progress, cleared);
   const forge = isForgeOpen(cleared);
-  // What the journey has done so far: every letter of the cleared episodes, lit once it is back.
+  // What the chapter just finished has done: its letters, lit once they are back. The
+  // latest chapter only — every chapter's together is too long a grid for a phone.
   const owned = useOwnedKanji();
-  const brought = MOJI_EPISODES.filter((e) => cleared.includes(e.id)).flatMap((e) => e.kanji);
+  const done = MOJI_EPISODES.filter((e) => cleared.includes(e.id));
+  const chapter = done.length ? done[done.length - 1].chapter : null;
+  const brought = done.filter((e) => e.chapter === chapter).flatMap((e) => e.kanji);
   const lit = brought.filter((c) => owned.has(c)).length;
 
   return (

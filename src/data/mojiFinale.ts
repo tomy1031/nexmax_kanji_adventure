@@ -52,6 +52,19 @@ export const MOJI_FINALES: MojiFinale[] = [
     // HP: ten kanji at about two clean ★1 writes each (8 a write, bare-handed).
     boss: { name: '大(おお)モジクイ', img: 'img/battle/mojikui_boss.webp', hp: 160, attack: 45, element: Element.AN, icon: 'GiShadowFollower' },
   },
+  {
+    // 2章「市場の ともだち」の 終わり（docs/design/12）: 霧の 灯台に 逃げた 大モジクイ。
+    id: 'moji-2-boss',
+    chapter: 'moji-2',
+    title: 'まとめの ボス',
+    asks: 10,
+    patience: 2,
+    reward: 100,
+    // The lighthouse on the cape (10話's screen shows its shadow).
+    bg: 'port_lighthouse',
+    // Ten kanji at about two clean ★1 writes each, a little more than 1章's; it hits harder.
+    boss: { name: '大(おお)モジクイ', img: 'img/battle/mojikui_boss.webp', hp: 176, attack: 55, element: Element.AN, icon: 'GiShadowFollower' },
+  },
 ];
 
 export const getMojiFinale = (id: string): MojiFinale | undefined => MOJI_FINALES.find((f) => f.id === id);
