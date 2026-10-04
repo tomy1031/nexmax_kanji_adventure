@@ -5,6 +5,7 @@ import {
   afterEpisode,
   afterEpisodePath,
   canForge,
+  chapterProgress,
   continuePath,
   episodePath,
   isChapterOpen,
@@ -150,3 +151,19 @@ describe('the end of an episode — a replay goes back to the map (2026-10-05)',
     expect(afterEpisodePath('moji-1-boss', [...ch1, 'moji-1-boss', 'moji-2-1'])).toBe('/map/moji?at=moji-1-boss');
   });
 });
+
+describe('a chapter’s progress on the stage select (2026-10-05)', () => {
+  const ch1 = Array.from({ length: 11 }, (_, i) => `moji-1-${i + 1}`);
+
+  it('counts its episodes and its まとめの ボス, and the letters owned', () => {
+    const p = chapterProgress('moji-1', ch1.slice(0, 3), new Set([...'日月火']));
+    expect(p).toEqual({ cleared: 3, total: 12, kanji: 3, kanjiTotal: 60, done: false });
+  });
+
+  it('is done only with the boss beaten too', () => {
+    expect(chapterProgress('moji-1', ch1, new Set()).done).toBe(false);
+    expect(chapterProgress('moji-1', [...ch1, 'moji-1-boss'], new Set()).done).toBe(true);
+    expect(chapterProgress('moji-5', [], new Set()).done).toBe(false); // not written yet
+  });
+});
+
