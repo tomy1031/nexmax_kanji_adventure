@@ -308,6 +308,8 @@ export const NaniwaBattleView = ({
   const writeSize = Math.floor((colW * WRITE_PX) / W);
 
   const [menu, setMenu] = useState(false);
+  // もどる sits by the home bar: one stray tap must not throw the fight away (2026-10-05).
+  const [fleeAsk, setFleeAsk] = useState(false);
   const settings = useGameStore((s) => s.settings);
   const setSetting = useGameStore((s) => s.setSetting);
 
@@ -583,7 +585,7 @@ export const NaniwaBattleView = ({
           )}
 
           {/* もどる（にげる） */}
-          <motion.button type="button" data-tap whileTap={{ scale: 0.95 }} onClick={onFlee} className="absolute" style={{ ...onBottom(30, 1533, 228, 85), height: 'auto' }}>
+          <motion.button type="button" data-tap whileTap={{ scale: 0.95 }} onClick={() => setFleeAsk(true)} className="absolute" style={{ ...onBottom(30, 1533, 228, 85), height: 'auto' }}>
             <img src={art('btn_back')} alt="もどる" draggable={false} className="block h-auto w-full select-none" />
           </motion.button>
 
@@ -645,6 +647,42 @@ export const NaniwaBattleView = ({
             )}
           </AnimatePresence>
         </div>
+        <AnimatePresence>
+          {fleeAsk && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 z-40 flex items-center justify-center bg-black/55 px-6"
+              onClick={() => setFleeAsk(false)}
+            >
+              <motion.div
+                role="alertdialog"
+                aria-modal="true"
+                aria-labelledby="flee-title"
+                initial={{ scale: 0.9 }}
+                animate={{ scale: 1 }}
+                className="g-parchment w-full max-w-xs px-5 py-4 text-center"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <p id="flee-title" className="text-lg leading-[2] font-black">
+                  🏃💨 <RubyText showFurigana={showFurigana}>にげますか？</RubyText>
+                </p>
+                <p className="text-sm leading-[2]" style={{ color: 'var(--ink-2)' }}>
+                  <RubyText showFurigana={showFurigana}>この たたかいは おわりです。じゅんびに もどります。</RubyText>
+                </p>
+                <div className="mt-3 flex gap-2">
+                  <button type="button" data-tap className="g-btn g-btn-ghost flex-1" onClick={onFlee}>
+                    <RubyText showFurigana={showFurigana}>にげる</RubyText>
+                  </button>
+                  <button type="button" data-tap autoFocus className="g-btn g-btn-primary flex-1" onClick={() => setFleeAsk(false)}>
+                    <RubyText showFurigana={showFurigana}>つづける</RubyText>
+                  </button>
+                </div>
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
         <ComboEdge combo={combo} still={still} />
         <SkillCutIn cut={cut} showFurigana={showFurigana} still={still} />
         {overlay}
