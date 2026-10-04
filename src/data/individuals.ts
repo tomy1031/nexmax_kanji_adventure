@@ -48,6 +48,11 @@ export interface Individual {
   resists: Element;
   /** Percent bonus to attack when holding a favoured weapon. */
   bonus: number;
+  /**
+   * A town person's first episode (the story meets them there): the gacha
+   * keeps them, and their dressed cards, back until it is cleared (lib/gacha.ts isMet).
+   */
+  meets?: string;
 }
 
 const portrait = (code: string) => `img/chara/types/${code}.webp`;
@@ -268,7 +273,7 @@ export const INDIVIDUALS: readonly Individual[] = ROBOTS.map(robot);
  * 町の なかま (11 §4.1, 2026-10-03「町の 人は ネクマックスタイプで なくても 良い」):
  * people of Naniwa Town the player has helped, at ★3 in their town clothes.
  */
-const town = (id: string, name: string, tagline: string, favours: WeaponClass, resists: Element): Individual => ({
+const town = (id: string, name: string, tagline: string, favours: WeaponClass, resists: Element, meets: string): Individual => ({
   id,
   char: id,
   rarity: 3,
@@ -283,19 +288,20 @@ const town = (id: string, name: string, tagline: string, favours: WeaponClass, r
   favours,
   resists,
   bonus: 20,
+  meets,
 });
 
 export const TOWN: readonly Individual[] = [
-  town('rin', 'リンさん', '本(ほん)が だいすきな りゅうがくせい。', WeaponClass.SPEAR, Element.KOU),
-  town('yamada', '山(やま)田(だ)さん', 'ナニワタウンの やさしい 人(ひと)。', WeaponClass.STAFF, Element.MOKU),
-  town('teacher', '先(せん)生(せい)', '日本語(にほんご)学校(がっこう)の 先(せん)生(せい)。', WeaponClass.SWORD, Element.KIN),
-  town('doctor', 'お医(い)者(しゃ)さん', 'みんなの けんこうを まもります。', WeaponClass.SHIELD, Element.SUI),
-  town('baker', 'パンやさん', 'まいあさ おいしい パンを やきます。', WeaponClass.HAMMER, Element.KA),
-  town('keeper', 'とけいだいの 人(ひと)', '町(まち)の 時間(じかん)を まもります。', WeaponClass.AXE, Element.DO),
+  town('rin', 'リンさん', '本(ほん)が だいすきな りゅうがくせい。', WeaponClass.SPEAR, Element.KOU, 'moji-1-7'),
+  town('yamada', '山(やま)田(だ)さん', 'ナニワタウンの やさしい 人(ひと)。', WeaponClass.STAFF, Element.MOKU, 'moji-1-2'),
+  town('teacher', '先(せん)生(せい)', '日本語(にほんご)学校(がっこう)の 先(せん)生(せい)。', WeaponClass.SWORD, Element.KIN, 'moji-1-6'),
+  town('doctor', 'お医(い)者(しゃ)さん', 'みんなの けんこうを まもります。', WeaponClass.SHIELD, Element.SUI, 'moji-1-7'),
+  town('baker', 'パンやさん', 'まいあさ おいしい パンを やきます。', WeaponClass.HAMMER, Element.KA, 'moji-1-9'),
+  town('keeper', 'とけいだいの 人(ひと)', '町(まち)の 時間(じかん)を まもります。', WeaponClass.AXE, Element.DO, 'moji-1-8'),
   // 2章 ミナトタウン（docs/design/13）: はじめての ともだち ソラと、町で 会う 二人。
-  town('sora', 'ソラ', 'ミナトタウンの 子(こ)。えいがと 英(えい)語(ご)が 好(す)き。', WeaponClass.BOW, Element.SUI),
-  town('usher', 'えいがかんの 人(ひと)', 'むかしの ゆめは えいがスター。', WeaponClass.DAGGER, Element.KOU),
-  town('photographer', 'しゃしんやさん', 'お茶(ちゃ)も 出(だ)す しゃしんやさん。', WeaponClass.STAFF, Element.AN),
+  town('sora', 'ソラ', 'ミナトタウンの 子(こ)。えいがと 英(えい)語(ご)が 好(す)き。', WeaponClass.BOW, Element.SUI, 'moji-2-3'),
+  town('usher', 'えいがかんの 人(ひと)', 'むかしの ゆめは えいがスター。', WeaponClass.DAGGER, Element.KOU, 'moji-2-10'),
+  town('photographer', 'しゃしんやさん', 'お茶(ちゃ)も 出(だ)す しゃしんやさん。', WeaponClass.STAFF, Element.AN, 'moji-2-9'),
 ];
 
 /**

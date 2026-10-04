@@ -79,6 +79,15 @@ export const BANNERS: Record<BannerId, Banner> = {
 
 const FIVES = CARDS.filter((c) => c.rarity === 5);
 const FOURS = CARDS.filter((c) => c.rarity === 4);
+
+/** Who may come out: a town person only once the story has met them (Individual.meets). */
+export type Met = (c: Individual) => boolean;
+const everyone: Met = () => true;
+export const isMet = (c: Individual, cleared: readonly string[]): boolean => !c.meets || cleared.includes(c.meets);
+const metOr = (cards: Individual[], met: Met) => {
+  const known = cards.filter(met);
+  return known.length > 0 ? known : cards;
+};
 const mod = (n: number, m: number) => ((n % m) + m) % m;
 
 /** Weeks since Monday 2026-01-05 (local time): the pickup changes every Monday. */
@@ -91,11 +100,12 @@ export const weekOf = (d: Date = new Date()): number => {
 /** Days until the pickup changes (1..7). */
 export const daysToNextPickup = (d: Date = new Date()): number => 7 - mod(Math.round((new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime() - new Date(2026, 0, 5).getTime()) / 86400000), 7);
 
-/** This week's pickup: one ★5 and two ★4, in turn so every card has its week. */
-export const pickupOf = (week: number): { five: Individual; fours: Individual[] } => ({
-  five: FIVES[mod(week, FIVES.length)],
-  fours: [FOURS[mod(week * 2, FOURS.length)], FOURS[mod(week * 2 + 1, FOURS.length)]],
-});
+/** This week's pickup: one ★5 and two ★4, in turn so every card has its week — among those the story has met. */
+export const pickupOf = (week: number, met: Met = everyone): { five: Individual; fours: Individual[] } => {
+  const fives = metOr(FIVES, met);
+  const fours = metOr(FOURS, met);
+  return { five: fives[mod(week, fives.length)], fours: [fours[mod(week * 2, fours.length)], fours[mod(week * 2 + 1, fours.length)]] };
+};
 
 export interface PullResult {
   card: Individual;
@@ -109,6 +119,7 @@ export interface PullResult {
 /**
  * One pull. `random` is injected so the result is testable.
  * `atLeast4`: the ten-pull's promise, used on its last card.
+ * `met`: the town people the story has met; no one else comes out.
  */
 export const pull = (
   bannerId: BannerId,
@@ -117,6 +128,7 @@ export const pull = (
   week: number,
   random: () => number = Math.random,
   atLeast4 = false,
+  met: Met = everyone,
 ): PullResult => {
   const banner = BANNERS[bannerId];
   const ceilingHit = banner.ceiling && pity + 1 >= STAR5_CEILING;
@@ -125,11 +137,14 @@ export const pull = (
   const promised = atLeast4 && rarity === 3;
   if (promised) rarity = 4;
 
-  const pool = CARDS.filter((c) => c.rarity === rarity && banner.has(c));
+  const pool = metOr(
+    CARDS.filter((c) => c.rarity === rarity && banner.has(c)),
+    met,
+  );
   const pick = <T,>(xs: readonly T[]) => xs[Math.floor(random() * xs.length) % xs.length];
 
   if (bannerId === 'pickup' && rarity >= 4) {
-    const { five, fours } = pickupOf(week);
+    const { five, fours } = pickupOf(week, met);
     const featured = rarity === 5 ? [five] : fours;
     // Half of every ★5 (or ★4) is this week's.
     if (random() < 0.5) {
@@ -141,7 +156,8 @@ export const pull = (
   // the point, and a wall of duplicates reads as the game wasting their time.
   const fresh = pool.filter((c) => !owned.includes(c.id));
   const card = pick(fresh.length > 0 ? fresh : pool);
-  const featured = bannerId === 'pickup' && (card.id === pickupOf(week).five.id || pickupOf(week).fours.some((f) => f.id === card.id));
+  const thisWeek = pickupOf(week, met);
+  const featured = bannerId === 'pickup' && (card.id === thisWeek.five.id || thisWeek.fours.some((f) => f.id === card.id));
   return { card, duplicate: owned.includes(card.id), guaranteed: ceilingHit || promised, featured };
 };
 
@@ -164,6 +180,7 @@ export const pullMany = (
   pity: number,
   week: number,
   random: () => number = Math.random,
+  met: Met = everyone,
 ): { results: PullResult[]; pityAfter: number } => {
   const results: PullResult[] = [];
   const seen = [...owned];
@@ -171,7 +188,7 @@ export const pullMany = (
   for (let i = 0; i < MULTI_COUNT; i++) {
     const last = i === MULTI_COUNT - 1;
     const none4 = !results.some((r) => r.card.rarity >= 4);
-    const r = pull(bannerId, seen, p, week, random, last && none4);
+    const r = pull(bannerId, seen, p, week, random, last && none4, met);
     results.push(r);
     if (!seen.includes(r.card.id)) seen.push(r.card.id);
     p = pityAfter(bannerId, p, r);
