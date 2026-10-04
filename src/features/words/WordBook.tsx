@@ -277,7 +277,7 @@ export const WordBook = () => {
                       <>
                         <p className="mt-4 text-xs" style={{ color: 'var(--ink-3)' }}>
                           <RubyText showFurigana={showFurigana}>
-                            合成(ごうせい)で この 言葉(ことば)を 作(つく)ると 見(み)つかります。
+                            {moji ? '漢字(かんじ)やさんで この 言葉(ことば)を 作(つく)ると 見(み)つかります。' : '合成(ごうせい)で この 言葉(ことば)を 作(つく)ると 見(み)つかります。'}
                           </RubyText>
                         </p>
 
