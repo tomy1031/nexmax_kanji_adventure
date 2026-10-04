@@ -6,6 +6,8 @@ import {
   canForge,
   continuePath,
   episodePath,
+  isChapterOpen,
+  isEpisodeOpen,
   isForgeOpen,
   mastersOf,
   nextUp,
@@ -13,6 +15,7 @@ import {
 } from './mojiFlow';
 import { KANA_EPISODES } from './kana';
 import { MOJI_EPISODES, getMojiEpisode } from './mojiEpisodes';
+import type { MojiFinale } from './mojiFinale';
 import { getKanjiByChar } from '../lib/kanjiDb';
 
 const kana = (n: number) => Array.from({ length: n }, (_, i) => `kana-${i + 1}`);
@@ -97,5 +100,35 @@ describe('coming back to an episode', () => {
 
   it('has nowhere to send つづき once every kanji is ★3', () => {
     expect(continuePath([...kana(10), ...town], 'kana', reps(10))).toBeNull();
+  });
+});
+
+describe('章の 鍵 (docs/design/12 §5)', () => {
+  // A made-up 2章 beside the real 1章, so the rule is checked before 2章 exists.
+  const ch1 = MOJI_EPISODES.filter((e) => e.chapter === 'moji-1');
+  const ch2 = [1, 2].map((order) => ({ ...ch1[0], id: `moji-2-${order}`, chapter: 'moji-2', order }));
+  const episodes = [...ch1, ...ch2];
+  const boss = { id: 'moji-1-boss', chapter: 'moji-1' } as MojiFinale;
+
+  it('always opens 1章', () => {
+    expect(isChapterOpen('moji-1', [], episodes, [boss])).toBe(true);
+  });
+
+  it('opens 2章 only once 1章 まとめの ボス is cleared', () => {
+    const allOf1 = ch1.map((e) => e.id);
+    expect(isChapterOpen('moji-2', [], episodes, [boss])).toBe(false);
+    expect(isChapterOpen('moji-2', allOf1, episodes, [boss])).toBe(false);
+    expect(isChapterOpen('moji-2', [...allOf1, 'moji-1-boss'], episodes, [boss])).toBe(true);
+  });
+
+  it('without a まとめの ボス, opens on the last episode of the chapter before', () => {
+    expect(isChapterOpen('moji-2', [ch1[ch1.length - 1].id], episodes, [])).toBe(true);
+    expect(isChapterOpen('moji-2', [ch1[0].id], episodes, [])).toBe(false);
+  });
+
+  it('keeps every 1章 episode as it was', () => {
+    for (const ep of ch1) expect(isEpisodeOpen(ep, ch1.map((e) => e.id))).toBe(true);
+    expect(isEpisodeOpen(ch1[0], [])).toBe(true);
+    expect(isEpisodeOpen(ch1[1], [])).toBe(false);
   });
 });

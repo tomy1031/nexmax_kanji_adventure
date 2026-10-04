@@ -11,8 +11,7 @@ import { canSpeak, speak } from '../../lib/speech';
 import { preloadCharData } from '../../lib/strokeLoader';
 import KanjiWriterCanvas, { type KanjiWriterHandle } from '../../components/KanjiWriterCanvas';
 import { cardWords, episodeOfKanji } from '../../data/kanjiCard';
-import { episodePath } from '../../data/mojiFlow';
-import { isMojiEpisodeUnlocked } from '../../data/mojiEpisodes';
+import { episodePath, isEpisodeOpen } from '../../data/mojiFlow';
 import KanjiBackText from '../moji/KanjiBackText';
 import { useOwnedKanji } from '../moji/useOwnedKanji';
 import { useEscapeToClose } from '../../hooks/useEscapeToClose';
@@ -81,7 +80,7 @@ export const KanjiCard = ({
   const left = repsToNextStar(reps);
   const words = cardWords(kanji.char, owned);
   const ep = episodeOfKanji(kanji.char);
-  const open = ep ? isMojiEpisodeUnlocked(ep, cleared) : false;
+  const open = ep ? isEpisodeOpen(ep, cleared) : false;
   const sound = /\(([^)]*)\)/.exec(kanjiRuby(kanji))?.[1] ?? kanji.char;
 
   const write = () => {

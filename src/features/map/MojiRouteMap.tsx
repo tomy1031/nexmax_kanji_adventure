@@ -7,7 +7,7 @@ import { MOJI_CHAPTERS, isChapterReady } from '../../data/mojiRoute';
 import { KANA_EPISODES, isKanaEpisodeUnlocked, type KanaEpisode } from '../../data/kana';
 import KanaText from '../kana/KanaText';
 import { useKnownKana } from '../kana/useKnownKana';
-import { MOJI_EPISODES, episodesOf, isMojiEpisodeUnlocked } from '../../data/mojiEpisodes';
+import { MOJI_EPISODES, episodesOf } from '../../data/mojiEpisodes';
 import KanjiBackText from '../moji/KanjiBackText';
 import { useOwnedKanji } from '../moji/useOwnedKanji';
 import { getKanjiByChar } from '../../lib/kanjiDb';
@@ -16,7 +16,7 @@ import { MASTERY_REPS, starsOf } from '../../lib/mastery';
 import { assetPath } from '../../lib/assetPath';
 import { getKanaEpisode } from '../../data/kana';
 import { getMojiEpisode } from '../../data/mojiEpisodes';
-import { continuePathWithFinale, episodePath, nextUpWithFinale } from '../../data/mojiFlow';
+import { continuePathWithFinale, episodePath, isChapterOpen, isEpisodeOpen, nextUpWithFinale } from '../../data/mojiFlow';
 import { finaleNumber, finaleOf, getMojiFinale, isFinaleOpen, isFinaleReady, MOJI_FINALES } from '../../data/mojiFinale';
 import { useBgm } from '../../lib/bgm';
 import { preloadImages } from '../../lib/preload';
@@ -629,10 +629,15 @@ export const MojiRouteMap = () => {
                             <p className="text-[13px] leading-[1.95]">
                               <RubyText showFurigana={showFurigana}>{c.summary}</RubyText>
                             </p>
+                            {ready && !isChapterOpen(c.id, cleared) && (
+                              <p className="text-xs font-black" style={{ color: 'var(--ink-2)' }}>
+                                🔒 <RubyText showFurigana={showFurigana}>{`${c.order - 1}章(しょう)の まとめの ボスの あとで ひらきます`}</RubyText>
+                              </p>
+                            )}
                             {ready ? (
                               <div className="mt-2 grid grid-cols-2 gap-2">
                                 {episodesOf(c.id).map((ep) => {
-                                  const open = isMojiEpisodeUnlocked(ep, cleared);
+                                  const open = isEpisodeOpen(ep, cleared);
                                   const done = cleared.includes(ep.id);
                                   const stars = starsOfEpisode(ep.kanji);
                                   const max = ep.kanji.length * 3;

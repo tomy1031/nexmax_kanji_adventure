@@ -1,7 +1,8 @@
 import type { CastMember, NovelScript } from '../types/novel';
 import { SCENES } from '../features/picturebook/scenes';
 import { KANA_CAST, KANA_SCRIPTS } from './scripts/kana';
-import { MOJI1_CAST, MOJI1_PRELUDE, MOJI1_SCRIPTS } from './scripts/moji1';
+import { MOJI1_PRELUDE } from './scripts/moji1';
+import { MOJI_CAST, MOJI_SCRIPTS } from './mojiScripts';
 import { getMojiEpisode } from './mojiEpisodes';
 import { getMojiFinale } from './mojiFinale';
 import { MOJI_FINALE_SCRIPTS } from './mojiFinaleScripts';
@@ -40,16 +41,16 @@ export const episodeArt = (id: string): string[] => {
     const scene = SCENES[finale.bg]?.photo;
     return [
       ...new Set([
-        ...(story ? scriptArt([story.intro, story.outro], MOJI1_CAST) : []),
+        ...(story ? scriptArt([story.intro, story.outro], [...MOJI_CAST]) : []),
         ...(scene ? [scene] : []),
         ...(finale.boss.img ? [finale.boss.img] : []),
         ...BATTLE_UI,
       ]),
     ];
   }
-  const moji = MOJI1_SCRIPTS[id];
+  const moji = MOJI_SCRIPTS[id];
   if (!moji) return [];
   const ep = getMojiEpisode(id);
   const scripts = [moji.intro, moji.encounter, moji.outro, ...(id === MOJI1_PRELUDE.stageId ? [MOJI1_PRELUDE] : [])];
-  return [...new Set([...scriptArt(scripts, MOJI1_CAST), ...(ep?.boss.img ? [ep.boss.img] : []), ...BATTLE_UI])];
+  return [...new Set([...scriptArt(scripts, [...MOJI_CAST]), ...(ep?.boss.img ? [ep.boss.img] : []), ...BATTLE_UI])];
 };

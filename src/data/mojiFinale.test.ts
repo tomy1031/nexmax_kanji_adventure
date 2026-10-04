@@ -14,7 +14,7 @@ import {
 } from './mojiFinale';
 import { MOJI_EPISODES, type MojiEpisode } from './mojiEpisodes';
 import { MOJI_FINALE_SCRIPTS } from './mojiFinaleScripts';
-import { MOJI1_CAST } from './scripts/moji1';
+import { MOJI_CAST } from './mojiScripts';
 import { MOJI_CHAPTERS } from './mojiRoute';
 import { ROUTE_ORDER, afterEpisode, continuePath, continuePathWithFinale, episodePath, nextUp, nextUpWithFinale } from './mojiFlow';
 import { SCENES, fxNamesOf } from '../features/picturebook/scenes';
@@ -153,7 +153,7 @@ describe('まとめの ボス: its story, once written', () => {
 
   it('belongs to a finale, opens on a scene and follows the episodes’ rules', () => {
     const bad: string[] = [];
-    const cast = new Map(MOJI1_CAST.map((c) => [c.id, c.sprites]));
+    const cast = new Map(MOJI_CAST.map((c) => [c.id, c.sprites]));
     for (const [finaleId, script] of entries) {
       if (!getMojiFinale(finaleId)) bad.push(`${finaleId}: no such finale`);
       for (const s of [script!.intro, script!.outro]) {

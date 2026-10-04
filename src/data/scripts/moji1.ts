@@ -47,7 +47,7 @@ export const MOJI1_CAST: CastMember[] = [
   ...NANIWA_FOLK,
 ];
 
-interface EpisodeScript {
+export interface EpisodeScript {
   intro: NovelScript;
   /** After the writing, before じゅんび: the letters just lit draw the opponent in. */
   encounter: NovelScript;

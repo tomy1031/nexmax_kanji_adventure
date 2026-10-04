@@ -18,8 +18,9 @@ import { useGameStore } from '../../store/gameStore';
 import type { KanjiData } from '../../types/kanji';
 import { getMojiEpisode, type MojiEpisode } from '../../data/mojiEpisodes';
 import { MOJI_CHAPTERS } from '../../data/mojiRoute';
-import { MOJI1_CAST, MOJI1_PRELUDE, MOJI1_SCRIPTS } from '../../data/scripts/moji1';
-import { afterEpisode, canForge, isForgeOpen } from '../../data/mojiFlow';
+import { MOJI1_PRELUDE } from '../../data/scripts/moji1';
+import { MOJI_CAST, MOJI_SCRIPTS } from '../../data/mojiScripts';
+import { afterEpisode, canForge, isChapterOpen, isForgeOpen } from '../../data/mojiFlow';
 import { finaleNumber, finalePool, getMojiFinale, isFinaleOpen } from '../../data/mojiFinale';
 import { MOJI_FINALE_SCRIPTS } from '../../data/mojiFinaleScripts';
 import { hardFight, hardFinaleFight, isHardOpen, type Difficulty, type HardFight } from '../../lib/difficulty';
@@ -57,8 +58,8 @@ import { useOwnedKanji } from './useOwnedKanji';
 
 type Phase = 'prelude' | 'intro' | 'write' | 'encounter' | 'ready' | 'practice' | 'battle' | 'outro' | 'end';
 
-const SCRIPTS = MOJI1_SCRIPTS;
-const CAST = MOJI1_CAST;
+const SCRIPTS = MOJI_SCRIPTS;
+const CAST = [...MOJI_CAST];
 
 /** Gems for the first win of an episode. */
 const EPISODE_REWARD = 30;
@@ -697,7 +698,10 @@ export const MojiEpisodeScreen = () => {
   if (finale) {
     return isFinaleOpen(finale, cleared) || cleared.includes(id) ? <FinalePlayer key={id} id={id} /> : <Navigate to="/map/moji" replace />;
   }
-  if (!getMojiEpisode(id) || !SCRIPTS[id]) return <Navigate to="/map/moji" replace />;
+  const ep = getMojiEpisode(id);
+  if (!ep || !SCRIPTS[id]) return <Navigate to="/map/moji" replace />;
+  // A later chapter waits for the one before it (its まとめの ボス).
+  if (!isChapterOpen(ep.chapter, cleared) && !cleared.includes(id)) return <Navigate to="/map/moji" replace />;
   return <EpisodePlayer key={id} id={id} />;
 };
 

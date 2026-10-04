@@ -21,7 +21,7 @@ export const WeaponSortBar = ({ sort, onSort, showFurigana }: { sort: WeaponSort
   </div>
 );
 
-/** Where a weapon's kanji come from (📍3話), and whether it is a かくし武器 — beside its ★. */
+/** Where a weapon's kanji come from (📍1章3話), and whether it is a かくし武器 — beside its ★. */
 export const WeaponTags = ({ w, showFurigana }: { w: { stage?: number; hidden?: boolean }; showFurigana: boolean }) => {
   const ep = episodeOfStep(w.stage ?? 0);
   return (
@@ -33,7 +33,7 @@ export const WeaponTags = ({ w, showFurigana }: { w: { stage?: number; hidden?: 
       )}
       {ep != null && (
         <span className="ml-1 text-[11px] font-bold" style={{ color: '#4f6478' }}>
-          📍<RubyText showFurigana={showFurigana}>{`${ep}話(わ)`}</RubyText>
+          📍<RubyText showFurigana={showFurigana}>{`${ep.chapter}章(しょう)${ep.episode}話(わ)`}</RubyText>
         </span>
       )}
     </>
