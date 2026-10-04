@@ -107,6 +107,18 @@ with soft purple highlights, glowing amber eyes, scraps of cream-colored paper t
 them (abstract strokes only — no real readable characters), curling wisps of black ink smoke. Mischievous and
 "cute-spooky", never gory, nothing that would scare a young child. Facing LEFT in three-quarter view.`,
 
+  // 2026-10-04「モジクイに もう少し 個性が 欲しい…特に 顔。みんな 同じに 見える」: 同じ 一族だが、1体ずつ 体の 形・顔・色を 変える。
+  CREATURE_UNIQUE: `Output: 1024x1536 portrait PNG, one creature, full body, centered with a wide margin on every
+side, plain pure white (#FFFFFF) background, no ground, no shadow on the ground, no text, no logo.
+Style: polished Japanese anime game art, rendered like the reference creature (glossy inky black-violet body with
+soft purple highlights, a FEW cream-colored paper talismans with abstract brush strokes — no real readable
+characters — and curling wisps of ink smoke), so it is clearly one of the same Mojikui family. BUT this is a
+DIFFERENT member of the family with its OWN silhouette and its OWN face — do NOT copy the reference's hooded head,
+paper-pile body or small amber eyes. The FACE matters most: big, clear and readable at a small size, with eyes and a
+mouth that show the personality below at a glance, like a memorable mascot character. Use the accent colour below for
+its eyes, glow and details (not amber unless stated). Mischievous and "cute-spooky", never gory, nothing that would
+scare a young child. Facing LEFT in three-quarter view.`,
+
   FG_LAYER: `Output: 1024x1536 portrait PNG with a FULLY TRANSPARENT background (alpha).
 Draw ONLY the foreground framing elements described below, hugging the bottom edge and the left and right edges,
 leaving the middle and the whole upper half completely empty and transparent.
@@ -447,59 +459,49 @@ const naniwa = (id, desc, used) => ({
   note: '絵本の 場面（scenes.ts の photo）として 使う',
 });
 
-const CREATURES = [
-  {
-    id: 'mojikui_kid',
-    group: 'enemy',
-    prio: 'A',
-    out: 'img/battle/mojikui_kid.webp',
-    kind: 'chara',
-    bgmode: 'white',
-    refs: ['art-src/battle/04_敵_モジクイ.png'],
-    style: ['CREATURE_NANIWA'],
-    diff: 'Creature: a YOUNG Mojikui, the letter-eater\'s little one — a small round blob of ink shadow about the size of a cat, big round glowing amber eyes and a cheeky grin, one crumpled paper talisman worn like a tiny hat, two or three small paper slips stuck to its body, short stubby ink tendrils, a few ink droplets floating around it. Clearly smaller, rounder and sillier than the reference, but obviously the same kind of creature.',
-    used: '1章 1話の あいて「モジクイの こども」（出会いの お話・たたかい）',
-    note: '白い 背景を import.mjs が 切り抜く',
-  },
+/**
+ * モジクイ — 1体ずつ 性格・体・顔・色が ちがう（2026-10-04「モジクイに もう少し 個性が 欲しい…特に 顔。
+ * みんな 同じに 見える」、docs/design/13）。同じ 一族の しるしは 黒紫の 墨の 体と 少しの お札だけ。
+ */
+const mojikui = (id, personality, body, face, accent, props, used) => ({
+  id,
+  group: 'enemy',
+  prio: 'A',
+  out: `img/battle/${id}.webp`,
+  kind: 'chara',
+  bgmode: 'white',
+  refs: ['art-src/battle/04_敵_モジクイ.png'],
+  style: ['CREATURE_UNIQUE'],
+  diff: `Personality: ${personality}\nBody: ${body}\nFace: ${face}\nAccent colour: ${accent}\nProps: ${props}`,
+  used,
+  note: '白い 背景を import.mjs が 切り抜く',
+});
 
-  ...[
-    ['mojikui_clock', 'the Mojikui gnawing on a big round brass clock face held in its inky claws, clock hands sticking out of its grinning mouth, a few loose brass numerals-free dial pieces and gear crumbs floating around; same size and shape as the reference.', '1章 3話の あいて（時計を かじる モジクイ）'],
-    ['mojikui_gear', 'the Mojikui tangled in brass gears and springs, several small gears stuck in its inky body like armour, chewing a small blank metal number plate, a wrench-shaped tendril; same size and shape as the reference.', '1章 4話の あいて（歯車の モジクイ）'],
-    ['mojikui_price', 'the Mojikui covered in blank paper price tags on strings and a few gold coins stuck to it, stuffing a stack of blank price tags into its mouth, coins spilling; same size and shape as the reference.', '1章 5話の あいて（値札の モジクイ）'],
-    // 1章 12話 まとめの ボス（10 §3）
-    ['mojikui_boss', 'the GREAT Mojikui, the grown-up letter-eater at the heart of its nest: much bigger, taller and grander than the reference, a towering swirl of black-violet ink smoke with two huge glowing amber eyes and a wide grin, a crown of crumpled blank paper talismans, long tendrils clutching blank trophies of everything it ate in the town — a calendar page, a wooden name plate, a brass clock hand, a price tag, a bus-stop sign, an open book — and a ribbon of tiny golden letter-motes being slurped into its mouth. Imposing but kid-friendly, never gory.', '1章 12話 まとめの ボス「大モジクイ」'],
-    // 1章 6〜11話（10 §4）
-    ['mojikui_nametag', 'the Mojikui wearing a long necklace of blank wooden name plates on strings and a little cape stitched from blank name badges, chewing one name plate with a smug grin, a few blank badges floating around; same size and shape as the reference.', '1章 6話の あいて（名札の モジクイ）'],
-    ['mojikui_book', 'the Mojikui with an open book held up to its wide grinning mouth, slurping the pages, a few blank pages fluttering around it, a stack of books with blank covers tucked under one inky arm; same size and shape as the reference.', '1章 7話の あいて（本の モジクイ）'],
-    ['mojikui_clocktower', 'a BIGGER Mojikui with a huge round stopped clock-tower dial (blank, no numerals) set into its chest, two long ornate brass clock hands rising from its head like horns, a brass pendulum swinging from its tail, its inky body half deep night-blue with tiny stars and half dawn-orange; noticeably larger and grander than the reference.', '1章 8話の あいて（時計台の モジクイ）'],
-    ['mojikui_signboard', 'the Mojikui hiding behind a big blank wooden shop signboard held like a shield, a blank hanging open/closed board around its neck, a half-lowered metal shop shutter for a jaw, a loaf of bread in one tendril; same size and shape as the reference.', '1章 9話の あいて（看板の モジクイ）'],
-    ['mojikui_bus', 'the Mojikui gripping a big brass bus steering wheel, two round bus headlights glowing on its body, a bent bus-stop pole with a blank round sign as a staff, small rubber wheels under its inky skirt, a torn blank bus timetable in its mouth; same size and shape as the reference.', '1章 10話の あいて（バスの モジクイ）'],
-    ['mojikui_station', 'the Mojikui coiled around a blank station name board, curls of train track and sleepers for tendrils, a small station clock (blank dial) on its head like a hat, puffs of steam, blank paper train tickets swirling around; same size and shape as the reference.', '1章 11話の あいて（駅の モジクイ）'],
-    // 2章 ミナトタウン 1〜5話（docs/design/12）
-    ['mojikui_scale', 'the Mojikui hugging a big brass hanging fish-market weighing scale with a BLANK dial, a fish tail sticking out of its grinning mouth, blank paper price cards stuck to its inky body, a few drops of sea water; same size and shape as the reference.', '2章 1話の あいて（はかりの モジクイ）'],
-    ['mojikui_paint', 'the Mojikui splashed with dull grey paint, slurping a rainbow of colour out of a tipped paint pot through a long straw, a few colour-drained cloth scraps and blank colour cards floating around it; same size and shape as the reference.', '2章 2話の あいて（色の モジクイ）'],
-    ['mojikui_stairs', 'a long Mojikui coiled down a short flight of stone steps like a spring toy, a blank wooden shop sign clamped in its grinning mouth, small handmade wooden toys and a little clay pot caught in its tendrils; same overall size as the reference.', '2章 3話の あいて（石だんの モジクイ）'],
-    ['mojikui_hungry', 'an extra-chubby round Mojikui wearing a napkin bib, holding a fork in one tendril and chopsticks in another, chewing a blank wooden menu board, a teacup and a grilled-fish skewer floating around it; same size as the reference.', '2章 4話の あいて（はらぺこ モジクイ）'],
-    ['mojikui_arrow', 'the Mojikui stuck all over with BLANK arrow-shaped signpost boards pointing in every direction like a pincushion, dizzy swirl eyes, spinning on the spot, a brass compass in one tendril; same size and shape as the reference.', '2章 5話の あいて（道しるべの モジクイ）'],
-    // 2章 6〜10話（docs/design/12）。まとめの ボスは 1章の 大モジクイ（mojikui_boss）。
-    ['mojikui_park', 'the Mojikui wearing a dog collar with a tangled red leash and a BLANK dog tag, chewing a blank park sign, a small chewed blank door plate floating beside it; same size and shape as the reference.', '2章 6話の あいて（公園の モジクイ）'],
-    ['mojikui_newspaper', 'the Mojikui wrapped in blank newspaper pages like a cloak, little round reading glasses on, an open book with blank pages in its grinning mouth, blank picture-story cards fluttering around; same size and shape as the reference.', '2章 7話の あいて（新聞の モジクイ）'],
-    ['mojikui_diary', 'the Mojikui hugging a small diary notebook with a tiny brass lock, its blank pages flapping, a pencil stuck in its inky body, a heart sticker on its head; same size and shape as the reference.', '2章 8話の あいて（日記の モジクイ）'],
-    ['mojikui_camera', 'the Mojikui with an old wooden box camera for a face, its lens glowing amber, a flash bulb popping on top, a strip of blank photographs trailing from it, a teacup in one tendril; same size and shape as the reference.', '2章 9話の あいて（カメラの モジクイ）'],
-    ['mojikui_film', 'the Mojikui tangled in a long reel of movie film, a beam of projector light shining from its eyes, blank cinema tickets and a blank poster swirling around it; same size and shape as the reference.', '2章 10話の あいて（フィルムの モジクイ）'],
-  ].map(([id, diff, used]) => ({
-    id,
-    group: 'enemy',
-    prio: 'A',
-    out: `img/battle/${id}.webp`,
-    kind: 'chara',
-    bgmode: 'white',
-    refs: ['art-src/battle/04_敵_モジクイ.png'],
-    style: ['CREATURE_NANIWA'],
-    diff: `Creature: ${diff}`,
-    used,
-    note: '白い 背景を import.mjs が 切り抜く',
-  })),
+const CREATURES = [
+  // 1章
+  mojikui('mojikui_kid', 'a cheeky little prankster, the youngest of the family.', 'a small round squishy ink blob the size of a cat, like a soft rice cake, with two tiny stubby arms and a wispy little tail.', 'HUGE round sparkly eyes with big white highlights, a wide cheeky grin showing two buck teeth, a tiny tongue poking out.', 'warm amber.', 'one crumpled paper talisman worn like a tiny hat.', '1章 1話の あいて「モジクイの こども」（出会いの お話・たたかい）'),
+  mojikui('mojikui_clock', 'impatient and always in a hurry, taps its foot, can never wait.', 'a round body shaped like a pocket watch with two thin wiry legs that are mid-hop, a brass winding crown on top of its head.', 'its two eyes are small clock dials whose hands are spinning, the mouth is a jagged row of brass gear teeth gritted in impatience, a sweat drop flying.', 'teal-green.', 'chewing on a big round brass clock hand; a few dial pieces with dots only (no numerals) float around.', '1章 3話の あいて（時計を かじる モジクイ）'),
+  mojikui('mojikui_gear', 'a grumpy stubborn old craftsman.', 'a short, squat, boxy body plated with brass gears like armour, thick stubby arms, little steam pipes on its shoulders puffing steam.', 'one eye behind a gear-shaped monocle, the other eye squinting, thick heavy ink eyebrows in a deep frown, a clenched zigzag mouth, steam puffing from the top of its head.', 'brass orange.', 'holds a big wrench; chewing a small blank metal number plate.', '1章 4話の あいて（歯車の モジクイ）'),
+  mojikui('mojikui_price', 'a greedy penny-pincher who loves money.', 'a plump pear-shaped body like a drawstring coin purse, tendrils rubbing together greedily.', 'its eyes are two shiny round gold coins (no symbols), a sly sideways smirk with one gold tooth, raised eyebrows.', 'gold.', 'blank paper price tags on strings hanging from it, a few gold coins spilling.', '1章 5話の あいて（値札の モジクイ）'),
+  mojikui('mojikui_nametag', 'shy and bashful, likes to hide.', 'a thin, tall, wobbly body half hidden behind a tall stack of blank wooden name plates it hugs.', 'only peeking out: big round shy eyes with long lashes looking sideways, rosy pink blushing cheeks, a tiny wobbly mouth.', 'pink.', 'a little cape stitched from blank name badges.', '1章 6話の あいて（名札の モジクイ）'),
+  mojikui('mojikui_book', 'a sleepy bookworm who nibbles pages.', 'a long caterpillar-like ink body curling out of an open book, several little stubby legs.', 'big round glasses, droopy half-closed sleepy eyes, a long tongue licking a page, a contented smile.', 'leaf green.', 'books with blank covers tucked under it, blank pages fluttering.', '1章 7話の あいて（本の モジクイ）'),
+  mojikui('mojikui_clocktower', 'pompous and full of itself, acts like a lord.', 'a TALL, grand body like a clock tower with a long ink cape, noticeably bigger than the others; its HEAD is a huge round clock dial (blank, no numerals) framed in ornate brass.', 'the face is drawn ON that big clock dial and fills it: one big eye shaped like a crescent moon and the other like a sun, the two brass clock hands bent into haughty raised eyebrows, a curly ink handlebar moustache and a smug pointed grin below them, chin raised.', 'midnight blue and gold.', 'two ornate brass spires rising from the top of the dial like a crown, a brass pendulum swinging from its tail.', '1章 8話の あいて（時計台の モジクイ）'),
+  mojikui('mojikui_signboard', 'lazy, always sleepy, wants every shop closed forever.', 'a wide, flat, slouching body like a half-lowered metal shop shutter, lying on its side.', 'heavy half-closed sleepy eyes with bags under them, a huge yawning mouth, a little drool, a striped nightcap.', 'red.', 'a blank wooden signboard used as a pillow, a loaf of bread in one tendril, a blank open/closed board around its neck.', '1章 9話の あいて（看板の モジクイ）'),
+  mojikui('mojikui_bus', 'hasty and panicky, always rushing.', 'a chunky round body shaped like the front of a little bus, small rubber wheels under it, mid-dash with speed lines.', 'its eyes are two big round bus headlights, wide and panicked, a wide open shouting mouth, sweat drops flying.', 'cream and teal.', 'gripping a brass steering wheel, a bent bus-stop pole with a blank round sign, a torn blank timetable.', '1章 10話の あいて（バスの モジクイ）'),
+  mojikui('mojikui_station', 'a strict, stern gatekeeper who lets nobody pass.', 'a tall straight pillar-like body standing at attention, arms crossed, wearing a station-master cap.', 'stern narrow eyes under a stiff brim, a firm frown, a whistle in its mouth.', 'steam-white and blue.', 'coiled railway track for a belt, a blank station name board behind it, puffs of steam, blank train tickets.', '1章 11話の あいて（駅の モジクイ）'),
+  // 1章 12話 まとめの ボス（10 §3）
+  mojikui('mojikui_boss', 'the GREAT Mojikui, a vain self-proclaimed king, grand and theatrical.', 'much bigger and taller than any other, a towering swirl of black-violet ink smoke with broad shoulders and long sweeping tendrils, a royal ink cloak.', 'a big crowned head with THREE glowing violet eyes with slit pupils, a huge crescent grin with pointed (not gory) teeth, eyebrows raised in arrogance.', 'royal violet and gold.', 'a crown of crumpled blank paper talismans and gold, tendrils clutching blank trophies of everything it ate — a calendar page, a name plate, a clock hand, a price tag, a bus-stop sign, an open book — and a ribbon of tiny golden letter-motes slurped into its mouth.', '1章 12話・2章 11話 まとめの ボス「大モジクイ」'),
+  // 2章（docs/design/12）
+  mojikui('mojikui_scale', 'a sly, crafty market trader.', 'a lopsided body balanced like a hanging scale, one side sagging lower.', 'one eye much bigger than the other (lopsided like an uneven scale), a cunning narrow smile, one eyebrow cocked.', 'sea blue.', 'a big brass hanging fish-market weighing scale with a BLANK dial, a fish tail sticking out of its mouth, blank price cards.', '2章 1話の あいて（はかりの モジクイ）'),
+  mojikui('mojikui_paint', 'a vain show-off who thinks it is a great artist.', 'a drippy, melting body that leaves paint drips, posing with one tendril on its hip.', 'star-shaped sparkling eyes, a curly moustache made of a paint drip, a smug open-mouthed laugh with a rainbow tongue, a little beret.', 'rainbow colours on grey.', 'slurping colour out of a tipped paint pot through a long straw, colour-drained grey cloth scraps.', '2章 2話の あいて（色の モジクイ）'),
+  mojikui('mojikui_stairs', 'clumsy and goofy, always tumbling.', 'a long springy segmented body like a slinky toy, flopping down a short flight of stone steps.', 'goofy googly eyes looking in two different directions, a big open silly grin, a bandage on its head.', 'moss green.', 'a blank wooden shop sign clamped in its mouth, small handmade wooden toys and a clay pot caught in its tendrils.', '2章 3話の あいて（石だんの モジクイ）'),
+  mojikui('mojikui_hungry', 'a happy glutton who is always hungry.', 'a very round, extra-chubby body with a big belly, a napkin bib.', 'a HUGE wide-open mouth taking up half its face with a long drooling tongue, tiny happy closed eyes like upside-down U shapes, rosy cheeks.', 'warm red.', 'a fork and chopsticks, chewing a blank wooden menu board, a teacup and a grilled-fish skewer floating around.', '2章 4話の あいて（はらぺこ モジクイ）'),
+  mojikui('mojikui_arrow', 'always lost and confused, spins around.', 'a twisty corkscrew body spinning on the spot.', 'big dizzy spiral eyes, a crooked wavy confused mouth, little question-mark shapes of ink floating above its head.', 'bright yellow.', 'BLANK arrow-shaped signpost boards stuck in it pointing every which way, a brass compass with a spinning needle.', '2章 5話の あいて（道しるべの モジクイ）'),
+  mojikui('mojikui_park', 'playful and dog-like, can not sit still.', 'a four-legged puppy-like ink body with floppy ink ears and a wagging tail.', 'big round puppy eyes, a little black dog nose, a happy panting open mouth with its tongue hanging out.', 'grass green.', 'a dog collar with a tangled red leash and a BLANK dog tag, chewing a blank park sign.', '2章 6話の あいて（公園の モジクイ）'),
+  mojikui('mojikui_newspaper', 'a smug know-it-all.', 'an upright body wrapped in blank newspaper pages like a long coat, one tendril raised lecturing.', 'one eye behind a monocle and one raised eyebrow, a smug closed-mouth smile, nose in the air.', 'ink grey with silver.', 'an open book with blank pages, blank picture-story cards fluttering.', '2章 7話の あいて（新聞の モジクイ）'),
+  mojikui('mojikui_diary', 'secretive, loves secrets and whispers.', 'a soft heart-shaped body, a tendril held up to its lips going "shh".', 'one eye winking, the other big and twinkling, a mouth shaped like a little zipper, pink cheeks.', 'lilac and pink.', 'hugging a small diary notebook with a tiny brass lock, blank pages flapping, a pencil stuck in it.', '2章 8話の あいて（日記の モジクイ）'),
+  mojikui('mojikui_camera', 'a show-off who loves the spotlight and posing.', 'a body built around an old wooden box camera, striking a pose with one tendril in a peace sign.', 'ONE big single eye that is the camera lens, with an iris-shutter pupil, a flash bulb on its head like an antenna, a big toothy show-off grin below the lens.', 'magenta.', 'a strip of blank photographs trailing from it, a teacup in one tendril.', '2章 9話の あいて（カメラの モジクイ）'),
+  mojikui('mojikui_film', 'a dramatic actor who overacts everything.', 'a swirling body wrapped in a long reel of movie film like a flowing cape, one tendril flung up dramatically.', 'large expressive eyes with long dramatic lashes, a wide open theatrical mouth mid-gasp, one tear of drama.', 'cinema red and gold.', 'a beam of projector light, blank cinema tickets and a blank poster swirling around.', '2章 10話の あいて（フィルムの モジクイ）'),
 ];
 
 const NANIWA = [
@@ -624,14 +626,15 @@ const PEOPLE = {
   baker: { ref: 'ENFJ_f', who: 'a warm bakery owner in her thirties: wavy orange hair under a tall white baker\'s hat, a white baker\'s jacket and a pink apron with a little flour on it' },
   driver: { ref: 'ENTP', who: 'a cheerful bus driver in his forties: a navy driver\'s cap, a light-blue short-sleeved uniform shirt with a navy tie, white gloves, a neat short beard' },
   // 2章 ミナトタウン（docs/design/12）
-  sora: { ref: 'ENFP_f', who: 'Sora, a cheerful ten-year-old girl who lives in the harbor town: a short tousled dark-brown bob with a teal bandana, a navy-and-white sailor-collar top, denim overall shorts, white sneakers, a small toy camera on a strap around her neck' },
+  // ガチャの なかまにも なる（docs/design/13）: 絵本の 主役らしく 作りこむ。
+  sora: { ref: 'ENFP_f', who: "Sora, a spirited ten-year-old girl of the harbor town who dreams of making movies: a short tousled dark-brown bob with a big teal bandana tied in a bow, an oversized navy captain's cap with a gold anchor badge worn tilted back, a white sailor-collar top with a red neckerchief, navy shorts with a small anchor patch, red-and-white sneakers, a little vintage film camera on a strap across her body. Bright, determined eyes." },
   sora_papa: { ref: 'INFJ', who: "Sora's father, a gentle craftsman in his forties who makes handmade goods: short black hair, a short neat beard, round glasses, a brown canvas work apron over a light-blue shirt with rolled sleeves, a pencil behind his ear" },
   sora_mama: { ref: 'INFJ_f', who: "Sora's mother, a cheerful woman in her forties: dark-brown hair in a low ponytail, a mustard cardigan over a white blouse, a long teal skirt, a measuring tape around her neck" },
   fishmonger: { ref: 'ESTP_f', who: 'a lively harbor fish-market seller in her thirties: hair tied up in a blue headscarf, a navy rubber apron over a blue-and-white striped shirt, tall rubber boots' },
   tailor: { ref: 'ISFP', who: 'a stylish young clothes-shop owner in his twenties: wavy chestnut hair, a grey waistcoat over a white shirt, a yellow tape measure draped over his shoulders, a pin cushion on his wrist' },
   librarian: { ref: 'INTJ_f', who: 'a calm librarian in her thirties: long dark hair in a side braid, thin round glasses, a deep-green cardigan over a cream blouse, a brown skirt, a stack of books in her arm' },
-  photographer: { ref: 'INTP', who: 'an old photographer who also runs the tea shop next door: white hair and a neat white beard, a flat cap, a brown tweed vest over a white shirt, an old box camera on a strap' },
-  usher: { ref: 'ESFP_f', who: 'a lively young cinema usher in her twenties: wavy auburn hair under a small red pillbox hat, a red usher jacket with gold buttons, a flashlight and a ticket punch' },
+  photographer: { ref: 'INTP', who: 'a kind old photographer who also runs the tea shop: white hair and a fluffy white beard, round amber-tinted spectacles, a flat cap with a small feather, a brown tweed waistcoat with a gold pocket-watch chain, a red bow tie, an old wooden box camera on a tall tripod he carries like a staff, a tiny brass teapot hanging from his belt' },
+  usher: { ref: 'ESFP_f', who: 'a glamorous young cinema usher in her twenties who once dreamed of being a movie star: wavy auburn hair with a gold star hairpin, a red velvet usher jacket with gold braid and gold buttons, a small red pillbox hat, white gloves, a sparkling flashlight, a red-and-white striped popcorn box' },
   cook: { ref: 'ENTJ_f', who: 'a warm eatery cook in her fifties: a white bandana over grey-streaked hair, a white cook\'s coat with rolled sleeves and a red apron, a wooden ladle' },
   yamada: { ref: 'ESFJ_f', who: 'Yamada-san, a gentle woman in her forties who lives in the town: short wavy brown hair with a pink cherry-blossom hairpin, a sky-blue cardigan over a white blouse, a navy pleated skirt, a small pink rosette pinned on the cardigan' },
 };
@@ -703,7 +706,7 @@ const FOLK = [
   human('cook', 'happy', 'happy', 'happy: holding a steaming bowl and the ladle, a big hearty laugh, eyes curved, steam swirls.', '2章 4話 食堂の 人（メニューが 戻った）'),
   human('cook', 'trouble', 'happy', 'troubled: pointing at a blank menu card with the ladle, puzzled, mouth open as if asking "what will you eat?", a sweat drop.', '2章 4話 食堂の 人（メニューが 読めない）'),
   // 2章 6〜10話（docs/design/12）
-  human('sora', 'dog', 'happy', 'overjoyed: kneeling and hugging her small fluffy shiba-inu puppy with a red collar, the puppy licking her cheek, eyes closed in a big smile, little hearts and sparkles.', '2章 6話 ソラ（犬が 見つかった）'),
+  human('sora', 'dog', 'happy', 'overjoyed: kneeling and hugging her small fluffy cream-and-orange shiba-inu puppy Maru, who wears a red collar and a tiny navy sailor collar, the puppy licking her cheek, eyes closed in a big smile, little hearts and sparkles.', '2章 6話 ソラ（犬が 見つかった）'),
   human('sora', 'diary', 'happy', 'holding an open diary notebook against her chest with a pencil in her other hand, cheeks pink, a shy happy smile, a few sparkles.', '2章 8話 ソラ（日記に「友達」と 書く）'),
   human('librarian', 'happy', 'happy', 'happy: holding an open book up toward the viewer with a gentle smile, eyes curved behind her glasses, a little sparkle.', '2章 7話 図書館の 人（本が 読める）'),
   human('librarian', 'trouble', 'happy', 'troubled: holding an open book with blank pages, finger to her lips, puzzled frown, a sweat drop.', '2章 7話 図書館の 人（本の 字が 消えた）'),
@@ -837,6 +840,11 @@ const CARDS = [
   card('baker', 4, "a Christmas baker's outfit: a red-and-white baker's jacket and a Santa hat, holding a tray of decorated cookies and a wreath-shaped bread.", '★4 クリスマスの パンやさん'),
   card('keeper', 4, "an astronomer's outfit: a deep-blue starry cape and a pointed star hat, holding a brass telescope.", '★4 ほしぞらの とけいだいの 人'),
   card('rin', 5, 'a grand festival dancer outfit: an ornate red-and-gold kimono with long flowing sleeves, holding two paper lanterns, dancing.', '★5 まつりの リンさん'),
+  // 2章の なかま（docs/design/13）
+  card('sora', 4, "a young film director's outfit: a red beret tilted on her bandana, a navy director's vest with many pockets over her sailor top, holding a blank wooden clapperboard and a small megaphone, her shiba puppy Maru in a tiny beret at her feet, an energetic action pose.", '★4 えいがかんとくの ソラ'),
+  card('sora', 5, "a grand harbor-captain outfit: a long navy captain's coat with gold epaulettes and gold braid, the big captain's cap with a shining gold anchor badge, a brass telescope raised in one hand, one foot on a small ship's wheel, her shiba puppy Maru in a sailor hat beside her, heroic and adventurous.", '★5 みなとの キャプテン ソラ'),
+  card('usher', 4, 'a stage-star costume for a kids show: a short sparkly red jacket with gold film-strip trim and gold buttons, a matching pleated red skirt to the knees with white tights, red ankle boots, a golden film-strip scarf, sunglasses pushed up on her head, the gold star hairpin, waving to fans with a white-gloved hand and holding a golden star-topped flashlight like a wand. Modest and cute.', '★4 スターの えいがかんの 人'),
+  card('photographer', 4, 'a tea-master look: an elegant dark-green haori jacket with a crest-less pattern over his waistcoat, holding a tray with a steaming teapot and a teacup, the wooden box camera strapped on his back, a gentle bow.', '★4 おちゃの めいじん しゃしんやさん'),
   card('keeper', 5, 'a time wizard outfit: a long midnight-blue robe with golden clock-gear patterns, a staff topped with an hourglass, a ring of small golden gears floating around him.', '★5 じかんの まほうつかい'),
 ];
 

@@ -1,29 +1,13 @@
 import { useEffect, type ReactNode } from 'react';
 import { motion } from 'framer-motion';
 import type { CastMember } from '../../types/novel';
-import { assetPath } from '../../lib/assetPath';
 import { nameRevealed } from '../../lib/nameReveal';
 import { useKnownKana } from '../kana/useKnownKana';
 import { useOwnedKanji } from '../moji/useOwnedKanji';
-import { FACE_CROPS } from '../../data/faceCrops.generated';
+import { faceStyle } from '../../lib/faceCrop';
 
 /** The round face frame's size (index.css .g-plate-face). */
 const FACE_PX = 34;
-
-/**
- * The portrait placed so its face fills the frame (scripts/face_crops.mjs found
- * where the face is on each picture). A picture it does not know falls back to
- * the frame's own crop in index.css.
- */
-const faceStyle = (src: string) => {
-  const crop = FACE_CROPS[src];
-  const style: Record<string, string> = { backgroundImage: `url(${assetPath(src)})` };
-  if (!crop) return style;
-  const [x, y, size, aspect] = crop;
-  const w = FACE_PX / size;
-  const h = w * aspect;
-  return { ...style, backgroundSize: `${w}px ${h}px`, backgroundPosition: `${FACE_PX / 2 - x * w}px ${FACE_PX / 2 - y * h}px` };
-};
 
 /**
  * Whose line this is. The player cannot read Japanese yet, so on 文字が 消えた 町
@@ -86,7 +70,7 @@ export const NamePlate = ({
     >
       <span className="g-plate-face" aria-hidden>
         {face ? (
-          <span className="block h-full w-full" style={faceStyle(face)} />
+          <span className="block h-full w-full" style={faceStyle(face, FACE_PX)} />
         ) : (
           <span className="flex h-full w-full items-center justify-center text-base">💭</span>
         )}

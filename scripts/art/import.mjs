@@ -67,7 +67,9 @@ const floodClear = (data, w, h, isBg) => {
 /**
  * Background shut inside the picture — the gap between a bow and its string —
  * that a flood from the edges cannot reach: large patches of flat, pure white.
- * Only for things (prop): a character's white face-screen must stay.
+ * Only for things (prop) and the Mojikui (enemy group: an ink body with no
+ * white of its own, where the white shut between its wisps showed as specks):
+ * a person's white shirt and Nexmax's face-screen must stay.
  */
 const clearEnclosedWhite = (data, w, h, minArea) => {
   const pure = (i) => data[i * 4 + 3] > 0 && data[i * 4] >= 250 && data[i * 4 + 1] >= 250 && data[i * 4 + 2] >= 250;
@@ -92,12 +94,12 @@ const clearEnclosedWhite = (data, w, h, minArea) => {
   }
 };
 
-const cutOut = async (file, { enclosed = false } = {}) => {
+const cutOut = async (file, { enclosed = false, minArea = 2500 } = {}) => {
   const { data, info, transparent } = await load(file, 1024, 1536);
   if (!transparent) {
     const T = 236;
     floodClear(data, info.width, info.height, (i) => data[i * 4 + 3] < 16 || (data[i * 4] >= T && data[i * 4 + 1] >= T && data[i * 4 + 2] >= T));
-    if (enclosed) clearEnclosedWhite(data, info.width, info.height, 2500);
+    if (enclosed) clearEnclosedWhite(data, info.width, info.height, minArea);
   }
   return sharp(data, { raw: { width: info.width, height: info.height, channels: 4 } }).trim({ threshold: 1 });
 };
@@ -134,7 +136,7 @@ for (const a of ASSETS) {
   const out = `public/${a.out}`;
   ensureDir(out);
   if (a.kind === 'chara') {
-    const img = await cutOut(raw);
+    const img = await cutOut(raw, a.group === 'enemy' ? { enclosed: true, minArea: 300 } : {});
     await (await img.png().toBuffer().then((b) => sharp(b)))
       .resize(768, 1152, { fit: 'inside', withoutEnlargement: true })
       .webp({ quality: 88, alphaQuality: 90 })

@@ -292,6 +292,10 @@ export const TOWN: readonly Individual[] = [
   town('doctor', 'お医(い)者(しゃ)さん', 'みんなの けんこうを まもります。', WeaponClass.SHIELD, Element.SUI),
   town('baker', 'パンやさん', 'まいあさ おいしい パンを やきます。', WeaponClass.HAMMER, Element.KA),
   town('keeper', 'とけいだいの 人(ひと)', '町(まち)の 時間(じかん)を まもります。', WeaponClass.AXE, Element.DO),
+  // 2章 ミナトタウン（docs/design/13）: はじめての ともだち ソラと、町で 会う 二人。
+  town('sora', 'ソラ', 'ミナトタウンの 子(こ)。えいがと 英(えい)語(ご)が 好(す)き。', WeaponClass.BOW, Element.SUI),
+  town('usher', 'えいがかんの 人(ひと)', 'むかしの ゆめは えいがスター。', WeaponClass.DAGGER, Element.KOU),
+  town('photographer', 'しゃしんやさん', 'お茶(ちゃ)も 出(だ)す しゃしんやさん。', WeaponClass.STAFF, Element.AN),
 ];
 
 /**
@@ -339,6 +343,9 @@ export const DRESSED: readonly Individual[] = [
   dressed('keeper', 4, 'ほしぞらの'),
   dressed('rin', 5, 'まつりの'),
   dressed('keeper', 5, 'じかんの', 'じかんの まほうつかい'),
+  dressed('sora', 4, 'えいがかんとくの'),
+  dressed('sora', 5, 'みなとの キャプテン'),
+  dressed('photographer', 4, 'おちゃの めいじん'),
 ];
 
 /** Every card there is. */

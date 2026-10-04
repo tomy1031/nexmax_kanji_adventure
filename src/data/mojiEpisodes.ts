@@ -16,6 +16,11 @@ export interface MojiBoss {
   name: string;
   /** Its picture (a path under public/), in the story and the fight. */
   img?: string;
+  /**
+   * Its one-word nature, shown beside its name on じゅんび (2026-10-04「モジクイに もう少し
+   * 個性が 欲しい」): a picture, the word in furigana notation, and English for the EN setting.
+   */
+  trait?: { icon: string; ja: string; en: string };
   hp: number;
   attack: number;
   element: Element;
@@ -49,7 +54,7 @@ export const MOJI_EPISODES: MojiEpisode[] = [
     title: 'きえた カレンダー',
     kanji: [...'日月火水木'],
     bg: 'naniwa_town_station',
-    boss: { name: 'モジクイの こども', img: 'img/battle/mojikui_kid.webp', hp: 70, attack: 25, element: Element.AN, icon: 'GiShadowGrasp' },
+    boss: { name: 'モジクイの こども', img: 'img/battle/mojikui_kid.webp', trait: { icon: '😜', ja: 'いたずらっこ', en: 'prankster' }, hp: 70, attack: 25, element: Element.AN, icon: 'GiShadowGrasp' },
   },
   {
     id: 'moji-1-2',
@@ -59,7 +64,7 @@ export const MOJI_EPISODES: MojiEpisode[] = [
     title: 'きえた なまえ',
     kanji: [...'金土山川田'],
     bg: 'naniwa_station_square',
-    boss: { name: 'モジクイ', img: 'img/battle/mojikui.webp', hp: 80, attack: 30, element: Element.AN, icon: 'GiShadowFollower' },
+    boss: { name: 'モジクイ', img: 'img/battle/mojikui.webp', trait: { icon: '😋', ja: 'なんでも 食(た)べる', en: 'eats anything' }, hp: 80, attack: 30, element: Element.AN, icon: 'GiShadowFollower' },
   },
   // 1章 3〜5話（09 §1）: ユニット2 の 数と お金。HP は 上の 決まり（★1・武器なしで 1字 約2回）に 合わせた
   // （5話は 4字なので 低め）。がまん・なかま（4話）は 別の しくみで 入る。
@@ -70,7 +75,7 @@ export const MOJI_EPISODES: MojiEpisode[] = [
     title: '山(やま)の ロープウェー',
     kanji: [...'一二三四五'],
     bg: 'naniwa_ropeway',
-    boss: { name: 'とけいの モジクイ', img: 'img/battle/mojikui_clock.webp', hp: 90, attack: 32, element: Element.AN, icon: 'GiShadowFollower' },
+    boss: { name: 'とけいの モジクイ', img: 'img/battle/mojikui_clock.webp', trait: { icon: '⏱️', ja: 'せっかち', en: 'impatient' }, hp: 90, attack: 32, element: Element.AN, icon: 'GiShadowFollower' },
   },
   {
     id: 'moji-1-4',
@@ -79,7 +84,7 @@ export const MOJI_EPISODES: MojiEpisode[] = [
     title: 'なかまの ロボット',
     kanji: [...'六七八九十'],
     bg: 'naniwa_factory',
-    boss: { name: 'はぐるまの モジクイ', img: 'img/battle/mojikui_gear.webp', hp: 96, attack: 34, element: Element.AN, icon: 'GiShadowFollower' },
+    boss: { name: 'はぐるまの モジクイ', img: 'img/battle/mojikui_gear.webp', trait: { icon: '😤', ja: 'がんこもの', en: 'stubborn' }, hp: 96, attack: 34, element: Element.AN, icon: 'GiShadowFollower' },
     // 七ばん, the factory robot who wakes up: まじめの ネクマックス (09 §1.2).
     grants: 'ISTJ',
   },
@@ -90,7 +95,7 @@ export const MOJI_EPISODES: MojiEpisode[] = [
     title: 'いくらですか',
     kanji: [...'百千万円'],
     bg: 'naniwa_market',
-    boss: { name: 'ねふだの モジクイ', img: 'img/battle/mojikui_price.webp', hp: 80, attack: 36, element: Element.AN, icon: 'GiShadowFollower' },
+    boss: { name: 'ねふだの モジクイ', img: 'img/battle/mojikui_price.webp', trait: { icon: '🤑', ja: 'けちんぼ', en: 'stingy' }, hp: 80, attack: 36, element: Element.AN, icon: 'GiShadowFollower' },
   },
   // 1章 6〜11話（10 §1・§4）: ユニット3〜5 を 2話ずつ。題は その 話で 書く 字を かなで（書く 前は 読めない）。
   // ボスの 数字は 10 §4 の 表（上の 決まりに 合わせて ある）。
@@ -101,7 +106,7 @@ export const MOJI_EPISODES: MojiEpisode[] = [
     title: 'はじめまして',
     kanji: [...'学生先会社員'],
     bg: 'naniwa_school',
-    boss: { name: 'なふだの モジクイ', img: 'img/battle/mojikui_nametag.webp', hp: 96, attack: 36, element: Element.AN, icon: 'GiShadowFollower' },
+    boss: { name: 'なふだの モジクイ', img: 'img/battle/mojikui_nametag.webp', trait: { icon: '🙈', ja: 'はずかしがりや', en: 'shy' }, hp: 96, attack: 36, element: Element.AN, icon: 'GiShadowFollower' },
   },
   {
     id: 'moji-1-7',
@@ -110,7 +115,7 @@ export const MOJI_EPISODES: MojiEpisode[] = [
     title: 'びょういんの ほん',
     kanji: [...'医者本中国人'],
     bg: 'naniwa_clinic',
-    boss: { name: 'ほんの モジクイ', img: 'img/battle/mojikui_book.webp', hp: 96, attack: 38, element: Element.AN, icon: 'GiShadowFollower' },
+    boss: { name: 'ほんの モジクイ', img: 'img/battle/mojikui_book.webp', trait: { icon: '😪', ja: 'ねぼすけの 本(ほん)の むし', en: 'sleepy bookworm' }, hp: 96, attack: 38, element: Element.AN, icon: 'GiShadowFollower' },
   },
   {
     id: 'moji-1-8',
@@ -119,7 +124,7 @@ export const MOJI_EPISODES: MojiEpisode[] = [
     title: 'とまった とけいだい',
     kanji: [...'今朝昼晩時分半'],
     bg: 'naniwa_clocktower',
-    boss: { name: 'とけいだいの モジクイ', img: 'img/battle/mojikui_clocktower.webp', hp: 110, attack: 40, element: Element.AN, icon: 'GiShadowFollower' },
+    boss: { name: 'とけいだいの モジクイ', img: 'img/battle/mojikui_clocktower.webp', trait: { icon: '🎩', ja: 'いばりんぼう', en: 'pompous' }, hp: 110, attack: 40, element: Element.AN, icon: 'GiShadowFollower' },
   },
   {
     id: 'moji-1-9',
@@ -128,7 +133,7 @@ export const MOJI_EPISODES: MojiEpisode[] = [
     title: 'おみせは やすみ？',
     kanji: [...'午前後休毎何'],
     bg: 'naniwa_shopstreet',
-    boss: { name: 'かんばんの モジクイ', img: 'img/battle/mojikui_signboard.webp', hp: 96, attack: 40, element: Element.AN, icon: 'GiShadowFollower' },
+    boss: { name: 'かんばんの モジクイ', img: 'img/battle/mojikui_signboard.webp', trait: { icon: '💤', ja: 'なまけもの', en: 'lazy' }, hp: 96, attack: 40, element: Element.AN, icon: 'GiShadowFollower' },
   },
   {
     id: 'moji-1-10',
@@ -137,7 +142,7 @@ export const MOJI_EPISODES: MojiEpisode[] = [
     title: 'がっこうへ いく',
     kanji: [...'行来校週去年'],
     bg: 'naniwa_bus_stop',
-    boss: { name: 'バスの モジクイ', img: 'img/battle/mojikui_bus.webp', hp: 96, attack: 42, element: Element.AN, icon: 'GiShadowFollower' },
+    boss: { name: 'バスの モジクイ', img: 'img/battle/mojikui_bus.webp', trait: { icon: '💦', ja: 'あわてんぼう', en: 'hasty' }, hp: 96, attack: 42, element: Element.AN, icon: 'GiShadowFollower' },
   },
   {
     id: 'moji-1-11',
@@ -146,7 +151,7 @@ export const MOJI_EPISODES: MojiEpisode[] = [
     title: 'でんしゃが うごかない',
     kanji: [...'駅電車自転'],
     bg: 'naniwa_station_deep',
-    boss: { name: 'えきの モジクイ', img: 'img/battle/mojikui_station.webp', hp: 80, attack: 42, element: Element.AN, icon: 'GiShadowFollower' },
+    boss: { name: 'えきの モジクイ', img: 'img/battle/mojikui_station.webp', trait: { icon: '🚫', ja: 'がんこな もんばん', en: 'stern gatekeeper' }, hp: 80, attack: 42, element: Element.AN, icon: 'GiShadowFollower' },
   },
   // 2章「市場の ともだち」（docs/design/12）: 海の むこうの 港町 ミナトタウン。字は 本の 順、
   // HP は 1章と 同じ 決まり（★1・武器なしで 1字 約2回）。手ごたえは こうげきで 出す。
@@ -157,7 +162,7 @@ export const MOJI_EPISODES: MojiEpisode[] = [
     title: 'たかい？ やすい？',
     kanji: [...'高安大小新'],
     bg: 'port_market',
-    boss: { name: 'はかりの モジクイ', img: 'img/battle/mojikui_scale.webp', hp: 96, attack: 44, element: Element.AN, icon: 'GiShadowFollower' },
+    boss: { name: 'はかりの モジクイ', img: 'img/battle/mojikui_scale.webp', trait: { icon: '😏', ja: 'ずるがしこい', en: 'crafty' }, hp: 96, attack: 44, element: Element.AN, icon: 'GiShadowFollower' },
   },
   {
     id: 'moji-2-2',
@@ -166,7 +171,7 @@ export const MOJI_EPISODES: MojiEpisode[] = [
     title: 'いろの ない ふく',
     kanji: [...'古青白赤黒'],
     bg: 'port_clothes',
-    boss: { name: 'いろの モジクイ', img: 'img/battle/mojikui_paint.webp', hp: 96, attack: 44, element: Element.AN, icon: 'GiShadowFollower' },
+    boss: { name: 'いろの モジクイ', img: 'img/battle/mojikui_paint.webp', trait: { icon: '🎨', ja: 'げいじゅつか きどり', en: 'would-be artist' }, hp: 96, attack: 44, element: Element.AN, icon: 'GiShadowFollower' },
   },
   {
     id: 'moji-2-3',
@@ -175,7 +180,7 @@ export const MOJI_EPISODES: MojiEpisode[] = [
     title: 'いしだんの うえの おみせ',
     kanji: [...'上下父母子手'],
     bg: 'port_stairs',
-    boss: { name: 'いしだんの モジクイ', img: 'img/battle/mojikui_stairs.webp', hp: 112, attack: 46, element: Element.AN, icon: 'GiShadowFollower' },
+    boss: { name: 'いしだんの モジクイ', img: 'img/battle/mojikui_stairs.webp', trait: { icon: '🤪', ja: 'おっちょこちょい', en: 'clumsy' }, hp: 112, attack: 46, element: Element.AN, icon: 'GiShadowFollower' },
   },
   {
     id: 'moji-2-4',
@@ -184,7 +189,7 @@ export const MOJI_EPISODES: MojiEpisode[] = [
     title: 'なにが すきですか',
     kanji: [...'好主肉魚食飲物'],
     bg: 'port_foodhall',
-    boss: { name: 'はらぺこ モジクイ', img: 'img/battle/mojikui_hungry.webp', hp: 128, attack: 46, element: Element.AN, icon: 'GiShadowFollower' },
+    boss: { name: 'はらぺこ モジクイ', img: 'img/battle/mojikui_hungry.webp', trait: { icon: '🍽️', ja: 'くいしんぼう', en: 'glutton' }, hp: 128, attack: 46, element: Element.AN, icon: 'GiShadowFollower' },
   },
   {
     id: 'moji-2-5',
@@ -193,7 +198,7 @@ export const MOJI_EPISODES: MojiEpisode[] = [
     title: 'みぎ？ ひだり？',
     kanji: [...'近間右左'],
     bg: 'port_alley',
-    boss: { name: 'みちしるべの モジクイ', img: 'img/battle/mojikui_arrow.webp', hp: 80, attack: 48, element: Element.AN, icon: 'GiShadowFollower' },
+    boss: { name: 'みちしるべの モジクイ', img: 'img/battle/mojikui_arrow.webp', trait: { icon: '🌀', ja: 'ほうこうおんち', en: 'always lost' }, hp: 80, attack: 48, element: Element.AN, icon: 'GiShadowFollower' },
   },
   {
     id: 'moji-2-6',
@@ -202,7 +207,7 @@ export const MOJI_EPISODES: MojiEpisode[] = [
     title: 'いぬは どこですか',
     kanji: [...'外男女犬'],
     bg: 'port_park',
-    boss: { name: 'こうえんの モジクイ', img: 'img/battle/mojikui_park.webp', hp: 80, attack: 48, element: Element.AN, icon: 'GiShadowFollower' },
+    boss: { name: 'こうえんの モジクイ', img: 'img/battle/mojikui_park.webp', trait: { icon: '🐶', ja: 'じっと して いない', en: 'can\'t sit still' }, hp: 80, attack: 48, element: Element.AN, icon: 'GiShadowFollower' },
   },
   {
     id: 'moji-2-7',
@@ -211,7 +216,7 @@ export const MOJI_EPISODES: MojiEpisode[] = [
     title: 'としょかんで よみます',
     kanji: [...'書聞読見話'],
     bg: 'port_library',
-    boss: { name: 'しんぶんの モジクイ', img: 'img/battle/mojikui_newspaper.webp', hp: 96, attack: 50, element: Element.AN, icon: 'GiShadowFollower' },
+    boss: { name: 'しんぶんの モジクイ', img: 'img/battle/mojikui_newspaper.webp', trait: { icon: '🧐', ja: 'しったかぶり', en: 'know-it-all' }, hp: 96, attack: 50, element: Element.AN, icon: 'GiShadowFollower' },
   },
   {
     id: 'moji-2-8',
@@ -220,7 +225,7 @@ export const MOJI_EPISODES: MojiEpisode[] = [
     title: 'はじめての ともだち',
     kanji: [...'買起帰友達'],
     bg: 'port_seaside',
-    boss: { name: 'にっきの モジクイ', img: 'img/battle/mojikui_diary.webp', hp: 96, attack: 50, element: Element.AN, icon: 'GiShadowFollower' },
+    boss: { name: 'にっきの モジクイ', img: 'img/battle/mojikui_diary.webp', trait: { icon: '🤫', ja: 'ひみつが 好(す)き', en: 'loves secrets' }, hp: 96, attack: 50, element: Element.AN, icon: 'GiShadowFollower' },
   },
   {
     id: 'moji-2-9',
@@ -229,7 +234,7 @@ export const MOJI_EPISODES: MojiEpisode[] = [
     title: 'しゃしんを とりましょう',
     kanji: [...'茶酒写真紙'],
     bg: 'port_photo',
-    boss: { name: 'カメラの モジクイ', img: 'img/battle/mojikui_camera.webp', hp: 96, attack: 52, element: Element.AN, icon: 'GiShadowFollower' },
+    boss: { name: 'カメラの モジクイ', img: 'img/battle/mojikui_camera.webp', trait: { icon: '📸', ja: 'めだちたがりや', en: 'show-off' }, hp: 96, attack: 52, element: Element.AN, icon: 'GiShadowFollower' },
   },
   {
     id: 'moji-2-10',
@@ -238,7 +243,7 @@ export const MOJI_EPISODES: MojiEpisode[] = [
     title: 'えいがを みませんか',
     kanji: [...'映画店英語'],
     bg: 'port_cinema',
-    boss: { name: 'フィルムの モジクイ', img: 'img/battle/mojikui_film.webp', hp: 96, attack: 52, element: Element.AN, icon: 'GiShadowFollower' },
+    boss: { name: 'フィルムの モジクイ', img: 'img/battle/mojikui_film.webp', trait: { icon: '🎭', ja: 'おおげさ', en: 'dramatic' }, hp: 96, attack: 52, element: Element.AN, icon: 'GiShadowFollower' },
   },
 ];
 

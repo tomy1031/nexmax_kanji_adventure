@@ -33,6 +33,7 @@ import { TipCard } from './TipCard';
 import { nextReadyTip, type TipId } from '../../data/fightRules';
 import NexmaxLevelPlate from './NexmaxLevel';
 import { useOwnedKanji } from './useOwnedKanji';
+import { faceStyle } from '../../lib/faceCrop';
 
 /**
  * 文字が 消えた 町 — one episode (08 §4.2.1, §4.2.2, §3.8):
@@ -110,6 +111,7 @@ const ReadyScreen = ({
   hardNote?: string;
 }) => {
   const showFurigana = useGameStore((s) => s.settings.furigana);
+  const english = useGameStore((s) => s.settings.english);
   const progress = useGameStore((s) => s.progress);
   const repsOf = (k: KanjiData) => progress[k.id]?.reps ?? 0;
   const total = kanji.reduce((n, k) => n + starsOf(repsOf(k)), 0);
@@ -159,7 +161,8 @@ const ReadyScreen = ({
         >
           <span className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-[#2a1840] text-[#c9a4ff]">
             {ep.boss.img ? (
-              <img src={assetPath(ep.boss.img)} alt="" aria-hidden className="h-full w-full object-contain" />
+              // Its face, not its whole body shrunk small: each Mojikui is told apart by its face.
+              <span aria-hidden className="block h-full w-full" style={faceStyle(ep.boss.img, 56, 1.25)} />
             ) : (
               <GameIcon name={ep.boss.icon} size={38} fallback="☠" />
             )}
@@ -193,6 +196,18 @@ const ReadyScreen = ({
             <p className="text-lg font-black">
               <RubyText showFurigana={showFurigana}>{ep.boss.name}</RubyText>
             </p>
+            {/* Its nature in a word: each Mojikui is someone (2026-10-04「もう少し 個性が 欲しい」). */}
+            {ep.boss.trait && (
+              <p className="mt-0.5 inline-flex flex-wrap items-center gap-1 rounded-full bg-[#2a1840] px-2 text-[12px] leading-[2] font-black text-[#f0e2ff]">
+                <span aria-hidden>{ep.boss.trait.icon}</span>
+                <RubyText showFurigana={showFurigana}>{ep.boss.trait.ja}</RubyText>
+                {english && (
+                  <span lang="en" className="font-bold text-[#c9b3ff]">
+                    · {ep.boss.trait.en}
+                  </span>
+                )}
+              </p>
+            )}
             <p className="text-[11px] font-bold" style={{ color: 'var(--ink-2)' }}>
               HP {isHard ? hard.boss.hp : ep.boss.hp} ・{' '}
               <RubyText showFurigana={showFurigana}>

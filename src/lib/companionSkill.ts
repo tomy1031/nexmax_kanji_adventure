@@ -51,6 +51,10 @@ export const SKILL_OF: Record<string, SkillKind> = {
   keeper: SkillKind.CALM,
   baker: SkillKind.POWER,
   rin: SkillKind.COMBO,
+  // 2章（docs/design/13）
+  sora: SkillKind.GUARD,
+  usher: SkillKind.POWER,
+  photographer: SkillKind.HINT,
 };
 
 /** What one use does. Only the fields of its kind are set. */

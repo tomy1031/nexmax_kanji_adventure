@@ -50,7 +50,7 @@ export const MOJI_FINALES: MojiFinale[] = [
     // The nest at the end of the station's tunnel (11話 points there).
     bg: 'naniwa_nest',
     // HP: ten kanji at about two clean ★1 writes each (8 a write, bare-handed).
-    boss: { name: '大(おお)モジクイ', img: 'img/battle/mojikui_boss.webp', hp: 160, attack: 45, element: Element.AN, icon: 'GiShadowFollower' },
+    boss: { name: '大(おお)モジクイ', img: 'img/battle/mojikui_boss.webp', trait: { icon: '👑', ja: 'じぶんが おうさま', en: 'self-made king' }, hp: 160, attack: 45, element: Element.AN, icon: 'GiShadowFollower' },
   },
   {
     // 2章「市場の ともだち」の 終わり（docs/design/12）: 霧の 灯台に 逃げた 大モジクイ。
@@ -63,7 +63,7 @@ export const MOJI_FINALES: MojiFinale[] = [
     // The lighthouse on the cape (10話's screen shows its shadow).
     bg: 'port_lighthouse',
     // Ten kanji at about two clean ★1 writes each, a little more than 1章's; it hits harder.
-    boss: { name: '大(おお)モジクイ', img: 'img/battle/mojikui_boss.webp', hp: 176, attack: 55, element: Element.AN, icon: 'GiShadowFollower' },
+    boss: { name: '大(おお)モジクイ', img: 'img/battle/mojikui_boss.webp', trait: { icon: '👑', ja: 'じぶんが おうさま', en: 'self-made king' }, hp: 176, attack: 55, element: Element.AN, icon: 'GiShadowFollower' },
   },
 ];
 
