@@ -3,8 +3,8 @@ import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import type { CastMember, NovelScript } from '../../types/novel';
 import { RubyText } from '../../components/ui/Ruby';
 import { assetPath } from '../../lib/assetPath';
-import { parseRuby, stripRuby } from '../../lib/ruby';
-import { glossFor } from '../../data/glossary';
+import { stripRuby } from '../../lib/ruby';
+import { wordsOfLine as lineWords } from '../../data/glossary';
 import { canSpeak, speak, stopSpeaking } from '../../lib/speech';
 import { useGameStore } from '../../store/gameStore';
 import PictureBook from '../picturebook/PictureBook';
@@ -85,19 +85,6 @@ const glyphSize = (glyph: string): string => {
   return n <= 2 ? '88px' : n <= 4 ? '64px' : 'min(48px, 11vw)';
 };
 
-/** The annotated words of a line, each with its English. Words without one are left out. */
-const lineWords = (text: string): { word: string; gloss: string }[] => {
-  const seen = new Set<string>();
-  const out: { word: string; gloss: string }[] = [];
-  for (const seg of parseRuby(text)) {
-    if (!seg.reading || /^[0-9０-９]/.test(seg.text) || seen.has(seg.text)) continue;
-    seen.add(seg.text);
-    const gloss = glossFor(seg.text);
-    if (gloss) out.push({ word: `${seg.text}(${seg.reading})`, gloss });
-  }
-  return out;
-};
-
 /** Reading time for auto mode: a base plus a little per character. */
 const autoDelay = (text: string) => 1600 + stripRuby(text).length * 85;
 
@@ -113,11 +100,15 @@ export const NovelScene = ({ script, cast, onFinish, chapter, renderText, speech
   const [auto, setAuto] = useState(false);
   const [seen, setSeen] = useState<number[]>([0]);
   /**
-   * ことば: the words of this line with their English. Closed again on every
-   * new line — the learner tries the line first, then looks up what they
-   * could not read (docs/design/07 §3).
+   * ことば: the words of this line with their English. With the English
+   * setting on (the default, 2026-10-04「言葉の 意味の 英語は デフォルトで ON」)
+   * they are open on every line and ？ことば closes them for that line; with it
+   * off they open only on ？ことば — the learner tries the line first, then
+   * looks up what they could not read (docs/design/07 §3).
    */
-  const [wordsFor, setWordsFor] = useState<number | null>(null);
+  const wordsByDefault = useGameStore((s) => s.settings.english);
+  const [wordsToggled, setWordsToggled] = useState<number | null>(null);
+  const wordsOpen = wordsByDefault !== (wordsToggled === index);
   /** The line whose English is open. */
   const [enFor, setEnFor] = useState<number | null>(null);
   /** The line whose text has finished appearing (a tap while it appears shows it all). */
@@ -445,12 +436,15 @@ export const NovelScene = ({ script, cast, onFinish, chapter, renderText, speech
               </p>
             )}
 
-            {wordsFor === index && (
+            {wordsOpen && (
               <div className="mt-1 flex flex-wrap gap-1.5" onClick={(e) => e.stopPropagation()}>
                 {lineWords(line.text).map(({ word, gloss }) => (
-                  <span key={word} className="rounded-lg border border-[#caa468] bg-white/80 px-2 text-[12px] leading-[2]">
+                  <span
+                    key={word}
+                    className={`rounded-lg border px-2 text-[13px] leading-[2] font-bold ${night ? 'border-[#c9a052]/70 bg-white/10 text-[#fff3dc]' : 'border-[#caa468] bg-white/85 text-[#3a2814] [&_rt]:text-[#8a6a44]'}`}
+                  >
                     <RubyText showFurigana>{word}</RubyText>
-                    <span className="ml-1 font-bold" style={{ color: tone.en }}>
+                    <span lang="en" className="ml-1.5 font-extrabold" style={{ color: tone.en }}>
                       {gloss}
                     </span>
                   </span>
@@ -506,11 +500,11 @@ export const NovelScene = ({ script, cast, onFinish, chapter, renderText, speech
                   {lineWords(line.text).length > 0 && (
                     <button
                       type="button"
-                      aria-pressed={wordsFor === index}
+                      aria-pressed={wordsOpen}
                       className={tone.pill}
                       onClick={(e) => {
                         e.stopPropagation();
-                        setWordsFor(wordsFor === index ? null : index);
+                        setWordsToggled(wordsToggled === index ? null : index);
                       }}
                     >
                       ？ ことば

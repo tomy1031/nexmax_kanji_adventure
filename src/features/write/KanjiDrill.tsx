@@ -242,7 +242,7 @@ export const KanjiDrill = ({ kanji, onObtained, onExit, onDone, nextLabel = 'つ
             <div className="min-w-0 text-sm leading-relaxed">
               <Readings kanji={kanji} size="sm" />
               <p className="truncate" style={{ color: 'var(--ink-2)' }}>
-                meaning: <b>{kanji.meanings.slice(0, 2).join(' / ')}</b>
+                meaning: <b lang="en" className="text-[15px]" style={{ color: '#1b4f8f' }}>{kanji.meanings.slice(0, 2).join(' / ')}</b>
               </p>
             </div>
           </div>

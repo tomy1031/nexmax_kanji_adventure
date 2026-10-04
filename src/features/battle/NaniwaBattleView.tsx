@@ -66,6 +66,9 @@ const WRITE_PX = 423;
 const art = (name: string) => assetPath(`img/battle/${name}.webp`);
 const MINCHO = { fontFamily: 'var(--font-mincho)' } as const;
 
+/** The meaning's size (design px): as big as fits on its line — a short word large, a long pair smaller. */
+const meaningSize = (text: string) => (text.length <= 16 ? 40 : text.length <= 24 ? 33 : 28);
+
 /** The reading the blank in the fill-in word takes, else the kanji's usual one. */
 const readingFor = (k: KanjiData): string => {
   const word = exampleWord(k);
@@ -315,6 +318,7 @@ export const NaniwaBattleView = ({
   const line = flash && hiddenKey !== flashKey ? { text: flash, key: `f${flashKey}` } : idle ? { text: idle, key: 'idle' } : null;
 
   const reading = readingFor(target);
+  const meaning = target.meanings.slice(0, 2).join(' / ');
   const hasWord = exampleWord(target) != null;
 
   return (
@@ -497,12 +501,13 @@ export const NaniwaBattleView = ({
                 <FillIn kanji={target} showFurigana={showFurigana} />
               </p>
             )}
-            <p className="absolute flex items-center gap-[1.2cqw] leading-none" style={{ left: pct(66 / 672), top: pct(100 / 165), height: pct(40 / 165), width: pct(400 / 672) }}>
+            {/* The meaning in English: in the rounded sans and a blue of its own, big enough to read at a glance (2026-10-04「単語の 意味の 視認性が 悪い」). */}
+            <p className="absolute flex items-center gap-[1.2cqw] leading-none" style={{ left: pct(66 / 672), top: pct(92 / 165), height: pct(56 / 165), width: pct(480 / 672) }}>
               <span className="shrink-0 font-semibold" style={{ fontSize: cq(26) }}>
                 <RubyText showFurigana={showFurigana}>意味(いみ)：</RubyText>
               </span>
-              <span className="truncate font-semibold" style={{ fontSize: cq(30) }}>
-                {target.meanings.slice(0, 2).join(' / ')}
+              <span lang="en" className="truncate font-extrabold text-[#173f78]" style={{ fontSize: cq(meaningSize(meaning)), fontFamily: 'var(--font-body)' }}>
+                {meaning}
               </span>
             </p>
             <p

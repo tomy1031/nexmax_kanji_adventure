@@ -164,3 +164,15 @@ describe('武器の 強化 (docs/design/11 §6)', () => {
     expect(useGameStore.getState().weapons[0].points).toBe(3);
   });
 });
+
+describe('英語の 意味 (settings.english)', () => {
+  it('starts on, also for a save from before the setting, and keeps a player who turned it off', () => {
+    const merge = useGameStore.persist.getOptions().merge!;
+    const current = useGameStore.getState();
+    expect(current.settings.english).toBe(true);
+    const old = merge({ settings: { furigana: false, muted: true, reducedMotion: false, bgmOff: false } }, current) as typeof current;
+    expect(old.settings).toEqual({ furigana: false, muted: true, reducedMotion: false, bgmOff: false, english: true });
+    const off = merge({ settings: { ...current.settings, english: false } }, current) as typeof current;
+    expect(off.settings.english).toBe(false);
+  });
+});
