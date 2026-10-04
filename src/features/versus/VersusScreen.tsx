@@ -27,6 +27,7 @@ import { CPU_LEVELS, cpuTurn, type CpuLevel } from './cpu';
 import { SELF_HIT, SLIPS_TO_SELF_HIT, writeDamage } from './rules';
 import { SKILL_INFO, SKILL_OF, type SkillKind } from '../../lib/companionSkill';
 import { throughWard, versusSkill } from './versusSkill';
+import { useCompoundsVersion } from '../../data/compounds';
 
 /**
  * たいせん — two players, the same kanji, who writes them better.
@@ -162,10 +163,13 @@ export const VersusScreen = () => {
 
   useBgm(phase === 'fighting' ? 'boss' : phase === 'over' ? null : 'map');
 
+  // The forge's words beyond the core arrive just after start (data/compounds.ts): read again then.
+  const wordsV = useCompoundsVersion();
   const weapon = useMemo(() => {
     const recipe = weapons.find((w) => w.id === equippedId);
     return recipe ? weaponFromRecipe(recipe) : null;
-  }, [weapons, equippedId]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [weapons, equippedId, wordsV]);
   /** 1.0 with nothing equipped, at most 1.2 with the best weapon. */
   const weaponBonus = weapon ? 1 + Math.min(MAX_WEAPON_BONUS, (weapon.attack / 96) * MAX_WEAPON_BONUS) : 1;
 

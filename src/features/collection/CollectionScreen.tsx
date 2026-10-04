@@ -13,6 +13,7 @@ import { CompanionBook } from './CompanionBook';
 import { RubyText } from '../../components/ui/Ruby';
 import { rustLevel } from '../../lib/srs';
 import { GameIcon } from '../../components/ui/GameIcon';
+import { useCompoundsVersion } from '../../data/compounds';
 
 /** Inventory: what has been forged, and who is in the party. */
 
@@ -31,6 +32,8 @@ export const CollectionScreen = () => {
 
   const [tab, setTab] = useState<Tab>('weapons');
 
+  // The forge's words beyond the core arrive just after start (data/compounds.ts): read again then.
+  const wordsV = useCompoundsVersion();
   const forged = useMemo(
     () =>
       weapons
@@ -42,7 +45,8 @@ export const CollectionScreen = () => {
         })
         .filter((w) => w != null)
         .sort((a, b) => b.weapon.rarity - a.weapon.rarity || b.weapon.attack - a.weapon.attack),
-    [weapons, progress],
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [weapons, progress, wordsV],
   );
 
   return (

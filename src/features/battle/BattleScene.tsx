@@ -46,6 +46,7 @@ import { useBgm } from '../../lib/bgm';
 import { isReadTurn, readDamage, readQuestion } from '../../lib/readTurn';
 import { nextStarGoal } from '../../data/starPerks';
 import { EXP_BOSS_FIRST, EXP_BOSS_REPEAT, EXP_READ, applyLevel, levelInfo, levelOf, ownedCount } from '../../lib/level';
+import { useCompoundsVersion } from '../../data/compounds';
 
 /**
  * The fight.
@@ -219,11 +220,14 @@ export const BattleScene = ({
   }, [equippedGear, tutorial, mastery, level]);
   const patience = basePatienceValue + stats.patience;
 
+  // The forge's words beyond the core arrive just after start (data/compounds.ts): read again then.
+  const wordsV = useCompoundsVersion();
   const weapon = useMemo(() => {
     if (weaponOverride) return weaponOverride;
     const recipe = weapons.find((w) => w.id === equippedId);
     return recipe ? weaponFromRecipe(recipe) : null;
-  }, [weapons, equippedId, weaponOverride]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [weapons, equippedId, weaponOverride, wordsV]);
 
   const individual = activeIndividualId ? (getIndividual(activeIndividualId) ?? null) : null;
   // なかまの わざ (docs/design/11 §3.2): on the new route, once a companion has joined.
