@@ -23,9 +23,9 @@ export const FIGHT_RULES: FightRule[] = [
   { icons: '👾', text: 'あいては ★が 少(すく)ない 字(じ)を ねらう', en: 'The opponent goes for the letter with the fewest ★.' },
   {
     icons: '🔥',
-    text: `まちがえずに つづけて 書(か)くと COMBO（+${COMBO_CAP_PERCENT}%まで）`,
+    text: `ミス なしで つづけて 書(か)く → COMBO（+${COMBO_CAP_PERCENT}%まで）`,
     en: `Clean writes in a row build a COMBO, up to +${COMBO_CAP_PERCENT}%.`,
   },
-  { icons: '💢', text: 'ミスが たまると こうげきされる', en: 'Let the slips pile up, and it strikes back.' },
-  { icons: '📖', text: 'ときどき 字(じ)が とんでくる。読(よ)みを えらぶ', en: 'Now and then it throws a letter: pick its reading.' },
+  { icons: '💢', text: 'ミスが たまる → あいての こうげき', en: 'Let the slips pile up, and it strikes back.' },
+  { icons: '📖', text: 'ときどき 読(よ)みの もんだい。読(よ)みを えらぶ', en: 'Now and then it throws a letter: pick its reading.' },
 ];

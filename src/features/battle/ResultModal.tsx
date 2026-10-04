@@ -187,7 +187,7 @@ export const ResultModal = ({
 
         <p className="mt-2 text-lg font-black">
           <RubyText showFurigana={showFurigana}>
-            {win ? (tutorial ? `${bossName}は にげて いった！` : `${bossName} に かった！`) : 'たおされて しまった。'}
+            {win ? (tutorial ? `${bossName}は にげて いった！` : `${bossName} に かった！`) : 'まけました……'}
           </RubyText>
         </p>
         <p className="mt-0.5 text-sm" style={{ color: 'var(--ink-2)' }}>
@@ -303,7 +303,7 @@ export const ResultModal = ({
         {opened.map((f) => (
           <div key={f} className="mt-3 rounded-xl px-3 py-2.5 text-left" style={{ background: 'rgba(255,207,74,0.22)', border: '2px dashed #e0a93a' }}>
             <p className="text-sm font-black" style={{ color: '#b0741a' }}>
-              <RubyText showFurigana={showFurigana}>{`「${FEATURE_INTRO[f].label}」が つかえるように なりました`}</RubyText>
+              <RubyText showFurigana={showFurigana}>{`「${FEATURE_INTRO[f].label}」が つかえます！`}</RubyText>
             </p>
             <p className="mt-0.5 text-xs" style={{ color: 'var(--ink-2)' }}>
               <RubyText showFurigana={showFurigana}>{FEATURE_INTRO[f].line}</RubyText>
