@@ -148,6 +148,53 @@ export const MOJI_EPISODES: MojiEpisode[] = [
     bg: 'naniwa_station_deep',
     boss: { name: 'えきの モジクイ', img: 'img/battle/mojikui_station.webp', hp: 80, attack: 42, element: Element.AN, icon: 'GiShadowFollower' },
   },
+  // 2章「市場の ともだち」（docs/design/12）: 海の むこうの 港町 ミナトタウン。字は 本の 順、
+  // HP は 1章と 同じ 決まり（★1・武器なしで 1字 約2回）。手ごたえは こうげきで 出す。
+  {
+    id: 'moji-2-1',
+    chapter: 'moji-2',
+    order: 1,
+    title: 'たかい？ やすい？',
+    kanji: [...'高安大小新'],
+    bg: 'port_market',
+    boss: { name: 'はかりの モジクイ', img: 'img/battle/mojikui_scale.webp', hp: 96, attack: 44, element: Element.AN, icon: 'GiShadowFollower' },
+  },
+  {
+    id: 'moji-2-2',
+    chapter: 'moji-2',
+    order: 2,
+    title: 'いろの ない ふく',
+    kanji: [...'古青白赤黒'],
+    bg: 'port_clothes',
+    boss: { name: 'いろの モジクイ', img: 'img/battle/mojikui_paint.webp', hp: 96, attack: 44, element: Element.AN, icon: 'GiShadowFollower' },
+  },
+  {
+    id: 'moji-2-3',
+    chapter: 'moji-2',
+    order: 3,
+    title: 'いしだんの うえの おみせ',
+    kanji: [...'上下父母子手'],
+    bg: 'port_stairs',
+    boss: { name: 'いしだんの モジクイ', img: 'img/battle/mojikui_stairs.webp', hp: 112, attack: 46, element: Element.AN, icon: 'GiShadowFollower' },
+  },
+  {
+    id: 'moji-2-4',
+    chapter: 'moji-2',
+    order: 4,
+    title: 'なにが すきですか',
+    kanji: [...'好主肉魚食飲物'],
+    bg: 'port_foodhall',
+    boss: { name: 'はらぺこ モジクイ', img: 'img/battle/mojikui_hungry.webp', hp: 128, attack: 46, element: Element.AN, icon: 'GiShadowFollower' },
+  },
+  {
+    id: 'moji-2-5',
+    chapter: 'moji-2',
+    order: 5,
+    title: 'みぎ？ ひだり？',
+    kanji: [...'近間右左'],
+    bg: 'port_alley',
+    boss: { name: 'みちしるべの モジクイ', img: 'img/battle/mojikui_arrow.webp', hp: 80, attack: 48, element: Element.AN, icon: 'GiShadowFollower' },
+  },
 ];
 
 export const episodesOf = (chapterId: string): MojiEpisode[] =>
