@@ -22,6 +22,7 @@ import type { IconType } from 'react-icons';
 import { useGameStore } from '../../store/gameStore';
 import { ALL_KANJI } from '../../lib/kanjiDb';
 import { forgeWeapon, type Weapon } from '../../lib/forge/weapon';
+import { weaponFromRecipe } from '../../lib/forge/recipe';
 import { Element, ELEMENT_LABEL, elementOf } from '../../lib/forge/elements';
 import { charRuby, kanjiRuby } from '../../lib/reading';
 import { assetPath } from '../../lib/assetPath';
@@ -231,6 +232,7 @@ export const ForgeScreen = () => {
   const weapons = useGameStore((s) => s.weapons);
   const craftWeapon = useGameStore((s) => s.craftWeapon);
   const equipWeapon = useGameStore((s) => s.equipWeapon);
+  const equippedId = useGameStore((s) => s.equippedWeapon);
   const sumi = useGameStore((s) => s.sumi);
   const spendSumi = useGameStore((s) => s.spendSumi);
   const tryCost = useGameStore((s) => s.tryCost);
@@ -244,6 +246,8 @@ export const ForgeScreen = () => {
 
   const [slots, setSlots] = useState<KanjiData[]>([]);
   const [made, setMade] = useState<Weapon | null>(null);
+  /** The new weapon went on: it beats the one carried (a try is not a swap, 2026-10-05). */
+  const [madeEquipped, setMadeEquipped] = useState(false);
   /** Set when the craft just revealed a word for the first time. */
   const [discovered, setDiscovered] = useState<string | null>(null);
   const [tab, setTab] = useState<Tab>('all');
@@ -306,7 +310,11 @@ export const ForgeScreen = () => {
 
     if (preview.hidden) sfx.fanfare();
     setMade(preview);
-    equipWeapon(recipe.id);
+    // Only a stronger weapon replaces the one carried: a try with a weak pair must not swap it out before a fight.
+    const carried = weapons.find((w) => w.id === equippedId);
+    const better = !carried || (weaponFromRecipe(recipe)?.attack ?? 0) > (weaponFromRecipe(carried)?.attack ?? 0);
+    if (better) equipWeapon(recipe.id);
+    setMadeEquipped(better);
   };
 
   // Two frames to start with; a third, optional one once both are filled.
@@ -618,7 +626,9 @@ export const ForgeScreen = () => {
               <RubyText showFurigana={showFurigana}>{made.blurb}</RubyText>
             </p>
             <p className="text-xs text-white/70">
-              <RubyText showFurigana={showFurigana}>そうびしました。タップで とじる</RubyText>
+              <RubyText showFurigana={showFurigana}>
+                {madeEquipped ? 'そうびしました。タップで とじる' : 'いま もって いる 武器(ぶき)の ほうが 強(つよ)いので、そうびは そのまま。タップで とじる'}
+              </RubyText>
             </p>
           </motion.div>
         )}
