@@ -247,6 +247,8 @@ export interface NaniwaBattleViewProps {
   heroRef: RefObject<HTMLDivElement | null>;
   enemyRef: RefObject<HTMLDivElement | null>;
   onStrokeOrder: () => void;
+  /** Looking at the stroke order costs nothing now (a なかま's hint, or already paid for this write). */
+  hintFree?: boolean;
   onFlee: () => void;
   /** 読む ターン: a thrown kanji to read, in place of the reading panel and the board. */
   read?: ReadTurnView | null;
@@ -291,6 +293,7 @@ export const NaniwaBattleView = ({
   heroRef,
   enemyRef,
   onStrokeOrder,
+  hintFree = false,
   onFlee,
   read = null,
   overlay,
@@ -595,7 +598,17 @@ export const NaniwaBattleView = ({
             className="absolute rounded-[1.4cqw] border-[0.35cqw] border-[#b8863f]"
             style={{ ...onBottom(826, 1458, 86, 167), background: 'linear-gradient(180deg, #2a1b0e 0%, #0f0803 100%)' }}
           />
-          {!read && <RoundKey icon={GiLightBulb} label="かきじゅん（ミス＋1）" onClick={onStrokeOrder} style={onBottom(833, 1464, 72, 72)} />}
+          {!read && <RoundKey icon={GiLightBulb} label={hintFree ? 'かきじゅん（ミス なし）' : 'かきじゅん（ミス＋1）'} onClick={onStrokeOrder} style={onBottom(833, 1464, 72, 72)} />}
+          {/* What looking costs, on the key itself (2026-10-05). */}
+          {!read && (
+            <span
+              aria-hidden
+              className="pointer-events-none absolute flex items-center justify-center rounded-full border-[0.25cqw] font-black whitespace-nowrap"
+              style={{ ...onBottom(818, 1424, 116, 32), fontSize: cq(17), background: '#140c06', borderColor: hintFree ? '#7fd38a' : '#e2453c', color: hintFree ? '#bff5c6' : '#ffb3a8' }}
+            >
+              {hintFree ? 'ミス なし' : 'ミス＋1'}
+            </span>
+          )}
           <RoundKey icon={GiCog} label="せってい" onClick={() => setMenu((m) => !m)} style={onBottom(833, 1549, 72, 72)} />
           <AnimatePresence>
             {menu && (

@@ -318,6 +318,8 @@ export const BattleScene = ({
   const companionSay = useCallback((text: string) => setTalk({ n: (talkNo.current += 1), text }), []);
   // The stroke order was shown for free (ヒント) during this write: no half, no slip, but no ★ either.
   const freeLookRef = useRef(false);
+  // The same, for the hint key's label: this write's looks are already free.
+  const [freeLookNow, setFreeLookNow] = useState(false);
   const [rewards, setRewards] = useState<{ gems: number; individual: string | null; perfect: boolean; hard: boolean }>({
     gems: 0,
     individual: null,
@@ -470,14 +472,18 @@ export const BattleScene = ({
     if (!hinted && (freeLookRef.current || buffs.freeLooks > 0)) {
       if (!freeLookRef.current) {
         freeLookRef.current = true;
+        setFreeLookNow(true);
         setBuffs((b) => ({ ...b, freeLooks: b.freeLooks - 1 }));
         say('💡 ヒント！ 見(み)ても こうげきは へらない');
       }
       writerRef.current?.animateStroke();
       return;
     }
-    // Looking is allowed, and costs: one slip, and this write hits for half.
-    if (!hinted) addSlip();
+    // Looking is allowed, and costs: one slip, and this write hits for half — said aloud, not only in the button's label.
+    if (!hinted) {
+      addSlip();
+      say('💡 かきじゅん：ミス＋1。この 字(じ)の こうげきは 半分(はんぶん)');
+    }
     setHinted(true);
     writerRef.current?.animateStroke();
   };
@@ -489,6 +495,7 @@ export const BattleScene = ({
       writeSlipsRef.current = 0;
       const lookedFree = freeLookRef.current;
       freeLookRef.current = false;
+      setFreeLookNow(false);
       if (skillKind) setGauge((g) => Math.min(gaugeFull, g + gaugeGain(mistakes, hinted || lookedFree)));
       // A look at the stroke order counts against the stars like a slip.
       const nextMistakes = totalMistakes + mistakes + (hinted ? 1 : 0);
@@ -875,6 +882,7 @@ export const BattleScene = ({
           heroRef={heroRef}
           enemyRef={enemyRef}
           onStrokeOrder={showStrokeOrder}
+          hintFree={hinted || freeLookNow || buffs.freeLooks > 0}
           onFlee={onFlee}
           read={readQ ? { ...readQ, n: turn, picked: readPicked, onPick: handleReadPick, onNext: finishRead } : null}
         />
