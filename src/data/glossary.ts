@@ -350,6 +350,19 @@ export const KANA_WORDS: Readonly<Record<string, string>> = {
   みやこ: 'capital',
 };
 
+/**
+ * A kanji read one way means something its first dictionary sense does not
+ * (回 is "-times", but 回(まわ)ります is "go round"): the sense for that
+ * reading, for the story's single kanji (2026-10-05).
+ */
+const READING_GLOSS: Readonly<Record<string, string>> = {
+  '安(やす)': 'cheap',
+  '回(まわ)': 'go round',
+  '出(で)': 'go out, leave',
+  '起(お)': 'get up',
+  '好(す)': 'like',
+};
+
 /** What may follow a kana word in a line and still leave it that word. */
 const PARTICLE = /^(?:が|を|に|へ|で|と|の|は|も|や|から|まで|です|ですか|でした|だ)?$/;
 
@@ -384,7 +397,7 @@ export const wordsOfLine = (text: string): { word: string; gloss: string }[] => 
     for (; take > 1; take--) if (glossFor(segs.slice(i, i + take).map((s) => s.text).join(''))) break;
     const part = segs.slice(i, i + take);
     const base = part.map((s) => s.text).join('');
-    const gloss = glossFor(base);
+    const gloss = (take === 1 ? READING_GLOSS[`${part[0].text}(${part[0].reading})`] : undefined) ?? glossFor(base);
     if (gloss && !seen.has(base)) {
       seen.add(base);
       out.push({ word: part.map((s) => `${s.text}(${s.reading})`).join(''), gloss });
