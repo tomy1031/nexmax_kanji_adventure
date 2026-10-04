@@ -12,6 +12,7 @@ import { preloadCharData } from '../../lib/strokeLoader';
 import KanjiWriterCanvas, { type KanjiWriterHandle } from '../../components/KanjiWriterCanvas';
 import { cardWords, episodeOfKanji } from '../../data/kanjiCard';
 import { episodePath, isEpisodeOpen } from '../../data/mojiFlow';
+import { MOJI_CHAPTERS } from '../../data/mojiRoute';
 import KanjiBackText from '../moji/KanjiBackText';
 import { useOwnedKanji } from '../moji/useOwnedKanji';
 import { useEscapeToClose } from '../../hooks/useEscapeToClose';
@@ -193,10 +194,16 @@ export const KanjiCard = ({
           <button type="button" data-tap className="g-btn g-btn-primary mt-2 w-full" onClick={write}>
             ✎ <RubyText showFurigana={showFurigana}>書(か)きに いく</RubyText>
           </button>
+        ) : !ep ? (
+          <p className="mt-1 text-center text-xs font-black" style={{ color: 'var(--ink-3)' }}>
+            <RubyText showFurigana={showFurigana}>この 字(じ)の 話(はなし)は じゅんび中(ちゅう)</RubyText>
+          </p>
         ) : (
-          !ep && (
+          !open &&
+          left > 0 && (
+            // Not a dead end: where this letter is met (2026-10-05).
             <p className="mt-1 text-center text-xs font-black" style={{ color: 'var(--ink-3)' }}>
-              <RubyText showFurigana={showFurigana}>この 字(じ)の 話(はなし)は じゅんび中(ちゅう)</RubyText>
+              🔒 <RubyText showFurigana={showFurigana}>{`${MOJI_CHAPTERS.find((c) => c.id === ep.chapter)?.order ?? ''}章(しょう) ${ep.order}話(わ)で 会(あ)えます`}</RubyText>
             </p>
           )
         )}
