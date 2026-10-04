@@ -481,6 +481,12 @@ const CREATURES = [
     ['mojikui_stairs', 'a long Mojikui coiled down a short flight of stone steps like a spring toy, a blank wooden shop sign clamped in its grinning mouth, small handmade wooden toys and a little clay pot caught in its tendrils; same overall size as the reference.', '2章 3話の あいて（石だんの モジクイ）'],
     ['mojikui_hungry', 'an extra-chubby round Mojikui wearing a napkin bib, holding a fork in one tendril and chopsticks in another, chewing a blank wooden menu board, a teacup and a grilled-fish skewer floating around it; same size as the reference.', '2章 4話の あいて（はらぺこ モジクイ）'],
     ['mojikui_arrow', 'the Mojikui stuck all over with BLANK arrow-shaped signpost boards pointing in every direction like a pincushion, dizzy swirl eyes, spinning on the spot, a brass compass in one tendril; same size and shape as the reference.', '2章 5話の あいて（道しるべの モジクイ）'],
+    // 2章 6〜10話（docs/design/12）。まとめの ボスは 1章の 大モジクイ（mojikui_boss）。
+    ['mojikui_park', 'the Mojikui wearing a dog collar with a tangled red leash and a BLANK dog tag, chewing a blank park sign, a small chewed blank door plate floating beside it; same size and shape as the reference.', '2章 6話の あいて（公園の モジクイ）'],
+    ['mojikui_newspaper', 'the Mojikui wrapped in blank newspaper pages like a cloak, little round reading glasses on, an open book with blank pages in its grinning mouth, blank picture-story cards fluttering around; same size and shape as the reference.', '2章 7話の あいて（新聞の モジクイ）'],
+    ['mojikui_diary', 'the Mojikui hugging a small diary notebook with a tiny brass lock, its blank pages flapping, a pencil stuck in its inky body, a heart sticker on its head; same size and shape as the reference.', '2章 8話の あいて（日記の モジクイ）'],
+    ['mojikui_camera', 'the Mojikui with an old wooden box camera for a face, its lens glowing amber, a flash bulb popping on top, a strip of blank photographs trailing from it, a teacup in one tendril; same size and shape as the reference.', '2章 9話の あいて（カメラの モジクイ）'],
+    ['mojikui_film', 'the Mojikui tangled in a long reel of movie film, a beam of projector light shining from its eyes, blank cinema tickets and a blank poster swirling around it; same size and shape as the reference.', '2章 10話の あいて（フィルムの モジクイ）'],
   ].map(([id, diff, used]) => ({
     id,
     group: 'enemy',
@@ -541,6 +547,13 @@ const PORT = [
   port('port_stairs', 'a steep stone staircase street climbing the hillside in the afternoon: at the top of the stairs a tiny handmade-goods shop with pottery, wooden toys and woven baskets in the window, at the bottom another small shop door, a brass handrail, potted flowers on the steps, the foggy sea and pier far below; every shop sign BLANK. No people.', '2章 3話「かいだんの 上の おみせ」（石だんの 上と 下）'),
   port('port_foodhall', 'a busy-looking harbor eatery hall at lunchtime: long wooden counters and stools, steaming pots and a grill with fish and meat skewers, teapots and cups, a big BLANK wooden menu board with empty slots on the back wall, brass lamps, a window onto the foggy harbor. No people.', '2章 4話「なにが すきですか」（メニューが 消えた 食堂）'),
   port('port_alley', 'a maze of narrow stone alleys between old brick and stucco houses on the hillside at dusk: a small crossroads with a tall brass signpost whose arrow boards are all BLANK, steps going up and down in different directions, lanterns, a cat sleeping on a wall, laundry lines overhead, fog creeping in. No people.', '2章 5話「みぎ？ ひだり？」（道しるべが 消えた 小道）'),
+  port('port_park', 'a small harbour park on the hillside: a green lawn with benches and a round fountain, a fenced dog-run area with a BLANK wooden sign, a little public restroom building with two BLANK door plates (no symbols), an iron gate leading out to the street, lanterns, fog over the sea beyond the railing. No people, no animals.', '2章 6話「いぬは どこですか」（公園の 札が 消えた）'),
+  port('port_library', 'inside an old Western-style library on the hill: tall wooden bookshelves full of books with BLANK spines, reading tables with green lamps, a small corner stage with a wooden picture-story frame holding a blank card, on the wall an old framed engraving of a lighthouse, a big arched window showing the lighthouse far away in the fog. No people.', '2章 7話「としょかんで よみます」（本の 字が 消えた 図書館）'),
+  port('port_seaside', 'a seaside promenade along the harbour: a stone railing, wooden benches, iron street lamps, a little kiosk with a BLANK sign, gulls over the water, the lighthouse on the cape far away in the fog; on one bench lies an open diary notebook with blank pages and a pencil. No people.', '2章 8話「はじめての ともだち」（海ぞいの 道・ソラの 日記）'),
+  port('port_photo', 'a cobbled street with a small photo studio and a tea shop side by side: the photo studio window full of framed photographs faded to plain white, an old wooden camera on a tripod inside, the tea shop with teapots, cups and a shelf of round bottles, paper lanterns; both shop signboards BLANK. No people.', '2章 9話「しゃしんを とりましょう」（写真屋と お茶屋）'),
+  port('port_cinema', 'an old movie-theatre street at night: a grand art-deco cinema facade with rows of marquee bulbs, a BLANK marquee board and BLANK poster frames, a ticket booth, small shops along the street with BLANK signboards, fog glowing in the warm light. No people.', '2章 10話「えいがを みませんか」（映画館の 通り）'),
+  port('port_lighthouse', 'inside a tall old stone lighthouse at night in thick fog: an iron spiral staircase winding up around the walls toward the great lamp room at the top (dark and cold), black-violet ink mist pooling on the floor, heaps of eaten BLANK signs, price tags, menus, posters, photographs and books, thousands of tiny golden letter-motes trapped in floating ink bubbles glowing faintly. Spooky but kid-friendly. No people.', '2章 11話 まとめの ボス（霧の 灯台・大モジクイの 巣）'),
+  port('port_lights_back', 'the harbour town at night after the fog has cleared: the lighthouse beam sweeping across a clear starry sky, every window, lantern and shop sign glowing warmly along the hillside streets and the harbour, the white ferry at the pier; far across the sea on the horizon, the glow of another big city full of restaurants and food-stall lights. Hopeful and calm. No people.', '2章 11話 クリア（霧が 晴れ、灯台の 光が 戻る）'),
 ];
 
 // ---------------------------------------------------------------------------
@@ -616,6 +629,9 @@ const PEOPLE = {
   sora_mama: { ref: 'INFJ_f', who: "Sora's mother, a cheerful woman in her forties: dark-brown hair in a low ponytail, a mustard cardigan over a white blouse, a long teal skirt, a measuring tape around her neck" },
   fishmonger: { ref: 'ESTP_f', who: 'a lively harbor fish-market seller in her thirties: hair tied up in a blue headscarf, a navy rubber apron over a blue-and-white striped shirt, tall rubber boots' },
   tailor: { ref: 'ISFP', who: 'a stylish young clothes-shop owner in his twenties: wavy chestnut hair, a grey waistcoat over a white shirt, a yellow tape measure draped over his shoulders, a pin cushion on his wrist' },
+  librarian: { ref: 'INTJ_f', who: 'a calm librarian in her thirties: long dark hair in a side braid, thin round glasses, a deep-green cardigan over a cream blouse, a brown skirt, a stack of books in her arm' },
+  photographer: { ref: 'INTP', who: 'an old photographer who also runs the tea shop next door: white hair and a neat white beard, a flat cap, a brown tweed vest over a white shirt, an old box camera on a strap' },
+  usher: { ref: 'ESFP_f', who: 'a lively young cinema usher in her twenties: wavy auburn hair under a small red pillbox hat, a red usher jacket with gold buttons, a flashlight and a ticket punch' },
   cook: { ref: 'ENTJ_f', who: 'a warm eatery cook in her fifties: a white bandana over grey-streaked hair, a white cook\'s coat with rolled sleeves and a red apron, a wooden ladle' },
   yamada: { ref: 'ESFJ_f', who: 'Yamada-san, a gentle woman in her forties who lives in the town: short wavy brown hair with a pink cherry-blossom hairpin, a sky-blue cardigan over a white blouse, a navy pleated skirt, a small pink rosette pinned on the cardigan' },
 };
@@ -686,6 +702,15 @@ const FOLK = [
   human('tailor', 'trouble', 'happy', 'troubled: holding up a shirt drained to plain grey, staring at it in dismay, a hand on his forehead.', '2章 2話 ふく屋（色が ない）'),
   human('cook', 'happy', 'happy', 'happy: holding a steaming bowl and the ladle, a big hearty laugh, eyes curved, steam swirls.', '2章 4話 食堂の 人（メニューが 戻った）'),
   human('cook', 'trouble', 'happy', 'troubled: pointing at a blank menu card with the ladle, puzzled, mouth open as if asking "what will you eat?", a sweat drop.', '2章 4話 食堂の 人（メニューが 読めない）'),
+  // 2章 6〜10話（docs/design/12）
+  human('sora', 'dog', 'happy', 'overjoyed: kneeling and hugging her small fluffy shiba-inu puppy with a red collar, the puppy licking her cheek, eyes closed in a big smile, little hearts and sparkles.', '2章 6話 ソラ（犬が 見つかった）'),
+  human('sora', 'diary', 'happy', 'holding an open diary notebook against her chest with a pencil in her other hand, cheeks pink, a shy happy smile, a few sparkles.', '2章 8話 ソラ（日記に「友達」と 書く）'),
+  human('librarian', 'happy', 'happy', 'happy: holding an open book up toward the viewer with a gentle smile, eyes curved behind her glasses, a little sparkle.', '2章 7話 図書館の 人（本が 読める）'),
+  human('librarian', 'trouble', 'happy', 'troubled: holding an open book with blank pages, finger to her lips, puzzled frown, a sweat drop.', '2章 7話 図書館の 人（本の 字が 消えた）'),
+  human('photographer', 'happy', 'happy', 'happy: holding up an old framed photograph and his box camera, laughing warmly, eyes crinkled, sparkles.', '2章 9話 写真屋の 人（写真が 戻った）'),
+  human('photographer', 'trouble', 'happy', 'troubled: holding up a blank faded photograph, scratching his white beard, puzzled, a sweat drop.', '2章 9話 写真屋の 人（写真の 字が 消えた）'),
+  human('usher', 'happy', 'happy', 'happy: holding up two cinema tickets with a big wink and a grin, the flashlight in her other hand, sparkles.', '2章 10話 映画館の 人（ポスターが 戻った）'),
+  human('usher', 'trouble', 'happy', 'troubled: pointing her flashlight at a blank poster, mouth open in surprise, eyebrows up, a sweat drop.', '2章 10話 映画館の 人（ポスターの 字が 消えた）'),
 ];
 
 // ---------------------------------------------------------------------------
