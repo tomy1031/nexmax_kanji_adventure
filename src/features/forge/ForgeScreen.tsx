@@ -36,6 +36,7 @@ import { Feature, isFeatureUnlocked } from '../../data/unlocks';
 import { isForgeOpen, practiceTarget } from '../../data/mojiFlow';
 import { useBgm } from '../../lib/bgm';
 import { useCompoundsVersion } from '../../data/compounds';
+import * as sfx from '../../lib/sfx';
 
 /**
  * The forge — 漢字やさん (the layout example delivered with the parts,
@@ -303,6 +304,7 @@ export const ForgeScreen = () => {
       setDiscovered(null);
     }
 
+    if (preview.hidden) sfx.fanfare();
     setMade(preview);
     equipWeapon(recipe.id);
   };
@@ -586,6 +588,17 @@ export const ForgeScreen = () => {
               setSlots([]);
             }}
           >
+            {made.hidden && (
+              <motion.p
+                className="g-outline-text text-3xl font-black text-white"
+                initial={{ scale: 2.2, rotate: -10, opacity: 0 }}
+                animate={{ scale: 1, rotate: -4, opacity: 1 }}
+                transition={{ type: 'spring', stiffness: 360, damping: 12 }}
+                style={{ textShadow: '0 0 18px #c43c8a, 0 0 6px #7a3cc4' }}
+              >
+                🔑 <RubyText showFurigana={showFurigana}>かくし武器(ぶき)！</RubyText>
+              </motion.p>
+            )}
             <p className="rounded-full border-2 border-[#ffd86a] bg-[#3a2414] px-4 text-sm leading-[2] font-black text-[#ffd86a]">
               {discovered ? (
                 <RubyText showFurigana={showFurigana}>{KIND_LABEL[discoveryKind(discovered, ownedChars, foundSet)]}</RubyText>

@@ -10,6 +10,8 @@ import { ALL_KANJI } from '../../data/kanji.generated';
 import { GEAR, SLOT_LABEL, getGear, missingFor, type GearItem, type GearSlot } from '../../data/equipment';
 import { RARITY_LABEL } from '../../lib/forge/weapon';
 import { weaponArt, weaponFromRecipe, weaponWord } from '../../lib/forge/recipe';
+import { sortWeapons, useWeaponSort } from '../../lib/forge/weaponSort';
+import { WeaponSortBar, WeaponTags } from './WeaponSortBar';
 import { WeaponMount } from '../battle/WeaponMount';
 import { WeaponTrain } from './WeaponTrain';
 import { GearBehind, GearFront } from '../battle/GearOn';
@@ -79,11 +81,12 @@ export const EquipScreen = () => {
     () =>
       weapons
         .map((r) => weaponFromRecipe(r))
-        .filter((w) => w != null)
-        .sort((a, b) => b.attack - a.attack),
+        .filter((w) => w != null),
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [weapons, wordsV],
   );
+  const [weaponSort, setWeaponSort] = useWeaponSort();
+  const sortedWeapons = useMemo(() => sortWeapons(forged, weaponSort, new Map(weapons.map((r) => [r.id, r.craftedAt]))), [forged, weaponSort, weapons]);
 
   const weapon = forged.find((w) => w.id === equippedWeapon) ?? null;
   const worn = Object.values(equippedGear)
@@ -222,7 +225,13 @@ export const EquipScreen = () => {
                   )}
                 </li>
               ) : (
-                forged.map((w) => {
+                <>
+                {forged.length > 1 && (
+                  <li>
+                    <WeaponSortBar sort={weaponSort} onSort={setWeaponSort} showFurigana={showFurigana} />
+                  </li>
+                )}
+                {sortedWeapons.map((w) => {
                   const on = w.id === equippedWeapon;
                   return (
                     <li key={w.id} className="g-parchment flex items-center gap-3 p-2.5" style={on ? { borderColor: '#2f8fe0' } : undefined}>
@@ -240,6 +249,7 @@ export const EquipScreen = () => {
                         <p className="text-[11px]">
                           <span style={{ color: RARITY_LABEL[w.rarity].color }}>{RARITY_LABEL[w.rarity].ja}</span> こうげき ＋{w.attack}
                           {(w.level ?? 0) > 0 && <span className="ml-1 font-black text-[#b0741a]">⚒{w.level}</span>}
+                          <WeaponTags w={w} showFurigana={showFurigana} />
                         </p>
                       </div>
                       <div className="flex shrink-0 flex-col gap-1">
@@ -259,7 +269,8 @@ export const EquipScreen = () => {
                       </div>
                     </li>
                   );
-                })
+                })}
+                </>
               ))}
 
             {slot !== 'weapon' &&
