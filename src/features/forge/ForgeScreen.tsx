@@ -76,7 +76,8 @@ const ELEMENT_ICON: Record<Element, IconType> = {
  */
 type Tab = 'all' | 'nature' | 'power' | 'sky' | 'other';
 const TABS: { id: Tab; label: string; icon?: IconType; color?: string; elements?: Element[] }[] = [
-  { id: 'all', label: '持(も)っている漢字(かんじ)' },
+  // The forge takes a kanji at ★3 (obtainedAt), not at ★1 as ずかん does: the tab says so (2026-10-05).
+  { id: 'all', label: '★3の 漢字(かんじ)' },
   { id: 'nature', label: '自然(しぜん)', icon: GiThreeLeaves, color: '#6fd27c', elements: [Element.MOKU, Element.SUI, Element.DO] },
   { id: 'power', label: '力(ちから)', icon: GiFlame, color: '#ff7a45', elements: [Element.KA, Element.KIN] },
   { id: 'sky', label: '光(ひかり)・空(そら)', icon: GiSun, color: '#ffd45e', elements: [Element.KOU] },
@@ -578,7 +579,7 @@ export const ForgeScreen = () => {
               </span>
             )}
           </motion.button>
-          <RoundButton icon={GiOpenBook} label="図鑑(ずかん)" locked={wordsLocked} onClick={() => navigate('/words')} showFurigana={showFurigana} />
+          <RoundButton icon={GiOpenBook} label="ことば" locked={wordsLocked} onClick={() => navigate('/words')} showFurigana={showFurigana} />
           <RoundButton icon={GiBackpack} label="持(も)ちもの" onClick={() => navigate('/equip')} showFurigana={showFurigana} />
         </div>
       </div>
