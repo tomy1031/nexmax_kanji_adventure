@@ -3,6 +3,7 @@ import {
   MOJI_UNLOCKED_BY,
   ROUTE_ORDER,
   afterEpisode,
+  afterEpisodePath,
   canForge,
   continuePath,
   episodePath,
@@ -130,5 +131,22 @@ describe('章の 鍵 (docs/design/12 §5)', () => {
     for (const ep of ch1) expect(isEpisodeOpen(ep, ch1.map((e) => e.id))).toBe(true);
     expect(isEpisodeOpen(ch1[0], [])).toBe(true);
     expect(isEpisodeOpen(ch1[1], [])).toBe(false);
+  });
+});
+
+describe('the end of an episode — a replay goes back to the map (2026-10-05)', () => {
+  const ch1 = Array.from({ length: 11 }, (_, i) => `moji-1-${i + 1}`);
+
+  it('shows a new episode with NEW, and runs into an unbeaten まとめの ボス', () => {
+    expect(afterEpisodePath('moji-1-3', ch1.slice(0, 3))).toBe('/map/moji?new=moji-1-4');
+    expect(afterEpisodePath('moji-1-11', ch1)).toBe('/moji/moji-1-boss');
+  });
+
+  it('does not replay a beaten boss’s story, nor put NEW on an episode already cleared', () => {
+    expect(afterEpisode('moji-1-11', [...ch1, 'moji-1-boss'])).toBe('moji-2-1');
+    expect(afterEpisodePath('moji-1-11', [...ch1, 'moji-1-boss'])).toBe('/map/moji?new=moji-2-1');
+    expect(afterEpisodePath('moji-1-11', [...ch1, 'moji-1-boss', 'moji-2-1'])).toBe('/map/moji?at=moji-1-11');
+    expect(afterEpisodePath('moji-1-3', ch1)).toBe('/map/moji?at=moji-1-3');
+    expect(afterEpisodePath('moji-1-boss', [...ch1, 'moji-1-boss', 'moji-2-1'])).toBe('/map/moji?at=moji-1-boss');
   });
 });
