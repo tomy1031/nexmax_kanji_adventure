@@ -445,7 +445,9 @@ export const MojiRouteMap = () => {
 
   const kanaTotal = KANA_EPISODES.reduce((n, e) => n + e.kana.length, 0);
   const masters = Object.values(progress).filter((p) => (p?.reps ?? 0) >= MASTERY_REPS[2]).length;
-  const episodesCleared = [...KANA_EPISODES, ...MOJI_EPISODES].filter((e) => cleared.includes(e.id)).length;
+  // まとめの ボスも 話（12話 など）: the map numbers it so, the record counts it so.
+  const allEpisodes = [...KANA_EPISODES, ...MOJI_EPISODES, ...MOJI_FINALES].map((e) => e.id);
+  const episodesCleared = allEpisodes.filter((id) => cleared.includes(id)).length;
 
   return (
     <div className="relative h-dvh overflow-hidden bg-[#1a1030]">
@@ -802,7 +804,7 @@ export const MojiRouteMap = () => {
                       ['書(か)ける かな', `${known.size} / ${kanaTotal}`],
                       ['手(て)に 入(い)れた 漢字(かんじ)（★1）', `${owned.size}`],
                       ['漢字(かんじ)マスター（★3）', `${masters}`],
-                      ['クリアした 話(はなし)', `${episodesCleared} / ${KANA_EPISODES.length + MOJI_EPISODES.length}`],
+                      ['クリアした 話(はなし)', `${episodesCleared} / ${allEpisodes.length}`],
                       ['毎日(まいにち) つづけた 日(ひ)', `${streak.count}`],
                     ] as const
                   ).map(([label, value]) => (

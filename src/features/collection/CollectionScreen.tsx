@@ -17,6 +17,8 @@ import { useCompoundsVersion } from '../../data/compounds';
 import { sortWeapons, useWeaponSort } from '../../lib/forge/weaponSort';
 import { WeaponSortBar, WeaponTags } from '../equip/WeaponSortBar';
 import { HIDDEN_WEAPONS } from '../../data/hiddenWeapons';
+import { getMojiEpisode } from '../../data/mojiEpisodes';
+import { isChapterOpen } from '../../data/mojiFlow';
 
 /** Inventory: what has been forged, and who is in the party. */
 
@@ -32,6 +34,7 @@ export const CollectionScreen = () => {
   const equipWeapon = useGameStore((s) => s.equipWeapon);
   const ownedIndividuals = useGameStore((s) => s.individuals);
   const progress = useGameStore((s) => s.progress);
+  const cleared = useGameStore((s) => s.clearedStages);
 
   const [tab, setTab] = useState<Tab>('weapons');
 
@@ -51,6 +54,11 @@ export const CollectionScreen = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [weapons, progress, wordsV, weaponSort]);
   const hiddenFound = forged.filter((f) => f.weapon.hidden).length;
+  // Out of the ones in the chapters open so far: a later chapter's are not counted against the player yet.
+  const hiddenOpen = Object.values(HIDDEN_WEAPONS).filter((id) => {
+    const ep = getMojiEpisode(id);
+    return ep != null && isChapterOpen(ep.chapter, cleared);
+  }).length;
 
   return (
     <div className="g-stage min-h-dvh pb-8">
@@ -120,7 +128,7 @@ export const CollectionScreen = () => {
                 <WeaponSortBar sort={weaponSort} onSort={setWeaponSort} showFurigana={showFurigana} />
                 {/* かくし武器: how many there are is told, which words is not (data/hiddenWeapons.ts). */}
                 <p className="g-panel self-start px-3 py-1 text-[12px] font-black" style={{ color: 'var(--ink)' }}>
-                  🔑 <RubyText showFurigana={showFurigana}>{`かくし武器(ぶき) ${hiddenFound} / ${Object.keys(HIDDEN_WEAPONS).length} ・ どの 話(わ)にも 1(ひと)つ あります`}</RubyText>
+                  🔑 <RubyText showFurigana={showFurigana}>{`かくし武器(ぶき) ${hiddenFound} / ${Math.max(hiddenFound, hiddenOpen)} ・ どの 話(わ)にも 1(ひと)つ あります`}</RubyText>
                 </p>
               </li>
               {forged.map(({ weapon, rust }) => {
