@@ -32,6 +32,12 @@ export interface MojiChapter {
   units: number[];
   /** Kanji taught here: the units' kanji, in the book's order. */
   kanji: string[];
+  /**
+   * The town the chapter's story is in, for the way-out sign on the stage
+   * select: its name in katakana (a space where the sign breaks the line)
+   * and in capitals. Only the chapters whose story is written have one.
+   */
+  town?: { name: string; en: string };
 }
 
 /** Kanji introduced by each lesson, keyed by lesson number (minnaKanji.ts). */
@@ -57,10 +63,10 @@ export const PART_OF_LEVEL: Record<JlptLevel, { book: string; lessons: { from: n
 
 export const MOJI_CHAPTERS: MojiChapter[] = (
   [
-    { order: 1, level: 'N5', lessons: { from: 1, to: 5 }, units: [1, 2, 3, 4, 5], title: '字(じ)の ない 町(まち)', summary: '電車(でんしゃ)で ナニワタウンへ。駅(えき)の 看板(かんばん)も 時計(とけい)も、字(じ)が ありません。' },
-    { order: 2, level: 'N5', lessons: { from: 6, to: 10 }, units: [6, 7, 8, 9, 10], title: '市場(いちば)の ともだち', summary: 'にぎやかな 市場(いちば)で、はじめての ともだちに 会(あ)う。' },
-    { order: 3, level: 'N5', lessons: { from: 11, to: 15 }, units: [11, 12], title: '読(よ)めない メニュー', summary: 'レストランと 店(みせ)。メニューの 字(じ)が 消(き)えて いる。' },
-    { order: 4, level: 'N5', lessons: { from: 16, to: 20 }, units: [13, 14, 15], title: '町(まち)を 回(まわ)る', summary: 'ともだちと 町(まち)を 回(まわ)って、字(じ)を 取(と)り戻(もど)す。' },
+    { order: 1, level: 'N5', lessons: { from: 1, to: 5 }, units: [1, 2, 3, 4, 5], town: { name: 'ナニワ タウン', en: 'NANIWA TOWN' }, title: '字(じ)の ない 町(まち)', summary: '電車(でんしゃ)で ナニワタウンへ。駅(えき)の 看板(かんばん)も 時計(とけい)も、字(じ)が ありません。' },
+    { order: 2, level: 'N5', lessons: { from: 6, to: 10 }, units: [6, 7, 8, 9, 10], town: { name: 'ミナト タウン', en: 'MINATO TOWN' }, title: '市場(いちば)の ともだち', summary: 'にぎやかな 市場(いちば)で、はじめての ともだちに 会(あ)う。' },
+    { order: 3, level: 'N5', lessons: { from: 11, to: 15 }, units: [11, 12], town: { name: 'マンプク タウン', en: 'MANPUKU TOWN' }, title: '読(よ)めない メニュー', summary: 'レストランと 店(みせ)。メニューの 字(じ)が 消(き)えて いる。' },
+    { order: 4, level: 'N5', lessons: { from: 16, to: 20 }, units: [13, 14, 15], town: { name: 'ミヤコ タウン', en: 'MIYAKO TOWN' }, title: '町(まち)を 回(まわ)る', summary: 'ともだちと 町(まち)を 回(まわ)って、字(じ)を 取(と)り戻(もど)す。' },
     { order: 5, level: 'N5', lessons: { from: 21, to: 25 }, units: [16, 17, 18, 19, 20], title: 'モジクイの 王(おう)', summary: '「もし 字(じ)が なかったら…」。ネクマックスが ★4へ。' },
     { order: 6, level: 'N4', lessons: { from: 26, to: 30 }, units: [24, 25, 26, 27, 28, 29, 30], title: 'ネットに 逃(に)げた モジクイ', summary: 'IT会社(かいしゃ)で インターン。モジクイが ネットに 逃(に)げる。' },
     { order: 7, level: 'N4', lessons: { from: 31, to: 35 }, units: [31, 32, 33, 34, 35], title: '消(き)えた「止(と)まれ」', summary: '道(みち)の「止(と)まれ」が 消(き)えて、町(まち)が あぶない。' },
@@ -77,3 +83,13 @@ export const MOJI_CHAPTERS: MojiChapter[] = (
 
 /** A chapter can be played once some of its episodes have been written (mojiEpisodes.ts). */
 export const isChapterReady = (chapter: MojiChapter): boolean => episodesOf(chapter.id).length > 0;
+
+/**
+ * The town the stage select's way-out sign points to: the one where the next
+ * episode is (0章 leads to 1章's town), or, with everything written cleared,
+ * the town of the last chapter that has one.
+ */
+export const townOf = (chapterId: string | null): NonNullable<MojiChapter['town']> => {
+  const towns = MOJI_CHAPTERS.filter((c) => c.town);
+  return MOJI_CHAPTERS.find((c) => c.id === chapterId)?.town ?? towns.at(-1)!.town!;
+};

@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { MOJI_CHAPTERS, LESSON_KANJI, PART_OF_LEVEL, kanjiIntroducedBy } from './mojiRoute';
+import { MOJI_CHAPTERS, LESSON_KANJI, PART_OF_LEVEL, isChapterReady, kanjiIntroducedBy, townOf } from './mojiRoute';
 import { ALL_STAGES, MUKASHI_STAGES, stagesOfArc } from './stages';
 import { GENDAI_STAGES } from './gendaiStages';
 import { KANJI_UNITS } from './minnaKanji';
@@ -115,5 +115,20 @@ describe('文字が 消えた 町 leaves the picture-book arcs alone', () => {
       expect(prefixes.some((p) => ch.id.startsWith(p)), ch.id).toBe(false);
     }
     for (const s of ALL_STAGES) expect(s.id.startsWith(Arc.MOJI), s.id).toBe(false);
+  });
+});
+
+describe('the town on the stage select’s way-out sign (2026-10-05)', () => {
+  it('names a town for every chapter whose story is written', () => {
+    for (const ch of MOJI_CHAPTERS.filter(isChapterReady)) {
+      expect(ch.town?.name, ch.id).toMatch(/^[ァ-ヺー]+ [ァ-ヺー]+$/);
+      expect(ch.town?.en, ch.id).toMatch(/^[A-Z ]+$/);
+    }
+  });
+
+  it('points to the town of the next episode, and to the last town once all is cleared', () => {
+    expect(townOf('moji-1').en).toBe('NANIWA TOWN');
+    expect(townOf('moji-2').en).toBe('MINATO TOWN');
+    expect(townOf(null)).toBe(MOJI_CHAPTERS.filter((c) => c.town).at(-1)!.town);
   });
 });

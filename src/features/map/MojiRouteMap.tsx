@@ -3,7 +3,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
 import { RubyText } from '../../components/ui/Ruby';
 import { useGameStore } from '../../store/gameStore';
-import { MOJI_CHAPTERS, isChapterReady } from '../../data/mojiRoute';
+import { MOJI_CHAPTERS, isChapterReady, townOf } from '../../data/mojiRoute';
 import { KANA_EPISODES, isKanaEpisodeUnlocked, type KanaEpisode } from '../../data/kana';
 import KanaText from '../kana/KanaText';
 import { useKnownKana } from '../kana/useKnownKana';
@@ -124,8 +124,8 @@ const DeparturesBoard = ({ showFurigana }: { showFurigana: boolean }) => (
   </div>
 );
 
-/** The way-out sign the example has on the left: to the town. */
-const TownSign = () => (
+/** The way-out sign the example has on the left: to the town of the next episode (mojiRoute.ts townOf). */
+const TownSign = ({ town }: { town: { name: string; en: string } }) => (
   <div aria-hidden className="absolute" style={{ ...fromTop(26, 250, 300, 205), perspective: cq(900) }}>
     <div
       className="flex h-full w-full items-center gap-[2cqw] rounded-[0.8cqw] border-[0.5cqw] border-[#8a6128] bg-[#121218]/95 px-[2.6cqw]"
@@ -135,10 +135,13 @@ const TownSign = () => (
         ✈
       </span>
       <span className="flex flex-col leading-[1.15] font-bold whitespace-nowrap text-white">
-        <span style={{ fontSize: cq(34) }}>ナニワ</span>
-        <span style={{ fontSize: cq(34) }}>タウン</span>
+        {town.name.split(' ').map((part) => (
+          <span key={part} style={{ fontSize: cq(34) }}>
+            {part}
+          </span>
+        ))}
         <span className="mt-[0.8cqw] tracking-[0.06em]" style={{ fontSize: cq(14) }}>
-          NANIWA TOWN
+          {town.en}
         </span>
       </span>
       <span className="ml-auto self-end pb-[1cqw] font-black text-[#f6c544]" style={{ fontSize: cq(50) }}>
@@ -455,7 +458,7 @@ export const MojiRouteMap = () => {
         {/* 上: 看板・案内・ネクマックス ------------------------------------------ */}
         <div className="absolute inset-x-0 top-[env(safe-area-inset-top)]">
           <DeparturesBoard showFurigana={showFurigana} />
-          <TownSign />
+          <TownSign town={townOf(nextMoji?.chapter ?? nextFinale?.chapter ?? (nextKana ? MOJI_CHAPTERS[0].id : null))} />
           <h1 className="absolute" style={fromTop(160, 2, 620)}>
             <img src={art('sign')} alt="ステージせんたく　はじまりの空港" className="block h-auto w-full" />
           </h1>
