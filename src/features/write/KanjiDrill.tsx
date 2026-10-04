@@ -77,7 +77,7 @@ const COPY: Record<'rock' | 'sign', { verdict: Record<VerdictKind, { head: strin
   rock: {
     verdict: {
       perfect: { head: '正(せい)かい — かんぺき', next: '岩(いわ)が 割(わ)れた。この ちょうしで つづけよう。' },
-      clean: { head: '正(せい)かい', next: '岩(いわ)が 割(わ)れた。つぎは まちがえずに 書(か)いてみよう。' },
+      clean: { head: '正(せい)かい', next: '岩(いわ)が 割(わ)れた。つぎは ミス なしで 書(か)きましょう。' },
       // Not a pass. Say so, then say what to do about it.
       close: { head: 'まだ 正(せい)かいでは ない', next: '岩(いわ)は 割(わ)れない。「書(か)きじゅん」を 見(み)てから もう一度(いちど)。' },
     },
@@ -88,7 +88,7 @@ const COPY: Record<'rock' | 'sign', { verdict: Record<VerdictKind, { head: strin
   sign: {
     verdict: {
       perfect: { head: '正(せい)かい — かんぺき', next: '看板(かんばん)に あかりが ついた。この ちょうしで つづけよう。' },
-      clean: { head: '正(せい)かい', next: '看板(かんばん)に あかりが ついた。つぎは まちがえずに 書(か)いてみよう。' },
+      clean: { head: '正(せい)かい', next: '看板(かんばん)に あかりが ついた。つぎは ミス なしで 書(か)きましょう。' },
       close: { head: 'まだ 正(せい)かいでは ない', next: 'あかりが つかない。「書(か)きじゅん」を 見(み)てから もう一度(いちど)。' },
     },
     first: '手本(てほん)の 上(うえ)を なぞると、線(せん)が ひかる。',
@@ -385,7 +385,7 @@ export const KanjiDrill = ({ kanji, onObtained, onExit, onDone, nextLabel = 'つ
                 {reps === 0
                   ? copy.first
                   : sampleOverride === null && reps === SAMPLE_REPS
-                    ? 'ここからは 手本(てほん)なしで 書(か)いてみよう。'
+                    ? 'ここからは 手本(てほん)なしで 書(か)きましょう。'
                     : strokeMistakes > 0
                       ? `いま ${strokeMistakes} かい まちがえています`
                       : copy.idle}

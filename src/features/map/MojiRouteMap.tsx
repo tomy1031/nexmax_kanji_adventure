@@ -463,7 +463,7 @@ export const MojiRouteMap = () => {
           >
             <RubyText showFurigana={showFurigana}>ことばの翼(つばさ)で、</RubyText>
             <br />
-            <RubyText showFurigana={showFurigana}>新(あたら)しい世界(せかい)へ飛(と)び立(た)とう！</RubyText>
+            <RubyText showFurigana={showFurigana}>新(あたら)しい 世界(せかい)へ！</RubyText>
           </p>
           <motion.img
             src={art('nexmax_travel')}

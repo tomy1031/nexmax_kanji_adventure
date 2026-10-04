@@ -1014,8 +1014,8 @@ export const BattleScene = ({
               </span>
               <RubyText showFurigana={showFurigana}>
                 {targetStars === 3
-                  ? 'マスター。まちがえずに 書(か)くと「字(じ)の わざ」'
-                  : `こうげき ×${masteryMultiplier(targetStars, false)}。まちがえずに 書(か)くと ★が ふえる（${MASTERY_REPS[targetStars]}回(かい)で ★${targetStars + 1}）`}
+                  ? 'マスター。ミス なしで 書(か)く →「字(じ)の わざ」'
+                  : `こうげき ×${masteryMultiplier(targetStars, false)}。ミス なしで 書(か)く → ★が ふえる（${MASTERY_REPS[targetStars]}回(かい)で ★${targetStars + 1}）`}
               </RubyText>
             </p>
           )}

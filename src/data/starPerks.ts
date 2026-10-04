@@ -46,7 +46,7 @@ export const STAR_PERKS: StarPerk[] = [
 ];
 
 /** The closing line: where the next star comes from. */
-export const STAR_PERKS_HOW = { text: '字(じ)を タップして 書(か)くほど ★が ふえる', en: 'Tap a letter and write it: every write counts toward the next ★.' };
+export const STAR_PERKS_HOW = { text: '字(じ)を タップ → 書(か)く → ★が ふえる', en: 'Tap a letter and write it: every write counts toward the next ★.' };
 
 /** What the next star buys, in a word (the result screen's 🎯). */
 export const NEXT_STAR_GAIN: Record<2 | 3, string> = { 2: 'こうげき アップ', 3: '字(じ)の わざ' };
