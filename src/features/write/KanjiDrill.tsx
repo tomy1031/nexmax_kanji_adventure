@@ -18,7 +18,11 @@ import { TownBackdrop, TownShot } from './TownBackdrop';
 import { hasSign } from '../picturebook/hasSign';
 import { streetOf } from '../../lib/signStreet';
 import * as sfx from '../../lib/sfx';
+import { useOwnedKanji } from '../moji/useOwnedKanji';
 import { jinglePlaying, useBgm } from '../../lib/bgm';
+
+/** The ★1 cards that still explain ★★ and ★★★: 1話's five kanji. */
+const STAR_EXPLAINED_FOR = 5;
 
 /**
  * The writing drill: write the character, and it cuts a rock. Each rock
@@ -128,6 +132,9 @@ export const KanjiDrill = ({ kanji, onObtained, onExit, onDone, nextLabel = 'つ
   const [obtained, setObtained] = useState(false);
   /** The goal (★1) was reached on this write: the card offers つぎへ / もっと 書く. */
   const [goalCard, setGoalCard] = useState(false);
+  // What ★★ and ★★★ buy is said on the first episode's cards only: after five
+  // kanji the learner has read it five times, and じゅんび says it again.
+  const explainStars = useOwnedKanji().size <= STAR_EXPLAINED_FOR;
   /** A star gained without a card (★2), shown for a moment. */
   const [starUp, setStarUp] = useState<number | null>(null);
   /** Each write that lights the sign sends a glow over the town. */
@@ -371,7 +378,7 @@ export const KanjiDrill = ({ kanji, onObtained, onExit, onDone, nextLabel = 'つ
                 <RubyText showFurigana={showFurigana}>{copy.verdict[verdict.kind].head}</RubyText>
                 {verdict.mistakes > 0 && (
                   <span className="ml-2 text-sm font-normal" style={{ color: 'var(--ink-2)' }}>
-                    まちがえた ところ {verdict.mistakes}
+                    ミス {verdict.mistakes}
                   </span>
                 )}
               </motion.p>
@@ -544,6 +551,7 @@ export const KanjiDrill = ({ kanji, onObtained, onExit, onDone, nextLabel = 'つ
                 <RubyText showFurigana={showFurigana}>{`「${ruby}」が 町(まち)に 戻(もど)った！`}</RubyText>
               </p>
               {/* Why write more: said as what it buys, in the fight to come. */}
+              {explainStars && (
               <ul className="mt-2 space-y-0.5 text-left text-[13px] font-bold" style={{ color: 'var(--ink-2)' }}>
                 <li>
                   <span style={{ color: '#e8a317' }}>★★</span>{' '}
@@ -554,6 +562,7 @@ export const KanjiDrill = ({ kanji, onObtained, onExit, onDone, nextLabel = 'つ
                   <RubyText showFurigana={showFurigana}>{`${MASTERY_REPS[2]}回(かい)：漢字(かんじ)マスター（字(じ)の わざ・武器(ぶき)）`}</RubyText>
                 </li>
               </ul>
+              )}
               <button type="button" className="g-btn g-btn-primary mt-5 w-full text-lg" onClick={onDone ?? onExit}>
                 <RubyText showFurigana={showFurigana}>{nextLabel}</RubyText>
               </button>
