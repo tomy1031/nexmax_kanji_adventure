@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { MOJI_EPISODES, episodesOf, isMojiEpisodeUnlocked } from './mojiEpisodes';
 import { MOJI_CHAPTERS } from './mojiRoute';
 import { MOJI1_CAST, MOJI1_SCRIPTS } from './scripts/moji1';
+import { MOJI2_CAST, MOJI2_SCRIPTS } from './scripts/moji2';
 import { getKanjiByChar } from '../lib/kanjiDb';
 import { unreadKanji } from '../lib/ruby';
 import { SCENES, fxNamesOf } from '../features/picturebook/scenes';
@@ -97,6 +98,54 @@ describe('1章 scripts', () => {
         }
       }
     }
+    expect(bad).toEqual([]);
+  });
+});
+
+describe('2章 scripts (docs/design/12)', () => {
+  const scripts = Object.values(MOJI2_SCRIPTS).flatMap((s) => [s.intro, s.encounter, s.outro]);
+  const cast = new Map(MOJI2_CAST.map((c) => [c.id, c.sprites]));
+
+  it('exist for every 2章 episode, each opening on a scene', () => {
+    expect(Object.keys(MOJI2_SCRIPTS).sort()).toEqual(episodesOf('moji-2').map((e) => e.id).sort());
+    for (const s of scripts) expect(s.lines[0].bg, s.stageId).toBeTruthy();
+  });
+
+  it('give every kanji a reading, keep English behind EN, and use pictures', () => {
+    const bad: string[] = [];
+    for (const s of scripts) {
+      for (const l of s.lines) {
+        for (const c of [...unreadKanji(l.text), ...unreadKanji(l.glyph ?? '')]) bad.push(`${s.stageId}: ${c} in "${l.text}"`);
+        if (/[A-Za-z]/.test(l.text)) bad.push(`${s.stageId}: English on screen "${l.text}"`);
+      }
+      if (!s.lines.some((l) => /\p{Extended_Pictographic}/u.test(l.text + (l.glyph ?? '')))) bad.push(`${s.stageId}: no pictures`);
+    }
+    for (const c of MOJI2_CAST) for (const k of unreadKanji(c.name)) bad.push(`${c.id}: ${k}`);
+    expect(bad).toEqual([]);
+  });
+
+  it('use real scenes, effects, speakers and sprites', () => {
+    const bad: string[] = [];
+    for (const s of scripts) {
+      let scene = '';
+      for (const l of s.lines) {
+        if (l.bg) scene = l.bg;
+        if (!SCENES[scene]) bad.push(`${s.stageId}: scene ${scene}`);
+        for (const fx of l.fx ?? []) if (!fxNamesOf(scene).includes(fx)) bad.push(`${s.stageId}: fx ${fx}`);
+        if (l.speaker && !cast.has(l.speaker)) bad.push(`${s.stageId}: speaker ${l.speaker}`);
+        if (l.sprite) {
+          const [who, expr] = l.sprite.split(':');
+          if (!cast.get(who)?.[expr ?? 'normal']) bad.push(`${s.stageId}: sprite ${l.sprite}`);
+        }
+      }
+    }
+    expect(bad).toEqual([]);
+  });
+
+  it('stays in 1冊目 grammar (docs/constraints.md 2026-10-04)', () => {
+    // Passive, potential, ば, なら, かもしれません, 〜ていく, と-conditional, 〜たい, adjective past.
+    const PAST_LEVEL = /(られ|れます|れません|えば|けば|れば|なら|かもしれ|ていきます|ていく|[くすつぬむるうぐぶ]と、|たいです|かったです)/;
+    const bad = scripts.flatMap((s) => s.lines.filter((l) => PAST_LEVEL.test(l.text.replace(/\([^)]*\)/g, ''))).map((l) => `${s.stageId}: ${l.text}`));
     expect(bad).toEqual([]);
   });
 });

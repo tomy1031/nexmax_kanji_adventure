@@ -19,6 +19,12 @@ export const HIDDEN_WEAPONS: Readonly<Record<string, string>> = {
   一人前: 'moji-1-9',
   万年: 'moji-1-10',
   水車: 'moji-1-11',
+  // 2章 ミナトタウン（docs/design/12）
+  高校生: 'moji-2-1',
+  白黒: 'moji-2-2',
+  上手: 'moji-2-3',
+  金魚: 'moji-2-4',
+  人間: 'moji-2-5',
 };
 
 export const isHiddenWeapon = (word: string): boolean => word in HIDDEN_WEAPONS;

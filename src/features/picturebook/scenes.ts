@@ -739,6 +739,12 @@ export const PHOTO_SCENES: Record<string, SceneDef> = {
     ],
   }),
   naniwa_kanjiyasan: photoScene('img/kanjiyasan/bg_tall.webp'),
+  // 2章 ミナトタウン 1〜5話（docs/design/12）: 朝市の 値札・ふくの 色・石だんの 札・食堂の メニュー・小道の 道しるべ。
+  port_market: photoScene('img/port/port_market.webp', boardRows([...'高安大小新'])),
+  port_clothes: photoScene('img/port/port_clothes.webp', boardRows([...'古青白赤黒'])),
+  port_stairs: photoScene('img/port/port_stairs.webp', boardRows([...'上下父母子手'])),
+  port_foodhall: photoScene('img/port/port_foodhall.webp', boardRows([...'好主肉魚食飲物'])),
+  port_alley: photoScene('img/port/port_alley.webp', boardRows([...'近間右左'])),
 };
 
 export const SCENES: Record<string, SceneDef> = {
