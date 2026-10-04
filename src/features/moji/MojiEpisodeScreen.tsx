@@ -89,9 +89,12 @@ const ReadyScreen = ({
   hard,
   heading,
   hardNote,
+  place,
 }: {
   /** The episode, or a まとめの ボス (data/mojiFinale.ts): what is fought, where. */
   ep: Pick<MojiEpisode, 'id' | 'bg' | 'boss'>;
+  /** "1章 3話 とけいの …", furigana notation: on the top bar, so じゅんび says where it is (2026-10-05). */
+  place?: string;
   kanji: KanjiData[];
   onPractice: (k: KanjiData) => void;
   onFight: () => void;
@@ -152,7 +155,7 @@ const ReadyScreen = ({
       <PictureBook scene={ep.bg} className="!fixed -z-10" still signsFaint />
       {secrets && <StarSecrets showFurigana={showFurigana} onClose={closeSecrets} />}
       {tip && !secrets && <TipCard id={tip} showFurigana={showFurigana} onClose={closeTip} />}
-      <TopBar onBack={onExit} />
+      <TopBar onBack={onExit} title={place} />
       <div className="flex w-full max-w-md flex-1 flex-col gap-3 px-3 pt-3">
         {/* The opponent, so the writing has a reason. */}
         <div
@@ -420,7 +423,7 @@ const EpisodePlayer = ({ id }: { id: string }) => {
   }, [hardNow]);
 
   const renderText = useCallback((text: string) => <KanjiBackText owned={owned}>{text}</KanjiBackText>, [owned]);
-  const label = { label: `${chapter.order}章(しょう) ${ep.order}`, title: ep.title };
+  const label = { label: `${chapter.order}章(しょう) ${ep.order}話(わ)`, title: ep.title };
   // Back where the player came from (2026-10-02「戻り先は 来た ところ」): ずかん's ✎ passes ?back=.
   const back = params.get('back');
   const leave = () => navigate(back?.startsWith('/') ? back : '/map/moji');
@@ -473,6 +476,7 @@ const EpisodePlayer = ({ id }: { id: string }) => {
         return (
           <ReadyScreen
             ep={ep}
+            place={`${label.label} ${label.title}`}
             kanji={kanji}
             onExit={leave}
             onFight={() => {
@@ -608,7 +612,7 @@ const FinalePlayer = ({ id }: { id: string }) => {
   }, [hardNow]);
 
   const renderText = useCallback((text: string) => <KanjiBackText owned={owned}>{text}</KanjiBackText>, [owned]);
-  const label = { label: `${chapter.order}章(しょう) ${finaleNumber(f)}`, title: f.title };
+  const label = { label: `${chapter.order}章(しょう) ${finaleNumber(f)}話(わ)`, title: f.title };
   const back = params.get('back');
   const leave = () => navigate(back?.startsWith('/') ? back : '/map/moji');
   const toReady = () => setPhase('ready');
@@ -629,6 +633,7 @@ const FinalePlayer = ({ id }: { id: string }) => {
         return (
           <ReadyScreen
             ep={f}
+            place={`${label.label} ${label.title}`}
             kanji={shown}
             onExit={leave}
             onFight={() => {
