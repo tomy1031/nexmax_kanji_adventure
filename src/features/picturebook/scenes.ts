@@ -745,6 +745,15 @@ export const PHOTO_SCENES: Record<string, SceneDef> = {
   port_stairs: photoScene('img/port/port_stairs.webp', boardRows([...'上下父母子手'])),
   port_foodhall: photoScene('img/port/port_foodhall.webp', boardRows([...'好主肉魚食飲物'])),
   port_alley: photoScene('img/port/port_alley.webp', boardRows([...'近間右左'])),
+  // 2章 6〜10話: 公園の 札・図書館の 本・ソラの 日記・写真屋と お茶屋・映画館の ポスター。
+  port_park: photoScene('img/port/port_park.webp', boardRows([...'外男女犬'])),
+  port_library: photoScene('img/port/port_library.webp', boardRows([...'書聞読見話'])),
+  port_seaside: photoScene('img/port/port_seaside.webp', boardRows([...'買起帰友達'])),
+  port_photo: photoScene('img/port/port_photo.webp', boardRows([...'茶酒写真紙'])),
+  port_cinema: photoScene('img/port/port_cinema.webp', boardRows([...'映画店英語'])),
+  // 2章 11話 まとめの ボス: 霧の 灯台と、霧が 晴れた 町。
+  port_lighthouse: photoScene('img/port/port_lighthouse.webp'),
+  port_lights_back: photoScene('img/port/port_lights_back.webp'),
 };
 
 export const SCENES: Record<string, SceneDef> = {
