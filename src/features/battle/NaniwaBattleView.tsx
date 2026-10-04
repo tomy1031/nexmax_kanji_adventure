@@ -13,6 +13,8 @@ import type { Stars } from '../../lib/mastery';
 import { ComboBanner, ComboEdge, ComboMeter, StrokeSparks, type StrokeSpark } from './ComboFx';
 import { CompanionStand, SkillCutIn, type CompanionView, type SkillCut } from './CompanionFx';
 import { WeaponMount, type MountView } from './WeaponMount';
+import { GearBehind, GearFront } from './GearOn';
+import { LAYOUT_BATTLE, type Worn } from './gearLayout';
 import { useGameStore } from '../../store/gameStore';
 
 /**
@@ -228,6 +230,9 @@ export interface NaniwaBattleViewProps {
   /** The equipped weapon, mounted on Nexmax's back (WeaponMount); `fire` changes with each write. */
   mount?: MountView | null;
   fire?: number;
+  /** そうび worn (shield, armour, charm ids); `guard` changes when a strike lands on the shield. */
+  worn?: Worn;
+  guard?: number;
   still: boolean;
   heroCtl: LegacyAnimationControls;
   enemyCtl: LegacyAnimationControls;
@@ -270,6 +275,8 @@ export const NaniwaBattleView = ({
   cut = null,
   mount = null,
   fire,
+  worn = {},
+  guard,
   still,
   heroCtl,
   enemyCtl,
@@ -437,7 +444,9 @@ export const NaniwaBattleView = ({
 
           {/* ネクマックス — stands on the deck, over the frame */}
           <motion.div className="absolute" style={onBottom(55, 374, 379, 505)} animate={heroCtl}>
-            <img src={art('nexmax_brush')} alt="" aria-hidden draggable={false} className="h-full w-full select-none" />
+            <GearBehind worn={worn} layout={LAYOUT_BATTLE} still={still} />
+            <img src={art('nexmax_brush')} alt="" aria-hidden draggable={false} className="relative h-full w-full select-none" />
+            <GearFront worn={worn} layout={LAYOUT_BATTLE} still={still} guard={guard} />
             {/* the chest: where the light goes in */}
             <div ref={heroRef} aria-hidden className="absolute h-px w-px" style={{ left: '60%', top: '62%' }} />
           </motion.div>
