@@ -245,6 +245,7 @@ const FinaleCard = ({
   hard,
   showFurigana,
   onOpen,
+  onLocked,
 }: {
   chapterId: string;
   chapterOrder: number;
@@ -254,6 +255,8 @@ const FinaleCard = ({
   hard: readonly string[];
   showFurigana: boolean;
   onOpen: (id: string) => void;
+  /** Tapped while locked: what opens it. */
+  onLocked: (why: string) => void;
 }) => {
   const f = finaleOf(chapterId);
   if (!f || !isFinaleReady(f)) return null;
@@ -264,9 +267,9 @@ const FinaleCard = ({
       type="button"
       data-tap
       data-ep={f.id}
-      disabled={!open}
-      onClick={() => onOpen(f.id)}
-      className="relative col-span-2 flex items-center gap-3 overflow-hidden rounded-xl border-2 px-2 py-1.5 text-left text-[#f4f1ff] disabled:opacity-60"
+      aria-disabled={!open}
+      onClick={() => (open ? onOpen(f.id) : onLocked(`${finaleNumber(f) - 1}話(わ)の あとで ひらきます`))}
+      className={`relative col-span-2 flex items-center gap-3 overflow-hidden rounded-xl border-2 px-2 py-1.5 text-left text-[#f4f1ff] ${open ? '' : 'opacity-60'}`}
       style={{
         borderColor: fresh === f.id ? '#e2453c' : done ? '#e8b64a' : '#8a6128',
         background: 'linear-gradient(160deg,#2c1d55,#120c26)',
@@ -652,9 +655,18 @@ export const MojiRouteMap = () => {
                                       type="button"
                                       data-tap
                                       data-ep={ep.id}
-                                      disabled={!open}
-                                      onClick={() => navigate(episodePath(ep.id, cleared))}
-                                      className="relative rounded-xl border-2 px-2 py-1.5 text-left disabled:opacity-50"
+                                      aria-disabled={!open}
+                                      // Locked: say what opens it, instead of doing nothing.
+                                      onClick={() =>
+                                        open
+                                          ? navigate(episodePath(ep.id, cleared))
+                                          : setLocked(
+                                              isChapterOpen(c.id, cleared)
+                                                ? `${ep.order - 1}話(わ)の あとで ひらきます`
+                                                : `${c.order - 1}章(しょう)の まとめの ボスの あとで ひらきます`,
+                                            )
+                                      }
+                                      className={`relative rounded-xl border-2 px-2 py-1.5 text-left ${open ? '' : 'opacity-50'}`}
                                       style={{
                                         borderColor: fresh === ep.id ? '#e2453c' : done ? '#4f9a3c' : '#caa468',
                                         background: done ? 'linear-gradient(160deg,#fffbe8,#ffe7a3)' : '#fff',
@@ -691,7 +703,7 @@ export const MojiRouteMap = () => {
                                     </button>
                                   );
                                 })}
-                                <FinaleCard chapterId={c.id} chapterOrder={c.order} cleared={cleared} fresh={fresh} perfect={perfect} hard={hard} showFurigana={showFurigana} onOpen={(id) => navigate(episodePath(id, cleared))} />
+                                <FinaleCard chapterId={c.id} chapterOrder={c.order} cleared={cleared} fresh={fresh} perfect={perfect} hard={hard} showFurigana={showFurigana} onOpen={(id) => navigate(episodePath(id, cleared))} onLocked={setLocked} />
                               </div>
                             ) : (
                               <span className="text-xs font-black" style={{ color: 'var(--ink-3)' }}>
