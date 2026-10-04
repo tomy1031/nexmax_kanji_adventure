@@ -36,6 +36,14 @@ export const HIDDEN_WEAPONS: Readonly<Record<string, string>> = {
   火花: 'moji-3-3',
   五月雨: 'moji-3-4',
   大作: 'moji-3-5',
+  // 4章 京(みやこ)タウン（docs/design/15）: すぐ 作る 言葉（明日・長時間・元気・地下鉄・東京・料理・日曜日）でなく
+  大広間: 'moji-4-1',
+  紙一重: 'moji-4-2',
+  人気者: 'moji-4-3',
+  一大事: 'moji-4-4',
+  南南西: 'moji-4-5',
+  真夜中: 'moji-4-6',
+  五目: 'moji-4-7',
 };
 
 export const isHiddenWeapon = (word: string): boolean => word in HIDDEN_WEAPONS;

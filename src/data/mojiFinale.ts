@@ -78,6 +78,18 @@ export const MOJI_FINALES: MojiFinale[] = [
     // Ten of the chapter's twenty kanji, as 2章's finale; it hits a little harder.
     boss: { name: '大(おお)モジクイ', img: 'img/battle/mojikui_boss.webp', trait: { icon: '👑', ja: 'じぶんが おうさま', en: 'self-made king' }, hp: 176, attack: 62, element: Element.AN, icon: 'GiShadowFollower' },
   },
+  {
+    // 4章「町を 回る」の 終わり（docs/design/15）: タワーの いちばん 上の 大モジクイ。勝つと モジクイの 王が 連れて いく。
+    id: 'moji-4-boss',
+    chapter: 'moji-4',
+    title: 'まとめの ボス',
+    asks: 10,
+    patience: 2,
+    reward: 100,
+    // The top of the tower (7話 ends pointing up there).
+    bg: 'miyako_tower_top',
+    boss: { name: '大(おお)モジクイ', img: 'img/battle/mojikui_boss.webp', trait: { icon: '👑', ja: 'じぶんが おうさま', en: 'self-made king' }, hp: 176, attack: 72, element: Element.AN, icon: 'GiShadowFollower' },
+  },
 ];
 
 export const getMojiFinale = (id: string): MojiFinale | undefined => MOJI_FINALES.find((f) => f.id === id);

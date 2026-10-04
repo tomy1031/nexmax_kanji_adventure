@@ -508,6 +508,14 @@ const CREATURES = [
   mojikui('mojikui_queue', 'a sneaky line-cutter who squeezes in front of everyone.', 'a long, thin, wiggly body like a stretchy noodle, squeezing sideways through a narrow gap, very bendy.', 'sly eyes glancing sideways, a toothy sneaky grin, one tendril held up to its mouth as if whispering "shh, just me".', 'noodle yellow.', 'a snapped queue rope with brass posts, a few blank numbered waiting tickets (no numbers), a flower in its teeth.', '3章 3話の あいて（わりこみの モジクイ）'),
   mojikui('mojikui_umbrella', 'a contrarian who always does the opposite of what you say.', 'its body is an OPEN umbrella turned upside down like a bowl, the curved handle sticking up out of the top like a tail, small ink feet underneath; rain falls and collects in it.', 'its face is UPSIDE DOWN on the canopy: the cheeky grin with a stuck-out tongue at the top, the two eyes below it, one winking — so it looks like it is standing on its head.', 'rain blue and violet.', 'raindrops all around, two blank arrow signs pointing in opposite directions.', '3章 4話の あいて（かさの モジクイ）'),
   mojikui('mojikui_chef', 'a sneaky nibbler who snacks on the food while cooking.', 'a plump, pear-shaped body in a stolen chef\'s apron, a far-too-big tall white chef\'s toque slipping down over one eye.', 'cheeks puffed out and stuffed with food like a hamster, crumbs around its mouth, the one visible eye glancing guiltily sideways, a tiny sweat drop.', 'cream white and tomato red.', 'a fork in one tendril and a spoon in the other, a half-eaten blank menu card, a blank "sold out" board.', '3章 5話の あいて（コックの モジクイ）'),
+  // 4章（docs/design/15）
+  mojikui('mojikui_bulb', 'a night owl who loves the dark and hates lights.', 'a round glass light-bulb body with the ink swirling inside the glass, a brass screw base for feet, two small bat-like ink wings.', 'big round owl-like eyes glowing faintly yellow inside the glass, a tiny smug grin, one tendril held to its lips going "shh, lights off".', 'midnight indigo with a faint yellow glow.', 'a pulled light-switch cord in one tendril, a few dark burnt-out bulbs, blank signs.', '4章 1話の あいて（でんきゅうの モジクイ）'),
+  mojikui('mojikui_escalator', 'a mean little bully who loves making people trip.', 'a long zigzag body shaped like a moving escalator staircase, the steps rippling along its back, a black rubber handrail for arms.', 'narrow mischievous slit eyes, a wide mean grin with its tongue out going "nyah!", wickedly raised eyebrows.', 'steel silver and orange.', 'tipping over a heavy old suitcase, blank caution signs flying.', '4章 2話の あいて（エスカレーターの モジクイ）'),
+  mojikui('mojikui_vending', 'fickle and random, never gives you what you chose.', 'a boxy upright vending-machine body with a glowing window full of drink cans on its belly, short stubby legs.', 'its two eyes are glowing round push-buttons, one big and one small, a coin-slot mouth with a playful dizzy grin, a can popping out of its mouth.', 'bright cherry red and white.', 'cans and rice balls popping out in every direction, a pair of dice spinning above its head.', '4章 3話の あいて（じはんきの モジクイ）'),
+  mojikui('mojikui_mole', 'a slow, sleepy slowpoke who never hurries.', 'a plump mole-like ink body with big digging claws, a tiny subway conductor cap with a little miner lamp, half out of a tunnel hole.', 'very droopy half-closed eyes, a huge slow yawn, a pink mole nose, a little drool.', 'earth brown and subway green.', 'cuddling a stopped toy-sized subway car like a pillow, a blank route map.', '4章 4話の あいて（ちかてつの モジクイ）'),
+  mojikui('mojikui_map', 'a giggling liar who always points the wrong way.', 'a body made of a big folded city map flapping like a paper cape, several thin arms each pointing a different way.', 'shifty eyes glancing sideways, a long wooden fibber nose, a sneaky giggle half hidden behind one hand.', 'map yellow and compass red.', 'a spinning compass, blank direction boards.', '4章 5話の あいて（ちずの モジクイ）'),
+  mojikui('mojikui_mouth', 'a nonstop chatterbox who talks and eats at the same time.', 'a round body that is almost ALL mouth, with two tiny legs and tiny arms.', 'an enormous mouth filling the whole body, wide open mid-chatter with a long tongue and rounded white teeth (not sharp), two tiny eyes on top, blank speech-bubble shapes flying out.', 'hot pink and warm orange.', 'skewers of oden and a paper lantern, chopsticks.', '4章 6話の あいて（おおぐちの モジクイ）'),
+  mojikui('mojikui_telescope', 'a nosy busybody who peeps at everyone\'s secrets.', 'a tall thin body like a brass telescope on a tripod, the eyepiece end as its head.', 'ONE giant magnified eye seen through the telescope lens, a pursed curious "ooh" mouth below it, wiggling eyebrows.', 'brass gold and starry violet.', 'a blank calendar page, a magnifying glass, little blank gossip notes.', '4章 7話の あいて（ぼうえんきょうの モジクイ）'),
 ];
 
 const NANIWA = [
@@ -564,6 +572,25 @@ const FOOD = [
   food('food_kitchen', 'the busy market kitchen behind a big cooking-contest hall, after the rain: stalls of fresh vegetables, fish and spices with BLANK sold-out boards, racks of shiny pots, ladles and knives on the wall, long steel worktables, a BLANK rules board; through a doorway the edge of a big stage with lights. No people.', '3章 5話「つかっても いいですか」（りょうり大会の だいどころ）'),
   food('food_contest', 'the grand cooking-contest hall at night, taken over: a big stage with cooking counters and a HUGE BLANK menu board hanging over it, spotlights, black-violet ink mist pooling across the floor, heaps of eaten BLANK menus, recipe cards and shop signs, thousands of tiny golden letter-motes trapped in floating ink bubbles glowing faintly. Spooky but kid-friendly. No people.', '3章 6話 まとめの ボス（りょうり大会の かいじょう・大モジクイ）'),
   food('food_lights_back', 'the food city at night just after the rain has stopped: a clear starry sky, the wet streets and canals reflecting every lantern, shop sign and food-stall light glowing warmly, steam rising from kitchens, a faint moon rainbow over the rooftops; far away on the horizon, the lights of an even bigger city. Hopeful and calm. No people.', '3章 クリア（雨が やみ、町の 明かりが 戻る）'),
+];
+
+/** 4章 京(みやこ)タウン（docs/design/15）: 電車で 行く 大きい 町。 */
+const miyako = (id, desc, used) => ({
+  ...naniwa(id, `${desc} The town is a huge bustling capital city reached by train from the food city: a giant old-and-new station of brick, iron and glass, subway lines underground, wide avenues with trams, brass street lamps, and a tall elegant lattice tower (an original design) that can be seen from everywhere. Leave the upper part of the picture fairly open (sky, ceiling or plain wall) for hanging signs.`, used),
+  group: 'bg_miyako',
+  out: `img/miyako/${id}.webp`,
+});
+
+const MIYAKO = [
+  miyako('miyako_station', 'the vast concourse of the central station at night with most of its lights OUT: a huge arched iron-and-glass roof, many corridors and gates fading into darkness, a few faint lamps, big hanging boards all BLANK, dim and a little spooky but kid-friendly. No people.', '4章 1話「くらくて ひろい えき」（暗い 大きな 駅）'),
+  miyako('miyako_escalator', 'a very long escalator inside the station climbing steeply up toward a bright upper floor, a second escalator going down beside it, coin lockers along the wall, a big old suitcase left on a step, BLANK caution signs on the handrails. No people.', '4章 2話「はしらないで ください」（長い エスカレーター）'),
+  miyako('miyako_konbini', 'inside a small bright convenience store in the station: shelves of rice balls, bread and snacks, a fridge of drinks, a red vending machine by the door, a counter with a register; every shelf label and price card BLANK. No people.', '4章 3話「なんでも かう ことが できます」（駅の コンビニ）'),
+  miyako('miyako_subway', 'an underground subway platform: tiled walls, a long platform with benches, a green-and-silver subway train slowly arriving from a dark tunnel, a big BLANK route map on the wall and BLANK station-name boards. No people.', '4章 4話「のった ことが ありますか」（地下鉄の ホーム）'),
+  miyako('miyako_exit', 'the big square in front of the station in the evening: four exit gates of the station building (east, west, south, north) each with a BLANK board, a huge BLANK signboard for the town\'s name over the main entrance, a large BLANK city map stand, a compass-rose mosaic in the paving, the tall lattice tower far away among the buildings. No people.', '4章 5話「どっちに いく？」（駅前の ひろば）'),
+  miyako('miyako_yatai', 'a row of small night food stalls with paper lanterns at the foot of the tall lattice tower: an oden cart with a steaming pot, a skewer stall, little stools, steam rising into the cold night, the tower rising above; every stall sign BLANK. No people.', '4章 6話「よるに なりました」（タワーの 下の 屋台）'),
+  miyako('miyako_tower', 'inside the tall lattice tower: an iron spiral staircase climbing up past big round windows that show the night city lights far below, a stopped elevator with its doors closed, a brass telescope at a window, a BLANK calendar board on the wall. No people.', '4章 7話「みたり あるいたり」（タワーの 中）'),
+  miyako('miyako_tower_top', 'the open observation deck at the very top of the lattice tower at night, taken over: black-violet ink mist swirling around the railing, heaps of eaten BLANK signs, maps, calendars and dead light bulbs, thousands of tiny golden letter-motes trapped in floating ink bubbles, the dark city far below. Spooky but kid-friendly. No people.', '4章 8話 まとめの ボス（タワーの 上・大モジクイ）'),
+  miyako('miyako_lights_back', 'the huge capital city at night after the letters return, seen from high up: every street, station, window and sign glowing warmly, the lattice tower lit up in gold, trams and subway lights; but far away on the horizon, a strange dark storm of violet clouds is gathering under the moon. Hopeful but with a hint of mystery. No people.', '4章 クリア（町の 明かりが 戻る・遠くに 王の 影）'),
 ];
 
 const PORT = [
@@ -665,6 +692,12 @@ const PEOPLE = {
   ramen: { ref: 'ISTP_f', who: 'a strong, proud noodle-shop master in her forties: a black twisted towel headband over short black hair, a black work jacket with rolled sleeves, a dark-indigo apron, thick confident eyebrows, a noodle strainer in her hand' },
   delivery: { ref: 'ESTP', who: 'a speedy food-delivery boy about eighteen: a red bicycle helmet with goggles pushed up, a clear rain poncho over a yellow jacket, black shorts and long socks, carrying a stacked wooden food-delivery box by its handle' },
   grocer: { ref: 'ESFJ', who: 'a cheerful old market grocer in his sixties who sells to the cooks of the contest: a round bald head with a white headband, a big white moustache, a purple apron with many pockets over a striped shirt, rubber boots, a basket of fresh vegetables' },
+  // 4章 京(みやこ)タウン（docs/design/15）
+  guide: { ref: 'ISFJ', who: 'a cheerful young station guide in her twenties at the huge city station: a short black bob under a small red cap, a red-and-navy uniform jacket with brass buttons, a lantern-shaped hand light' },
+  granny: { ref: 'INFJ_f', who: 'a sweet tiny grandma travelling with heavy luggage: white hair in a bun with a hairpin, round glasses, a lavender cardigan over a flowered dress, a big old leather suitcase and a cloth bundle' },
+  konbini: { ref: 'ENFP', who: 'an energetic convenience-store clerk about twenty: spiky orange hair, a green-and-white striped store vest over a white shirt, a blank name badge, a big friendly grin' },
+  conductor: { ref: 'ISTJ', who: 'a dependable subway conductor in his forties: a navy cap with a silver badge, a navy uniform with silver piping, a neat moustache, white gloves, a whistle on a chain' },
+  yatai: { ref: 'ESTJ', who: 'a warm night-stall cook in his sixties who runs an oden cart: a towel headband, a dark-blue happi coat over a white undershirt, a thick grey beard, a ladle' },
   cook: { ref: 'ENTJ_f', who: 'a warm eatery cook in her fifties: a white bandana over grey-streaked hair, a white cook\'s coat with rolled sleeves and a red apron, a wooden ladle' },
   yamada: { ref: 'ESFJ_f', who: 'Yamada-san, a gentle woman in her forties who lives in the town: short wavy brown hair with a pink cherry-blossom hairpin, a sky-blue cardigan over a white blouse, a navy pleated skirt, a small pink rosette pinned on the cardigan' },
 };
@@ -759,6 +792,17 @@ const FOLK = [
   human('delivery', 'trouble', 'happy', 'troubled: soaked by rain, holding the food-delivery box, looking left and right in confusion, water drops flying.', '3章 4話 出前の 人（入口が わからない）'),
   human('grocer', 'happy', 'happy', 'happy: holding up a big fresh daikon radish and a cabbage, laughing, eyes crinkled, sparkles.', '3章 5話 いちばの 人（売る ふだが 戻った）'),
   human('grocer', 'trouble', 'happy', 'troubled: holding a blank board, scratching his bald head, puzzled frown, a sweat drop.', '3章 5話 いちばの 人（売り場が わからない）'),
+  // 4章 京(みやこ)タウン（docs/design/15）
+  human('guide', 'happy', 'happy', 'happy: holding her lantern light up high, the other hand waving toward the viewer, a bright smile, sparkles.', '4章 1話 駅の あんないの 人（明かりが ついた）'),
+  human('guide', 'trouble', 'happy', 'troubled: in the dark, shining her lantern light at a blank board, eyebrows up, a sweat drop.', '4章 1話 駅の あんないの 人（明かりが つかない）'),
+  human('granny', 'happy', 'happy', 'happy: hands together in thanks, eyes curved in a big warm smile, the suitcase beside her, little sparkles.', '4章 2話 おばあさん（にもつが 軽く なった）'),
+  human('granny', 'trouble', 'happy', 'troubled: struggling to pull the heavy suitcase, leaning back, a worried face, sweat drops.', '4章 2話 おばあさん（にもつが 重い）'),
+  human('konbini', 'happy', 'happy', 'happy: holding out a bottle of energy drink toward the viewer with a big grin and a thumbs-up, sparkles.', '4章 3話 コンビニの 店員（ふだが 戻った）'),
+  human('konbini', 'trouble', 'happy', 'troubled: holding a rice ball in one hand and a drink in the other, looking from one to the other in confusion, a sweat drop.', '4章 3話 コンビニの 店員（どれが 何か わからない）'),
+  human('conductor', 'happy', 'happy', 'happy: blowing his whistle with one hand raised in a salute, eyes curved in a smile, sparkles.', '4章 4話 地下鉄の しゃしょう（電車が 走る）'),
+  human('conductor', 'trouble', 'happy', 'troubled: looking at his pocket watch, then down the dark tunnel, a frown, a sweat drop.', '4章 4話 地下鉄の しゃしょう（電車が 来ない）'),
+  human('yatai', 'happy', 'happy', 'happy: holding up a skewer of oden and a steaming bowl, a big hearty laugh, steam swirls.', '4章 6話 屋台の 人（おでん）'),
+  human('yatai', 'trouble', 'happy', 'troubled: holding a blank wooden stall sign, scratching his head under the towel, puzzled, a sweat drop.', '4章 6話 屋台の 人（料理の 札が ない）'),
 ];
 
 // ---------------------------------------------------------------------------
@@ -956,7 +1000,7 @@ const GEAR_ART = [
   gear('charm-tomo', 'a friendship knot charm: two colorful braided cords (pink and sky-blue) tied together in a heart-shaped knot, with small beads.'),
 ];
 
-export const ASSETS = [...NEXMAX, ...GENDAI, ...MUKASHI_FOLK, ...ENEMIES, ...CREATURES, ...BG, ...NANIWA, ...PORT, ...FOOD, ...NEXMAX_NANIWA, ...FOLK, ...PROLOGUE_ART, ...PROLOGUE_EATEN, ...MAPS, ...ICONS, ...CARDS, ...WEAPONS, ...GEAR_ART];
+export const ASSETS = [...NEXMAX, ...GENDAI, ...MUKASHI_FOLK, ...ENEMIES, ...CREATURES, ...BG, ...NANIWA, ...PORT, ...FOOD, ...MIYAKO, ...NEXMAX_NANIWA, ...FOLK, ...PROLOGUE_ART, ...PROLOGUE_EATEN, ...MAPS, ...ICONS, ...CARDS, ...WEAPONS, ...GEAR_ART];
 
 export const GROUPS = {
   nexmax: 'ネクマックス（表情・ポーズ）',
@@ -969,6 +1013,7 @@ export const GROUPS = {
   bg_prologue: 'プロローグの 1枚絵',
   bg_port: '背景 — 2章 ミナトタウン（海の むこうの 港町）',
   bg_food: '背景 — 3章 マンプクタウン（雨の たべものの 町）',
+  bg_miyako: '背景 — 4章 京(みやこ)タウン（電車で 行く 大きい 町）',
   nexmax_naniwa: 'ナニワタウンの ネクマックス（新ルートの 立ち絵）',
   folk_naniwa: '町の 人の 表情（困る・よろこぶ）',
   companion_cards: 'なかまの カード ★4・★5',

@@ -4,6 +4,7 @@ import { MOJI_CHAPTERS } from './mojiRoute';
 import { MOJI1_CAST, MOJI1_SCRIPTS } from './scripts/moji1';
 import { MOJI2_CAST, MOJI2_SCRIPTS } from './scripts/moji2';
 import { MOJI3_CAST, MOJI3_FINALE, MOJI3_SCRIPTS } from './scripts/moji3';
+import { MOJI4_CAST, MOJI4_FINALE, MOJI4_SCRIPTS } from './scripts/moji4';
 import { MOJI_FINALES } from './mojiFinale';
 import { getKanjiByChar } from '../lib/kanjiDb';
 import { unreadKanji } from '../lib/ruby';
@@ -212,6 +213,63 @@ describe('3章 scripts (docs/design/14)', () => {
   it('hides Hana’s name until 花 is written, in 3話', () => {
     expect(MOJI3_CAST.find((c) => c.id === 'hana')?.nameChars).toBe('花(はな)');
     expect(getMojiEpisode('moji-3-3')?.kanji).toContain('花');
+  });
+});
+
+describe('4章 scripts (docs/design/15)', () => {
+  const scripts = [...Object.values(MOJI4_SCRIPTS).flatMap((s) => [s.intro, s.encounter, s.outro]), MOJI4_FINALE.intro, MOJI4_FINALE.outro];
+  const cast = new Map(MOJI4_CAST.map((c) => [c.id, c.sprites]));
+
+  it('exist for every 4章 episode, each opening on a scene', () => {
+    expect(Object.keys(MOJI4_SCRIPTS).sort()).toEqual(episodesOf('moji-4').map((e) => e.id).sort());
+    for (const s of scripts) expect(s.lines[0].bg, s.stageId).toBeTruthy();
+  });
+
+  it('give every kanji a reading, keep English behind EN, and use pictures', () => {
+    const bad: string[] = [];
+    for (const s of scripts) {
+      for (const l of s.lines) {
+        for (const c of [...unreadKanji(l.text), ...unreadKanji(l.glyph ?? '')]) bad.push(`${s.stageId}: ${c} in "${l.text}"`);
+        if (/[A-Za-z]/.test(l.text)) bad.push(`${s.stageId}: English on screen "${l.text}"`);
+      }
+      if (!s.lines.some((l) => /\p{Extended_Pictographic}/u.test(l.text + (l.glyph ?? '')))) bad.push(`${s.stageId}: no pictures`);
+    }
+    for (const c of MOJI4_CAST) for (const k of unreadKanji(c.name)) bad.push(`${c.id}: ${k}`);
+    expect(bad).toEqual([]);
+  });
+
+  it('use real scenes, effects, speakers and sprites — Sora and Hana as in 2章 and 3章', () => {
+    const bad: string[] = [];
+    for (const s of scripts) {
+      let scene = '';
+      for (const l of s.lines) {
+        if (l.bg) scene = l.bg;
+        if (!SCENES[scene]) bad.push(`${s.stageId}: scene ${scene}`);
+        for (const fx of l.fx ?? []) if (!fxNamesOf(scene).includes(fx)) bad.push(`${s.stageId}: fx ${fx}`);
+        if (l.speaker && !cast.has(l.speaker)) bad.push(`${s.stageId}: speaker ${l.speaker}`);
+        if (l.sprite && l.sprite !== 'none') {
+          const [who, expr] = l.sprite.split(':');
+          if (!cast.get(who)?.[expr ?? 'normal']) bad.push(`${s.stageId}: sprite ${l.sprite}`);
+        }
+      }
+    }
+    expect(bad).toEqual([]);
+    expect(cast.get('sora')).toBe(MOJI2_CAST.find((c) => c.id === 'sora')?.sprites);
+    expect(cast.get('hana')).toBe(MOJI3_CAST.find((c) => c.id === 'hana')?.sprites);
+  });
+
+  it('stays within lesson 20 (docs/constraints.md 2026-10-04)', () => {
+    // 16〜20課 (て形・ない形・辞書形・た形・ふつうの 言い方) are open here; passive, potential, ば, なら, たら,
+    // the volitional (行こう), かもしれません, 〜ていく and the と-conditional are later lessons.
+    // 〜なければ なりません (17課) is in; other ば-forms are not.
+    const PAST_LEVEL = /(られ|れます|れません|えば|けば|(?<!なけ)れば|なら、|たら、|だら、|かもしれ|ていきます|ていく|[くすつぬむるうぐぶ]と、|(こう|ろう|よう|ぼう)[！!。])/;
+    const bad = scripts.flatMap((s) => s.lines.filter((l) => PAST_LEVEL.test(l.text.replace(/\([^)]*\)/g, ''))).map((l) => `${s.stageId}: ${l.text}`));
+    expect(bad).toEqual([]);
+  });
+
+  it('names the town with 京 from the start, so it reads みやこ until 5話 brings 京 back', () => {
+    expect(MOJI4_SCRIPTS['moji-4-1'].intro.lines.some((l) => l.text.includes('京(みやこ)タウン'))).toBe(true);
+    expect(getMojiEpisode('moji-4-5')?.kanji).toContain('京');
   });
 });
 
