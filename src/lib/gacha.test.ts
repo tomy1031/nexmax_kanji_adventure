@@ -6,6 +6,7 @@ import {
   MULTI_COUNT,
   PULL_COST,
   STAR5_CEILING,
+  cardRates,
   daysToNextPickup,
   isMet,
   pickupOf,
@@ -209,6 +210,38 @@ describe('町の 人は お話で 会ってから (2026-10-05)', () => {
     for (let i = 0; i < 400; i++) seen.add(pull('town', [], 0, 0, rnd, false, met).card.char);
     expect(seen.has('sora')).toBe(true);
     expect(seen.has('usher')).toBe(false);
+  });
+});
+
+describe('くわしい かくりつ (docs/design/16 §6)', () => {
+  it('adds up to one on every gacha, with each rarity at its rate', () => {
+    for (const id of ['standard', 'pickup', 'town'] as const) {
+      const rates = cardRates(id, [], 3);
+      expect(rates.reduce((n, r) => n + r.rate, 0), id).toBeCloseTo(1, 9);
+      for (const rarity of [3, 4, 5] as const) {
+        const sum = rates.filter((r) => r.card.rarity === rarity).reduce((n, r) => n + r.rate, 0);
+        expect(sum, `${id} ★${rarity}`).toBeCloseTo(BANNERS[id].rates[rarity], 9);
+      }
+    }
+  });
+
+  it('matches what the pulls give', () => {
+    const rnd = seeded(11);
+    const n = 40000;
+    const count = new Map<string, number>();
+    for (let i = 0; i < n; i++) {
+      const id = pull('pickup', [], 0, 5, rnd).card.id;
+      count.set(id, (count.get(id) ?? 0) + 1);
+    }
+    for (const { card, rate } of cardRates('pickup', [], 5).slice(0, 4)) {
+      expect((count.get(card.id) ?? 0) / n, card.id).toBeCloseTo(rate, 2);
+    }
+  });
+
+  it('leaves out the town people the story has not met', () => {
+    const met = (c: (typeof CARDS)[number]) => isMet(c, ['moji-1-1', 'moji-1-2']);
+    const chars = new Set(cardRates('town', [], 0, met).map((r) => r.card.char));
+    expect([...chars]).toEqual(['yamada']);
   });
 });
 

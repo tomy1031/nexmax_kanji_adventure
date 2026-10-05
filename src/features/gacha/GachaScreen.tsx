@@ -9,6 +9,7 @@ import {
   BANNERS,
   BOND_REFUND,
   STAR5_CEILING,
+  cardRates,
   daysToNextPickup,
   pickupOf,
   isMet,
@@ -109,6 +110,7 @@ export const GachaScreen = () => {
   /** How many of the cards have been turned face-up. */
   const [revealed, setRevealed] = useState(0);
   const [busy, setBusy] = useState(false);
+  const [ratesOpen, setRatesOpen] = useState(false);
   const flipTimers = useRef<ReturnType<typeof setTimeout>[]>([]);
   useEffect(() => () => flipTimers.current.forEach(clearTimeout), []);
 
@@ -261,6 +263,20 @@ export const GachaScreen = () => {
           <p className="mt-1.5 text-xs" style={{ color: 'var(--color-gold-2)' }}>
             <RubyText showFurigana={showFurigana}>10回(かい)の 中(なか)に ★4 いじょうが かならず 1枚(まい)</RubyText>
           </p>
+          {banner.ceiling && (
+            // How far the ★5 ceiling is, at a glance (docs/design/16 §6).
+            <div className="mt-2 text-left text-[11px] font-black" style={{ color: 'var(--ink-2)' }}>
+              <div className="flex justify-between">
+                <RubyText showFurigana={showFurigana}>{`★5 かくてい まで あと ${pullsUntilStar5(pity)}回(かい)`}</RubyText>
+                <span className="tabular-nums">
+                  {pity} / {STAR5_CEILING}
+                </span>
+              </div>
+              <div className="mt-0.5 h-2 overflow-hidden rounded-full" style={{ background: 'var(--line)' }}>
+                <div className="h-full rounded-full" style={{ width: `${(pity / STAR5_CEILING) * 100}%`, background: 'linear-gradient(90deg,#ff8fc1,#ffd36a,#8be0a8,#7fb2ff)' }} />
+              </div>
+            </div>
+          )}
           <button type="button" className="g-btn g-btn-ghost mt-3 w-full" disabled={!canSingle} onClick={doSingle}>
             <RubyText showFurigana={showFurigana}>{`1回(かい) ひく（◆${banner.single}）`}</RubyText>
           </button>
@@ -311,8 +327,53 @@ export const GachaScreen = () => {
               <RubyText showFurigana={showFurigana}>お金(かね)は つかいません。ジェムは 書(か)いて もらえます。</RubyText>
             </li>
           </ul>
+          <button type="button" data-tap className="g-btn g-btn-ghost mt-3 w-full !min-h-[40px] text-xs" onClick={() => setRatesOpen(true)}>
+            <RubyText showFurigana={showFurigana}>くわしい かくりつ（カードごと） ▶</RubyText>
+          </button>
         </div>
       </div>
+
+      {/* くわしい かくりつ: every card this gacha can give now, and its chance (docs/design/16 §6). */}
+      <AnimatePresence>
+        {ratesOpen && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4 py-6"
+            onClick={() => setRatesOpen(false)}
+          >
+            <div
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="rates-title"
+              className="g-panel-solid flex max-h-full w-full max-w-sm flex-col p-4 text-left"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <h2 id="rates-title" className="g-title text-base">
+                <RubyText showFurigana={showFurigana}>{`${banner.name} の かくりつ`}</RubyText>
+              </h2>
+              <p className="mt-1 text-[11px] leading-[1.8]" style={{ color: 'var(--ink-2)' }}>
+                <RubyText showFurigana={showFurigana}>1回(かい)ごとの かくりつです。まだ もって いない カードが 先(さき)に 出(で)ます。お話(はなし)で まだ 会(あ)って いない 町(まち)の 人(ひと)は 出(で)ません。</RubyText>
+              </p>
+              <ul className="mt-2 min-h-0 flex-1 overflow-y-auto pr-1 text-xs">
+                {cardRates(bannerId, owned, week, met).map(({ card, rate }) => (
+                  <li key={card.id} className="flex items-center gap-2 border-b py-1" style={{ borderColor: 'var(--line)' }}>
+                    <Stars n={card.rarity} />
+                    <span className="min-w-0 flex-1 truncate font-bold">
+                      <RubyText showFurigana={showFurigana}>{card.name}</RubyText>
+                    </span>
+                    <span className="tabular-nums">{(rate * 100).toFixed(rate < 0.001 ? 3 : 2)}%</span>
+                  </li>
+                ))}
+              </ul>
+              <button type="button" data-tap className="g-btn g-btn-primary mt-3 w-full" onClick={() => setRatesOpen(false)}>
+                <RubyText showFurigana={showFurigana}>とじる</RubyText>
+              </button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* 結果 ------------------------------------------------------------ */}
       <AnimatePresence>
