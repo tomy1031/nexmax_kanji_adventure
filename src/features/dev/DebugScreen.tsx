@@ -197,6 +197,7 @@ const StoryTab = () => {
     tools: 'どうぐの 説明',
     forge: '合成の 説明',
     intro: 'むかし編 0話',
+    gacha: 'はじめての ガチャ',
   };
   return (
     <>

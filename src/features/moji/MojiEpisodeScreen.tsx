@@ -20,6 +20,7 @@ import { getMojiEpisode, type MojiEpisode } from '../../data/mojiEpisodes';
 import { MOJI_CHAPTERS } from '../../data/mojiRoute';
 import { MOJI1_PRELUDE } from '../../data/scripts/moji1';
 import { MOJI_CAST, MOJI_SCRIPTS } from '../../data/mojiScripts';
+import { UNLOCKED_ON_MOJI } from '../../data/unlocks';
 import { afterEpisodePath, canForge, isChapterOpen, isForgeOpen } from '../../data/mojiFlow';
 import { finaleNumber, finalePool, getMojiFinale, isFinaleOpen } from '../../data/mojiFinale';
 import { MOJI_FINALE_SCRIPTS } from '../../data/mojiFinaleScripts';
@@ -432,8 +433,14 @@ const EpisodePlayer = ({ id }: { id: string }) => {
 
   // The win records the clear (BattleScene); the story's end moves on.
   const finish = () => {
+    const state = useGameStore.getState();
+    // 1章 4話 opens the gacha and gives its first ticket: the first pull is made now, shown how (docs/design/16 §3).
+    if (ep.id === UNLOCKED_ON_MOJI.gacha && !state.tutorials.gacha && state.gachaTickets > 0) {
+      navigate('/gacha?first=1');
+      return;
+    }
     // The chapter's last episode runs straight on into its まとめの ボス; a replay goes back to the map.
-    const path = afterEpisodePath(ep.id, useGameStore.getState().clearedStages);
+    const path = afterEpisodePath(ep.id, state.clearedStages);
     if (path) navigate(path);
     else setPhase('end');
   };

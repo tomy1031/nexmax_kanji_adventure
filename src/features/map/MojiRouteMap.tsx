@@ -238,9 +238,11 @@ const FeatureTags = ({ cleared, showFurigana, onOpen }: { cleared: readonly stri
  */
 const GachaMachine = ({ showFurigana, still, onOpen }: { showFurigana: boolean; still: boolean; onOpen: () => void }) => {
   const gems = useGameStore((s) => s.gems);
+  const tickets = useGameStore((s) => s.gachaTickets);
   const [seen] = useState(readSeen);
   const fresh = !seen.includes(Feature.GACHA);
-  const can = gems >= MULTI_COST ? '10回(かい) ひける！' : gems >= PULL_COST ? '1回(かい) ひける！' : null;
+  // 「できます」reads plainer than ひける (2026-10-05).
+  const can = tickets > 0 ? `チケット ${tickets}まい！` : gems >= MULTI_COST ? '10回(かい) できます！' : gems >= PULL_COST ? '1回(かい) できます！' : null;
   const glow = fresh || can != null;
   return (
     <motion.button

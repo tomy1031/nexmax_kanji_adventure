@@ -188,3 +188,26 @@ describe('ひみつを 1つずつ (store)', () => {
     expect(old.tipsSeen).toEqual([]);
   });
 });
+
+describe('ガチャチケット (docs/design/16 §3)', () => {
+  it('comes once, with the first clear of the episode that opens the gacha', () => {
+    const st = () => useGameStore.getState();
+    expect(st().gachaTickets).toBe(0);
+    st().clearStage('moji-1-3');
+    expect(st().gachaTickets).toBe(0);
+    st().clearStage('moji-1-4');
+    expect(st().gachaTickets).toBe(1);
+    st().clearStage('moji-1-4'); // a replay
+    expect(st().gachaTickets).toBe(1);
+  });
+
+  it('is spent one at a time, and not below none', () => {
+    const st = () => useGameStore.getState();
+    st().clearStage('moji-1-4');
+    expect(st().useGachaTicket()).toBe(true);
+    expect(st().gachaTickets).toBe(0);
+    expect(st().useGachaTicket()).toBe(false);
+    expect(st().gachaTickets).toBe(0);
+  });
+});
+
