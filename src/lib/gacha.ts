@@ -161,6 +161,43 @@ export const pull = (
   return { card, duplicate: owned.includes(card.id), guaranteed: ceilingHit || promised, featured };
 };
 
+/**
+ * Each card's chance on one ordinary pull (not the ceiling's), worked out
+ * from the same rules `pull` follows: the rarity's rate, shared among the
+ * cards that can come out — the ones the story has met, and, while there are
+ * any, the ones the player does not have yet (a card owned waits until its
+ * rarity is complete). On the pickup, half of a ★5 or ★4 is this week's
+ * card(s). For the くわしい かくりつ table (docs/design/16 §6).
+ */
+export const cardRates = (bannerId: BannerId, owned: readonly string[], week: number, met: Met = everyone): { card: Individual; rate: number }[] => {
+  const banner = BANNERS[bannerId];
+  const out = new Map<string, { card: Individual; rate: number }>();
+  const add = (card: Individual, rate: number) => {
+    const e = out.get(card.id);
+    if (e) e.rate += rate;
+    else out.set(card.id, { card, rate });
+  };
+  for (const rarity of [5, 4, 3] as const) {
+    const r = banner.rates[rarity];
+    if (r <= 0) continue;
+    const pool = metOr(
+      CARDS.filter((c) => c.rarity === rarity && banner.has(c)),
+      met,
+    );
+    const fresh = pool.filter((c) => !owned.includes(c.id));
+    const from = fresh.length > 0 ? fresh : pool;
+    let rest = r;
+    if (bannerId === 'pickup' && rarity >= 4) {
+      const { five, fours } = pickupOf(week, met);
+      const featured = rarity === 5 ? [five] : fours;
+      for (const c of featured) add(c, (r * 0.5) / featured.length);
+      rest = r * 0.5;
+    }
+    for (const c of from) add(c, rest / from.length);
+  }
+  return [...out.values()].sort((a, b) => b.card.rarity - a.card.rarity || b.rate - a.rate);
+};
+
 /** Pulls left before the ★5 ceiling. */
 export const pullsUntilStar5 = (pity: number): number => Math.max(0, STAR5_CEILING - pity);
 
