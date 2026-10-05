@@ -22,6 +22,7 @@ import { useBgm } from '../../lib/bgm';
 import { preloadImages } from '../../lib/preload';
 import { episodeArt } from '../../data/episodeArt';
 import { Feature, isFeatureUnlocked } from '../../data/unlocks';
+import { MULTI_COST, PULL_COST } from '../../lib/gacha';
 import { isVersusConfigured } from '../../lib/versusConfig';
 
 /**
@@ -177,7 +178,7 @@ const FeatureTags = ({ cleared, showFurigana, onOpen }: { cleared: readonly stri
   const [seen] = useState(readSeen);
   const tags = [
     { feature: Feature.DAILY, icon: '📅', label: 'まいにち', en: 'Daily', path: '/daily' },
-    { feature: Feature.GACHA, icon: '🤖', label: 'なかま', en: 'Friends', path: '/gacha' },
+    // The gacha has its own machine on the right (GachaMachine, docs/design/16 §4).
     // Only where the relay is configured: a tag that always says つながりません is a broken promise.
     ...(isVersusConfigured ? [{ feature: Feature.VERSUS, icon: '⚔️', label: 'たいせん', en: 'Versus', path: '/versus' }] : []),
   ].filter((t) => isFeatureUnlocked(t.feature, cleared));
@@ -227,6 +228,70 @@ const FeatureTags = ({ cleared, showFurigana, onOpen }: { cleared: readonly stri
         </motion.button>
       ))}
     </>
+  );
+};
+
+/**
+ * The way into the gacha (docs/design/16 §4): a big glowing machine under
+ * まいにち, not a small tag — and a red tag when a pull can be
+ * made now. NEW and a ring until it is first tapped, as the other features.
+ */
+const GachaMachine = ({ showFurigana, still, onOpen }: { showFurigana: boolean; still: boolean; onOpen: () => void }) => {
+  const gems = useGameStore((s) => s.gems);
+  const [seen] = useState(readSeen);
+  const fresh = !seen.includes(Feature.GACHA);
+  const can = gems >= MULTI_COST ? '10回(かい) ひける！' : gems >= PULL_COST ? '1回(かい) ひける！' : null;
+  const glow = fresh || can != null;
+  return (
+    <motion.button
+      type="button"
+      data-tap
+      aria-label={`ガチャ${can ? `（${can.replace(/\(.*?\)/g, '')}）` : ''}`}
+      onClick={() => {
+        markSeen(Feature.GACHA);
+        onOpen();
+      }}
+      whileTap={{ scale: 0.94 }}
+      initial={{ opacity: 0, scale: 0.8 }}
+      animate={{ opacity: 1, scale: 1 }}
+      transition={{ delay: 0.7, type: 'spring', stiffness: 260, damping: 18 }}
+      className="absolute"
+      style={fromTop(6, 566, 228, 236)}
+    >
+      {glow && (
+        <motion.span
+          aria-hidden
+          className="pointer-events-none absolute inset-[6%] rounded-full"
+          style={{ background: 'radial-gradient(circle, rgba(255,214,110,0.75), rgba(255,140,200,0.35) 45%, transparent 70%)', willChange: 'opacity, transform' }}
+          animate={still ? undefined : { opacity: [0.45, 1, 0.45], scale: [0.92, 1.06, 0.92] }}
+          transition={{ duration: 1.8, repeat: Infinity }}
+        />
+      )}
+      <motion.img
+        src={assetPath('img/gacha/machine.webp')}
+        alt=""
+        aria-hidden
+        draggable={false}
+        className="relative block h-auto w-full select-none"
+        style={{ filter: 'drop-shadow(0 1.2cqw 2cqw rgba(0,0,0,0.55))', willChange: 'transform' }}
+        animate={still ? undefined : { rotate: [-2, 2, -2] }}
+        transition={{ duration: 2.4, repeat: Infinity, ease: 'easeInOut' }}
+      />
+      <span
+        className="absolute left-1/2 -translate-x-1/2 rounded-full border-[0.4cqw] border-[#ffd36a] px-[2.4cqw] font-black whitespace-nowrap text-[#fff1cf]"
+        style={{ bottom: cq(-6), fontSize: cq(26), background: 'linear-gradient(180deg,#d0567a,#8a2a5a)', boxShadow: '0 0.8cqw 1.6cqw rgba(0,0,0,0.5)' }}
+      >
+        ガチャ
+      </span>
+      {(fresh || can) && (
+        <span
+          className="absolute -top-[1cqw] -right-[1cqw] rounded-[1cqw] bg-[#e2453c] px-[1.2cqw] leading-[1.6] font-black whitespace-nowrap text-white"
+          style={{ fontSize: cq(17), boxShadow: '0 0.6cqw 1.2cqw rgba(0,0,0,0.4)' }}
+        >
+          {can ? <RubyText showFurigana={showFurigana}>{can}</RubyText> : 'NEW'}
+        </span>
+      )}
+    </motion.button>
   );
 };
 
@@ -487,6 +552,7 @@ export const MojiRouteMap = () => {
             transition={{ duration: 1.4, repeat: Infinity, ease: 'easeInOut' }}
           />
           {!sheet && <FeatureTags cleared={cleared} showFurigana={showFurigana} onOpen={(path) => navigate(path)} />}
+          {!sheet && isFeatureUnlocked(Feature.GACHA, cleared) && <GachaMachine showFurigana={showFurigana} still={still} onOpen={() => navigate('/gacha')} />}
           {/* つづき — Nexmax says where we go next; a tap plays it (08 §3.8) */}
           {!sheet && (
             <motion.button
