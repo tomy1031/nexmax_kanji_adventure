@@ -15,6 +15,7 @@ import { DEFAULT_VERSUS_STATS, type VersusStats } from '../features/versus/types
 import { FoundVia, HINT_COST, MAX_HINT, TRY_COST_2, TRY_COST_3 } from '../lib/forge/discovery';
 import { getGear, type GearSlot } from '../data/equipment';
 import { ALL_KANJI } from '../data/kanji.generated';
+import { UNLOCKED_ON_MOJI } from '../data/unlocks';
 
 /**
  * The whole save file.
@@ -102,6 +103,12 @@ export interface GameState {
   gems: number;
   /** Pity counter since the last top-rarity pull. */
   pityCount: number;
+  /**
+   * ガチャチケット: one pull without gems. The first comes with the first clear
+   * of the episode that opens the gacha (1章 4話), so the first pull is made
+   * there and then, shown how (docs/design/16 §3).
+   */
+  gachaTickets: number;
   /** きずな by card id, 0..BOND_MAX (docs/design/11 §4.2): a duplicate pull or a ★3 win with it along. */
   bonds: Record<string, number>;
   /** The day each card last gained きずな from a win — one a day. */
@@ -114,7 +121,7 @@ export interface GameState {
   settings: { furigana: boolean; muted: boolean; reducedMotion: boolean; bgmOff: boolean; english: boolean };
   /** One-off explainers the player has already been shown. */
   /** intro: むかし編の 0話. prologue: 文字が 消えた 町の プロローグ (08 §10.2). stars: じゅんびの ★の ひみつ. */
-  tutorials: { forge: boolean; intro: boolean; prologue: boolean; stars: boolean; tools: boolean };
+  tutorials: { forge: boolean; intro: boolean; prologue: boolean; stars: boolean; tools: boolean; gacha: boolean };
   /** The world last played in — where つづきから, ストーリー and もどる lead back to. */
   lastArc: 'mukashi' | 'gendai' | 'moji';
   /**
@@ -154,6 +161,8 @@ export interface GameActions {
    */
   gainExp: (n: number, source?: { bossRepeat?: boolean }) => number;
   clearStage: (stageId: string) => void;
+  /** Spends one ガチャチケット. False when there is none. */
+  useGachaTicket: () => boolean;
   /** Records a かんぺき clear. True only the first time for that stage. */
   markPerfect: (stageId: string) => boolean;
   /** Records a Hard win. True only the first time for that stage. */
@@ -227,12 +236,13 @@ const initialState: GameState = {
   equippedGear: { shield: null, body: null, charm: null },
   gems: 0,
   pityCount: 0,
+  gachaTickets: 0,
   bonds: {},
   bondDays: {},
   daily: freshDaily(),
   streak: { count: 0, lastDate: '' },
   settings: { furigana: true, muted: false, reducedMotion: false, bgmOff: false, english: true },
-  tutorials: { forge: false, intro: false, prologue: false, stars: false, tools: false },
+  tutorials: { forge: false, intro: false, prologue: false, stars: false, tools: false, gacha: false },
   // A new player starts on the new route (08 §10.2).
   lastArc: 'moji',
   startPath: null,
@@ -362,11 +372,19 @@ export const useGameStore = create<GameState & GameActions>()(
             : {
                 clearedStages: [...s.clearedStages, stageId],
                 daily: { ...s.daily, stagesToday: s.daily.stagesToday + 1 },
+                // The gacha opens here: its first pull comes with it (docs/design/16 §3).
+                ...(stageId === UNLOCKED_ON_MOJI.gacha ? { gachaTickets: s.gachaTickets + 1 } : {}),
               },
         );
       },
 
       addGems: (n) => set((s) => ({ gems: s.gems + n })),
+
+      useGachaTicket: () => {
+        if (get().gachaTickets <= 0) return false;
+        set((s) => ({ gachaTickets: s.gachaTickets - 1 }));
+        return true;
+      },
 
       spendGems: (n) => {
         if (get().gems < n) return false;

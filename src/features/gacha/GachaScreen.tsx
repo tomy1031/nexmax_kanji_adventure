@@ -2,7 +2,9 @@ import { useEffect, useRef, useState } from 'react';
 import { useMapPath } from '../../lib/nav';
 import { Backdrop } from '../../components/ui/Backdrop';
 import { NightStreetBackdrop } from '../write/NightStreet';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
+import { afterEpisodePath } from '../../data/mojiFlow';
+import { UNLOCKED_ON_MOJI } from '../../data/unlocks';
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import { SummonOverlay } from './SummonOverlay';
 import { Star5CutIn } from './Star5CutIn';
@@ -47,6 +49,8 @@ import * as sfx from '../../lib/sfx';
 interface Shown extends PullResult {
   bondTo: number | null;
   refund: number;
+  /** Why this card was certain, when it was not the ceiling (the first ticket). */
+  note?: string;
 }
 
 const BACK: Record<number, string> = {
@@ -124,6 +128,32 @@ export const GachaScreen = () => {
   useEffect(() => () => flipTimers.current.forEach(clearTimeout), []);
 
   const canSingle = gems >= banner.single && !busy;
+
+  // ガチャチケット and the first pull, shown how (docs/design/16 §3).
+  const tickets = useGameStore((s) => s.gachaTickets);
+  const spendTicket = useGameStore((s) => s.useGachaTicket);
+  const firstDone = useGameStore((s) => s.tutorials.gacha);
+  const markTutorialSeen = useGameStore((s) => s.markTutorialSeen);
+  const [params] = useSearchParams();
+  /** Brought here by 1章 4話 with its ticket: point at it, and say what a friend does after. */
+  const first = !firstDone && (params.get('first') === '1' || tickets > 0);
+  const [firstPulled, setFirstPulled] = useState<Shown | null>(null);
+  const [howTo, setHowTo] = useState(false);
+  const doTicket = () => {
+    if (busy || !spendTicket()) return;
+    setBusy(true);
+    // The first is a ★4 or better: a friend worth taking into the next fight.
+    const r = pull(bannerId, owned, pity, week, Math.random, first, met);
+    setPity(pityAfter(bannerId, pity, r));
+    const shown = apply([r]).map((s) => (first ? { ...s, guaranteed: false, note: 'はじめての ★4 かくてい' } : s));
+    if (first) setFirstPulled(shown[0]);
+    setSummon(shown);
+  };
+  const endFirst = () => {
+    markTutorialSeen('gacha');
+    setHowTo(false);
+    navigate(afterEpisodePath(UNLOCKED_ON_MOJI.gacha, useGameStore.getState().clearedStages) ?? mapPath);
+  };
   const canMulti = gems >= banner.multi && !busy;
 
   /** Into the save: new cards join, duplicates raise きずな or give gems back. */
@@ -199,6 +229,7 @@ export const GachaScreen = () => {
     flipTimers.current.forEach(clearTimeout);
     setResults(null);
     setRevealed(0);
+    if (firstPulled && !firstDone) setHowTo(true);
   };
 
   const isMulti = results !== null && results.length > 1;
@@ -224,7 +255,14 @@ export const GachaScreen = () => {
               Friends
             </span>
           </h1>
-          <span className="g-chip g-chip-gold text-xs tabular-nums">◆ {gems}</span>
+          <span className="flex items-center gap-1">
+            {tickets > 0 && (
+              <span className="g-chip text-xs tabular-nums" aria-label={`チケット ${tickets}`}>
+                <img src={assetPath('img/gacha/ticket.webp')} alt="" aria-hidden className="h-4 w-auto" /> {tickets}
+              </span>
+            )}
+            <span className="g-chip g-chip-gold text-xs tabular-nums">◆ {gems}</span>
+          </span>
         </div>
         <div className="mt-2 flex gap-1.5" role="tablist" aria-label="ガチャの しゅるい">
           {(['pickup', 'standard', 'town'] as const).map((id) => (
@@ -263,6 +301,28 @@ export const GachaScreen = () => {
               <RubyText showFurigana={showFurigana}>ぜんぶの なかまの カードが 出(で)ます。</RubyText>
             )}
           </p>
+
+          {tickets > 0 && (
+            // A ticket: one pull without gems. Above everything while there is one.
+            <motion.button
+              type="button"
+              data-tap
+              className={`g-btn mt-4 w-full !min-h-[68px] text-lg ${first ? 'relative z-[45]' : ''}`}
+              style={{ background: 'linear-gradient(180deg,#ffe39a,#e8a317)', color: '#3a2414', borderColor: '#fff3b0' }}
+              disabled={busy}
+              onClick={doTicket}
+              animate={first ? { scale: [1, 1.04, 1] } : undefined}
+              transition={{ duration: 1.2, repeat: Infinity }}
+            >
+              <img src={assetPath('img/gacha/ticket.webp')} alt="" aria-hidden className="h-10 w-auto" />
+              <span className="flex flex-col leading-tight">
+                <RubyText showFurigana={showFurigana}>チケットで 1回(かい) ひく</RubyText>
+                <span className="text-xs font-bold opacity-80">
+                  <RubyText showFurigana={showFurigana}>{first ? '★4 いじょう かくてい！' : `のこり ${tickets}まい`}</RubyText>
+                </span>
+              </span>
+            </motion.button>
+          )}
 
           {/* 10連を主役にする ------------------------------------------- */}
           <button type="button" className="g-btn g-btn-primary mt-4 w-full !min-h-[64px] text-lg" disabled={!canMulti} onClick={doMulti}>
@@ -390,6 +450,47 @@ export const GachaScreen = () => {
                 <RubyText showFurigana={showFurigana}>とじる</RubyText>
               </button>
             </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* はじめての ガチャ: everything dim but the ticket, and a hand at it (docs/design/16 §3). */}
+      <AnimatePresence>
+        {first && tickets > 0 && !summon && !results && (
+          <motion.div key="coach" className="fixed inset-0 z-40 bg-black/60" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+            <div className="g-parchment absolute inset-x-6 top-[max(70px,12dvh)] mx-auto max-w-sm px-4 py-3 text-center">
+              <p className="text-base leading-[2] font-black">
+                <img src={assetPath('img/gacha/ticket.webp')} alt="" aria-hidden className="mr-1 inline h-6 w-auto align-middle" />
+                <RubyText showFurigana={showFurigana}>チケットで なかまを よぼう！</RubyText>
+              </p>
+              <p className="text-sm leading-[1.9]" style={{ color: 'var(--ink-2)' }}>
+                <RubyText showFurigana={showFurigana}>はじめての 1回(かい)は ★4 いじょうが 出(で)ます。</RubyText>
+              </p>
+              <motion.p aria-hidden className="mt-1 text-3xl" animate={{ y: [0, 8, 0] }} transition={{ duration: 0.9, repeat: Infinity }}>
+                👇
+              </motion.p>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+      <AnimatePresence>
+        {howTo && firstPulled && (
+          <motion.div key="howto" className="fixed inset-0 z-50 flex items-center justify-center bg-black/65 px-6" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+            <motion.div role="dialog" aria-modal="true" aria-labelledby="howto-title" className="g-parchment w-full max-w-xs px-5 py-4 text-center" initial={{ scale: 0.9 }} animate={{ scale: 1 }}>
+              <img src={assetPath(firstPulled.card.art)} alt="" aria-hidden className="mx-auto h-28 object-contain" />
+              <p id="howto-title" className="mt-1 text-base leading-[2] font-black">
+                <RubyText showFurigana={showFurigana}>{`${firstPulled.card.shortName}が なかまに なりました！`}</RubyText>
+              </p>
+              <p className="mt-1 text-sm leading-[1.95]">
+                <RubyText showFurigana={showFurigana}>じゅんびで なかまを えらぶと、たたかいで わざを つかいます。</RubyText>
+              </p>
+              <p className="mt-1 text-xs leading-[1.9]" style={{ color: 'var(--ink-2)' }}>
+                <RubyText showFurigana={showFurigana}>{`わざ「${SKILL_INFO[SKILL_OF[firstPulled.card.char]].name}」 ${SKILL_INFO[SKILL_OF[firstPulled.card.char]].icon}`}</RubyText>
+              </p>
+              <button type="button" data-tap className="g-btn g-btn-primary mt-3 w-full" onClick={endFirst}>
+                <RubyText showFurigana={showFurigana}>つぎの 話(わ)へ ▶</RubyText>
+              </button>
+            </motion.div>
           </motion.div>
         )}
       </AnimatePresence>
@@ -522,9 +623,9 @@ const SingleCard = ({ r, face, showFurigana, onClose }: { r: Shown; face: boolea
         </div>
       ) : (
         <>
-          {r.guaranteed && (
+          {(r.note || r.guaranteed) && (
             <p className="g-eyebrow" style={{ color: 'var(--color-gold-2)' }}>
-              <RubyText showFurigana={showFurigana}>てんじょう</RubyText>
+              <RubyText showFurigana={showFurigana}>{r.note ?? 'てんじょう'}</RubyText>
             </p>
           )}
           {/* Its stars, one by one, then the friend steps out of the light. */}
