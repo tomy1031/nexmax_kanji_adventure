@@ -200,6 +200,12 @@ sky-blue (#A9D6F5), white and navy (#004F8D) mecha details where it clips on, be
 below. Shown alone, front view, centered. Output: 1024x1024 PNG, plain pure white (#FFFFFF) background with nothing
 else on it, no shadow on the ground, no text, no letters, no numbers, no kanji, no logo.`,
 
+  GACHA_PROP: `One game prop for the stage-select screen of a kids' kanji game set in a steampunk town of brass, glass
+and warm lantern light, in exactly the polished, glossy, anime game-art rendering of the reference image: soft shading,
+a clean dark outline, rich warm colors, sparkles of light. Shown alone, centered, three-quarter front view, so it reads
+at a small size. Output: 1024x1024 PNG, plain pure white (#FFFFFF) background with nothing else on it, no ground
+shadow, no text, no letters, no numbers, no kanji, no logo.`,
+
   ICON: `Output: 1024x1024 PNG. App icon for a kids' kanji learning game. Keep all important shapes inside the
 central 80% circle (the edges are cropped into a circle or rounded square on phones). Bold, simple, readable at 48px.
 No text, no letters, no kanji.`,
@@ -1002,7 +1008,21 @@ const GEAR_ART = [
   gear('charm-tomo', 'a friendship knot charm: two colorful braided cords (pink and sky-blue) tied together in a heart-shaped knot, with small beads.'),
 ];
 
-export const ASSETS = [...NEXMAX, ...GENDAI, ...MUKASHI_FOLK, ...ENEMIES, ...CREATURES, ...BG, ...NANIWA, ...PORT, ...FOOD, ...MIYAKO, ...NEXMAX_NANIWA, ...FOLK, ...PROLOGUE_ART, ...PROLOGUE_EATEN, ...MAPS, ...ICONS, ...CARDS, ...WEAPONS, ...GEAR_ART];
+// ---------------------------------------------------------------------------
+// ガチャ（docs/design/16）: 地図の 入口の 機械・ひく ときの 魔法陣・はじめての チケット。
+// ---------------------------------------------------------------------------
+const GACHA_ART = [
+  { id: 'gacha_machine', group: 'gacha', prio: 'A', out: 'img/gacha/machine.webp', kind: 'prop', bgmode: 'white', refs: ['public/img/stageselect/bg_tall.webp'], style: ['GACHA_PROP'],
+    diff: 'The item: a magical "friend-calling" capsule machine — a round glass dome on a polished brass and navy body with gears and rivets, the dome full of glowing colorful orbs (mostly sky-blue and silver, a few gold, one shining rainbow orb), a big brass crank handle on the side, a small chute at the bottom with a glowing orb just coming out, warm amber light spilling from inside, little stars and sparkles around it. Cute, chunky, inviting.',
+    used: 'ステージせんたくの ガチャの 入口（大きい ボタン）', note: '白い 背景を import.mjs が 切り抜く（prop）' },
+  { id: 'gacha_ticket', group: 'gacha', prio: 'A', out: 'img/gacha/ticket.webp', kind: 'prop', bgmode: 'white', refs: ['public/img/stageselect/bg_tall.webp'], style: ['GACHA_PROP'],
+    diff: 'The item: a shiny golden admission ticket with scalloped torn edges, a big embossed star in the middle surrounded by a ring of small stars, a red ribbon tied through a punched hole, glowing slightly. No letters or numbers anywhere on it.',
+    used: 'はじめての ガチャ チケット（1章 4話の あと）', note: '白い 背景を import.mjs が 切り抜く（prop）' },
+  { ...naniwa('gacha_portal', 'a magical summoning scene at night above the rooftops of the steampunk town: in the center of the picture a huge glowing circle of golden light floats in the air, made of concentric rings, gear-like notches and small dots of light (NO letters, NO symbols that look like writing), beams of warm light shooting up from it into a deep indigo starry sky, glowing orbs of sky-blue, gold and rainbow light swirling around it, lantern-lit rooftops far below. Dramatic, magical and joyful. No people.', 'ガチャを ひく ときの 演出の 背景'),
+    group: 'gacha', out: 'img/gacha/portal.webp' },
+];
+
+export const ASSETS = [...NEXMAX, ...GENDAI, ...MUKASHI_FOLK, ...ENEMIES, ...CREATURES, ...BG, ...NANIWA, ...PORT, ...FOOD, ...MIYAKO, ...NEXMAX_NANIWA, ...FOLK, ...PROLOGUE_ART, ...PROLOGUE_EATEN, ...MAPS, ...ICONS, ...CARDS, ...WEAPONS, ...GEAR_ART, ...GACHA_ART];
 
 export const GROUPS = {
   nexmax: 'ネクマックス（表情・ポーズ）',
@@ -1021,6 +1041,7 @@ export const GROUPS = {
   companion_cards: 'なかまの カード ★4・★5',
   weapons: '武器（ネクマックスに 積む）',
   gear: 'そうび（盾・よろい・おまもり。ネクマックスに 着せる）',
+  gacha: 'ガチャ（地図の 入口・ひく ときの 演出・チケット）',
   map: 'ステージ選択の 地図',
   icon: 'アプリの アイコン',
 };
