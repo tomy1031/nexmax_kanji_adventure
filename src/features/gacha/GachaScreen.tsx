@@ -3,7 +3,9 @@ import { useMapPath } from '../../lib/nav';
 import { Backdrop } from '../../components/ui/Backdrop';
 import { NightStreetBackdrop } from '../write/NightStreet';
 import { useNavigate } from 'react-router-dom';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
+import { SummonOverlay } from './SummonOverlay';
+import { Star5CutIn } from './Star5CutIn';
 import { useGameStore } from '../../store/gameStore';
 import {
   BANNERS,
@@ -111,6 +113,13 @@ export const GachaScreen = () => {
   const [revealed, setRevealed] = useState(0);
   const [busy, setBusy] = useState(false);
   const [ratesOpen, setRatesOpen] = useState(false);
+  /** The pull being shown coming down (SummonOverlay), before its cards are dealt. */
+  const [summon, setSummon] = useState<Shown[] | null>(null);
+  /** A ★5 just turned: its cut-in, and how far to keep turning after it. */
+  const [cutIn, setCutIn] = useState<{ r: Shown; resume: number } | null>(null);
+  const prefersReduced = useReducedMotion();
+  const settingReduced = useGameStore((s) => s.settings.reducedMotion);
+  const still = Boolean(prefersReduced || settingReduced);
   const flipTimers = useRef<ReturnType<typeof setTimeout>[]>([]);
   useEffect(() => () => flipTimers.current.forEach(clearTimeout), []);
 
@@ -136,44 +145,54 @@ export const GachaScreen = () => {
     if (!canSingle || !spendGems(banner.single)) return;
     setBusy(true);
     const r = pull(bannerId, owned, pity, week, Math.random, false, met);
-    setTimeout(() => {
-      setResults(apply([r]));
-      setPity(pityAfter(bannerId, pity, r));
-      setRevealed(0);
-      setBusy(false);
-      flipTo(1, [r]);
-    }, 450);
+    setPity(pityAfter(bannerId, pity, r));
+    setSummon(apply([r]));
   };
 
   const doMulti = () => {
     if (!canMulti || !spendGems(banner.multi)) return;
     setBusy(true);
     const { results: rs, pityAfter: p } = pullMany(bannerId, owned, pity, week, Math.random, met);
-    setTimeout(() => {
-      setResults(apply(rs));
-      setPity(p);
-      setRevealed(0);
-      setBusy(false);
-    }, 450);
+    setPity(p);
+    setSummon(apply(rs));
   };
 
-  /** Turn cards over up to `n`, one after another; a ★5 waits a beat first. */
-  const flipTo = (n: number, list: PullResult[] = results ?? []) => {
+  /** The light has burst: deal the cards. One card turns by itself. */
+  const dealt = () => {
+    const list = summon ?? [];
+    setSummon(null);
+    setResults(list);
+    setRevealed(0);
+    setBusy(false);
+    if (list.length === 1) flipTo(1, list, 0);
+  };
+
+  /**
+   * Turn cards over up to `n`, one after another; a ★5 waits a beat first,
+   * then has the whole screen (Star5CutIn) before the rest go on turning.
+   */
+  const flipTo = (n: number, list: Shown[] = results ?? [], from = revealed) => {
     flipTimers.current.forEach(clearTimeout);
     flipTimers.current = [];
     let at = 0;
-    for (let i = revealed; i < n; i++) {
+    for (let i = from; i < n; i++) {
       const r = list[i];
       at += r.card.rarity === 5 ? 800 : 260;
       flipTimers.current.push(
         setTimeout(() => {
           setRevealed((v) => Math.max(v, i + 1));
-          if (r.card.rarity === 5) sfx.fanfare();
+          if (r.card.rarity === 5) setCutIn({ r, resume: n });
           else if (r.card.rarity === 4) sfx.chime();
           else sfx.tap();
         }, at),
       );
+      if (r.card.rarity === 5) break;
     }
+  };
+  const closeCutIn = () => {
+    const c = cutIn;
+    setCutIn(null);
+    if (c && c.resume > revealed) flipTo(c.resume, results ?? [], revealed);
   };
 
   const close = () => {
@@ -375,6 +394,10 @@ export const GachaScreen = () => {
         )}
       </AnimatePresence>
 
+      {/* ひく 演出 (docs/design/16 §5) */}
+      <AnimatePresence>{summon && <SummonOverlay key="summon" rarities={summon.map((r) => r.card.rarity)} still={still} onDone={dealt} />}</AnimatePresence>
+      <AnimatePresence>{cutIn && <Star5CutIn key={cutIn.r.card.id} card={cutIn.r.card} fresh={!cutIn.r.duplicate} showFurigana={showFurigana} still={still} onClose={closeCutIn} />}</AnimatePresence>
+
       {/* 結果 ------------------------------------------------------------ */}
       <AnimatePresence>
         {results && (
@@ -397,9 +420,10 @@ export const GachaScreen = () => {
                         key={`${r.card.id}-${i}`}
                         type="button"
                         onClick={() => flipTo(i + 1)}
-                        initial={false}
-                        animate={{ rotateY: face ? 0 : 180, scale: face ? 1 : 0.96 }}
-                        transition={{ duration: 0.28 }}
+                        // Dealt in one by one, then turned on a tap.
+                        initial={{ opacity: 0, y: -60, rotateY: 180, scale: 0.5 }}
+                        animate={{ opacity: 1, y: 0, rotateY: face ? 0 : 180, scale: face ? 1 : 0.96 }}
+                        transition={{ duration: 0.3, delay: face || still ? 0 : i * 0.07 }}
                         className="relative flex aspect-[3/4] flex-col items-center justify-center overflow-hidden rounded-lg p-1"
                         style={{
                           background: face ? 'var(--panel-solid)' : BACK[r.card.rarity],
@@ -424,10 +448,22 @@ export const GachaScreen = () => {
                             )}
                           </>
                         ) : (
-                          // The card is turned away (rotateY 180): turn the label back so it reads.
-                          <span className="text-lg font-black text-white/90 drop-shadow" style={{ transform: 'scaleX(-1)' }} aria-hidden>
-                            ★{r.card.rarity}
-                          </span>
+                          <>
+                            {/* The card is turned away (rotateY 180): turn the label back so it reads. */}
+                            <span className="text-lg font-black text-white/90 drop-shadow" style={{ transform: 'scaleX(-1)' }} aria-hidden>
+                              ★{r.card.rarity}
+                            </span>
+                            {r.card.rarity >= 4 && !still && (
+                              // A ★4 or ★5 face down shimmers: something good is under it.
+                              <motion.span
+                                aria-hidden
+                                className="pointer-events-none absolute inset-0"
+                                style={{ background: 'linear-gradient(115deg, transparent 30%, rgba(255,255,255,0.75) 50%, transparent 70%)', willChange: 'transform' }}
+                                animate={{ x: ['-120%', '120%'] }}
+                                transition={{ duration: r.card.rarity === 5 ? 0.9 : 1.4, repeat: Infinity, repeatDelay: 0.3 }}
+                              />
+                            )}
+                          </>
                         )}
                       </motion.button>
                     );
@@ -491,8 +527,31 @@ const SingleCard = ({ r, face, showFurigana, onClose }: { r: Shown; face: boolea
               <RubyText showFurigana={showFurigana}>てんじょう</RubyText>
             </p>
           )}
-          <Stars n={r.card.rarity} />
-          <img src={assetPath(r.card.art)} alt="" aria-hidden className="mx-auto my-1 h-48 object-contain" />
+          {/* Its stars, one by one, then the friend steps out of the light. */}
+          <p aria-label={`★${r.card.rarity}`} className="flex justify-center gap-0.5 text-xl leading-none">
+            {Array.from({ length: r.card.rarity }, (_, i) => (
+              <motion.span
+                key={i}
+                aria-hidden
+                style={{ color: r.card.rarity === 5 ? '#d0567a' : '#e8a317' }}
+                initial={{ scale: 0, rotate: -90 }}
+                animate={{ scale: 1, rotate: 0 }}
+                transition={{ delay: 0.1 + i * 0.1, type: 'spring', stiffness: 420, damping: 14 }}
+              >
+                ★
+              </motion.span>
+            ))}
+          </p>
+          <motion.img
+            src={assetPath(r.card.art)}
+            alt=""
+            aria-hidden
+            className="mx-auto my-1 h-48 object-contain"
+            style={{ filter: `drop-shadow(0 0 14px ${r.card.rarity === 5 ? 'rgba(255,150,200,0.8)' : r.card.rarity === 4 ? 'rgba(255,210,90,0.8)' : 'rgba(200,215,240,0.7)'})` }}
+            initial={{ scale: 0.5, opacity: 0, y: 20 }}
+            animate={{ scale: 1, opacity: 1, y: 0 }}
+            transition={{ type: 'spring', stiffness: 260, damping: 16 }}
+          />
           <p className="g-title text-lg">
             <RubyText showFurigana={showFurigana}>{r.card.name}</RubyText>
           </p>
@@ -507,9 +566,15 @@ const SingleCard = ({ r, face, showFurigana, onClose }: { r: Shown; face: boolea
               <RubyText showFurigana={showFurigana}>{r.bondTo ? `もう いる カード。きずな ♥${r.bondTo}` : `きずなは いっぱい。◆${r.refund} もどりました`}</RubyText>
             </p>
           ) : (
-            <p className="g-chip mt-3 text-xs" style={{ background: '#e2453c', color: '#fff', borderColor: 'transparent' }}>
-              <RubyText showFurigana={showFurigana}>新(あたら)しい なかま！</RubyText>
-            </p>
+            <motion.p
+              className="g-chip mt-3 text-sm"
+              style={{ background: '#e2453c', color: '#fff', borderColor: 'transparent' }}
+              initial={{ scale: 2.4, rotate: -14, opacity: 0 }}
+              animate={{ scale: 1, rotate: -3, opacity: 1 }}
+              transition={{ delay: 0.55, type: 'spring', stiffness: 480, damping: 16 }}
+            >
+              <RubyText showFurigana={showFurigana}>NEW! 新(あたら)しい なかま！</RubyText>
+            </motion.p>
           )}
         </>
       )}
