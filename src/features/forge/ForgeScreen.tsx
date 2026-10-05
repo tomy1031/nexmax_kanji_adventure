@@ -41,7 +41,7 @@ import { Feature, isFeatureUnlocked } from '../../data/unlocks';
 import { isForgeOpen, practiceTarget } from '../../data/mojiFlow';
 
 /** はじめての 武器 (docs/design/16 §2): the pair the story names in 1章 2話, made together once. */
-const FIRST_PAIR = ['火', '山'] as const;
+const FIRST_PAIR = [...'火山'];
 import { useBgm } from '../../lib/bgm';
 import { useCompoundsVersion } from '../../data/compounds';
 import * as sfx from '../../lib/sfx';
@@ -302,7 +302,7 @@ export const ForgeScreen = () => {
   const canCraft = Boolean(preview) && !alreadyMade && canAfford;
 
   /** In the first weapon: the one tile to tap now (火, then 山), or null for つくる. */
-  const nextPick = firstMode && !toWrite ? (slots.length === 0 ? '火' : slots.length === 1 && slots[0].char === '火' ? '山' : null) : null;
+  const nextPick = firstMode && !toWrite ? (slots.length === 0 ? FIRST_PAIR[0] : slots.length === 1 && slots[0].char === FIRST_PAIR[0] ? FIRST_PAIR[1] : null) : null;
   const endFirst = () => {
     markTutorialSeen('firstWeapon');
     // The four cards of ForgeTutorial were said here, with the weapon in hand.
@@ -362,10 +362,10 @@ export const ForgeScreen = () => {
         goal={REPS_TO_OBTAIN}
         look="sign"
         scene="naniwa_kanjiyasan"
-        letters={[...FIRST_PAIR]}
+        letters={FIRST_PAIR}
         onExit={() => setDrill(null)}
         onDone={() => setDrill(null)}
-        nextLabel="漢字やさんに もどる"
+        nextLabel="かんじやさんに もどる"
       />
     );
   }
@@ -399,7 +399,7 @@ export const ForgeScreen = () => {
             </button>
           ) : (
             <p className="mt-1 text-sm leading-[2] font-black" style={{ color: 'var(--accent-2)' }}>
-              <RubyText showFurigana={showFurigana}>{nextPick ? `下(した)の「${nextPick === '火' ? '火(ひ)' : '山(やま)'}」を おそう 👇` : '「つくる」を おそう 👇'}</RubyText>
+              <RubyText showFurigana={showFurigana}>{nextPick ? `下(した)の「${kanjiRuby(getKanjiByChar(nextPick)!)}」を おそう 👇` : '「つくる」を おそう 👇'}</RubyText>
             </p>
           )}
         </div>
