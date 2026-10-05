@@ -33,8 +33,15 @@ import { GameIcon } from '../../components/ui/GameIcon';
 import ForgeTutorial from './ForgeTutorial';
 import { remainingForChar, FoundVia, discoveryKind, KIND_LABEL } from '../../lib/forge/discovery';
 import { REPS_TO_OBTAIN } from '../../types/kanji';
+import { getKanjiByChar } from '../../lib/kanjiDb';
+import KanjiDrill from '../write/KanjiDrill';
+import { afterEpisodePath } from '../../data/mojiFlow';
+import { UNLOCKED_ON_MOJI } from '../../data/unlocks';
 import { Feature, isFeatureUnlocked } from '../../data/unlocks';
 import { isForgeOpen, practiceTarget } from '../../data/mojiFlow';
+
+/** はじめての 武器 (docs/design/16 §2): the pair the story names in 1章 2話, made together once. */
+const FIRST_PAIR = [...'火山'];
 import { useBgm } from '../../lib/bgm';
 import { useCompoundsVersion } from '../../data/compounds';
 import * as sfx from '../../lib/sfx';
@@ -253,6 +260,17 @@ export const ForgeScreen = () => {
   const [discovered, setDiscovered] = useState<string | null>(null);
   const [tab, setTab] = useState<Tab>('all');
 
+  // はじめての 武器: write 火 and 山 to ★3 here, then make 火山 together (docs/design/16 §2).
+  const firstDone = useGameStore((s) => s.tutorials.firstWeapon);
+  const markTutorialSeen = useGameStore((s) => s.markTutorialSeen);
+  const firstMode = !firstDone && (params.get('first') === '1' || (weapons.length === 0 && cleared.includes(UNLOCKED_ON_MOJI.forge)));
+  const firstKanji = FIRST_PAIR.map((c) => getKanjiByChar(c)!);
+  const repsOf = (k: KanjiData) => progress[k.id]?.reps ?? 0;
+  /** The next of the pair still short of ★3, while there is one. */
+  const toWrite = firstMode ? firstKanji.find((k) => repsOf(k) < REPS_TO_OBTAIN) : undefined;
+  const [drill, setDrill] = useState<KanjiData | null>(null);
+  const [firstEnd, setFirstEnd] = useState(false);
+
   const owned = useMemo(
     () =>
       ALL_KANJI.filter((k) => progress[k.id]?.obtainedAt != null).sort(
@@ -277,10 +295,20 @@ export const ForgeScreen = () => {
   const preview = useMemo(() => (slots.length >= 2 ? forgeWeapon(slots) : null), [slots, wordsV]);
   /** A word already found costs nothing to remake. */
   const previewKnown = preview ? Boolean(foundWords[preview.word]) : false;
-  const cost = preview && !previewKnown ? tryCost(slots.length) : 0;
+  // The first weapon is on the house.
+  const cost = preview && !previewKnown && !firstMode ? tryCost(slots.length) : 0;
   const canAfford = sumi >= cost;
   const alreadyMade = preview ? weapons.some((w) => w.id === preview.id) : false;
   const canCraft = Boolean(preview) && !alreadyMade && canAfford;
+
+  /** In the first weapon: the one tile to tap now (火, then 山), or null for つくる. */
+  const nextPick = firstMode && !toWrite ? (slots.length === 0 ? FIRST_PAIR[0] : slots.length === 1 && slots[0].char === FIRST_PAIR[0] ? FIRST_PAIR[1] : null) : null;
+  const endFirst = () => {
+    markTutorialSeen('firstWeapon');
+    // The four cards of ForgeTutorial were said here, with the weapon in hand.
+    markTutorialSeen('forge');
+    navigate(afterEpisodePath(UNLOCKED_ON_MOJI.forge, useGameStore.getState().clearedStages) ?? '/map/moji');
+  };
 
   const toggle = (k: KanjiData) => {
     setMade(null);
@@ -323,7 +351,24 @@ export const ForgeScreen = () => {
   // ことば図鑑 opens with the forge on the new route (08 §3.8).
   const wordsLocked = !isFeatureUnlocked(Feature.WORDS, cleared) && !isForgeOpen(cleared);
   // An empty forge says where the nearest ★3 is (data/mojiFlow.ts).
-  const practice = owned.length === 0 ? practiceTarget(progress, cleared) : null;
+  // (Not in the first weapon: its own card says which letter to write, here.)
+  const practice = owned.length === 0 && !firstMode ? practiceTarget(progress, cleared) : null;
+
+  if (drill) {
+    return (
+      <KanjiDrill
+        key={drill.id}
+        kanji={drill}
+        goal={REPS_TO_OBTAIN}
+        look="sign"
+        scene="naniwa_kanjiyasan"
+        letters={FIRST_PAIR}
+        onExit={() => setDrill(null)}
+        onDone={() => setDrill(null)}
+        nextLabel="かんじやさんに もどる"
+      />
+    );
+  }
 
   return (
     <div className="relative h-dvh overflow-hidden bg-[#2b1a10] text-[#fff1cf]">
@@ -331,7 +376,57 @@ export const ForgeScreen = () => {
         <source media="(orientation: landscape)" srcSet={art('bg_wide')} />
         <img src={art('bg_tall')} alt="" aria-hidden className="absolute inset-0 h-full w-full object-cover" />
       </picture>
-      <ForgeTutorial />
+      {!firstMode && <ForgeTutorial />}
+      {firstMode && !made && !firstEnd && (
+        // はじめての 武器: one step at a time, over the shop's sign (docs/design/16 §2).
+        <div className="g-parchment fixed inset-x-3 top-[max(8px,env(safe-area-inset-top))] z-40 mx-auto max-w-sm px-4 py-2.5 text-center text-[#2a1a0c]">
+          <p className="text-sm leading-[2] font-black">
+            🔨 <RubyText showFurigana={showFurigana}>はじめての 武器(ぶき)：火(ひ) ＋ 山(やま) → 🌋</RubyText>
+          </p>
+          <ol className="mt-0.5 flex justify-center gap-3 text-xs font-black">
+            {firstKanji.map((k) => {
+              const ok = repsOf(k) >= REPS_TO_OBTAIN;
+              return (
+                <li key={k.id} style={{ color: ok ? '#4f9a3c' : 'var(--ink-2)' }}>
+                  <RubyText showFurigana={showFurigana}>{ok ? `${kanjiRuby(k)} ★3 ✓` : `${kanjiRuby(k)} あと ${REPS_TO_OBTAIN - repsOf(k)}回(かい)`}</RubyText>
+                </li>
+              );
+            })}
+          </ol>
+          {toWrite ? (
+            <button type="button" data-tap className="g-btn g-btn-primary mt-2 w-full" onClick={() => setDrill(toWrite)}>
+              ✎ <RubyText showFurigana={showFurigana}>{`「${kanjiRuby(toWrite)}」を ★3に する（あと ${REPS_TO_OBTAIN - repsOf(toWrite)}回(かい)）`}</RubyText>
+            </button>
+          ) : (
+            <p className="mt-1 text-sm leading-[2] font-black" style={{ color: 'var(--accent-2)' }}>
+              <RubyText showFurigana={showFurigana}>{nextPick ? `下(した)の「${kanjiRuby(getKanjiByChar(nextPick)!)}」を おそう 👇` : '「つくる」を おそう 👇'}</RubyText>
+            </p>
+          )}
+        </div>
+      )}
+      <AnimatePresence>
+        {firstEnd && (
+          <motion.div key="first-end" className="fixed inset-0 z-50 flex items-center justify-center bg-black/65 px-6" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+            <motion.div role="dialog" aria-modal="true" aria-labelledby="first-end-title" className="g-parchment w-full max-w-xs px-5 py-4 text-center text-[#2a1a0c]" initial={{ scale: 0.9 }} animate={{ scale: 1 }}>
+              <p id="first-end-title" className="text-xl leading-[2] font-black">
+                🌋 <RubyText showFurigana={showFurigana}>火(か)山(ざん)！</RubyText>
+              </p>
+              <p className="mt-1 text-sm leading-[1.95]">
+                <RubyText showFurigana={showFurigana}>「火(ひ)」＋「山(やま)」＝「火(か)山(ざん)」。本当(ほんとう)に ある 言葉(ことば)は 強(つよ)い 武器(ぶき)に なります。</RubyText>
+              </p>
+              <p className="mt-1 text-sm leading-[1.95]">
+                <RubyText showFurigana={showFurigana}>「山(やま)」＋「火(ひ)」は 言葉(ことば)では ないので 弱(よわ)い。じゅんばんが 大事(だいじ)です。</RubyText>
+              </p>
+              <p className="mt-1 text-xs leading-[1.9]" style={{ color: 'var(--ink-2)' }}>
+                <RubyText showFurigana={showFurigana}>どの 話(わ)にも、かくし武器(ぶき)が 1(ひと)つ あります。さがして みましょう！</RubyText>
+              </p>
+              <button type="button" data-tap className="g-btn g-btn-primary mt-3 w-full" onClick={endFirst}>
+                <RubyText showFurigana={showFurigana}>つぎの 話(わ)へ ▶</RubyText>
+              </button>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       <div className="relative mx-auto flex h-full w-[min(100%,56dvh)] flex-col px-[3%] pt-[max(1.2dvh,env(safe-area-inset-top))] pb-[max(1.2dvh,env(safe-area-inset-bottom))]">
         {/* 看板 ---------------------------------------------------------- */}
@@ -529,9 +624,10 @@ export const ForgeScreen = () => {
                       type="button"
                       data-tap
                       onClick={() => toggle(k)}
+                      disabled={firstMode && k.char !== nextPick && !picked}
                       aria-pressed={picked}
                       aria-label={left > 0 ? `${k.char}（のこり ${left} 語）` : k.char}
-                      className="relative flex aspect-square items-center justify-center rounded-[10px] border-2 text-[clamp(16px,5.4vw,26px)] font-black transition-transform [container-type:inline-size] active:scale-95"
+                      className={`relative flex aspect-square items-center justify-center rounded-[10px] border-2 text-[clamp(16px,5.4vw,26px)] font-black transition-transform [container-type:inline-size] active:scale-95 ${firstMode && k.char !== nextPick && !picked ? 'opacity-35' : ''} ${firstMode && k.char === nextPick ? 'animate-pulse' : ''}`}
                       style={{
                         background: `radial-gradient(circle at 50% 38%, color-mix(in srgb, ${el.color} 30%, #fffdf4) 0%, color-mix(in srgb, ${el.color} 75%, #fff) 55%, color-mix(in srgb, ${el.color} 70%, #1a0f06) 100%)`,
                         borderColor: picked ? '#fff3b0' : '#c8913e',
@@ -595,6 +691,7 @@ export const ForgeScreen = () => {
             onClick={() => {
               setMade(null);
               setSlots([]);
+              if (firstMode) setFirstEnd(true);
             }}
           >
             {made.hidden && (
