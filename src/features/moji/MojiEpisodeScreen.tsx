@@ -434,6 +434,11 @@ const EpisodePlayer = ({ id }: { id: string }) => {
   // The win records the clear (BattleScene); the story's end moves on.
   const finish = () => {
     const state = useGameStore.getState();
+    // 1章 2話 opens 漢字やさん: the first weapon (火山) is made there now, together (docs/design/16 §2).
+    if (ep.id === UNLOCKED_ON_MOJI.forge && !state.tutorials.firstWeapon) {
+      navigate('/forge?first=1');
+      return;
+    }
     // 1章 4話 opens the gacha and gives its first ticket: the first pull is made now, shown how (docs/design/16 §3).
     if (ep.id === UNLOCKED_ON_MOJI.gacha && !state.tutorials.gacha && state.gachaTickets > 0) {
       navigate('/gacha?first=1');
