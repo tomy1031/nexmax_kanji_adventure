@@ -11,7 +11,7 @@ import { parseRuby } from '../../lib/ruby';
 import { speak } from '../../lib/speech';
 import type { Stars } from '../../lib/mastery';
 import { ComboBanner, ComboEdge, ComboMeter, StrokeSparks, type StrokeSpark } from './ComboFx';
-import { CompanionStand, SkillCutIn, type CompanionView, type SkillCut } from './CompanionFx';
+import { BuffStrip, CompanionStand, SkillCutIn, type BuffView, type CompanionView, type SkillCut } from './CompanionFx';
 import { WeaponMount, type MountView } from './WeaponMount';
 import { GearBehind, GearFront } from './GearOn';
 import { LAYOUT_BATTLE, type Worn } from './gearLayout';
@@ -322,6 +322,8 @@ export interface NaniwaBattleViewProps {
   overlay?: ReactNode;
   /** 字の ふういん (lib/seals.ts): the kanji the opponent holds, open once written. */
   seals?: readonly SealView[];
+  /** What a わざ still holds for the coming writes, over Nexmax (CompanionFx BuffStrip). */
+  buffs?: readonly BuffView[];
 }
 
 export const NaniwaBattleView = ({
@@ -366,6 +368,7 @@ export const NaniwaBattleView = ({
   read = null,
   overlay,
   seals = [],
+  buffs = [],
 }: NaniwaBattleViewProps) => {
   const fieldPhoto = field ? SCENES[field]?.photo : undefined;
   const colRef = useRef<HTMLDivElement>(null);
@@ -556,12 +559,32 @@ export const NaniwaBattleView = ({
             <GearFront worn={worn} layout={LAYOUT_BATTLE} still={still} guard={guard} />
             {/* the chest: where the light goes in */}
             <div ref={heroRef} aria-hidden className="absolute h-px w-px" style={{ left: '60%', top: '62%' }} />
+            {/* まもり: a bubble round him while a strike is still to be blocked */}
+            <AnimatePresence>
+              {buffs.some((b) => b.icon === '🛡️') && (
+                <motion.span
+                  aria-hidden
+                  className="pointer-events-none absolute inset-x-[6%] top-[14%] bottom-[2%] rounded-[50%] border-[0.5cqw] border-[#9fd0ff]"
+                  style={{ background: 'radial-gradient(ellipse at 50% 40%, rgba(106,176,255,0.05) 55%, rgba(106,176,255,0.35) 100%)', boxShadow: `0 0 ${cq(24)} rgba(106,176,255,0.7)` }}
+                  initial={{ opacity: 0, scale: still ? 1 : 0.7 }}
+                  animate={still ? { opacity: 0.9 } : { opacity: [0.65, 1, 0.65], scale: 1 }}
+                  exit={{ opacity: 0, scale: still ? 1 : 1.2 }}
+                  transition={{ opacity: { duration: 1.6, repeat: still ? 0 : Infinity }, scale: { duration: 0.3 } }}
+                />
+              )}
+            </AnimatePresence>
           </motion.div>
 
-          {/* なかま — on the deck to the right, out of the light's way */}
+          {/* なかま — its badge on the deck to the right, out of the light's way */}
           {companion && (
-            <div className="absolute z-[6]" style={onBottom(640, 370, 290, 320)}>
-              <CompanionStand c={companion} showFurigana={showFurigana} still={still} />
+            <div className="absolute z-[6]" style={onBottom(660, 420, 250, 300)}>
+              <CompanionStand c={companion} px={Math.round((colW * 250) / W)} showFurigana={showFurigana} still={still} />
+            </div>
+          )}
+          {/* what a わざ left for the coming writes, over Nexmax's head */}
+          {buffs.length > 0 && (
+            <div className="absolute z-[7]" style={onBottom(60, 330, 560, 60)}>
+              <BuffStrip buffs={buffs} still={still} />
             </div>
           )}
 
