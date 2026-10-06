@@ -156,7 +156,7 @@ export const MOJI1_SCRIPTS: Record<string, EpisodeScript> = {
     intro: {
       stageId: 'moji-1-3',
       lines: [
-        { bg: 'naniwa_ropeway', text: '山(やま)の ふもとの ロープウェーの えきです。', en: 'The ropeway station at the foot of the mountain.' },
+        { bg: 'naniwa_ropeway', text: '山(やま)の したの ロープウェーの えきです。', en: 'The ropeway station at the foot of the mountain.' },
         { speaker: 'nexmax', sprite: 'nexmax:guide', glyph: '🚡 ⛰️', text: 'これで 山(やま)へ いきます。', en: 'We take this up the mountain — after the Mojikui.' },
         { glyph: '🕐 ❓', text: 'じこくひょうの すうじが、ありません。', en: 'The numbers on the timetable are gone.' },
         { speaker: 'ropeway', sprite: 'ropeway:trouble', text: 'いま なんじですか？ ロープウェーが うごきません……😰', en: "What time is it now? The ropeway won't move…" },
@@ -222,7 +222,7 @@ export const MOJI1_SCRIPTS: Record<string, EpisodeScript> = {
         { speaker: 'worker', sprite: 'worker:awake', glyph: '🤖 ＋ 🤖', text: 'いっしょに いきます！ まじめに はたらきます！', en: "I'll come with you! I'll work hard!" },
         { glyph: '🤝 ✨', text: '七(なな)ばんが、なかまに なりました！', en: 'Number Seven joined you!' },
         { speaker: 'nexmax', sprite: 'nexmax:guide', glyph: '💎 → 🤖❓', text: 'ジェムで、ほかの なかまを よびます！', en: 'With gems, you can call other companions too.' },
-        { speaker: 'nexmax', sprite: 'nexmax:determined', glyph: '⬇️ 🏮', text: 'モジクイは ふもとの いちばへ。いきましょう！', en: "The Mojikui went to the market at the foot of the mountain. Let's go!" },
+        { speaker: 'nexmax', sprite: 'nexmax:determined', glyph: '⬇️ 🏮', text: 'モジクイは 山(やま)の したの いちばへ。いきましょう！', en: "The Mojikui went to the market at the foot of the mountain. Let's go!" },
       ],
     },
   },
@@ -230,7 +230,7 @@ export const MOJI1_SCRIPTS: Record<string, EpisodeScript> = {
     intro: {
       stageId: 'moji-1-5',
       lines: [
-        { bg: 'naniwa_market', text: '山(やま)の ふもとの いちばです。', en: 'The market at the foot of the mountain.' },
+        { bg: 'naniwa_market', text: '山(やま)の したの いちばです。', en: 'The market at the foot of the mountain.' },
         { glyph: '🏷️ ❓', text: 'ねふだの じが、ありません。', en: 'The letters on the price tags are gone.' },
         { speaker: 'vendor', sprite: 'vendor:trouble', text: 'いくらですか？ わたしも わかりません……💦', en: "How much is it? Even I don't know…" },
         { speaker: 'nexmax', sprite: 'nexmax:think', glyph: '🍎 ❓ 🪙', text: 'これは いくらですか？', en: 'How much is this?' },
