@@ -41,7 +41,7 @@ export const FIGHT_RULES: FightRule[] = [
   {
     id: 'skill',
     icons: '🤝',
-    text: '書(か)くと なかまの わが たまる。いっぱい → かおを タップ → わざ',
+    text: '書(か)くと なかまの ゲージが たまる。いっぱい → かおを タップ → わざ',
     en: "Writing fills your friend's ring. When it is full, tap their face for a special move.",
   },
 ];
