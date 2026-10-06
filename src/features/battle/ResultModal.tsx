@@ -113,6 +113,8 @@ export const ResultModal = ({
   growth?: {
     starUps: { kanji: KanjiData; stars: Stars }[];
     read: { right: number; total: number };
+    /** The kanji written in this fight (each once, furigana notation) and how many writes in all: the practice, seen. */
+    written?: { chars: string[]; total: number };
     goal?: { kanji: KanjiData; left: number; next: 2 | 3 } | null;
     /** ネクマックスの 経験値 (lib/level.ts): what this fight added, the level before and after, and the ceiling. */
     exp?: { gained: number; before: number; after: number; atCap: boolean; kanjiToRaiseCap: number };
@@ -219,7 +221,7 @@ export const ResultModal = ({
           </RubyText>
         </p>
 
-        {growth && (growth.starUps.length > 0 || growth.read.total > 0 || growth.goal || (growth.exp && growth.exp.gained > 0) || helpChips(growth.help).length > 0) && (
+        {growth && (growth.starUps.length > 0 || growth.read.total > 0 || growth.goal || (growth.exp && growth.exp.gained > 0) || helpChips(growth.help).length > 0 || (growth.written?.total ?? 0) > 0) && (
           <div className="mt-3 rounded-xl px-3 py-2 text-left" style={{ background: 'rgba(255,255,255,0.55)', border: '2px solid #e0c48a' }}>
             <p className="text-xs font-black" style={{ color: 'var(--ink-2)' }}>
               この たたかいで
@@ -266,6 +268,17 @@ export const ResultModal = ({
                 ))}
                 <span className="text-xs font-black">に なった！</span>
               </div>
+            )}
+            {growth.written && growth.written.total > 0 && (
+              // What was practised: the kanji written, each once, and the count.
+              <p className="mt-0.5 flex flex-wrap items-baseline gap-x-1 text-sm font-black">
+                <span>✍️</span>
+                <RubyText showFurigana={showFurigana}>書(か)いた 字(じ)：</RubyText>
+                <span className="text-lg">
+                  <RubyText showFurigana={showFurigana}>{growth.written.chars.join(' ')}</RubyText>
+                </span>
+                <RubyText showFurigana={showFurigana}>{`（${growth.written.total}回(かい)）`}</RubyText>
+              </p>
             )}
             {growth.read.total > 0 && (
               <p className="mt-0.5 text-sm font-black">

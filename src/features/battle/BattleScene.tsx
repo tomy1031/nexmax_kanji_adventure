@@ -312,10 +312,12 @@ export const BattleScene = ({
   const [readPicked, setReadPicked] = useState<string | null>(null);
   const lastThrownRef = useRef<string | null>(null);
   /** What this fight did for the learner (新ルート, the result shows it): ★ gained by kanji id, reading turns. */
-  const [growth, setGrowth] = useState<{ starUps: Record<string, Stars>; readRight: number; readTotal: number }>({
+  const [growth, setGrowth] = useState<{ starUps: Record<string, Stars>; readRight: number; readTotal: number; writes: string[] }>({
     starUps: {},
     readRight: 0,
     readTotal: 0,
+    // Every write of the fight, by kanji id, in order: the result says what was practised.
+    writes: [],
   });
   // Set at the first reading turn, so where the answer sits differs fight to fight.
   const fightSeedRef = useRef(0);
@@ -569,6 +571,10 @@ export const BattleScene = ({
         const id = target.id;
         const up = starUp;
         setGrowth((g) => ({ ...g, starUps: { ...g.starUps, [id]: up } }));
+      }
+      if (target) {
+        const id = target.id;
+        setGrowth((g) => ({ ...g, writes: [...g.writes, id] }));
       }
       const clean = mistakes === 0 && !hinted;
       const critical = mastery && targetStars === 3 && clean;
@@ -866,6 +872,14 @@ export const BattleScene = ({
                       }),
                       read: { right: growth.readRight, total: growth.readTotal },
                       help: individual && skillKind && helpedAtEnd ? { name: individual.shortName, art: individual.art, bonus: individual.bonus, ...helpedAtEnd } : undefined,
+                      written: {
+                        // Furigana notation (日(にち)), as every kanji on screen.
+                        chars: [...new Set(growth.writes)].flatMap((id) => {
+                          const k = getKanjiById(id);
+                          return k ? [kanjiRuby(k)] : [];
+                        }),
+                        total: growth.writes.length,
+                      },
                       goal: nextStarGoal(kanjiPool, (id) => progress[id]?.reps ?? 0),
                       exp: (() => {
                         // What the fight added, read off the store (nothing is counted twice).
