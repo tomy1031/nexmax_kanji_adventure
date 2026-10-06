@@ -238,6 +238,11 @@ const ReadyScreen = ({
                     : '手本(てほん)なしで 書(か)く'}
               </RubyText>
             </p>
+            {/* 字の ふういん (lib/seals.ts): the rule of every fight, before it starts. */}
+            <p className="mt-0.5 inline-flex items-center gap-1 rounded-full bg-[#2a1840]/10 px-2 text-[11px] leading-[1.9] font-black" style={{ color: 'var(--ink-2)' }}>
+              <span aria-hidden>{'🔒'.repeat(Math.min(5, isHard ? hard.seals.length : kanji.length))}{(isHard ? hard.seals.length : kanji.length) > 5 ? '…' : ''}</span>
+              <RubyText showFurigana={showFurigana}>{`字(じ)を ${isHard ? hard.seals.length : kanji.length}つ ぜんぶ 書(か)いて たおす`}</RubyText>
+            </p>
           </div>
         </div>
 
