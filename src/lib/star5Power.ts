@@ -34,20 +34,22 @@ export interface Star5Power {
   name: string;
   /** What it does, in a line, furigana notation. */
   says: string;
+  /** The same in English, for the EN setting (a player who cannot read the line yet). */
+  en: string;
   effect: Star5Effect;
 }
 
 /** Keyed by card id: the nine ★5 cards (data/individuals.ts DRESSED). */
 export const STAR5_POWER: Readonly<Record<string, Star5Power>> = {
-  'ISTJ-5': { name: 'まっすぐ ひとふで', says: 'ミスなしで 書(か)いた 字(じ)の こうげき ×1.3', effect: { cleanMul: 1.3 } },
-  'ESTP-5': { name: 'スタートダッシュ', says: 'わざの ゲージが はじめから 半分(はんぶん) たまって いる', effect: { gaugeStartHalf: true } },
-  'ENFP-5': { name: 'たびは つづく', says: 'コンボが 切(き)れても 半分(はんぶん) のこる', effect: { comboKeepHalf: true } },
-  'INTJ-5': { name: '先(さき)よみ', says: '書(か)きじゅんを 見(み)るのが 1回(かい) ただ（たたかい ごとに）', effect: { freeLooks: 1 } },
-  'ENTJ-5': { name: 'ちかみち', says: 'わざの ゲージが 1つ 多(おお)く たまる', effect: { gaugeBonus: 1 } },
-  'ENFJ-5': { name: 'ひかりの いやし', says: 'わざを つかった とき、HPも 15 もどる', effect: { skillHeal: 15 } },
-  'rin-5': { name: 'よみの ちから', says: '読(よ)みの もんだいの こうげき 2ばい', effect: { readingMul: 2 } },
-  'keeper-5': { name: '時(とき)とめ', says: 'てきが こうげき する までの ミスが 1つ 多(おお)い', effect: { patience: 1 } },
-  'sora-5': { name: '大(おお)空(ぞら)', says: 'HP の さいだいが ＋20', effect: { maxHp: 20 } },
+  'ISTJ-5': { name: 'まっすぐ ひとふで', says: 'ミスなしで 書(か)いた 字(じ)の こうげき ×1.3', en: 'A letter written with no slip hits ×1.3.', effect: { cleanMul: 1.3 } },
+  'ESTP-5': { name: 'スタートダッシュ', says: 'わざの ゲージが はじめから 半分(はんぶん) たまって いる', en: 'The special-move gauge starts half full.', effect: { gaugeStartHalf: true } },
+  'ENFP-5': { name: 'たびは つづく', says: 'コンボが 切(き)れても 半分(はんぶん) のこる', en: 'A broken COMBO keeps half.', effect: { comboKeepHalf: true } },
+  'INTJ-5': { name: '先(さき)よみ', says: '書(か)きじゅんを 見(み)るのが 1回(かい) ただ（たたかい ごとに）', en: 'One free look at the stroke order each fight.', effect: { freeLooks: 1 } },
+  'ENTJ-5': { name: 'ちかみち', says: 'わざの ゲージが 1つ 多(おお)く たまる', en: 'The gauge fills one more each write.', effect: { gaugeBonus: 1 } },
+  'ENFJ-5': { name: 'ひかりの いやし', says: 'わざを つかった とき、HPも 15 もどる', en: 'Every special move also heals 15 HP.', effect: { skillHeal: 15 } },
+  'rin-5': { name: 'よみの ちから', says: '読(よ)みの もんだいの こうげき 2ばい', en: 'Reading questions hit twice as hard.', effect: { readingMul: 2 } },
+  'keeper-5': { name: '時(とき)とめ', says: 'てきが こうげき する までの ミスが 1つ 多(おお)い', en: 'One more slip before the opponent strikes.', effect: { patience: 1 } },
+  'sora-5': { name: '大(おお)空(ぞら)', says: 'HP の さいだいが ＋20', en: 'Max HP +20.', effect: { maxHp: 20 } },
 };
 
 export const star5PowerOf = (cardId: string | null | undefined): Star5Power | undefined => (cardId ? STAR5_POWER[cardId] : undefined);

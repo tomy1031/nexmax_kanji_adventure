@@ -8,6 +8,7 @@ import { CLASS_LABEL } from '../../lib/forge/weapon';
 import { SKILL_INFO, SKILL_OF, skillEffect } from '../../lib/companionSkill';
 import { star5PowerOf } from '../../lib/star5Power';
 import { GachaCard } from './GachaCard';
+import { useGameStore } from '../../store/gameStore';
 
 /**
  * ピックアップ画面の 部品 (docs/design/18 §5): the banner's star large with
@@ -76,10 +77,12 @@ export const HereIsGreat = ({ card, showFurigana }: { card: Individual; showFuri
   const kind = SKILL_OF[card.char];
   const info = SKILL_INFO[kind];
   const power = star5PowerOf(card.id);
-  const items: { icon: string; head: string; body: string }[] = [];
-  if (power) items.push({ icon: '🌈', head: `★5 だけの ちから「${power.name}」`, body: power.says });
-  items.push({ icon: info.icon, head: `わざ「${info.name}」`, body: info.says(skillEffect(kind, card.rarity)) });
-  items.push({ icon: '⚔️', head: 'とくいな 武(ぶ)器(き)', body: `${CLASS_LABEL[card.favours].ja}(${CLASS_LABEL[card.favours].reading})で こうげき ＋${card.bonus}%` });
+  // EN (on by default): the same in English under each line — what this friend does, without reading it.
+  const english = useGameStore((s) => s.settings.english);
+  const items: { icon: string; head: string; body: string; en?: string }[] = [];
+  if (power) items.push({ icon: '🌈', head: `★5 だけの ちから「${power.name}」`, body: power.says, en: power.en });
+  items.push({ icon: info.icon, head: `わざ「${info.name}」`, body: info.says(skillEffect(kind, card.rarity)), en: info.en(skillEffect(kind, card.rarity)) });
+  items.push({ icon: '⚔️', head: 'とくいな 武(ぶ)器(き)', body: `${CLASS_LABEL[card.favours].ja}(${CLASS_LABEL[card.favours].reading})で こうげき ＋${card.bonus}%`, en: `Attack +${card.bonus}% with this weapon.` });
   return (
     <ul className="space-y-1.5">
       {items.map((it) => (
@@ -90,6 +93,11 @@ export const HereIsGreat = ({ card, showFurigana }: { card: Individual; showFuri
           <p className="text-xs leading-[1.85] text-white/90">
             <RubyText showFurigana={showFurigana}>{it.body}</RubyText>
           </p>
+          {english && it.en && (
+            <p lang="en" className="text-[11px] leading-snug font-bold text-[#cfe3ff]">
+              {it.en}
+            </p>
+          )}
         </li>
       ))}
     </ul>
