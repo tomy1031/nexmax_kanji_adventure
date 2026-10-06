@@ -18,6 +18,7 @@ import KanaEpisode from './features/kana/KanaEpisode';
 import MojiEpisodeScreen from './features/moji/MojiEpisodeScreen';
 import EquipScreen from './features/equip/EquipScreen';
 import ZukanScreen from './features/zukan/ZukanScreen';
+import { UpdateWatcher } from './components/UpdateWatcher';
 
 /**
  * Screens outside 文字が 消えた 町 — the older arcs (closing), versus, the word
@@ -170,6 +171,7 @@ const App = () => {
 
   return (
     <HashRouter>
+      <UpdateWatcher />
       <ArcTheme />
       <RotateHint />
       <ScreenDoors>

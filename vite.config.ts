@@ -9,10 +9,14 @@ const BASE = '/nexmax_kanji_adventure/';
 
 export default defineConfig({
   base: BASE,
+  // When this build was made: the settings screen shows it (lib/appUpdate.ts buildLabel).
+  define: { __BUILD_TIME__: JSON.stringify(new Date().toISOString()) },
   plugins: [
     react(),
     VitePWA({
-      registerType: 'autoUpdate',
+      // A new version waits, and components/UpdateWatcher.tsx switches to it on a
+      // screen where a reload loses nothing (2026-10-06「切り替わる仕組み」).
+      registerType: 'prompt',
       includeAssets: ['icon-192x192.png', 'icon-512x512.png', 'apple-touch-icon.png', 'favicon-48.png', 'icon-maskable-512.png'],
       manifest: {
         id: BASE,
