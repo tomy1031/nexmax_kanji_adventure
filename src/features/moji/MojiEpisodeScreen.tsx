@@ -20,7 +20,8 @@ import { getMojiEpisode, type MojiEpisode } from '../../data/mojiEpisodes';
 import { MOJI_CHAPTERS } from '../../data/mojiRoute';
 import { MOJI1_PRELUDE } from '../../data/scripts/moji1';
 import { MOJI_CAST, MOJI_SCRIPTS } from '../../data/mojiScripts';
-import { UNLOCKED_ON_MOJI } from '../../data/unlocks';
+import { Feature, UNLOCKED_ON_MOJI, isFeatureUnlocked } from '../../data/unlocks';
+import { HARD_BONUS_GEMS } from '../../data/clearRewards';
 import { afterEpisodePath, canForge, isChapterOpen, isForgeOpen } from '../../data/mojiFlow';
 import { finaleNumber, finalePool, getMojiFinale, isFinaleOpen } from '../../data/mojiFinale';
 import { MOJI_FINALE_SCRIPTS } from '../../data/mojiFinaleScripts';
@@ -244,6 +245,12 @@ const ReadyScreen = ({
               <span aria-hidden>{'🔒'.repeat(Math.min(5, isHard ? hard.seals.length : kanji.length))}{(isHard ? hard.seals.length : kanji.length) > 5 ? '…' : ''}</span>
               <RubyText showFurigana={showFurigana}>{`字(じ)を ${isHard ? hard.seals.length : kanji.length}つ ぜんぶ 書(か)いて たおす`}</RubyText>
             </p>
+            {isHard && !hardWon && isFeatureUnlocked(Feature.GACHA, useGameStore.getState().clearedStages) && (
+              // The reward for the high road, said before it is taken (09 §3 D).
+              <p className="mt-0.5 ml-1 inline-flex items-center rounded-full bg-[#e8a317]/20 px-2 text-[11px] leading-[1.9] font-black text-[#8a5a00]">
+                <RubyText showFurigana={showFurigana}>{`👹 はじめて 勝(か)つと ◆${HARD_BONUS_GEMS}`}</RubyText>
+              </p>
+            )}
           </div>
         </div>
 
