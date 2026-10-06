@@ -5,6 +5,7 @@ import { NightStreetBackdrop } from '../write/NightStreet';
 import { useNavigate } from 'react-router-dom';
 import { useGameStore } from '../../store/gameStore';
 import { RubyText } from '../../components/ui/Ruby';
+import { buildLabel } from '../../lib/appUpdate';
 
 /** Set once the debug screen has been found; it then has a button here. */
 const DEBUG_KEY = 'nexmax-debug';
@@ -221,6 +222,11 @@ export const SettingsScreen = () => {
             🛠 デバッグ
           </button>
         )}
+
+        {/* Which version this is: the app switches to a new one by itself (components/UpdateWatcher.tsx). */}
+        <p className="mt-4 text-center text-[11px]" style={{ color: 'var(--ink-2)' }}>
+          <RubyText showFurigana={showFurigana}>{`バージョン ${buildLabel(__BUILD_TIME__)}`}</RubyText>
+        </p>
       </div>
     </div>
   );
