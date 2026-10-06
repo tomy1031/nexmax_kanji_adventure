@@ -617,6 +617,8 @@ export const GachaScreen = () => {
             arrived={seq.list.length === 1}
             short={seq.list.length > 1 && seq.list[seq.at].card.rarity === 3}
             count={seq.list.length > 1 ? `${seq.at + 1} / ${seq.list.length}` : undefined}
+            // One pull: the player traces its character to call the companion (なぞって よぶ).
+            trace={seq.list.length === 1}
             onClose={nextCard}
             onSkipAll={seq.list.length > 1 ? () => setSeq(null) : undefined}
           />

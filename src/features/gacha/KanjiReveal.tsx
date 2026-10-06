@@ -7,6 +7,7 @@ import { linesFor } from '../../data/companionLines';
 import { kanjiOf } from '../../data/charKanji';
 import type { Individual } from '../../data/individuals';
 import { WrittenWord } from './WrittenKanji';
+import { TraceWord } from './TraceWord';
 import { GachaCard } from './GachaCard';
 import { StarBurst, StarFall } from './Sparkles';
 import { star5PowerOf } from '../../lib/star5Power';
@@ -19,6 +20,9 @@ import * as sfx from '../../lib/sfx';
  * order; its reading comes under it. The companion's shadow rises behind the
  * card, the light bursts, and they step out: large, their character huge
  * behind them, their stars, their name, and their line cutting in on a band.
+ *
+ * `trace` (one pull): the player traces the character on the card to call
+ * the companion (TraceWord, 2026-10-07) — or taps おまかせ and it writes itself.
  *
  * `short` (a ★3 among ten): the character is there at once, no shadow, and the
  * companion goes on by themselves after a moment. Any tap before the companion
@@ -46,6 +50,7 @@ export const KanjiReveal = ({
   short = false,
   arrived = false,
   count,
+  trace = false,
   onClose,
   onSkipAll,
 }: {
@@ -61,6 +66,8 @@ export const KanjiReveal = ({
   arrived?: boolean;
   /** Among ten: which this is, e.g. "3 / 10". */
   count?: string;
+  /** The player traces the character to call the companion (one pull). */
+  trace?: boolean;
   onClose: () => void;
   /** Among ten: skip the rest and go to the result. */
   onSkipAll?: () => void;
@@ -75,6 +82,10 @@ export const KanjiReveal = ({
   // The card's width: big on a phone, not huge on a tablet.
   const [cardW] = useState(() => Math.round(Math.min(window.innerWidth * 0.56, window.innerHeight * 0.3, 240)));
   const line = linesFor(card).start;
+  // なぞって よぶ: tracing until it is written, or おまかせ (it writes itself).
+  const [auto, setAuto] = useState(!trace);
+  const [traced, setTraced] = useState(false);
+  const tracing = phase === 'write' && !auto;
   /** The player has tapped this card: no going on by itself. */
   const [touched, setTouched] = useState(false);
   /** Goes on once, whatever asks first. */
@@ -219,12 +230,48 @@ export const KanjiReveal = ({
               <GachaCard card={card} face="back" width={cardW} showFurigana={showFurigana} />
             ) : (
               <GachaCard card={card} face="paper" width={cardW} showFurigana={showFurigana}>
-                {phase !== 'turn' && (
-                  <WrittenWord word={k.kanji} size={Math.round(cardW * 0.7)} still={short} onDone={() => setPhase((p) => (p === 'write' ? 'read' : p))} />
-                )}
+                {phase !== 'turn' &&
+                  (tracing ? (
+                    <TraceWord
+                      word={k.kanji}
+                      size={Math.round(cardW * 0.7)}
+                      onDone={() => {
+                        setTraced(true);
+                        setPhase((p) => (p === 'write' ? 'read' : p));
+                      }}
+                    />
+                  ) : (
+                    <WrittenWord word={k.kanji} size={Math.round(cardW * 0.7)} still={short || traced} onDone={() => setPhase((p) => (p === 'write' ? 'read' : p))} />
+                  ))}
               </GachaCard>
             )}
           </motion.div>
+          {tracing && (
+            // No words needed: a hand, a brush, and the model to follow.
+            <>
+              <motion.p
+                className="g-outline-text absolute inset-x-[-30%] -top-14 text-center text-2xl font-black text-white"
+                initial={{ opacity: 0, y: 8 }}
+                animate={still ? { opacity: 1, y: 0 } : { opacity: 1, y: [0, -4, 0] }}
+                transition={still ? { duration: 0.3 } : { y: { duration: 1, repeat: Infinity }, opacity: { duration: 0.3 } }}
+              >
+                ✍️ <RubyText showFurigana={showFurigana}>書(か)いて よびましょう！</RubyText>
+              </motion.p>
+              <div className="mt-3 flex justify-center">
+                <button
+                  type="button"
+                  data-tap
+                  className="rounded-full border-2 border-white/40 bg-black/40 px-4 text-sm leading-[2.2] font-black text-white"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setAuto(true);
+                  }}
+                >
+                  <RubyText showFurigana={showFurigana}>おまかせ ▶</RubyText>
+                </button>
+              </div>
+            </>
+          )}
           {written && (
             <motion.p
               className="g-outline-text mt-1 text-center text-3xl font-black text-white"
