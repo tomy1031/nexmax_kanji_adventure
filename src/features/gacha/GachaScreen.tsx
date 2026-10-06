@@ -320,15 +320,16 @@ export const GachaScreen = () => {
         {bannerId === 'kanji' && (
           <div className="mt-1 flex flex-wrap justify-center gap-1">
             {CARDS.filter((c) => c.id === c.char && met(c)).map((c) => {
-              const k = kanjiOf(c.char).kanji;
+              const { kanji: k, reading } = kanjiOf(c.char);
               const on = [...k].every(written);
+              // Not written yet: shown faint, so the player sees which kanji calls which friend.
               return (
                 <span
                   key={c.id}
-                  className="flex h-7 min-w-7 items-center justify-center rounded-md border px-1 text-sm leading-none font-black"
-                  style={on ? { background: '#fff8e6', borderColor: '#f2c45a', color: '#24180d' } : { background: 'rgba(20,12,6,0.6)', borderColor: 'rgba(255,255,255,0.2)', color: 'rgba(255,255,255,0.35)' }}
+                  className="flex min-w-8 items-end justify-center rounded-md border px-1 pb-0.5 text-sm leading-none font-black"
+                  style={on ? { background: '#fff8e6', borderColor: '#f2c45a', color: '#24180d' } : { background: 'rgba(20,12,6,0.6)', borderColor: 'rgba(255,255,255,0.2)', color: 'rgba(255,255,255,0.4)' }}
                 >
-                  {on ? <RubyText showFurigana={false}>{k}</RubyText> : '？'}
+                  <RubyText showFurigana={showFurigana}>{`${k}(${reading})`}</RubyText>
                 </span>
               );
             })}
