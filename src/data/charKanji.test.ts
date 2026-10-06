@@ -42,12 +42,14 @@ describe('キャラの 字 (docs/design/17 §1, 18 §1)', () => {
     }
   });
 
-  it('is the name on the card: the name is its reading (18 §1)', () => {
+  it('is the name on the card: the name is its reading, after the title (18 §1)', () => {
     // リン keeps her own name; 山田さん's is already kanji.
     const own = new Set(['rin', 'yamada']);
     for (const char of CHARACTERS) {
+      const c = getIndividual(char)!;
+      expect(c.name, char).toBe(`${c.title}：${c.shortName}`);
       if (own.has(char)) continue;
-      expect(getIndividual(char)!.name, char).toBe(katakana(kanjiOf(char).reading));
+      expect(c.shortName, char).toBe(katakana(kanjiOf(char).reading));
     }
   });
 });

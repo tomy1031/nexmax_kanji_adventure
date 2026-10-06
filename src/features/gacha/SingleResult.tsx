@@ -113,11 +113,6 @@ export const SingleResult = ({ r, showFurigana, still, onClose }: { r: SinglePul
             <p className="g-title mt-1 text-lg leading-snug">
               <RubyText showFurigana={showFurigana}>{r.card.name}</RubyText>
             </p>
-            {r.card.role && (
-              <p className="text-xs font-bold" style={{ color: 'var(--ink-2)' }}>
-                <RubyText showFurigana={showFurigana}>{r.card.role}</RubyText>
-              </p>
-            )}
             {/* The companion's character, and its reading. */}
             <p className="mt-1.5 inline-flex items-center gap-2 rounded-xl border-2 border-[#c9a45c] bg-[#fff8e6] px-2 py-0.5">
               <span className="text-xs font-bold" style={{ color: 'var(--ink-2)' }}>
