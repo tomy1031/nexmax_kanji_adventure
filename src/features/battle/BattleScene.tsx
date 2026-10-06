@@ -915,7 +915,7 @@ export const BattleScene = ({
     const info = SKILL_INFO[skillKind];
     const does = info.says(e);
     setGauge(0);
-    setCut({ n: talkNo.current + 1, art: individual.art, name: individual.name, kind: skillKind, does });
+    setCut({ n: talkNo.current + 1, art: individual.art, name: individual.name, kind: skillKind, does, doesEn: useGameStore.getState().settings.english ? info.en(e) : undefined });
     companionSay(linesFor(individual).skill);
     sfx.skill();
     // ★5 ひかりの いやし: every わざ heals too.

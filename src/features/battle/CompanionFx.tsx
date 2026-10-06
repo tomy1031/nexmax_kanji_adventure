@@ -39,6 +39,8 @@ export interface SkillCut {
   kind: SkillKind;
   /** What it does, this time (SKILL_INFO.says). */
   does: string;
+  /** The same in English (SKILL_INFO.en), shown with the EN setting. */
+  doesEn?: string;
 }
 
 export const CompanionStand = ({ c, px, showFurigana, still }: { c: CompanionView; px: number; showFurigana: boolean; still: boolean }) => {
@@ -239,6 +241,11 @@ export const SkillCutIn = ({ cut, showFurigana, still }: { cut: SkillCut | null;
         <span className="mt-[1cqw] rounded-full bg-[#140c06]/80 px-[2cqw] leading-[1.9] font-black text-[#fff1cf]" style={{ fontSize: cq(24) }}>
           <RubyText showFurigana={showFurigana}>{cut.does}</RubyText>
         </span>
+        {cut.doesEn && (
+          <span lang="en" className="mt-[0.6cqw] w-max rounded-full bg-[#140c06]/70 px-[2cqw] leading-[1.7] font-bold text-[#cfe3ff]" style={{ fontSize: cq(20) }}>
+            {cut.doesEn}
+          </span>
+        )}
       </motion.div>
     </motion.div>
   );
