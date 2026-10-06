@@ -112,6 +112,7 @@ export const FACE_CROPS: Record<string, readonly [number, number, number, number
   "img/chara/naniwa/folk_yamada_sad.webp": [0.458, 0.252, 0.984, 2.25],
   "img/chara/naniwa/folk_yatai_happy.webp": [0.55, 0.2, 0.4, 1.635],
   "img/chara/naniwa/folk_yatai_trouble.webp": [0.5, 0.22, 0.4, 1.375],
+  "img/chara/naniwa/nexmax_crank.webp": [0.495, 0.2, 0.766, 1.229],
   "img/chara/naniwa/nexmax_determined.webp": [0.536, 0.201, 0.828, 1.365],
   "img/chara/naniwa/nexmax_guide.webp": [0.469, 0.181, 0.781, 1.344],
   "img/chara/naniwa/nexmax_hello.webp": [0.448, 0.183, 0.781, 1.323],

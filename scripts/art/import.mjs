@@ -10,6 +10,7 @@
  *           fit in 768x1152, WebP with alpha
  *   enemy   the same, fit in 512x512
  *   prop    a thing on its own (a weapon): the same cut-out, trimmed, fit inside 512x512
+ *           (white shut inside it is cleared too, unless the entry says keepWhite)
  *   bg      cover-cropped to 800x1440 (the picture-book page, 400x720 at 2x)
  *   fg      as bg, keeping transparency; a raw file with no alpha is keyed
  *           on #00FF00
@@ -148,7 +149,8 @@ for (const a of ASSETS) {
       .webp({ quality: 88, alphaQuality: 90 })
       .toFile(out);
   } else if (a.kind === 'prop') {
-    const img = await cutOut(raw, { enclosed: true });
+    // keepWhite: glass and paper, whose own white highlights are not background.
+    const img = await cutOut(raw, { enclosed: !a.keepWhite });
     await (await img.png().toBuffer().then((b) => sharp(b)))
       .resize(512, 512, { fit: 'inside', withoutEnlargement: true })
       .webp({ quality: 88, alphaQuality: 90 })
