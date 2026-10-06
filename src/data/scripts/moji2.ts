@@ -200,13 +200,13 @@ export const MOJI2_SCRIPTS: Record<string, EpisodeScript> = {
     outro: {
       stageId: 'moji-2-4',
       lines: [
-        { bg: 'port_foodhall', fx: ['darkclouds'], sprite: 'mojikui_hungry:normal', glyph: '🛤️ 💨', text: 'モジクイは いしだんの こみちへ にげました。', en: 'The Mojikui fled into the narrow stone alleys.' },
+        { bg: 'port_foodhall', fx: ['darkclouds'], sprite: 'mojikui_hungry:normal', glyph: '🛤️ 💨', text: 'モジクイは いしだんの ほそい みちへ にげました。', en: 'The Mojikui fled into the narrow stone alleys.' },
         { fx: ['spring'], sprite: 'cook:happy', glyph: '📋 ✨', text: 'メニューが もどりました！', en: 'The menu came back!' },
         { speaker: 'cook', sprite: 'cook:happy', glyph: '🍖 🐟 🍵', text: '肉(にく)と 魚(さかな)が あります。なにを 食(た)べますか？', en: 'We have meat and fish. What will you eat?' },
         { speaker: 'sora', sprite: 'sora:happy', glyph: '🐟 😋', text: '魚(さかな)を 食(た)べます！ それから、おちゃを 飲(の)みます。', en: "I'll have fish! And then I'll drink tea." },
         { speaker: 'cook', sprite: 'cook:happy', glyph: '🍚 = 主(しゅ)食(しょく)', text: '主(しゅ)食(しょく)は ごはんです。たくさん どうぞ！', en: 'The staple is rice. Have plenty!' },
         { speaker: 'nexmax', sprite: 'nexmax:smile', glyph: '🤖 ❤️', text: 'ぼくは なにも 食(た)べません。でも、みんなの 好(す)きな 物(もの)が 好(す)きです！', en: "I don't eat anything. But I like everyone's favourite things!" },
-        { speaker: 'sora', sprite: 'sora:normal', glyph: '🛤️ 👉', text: 'こみちは むずかしいです。いっしょに いきましょう！', en: "The alleys are tricky. Let's go together!" },
+        { speaker: 'sora', sprite: 'sora:normal', glyph: '🛤️ 👉', text: 'ほそい みちは むずかしいです。いっしょに いきましょう！', en: "The alleys are tricky. Let's go together!" },
       ],
     },
   },
@@ -214,7 +214,7 @@ export const MOJI2_SCRIPTS: Record<string, EpisodeScript> = {
     intro: {
       stageId: 'moji-2-5',
       lines: [
-        { bg: 'port_alley', text: 'いしだんの こみちです。みちが たくさん あります。', en: 'The narrow stone alleys. So many paths.' },
+        { bg: 'port_alley', text: 'いしだんの ほそい みちです。みちが たくさん あります。', en: 'The narrow stone alleys. So many paths.' },
         { glyph: '🪧⬅️❓ 🪧➡️❓', text: 'みちしるべの じが ありません。', en: "The signposts' letters are gone." },
         { speaker: 'sora', sprite: 'sora:trouble', text: 'きりで みちが わかりません。右(みぎ)ですか？ 左(ひだり)ですか？ 😰', en: "I can't tell the way in this fog. Right? Left?" },
         { text: '近(ちか)く、間(あいだ)、右(みぎ)、左(ひだり)……かんじが ありませんから、わかりません。', en: 'chikaku, aida, migi, hidari… no kanji, so nobody understands.' },
@@ -304,13 +304,13 @@ export const MOJI2_SCRIPTS: Record<string, EpisodeScript> = {
     outro: {
       stageId: 'moji-2-7',
       lines: [
-        { bg: 'port_library', fx: ['darkclouds'], sprite: 'mojikui_newspaper:normal', glyph: '🌊 💨', text: 'モジクイは うみぞいの みちへ にげました。', en: 'The Mojikui fled to the seaside path.' },
+        { bg: 'port_library', fx: ['darkclouds'], sprite: 'mojikui_newspaper:normal', glyph: '🌊 💨', text: 'モジクイは うみの ちかくの みちへ にげました。', en: 'The Mojikui fled to the seaside path.' },
         { fx: ['spring'], sprite: 'librarian:happy', glyph: '📚 ✨', text: '本(ほん)の じが もどりました！', en: 'The letters came back to the books!' },
         { speaker: 'librarian', sprite: 'librarian:happy', glyph: '📖 😊', text: 'どうぞ、本(ほん)を 読(よ)んで ください。', en: 'Please, read the books.' },
         { speaker: 'sora', sprite: 'sora:happy', glyph: '🎭 ✨', text: 'かみしばいの 話(はなし)を 聞(き)きましょう！', en: "Let's listen to the picture-story!" },
         { speaker: 'librarian', sprite: 'librarian:happy', glyph: '🖼️ 💡', text: 'この えを 見(み)て ください。みさきの とうだいです。', en: 'Look at this picture. It is the lighthouse on the cape.' },
         { speaker: 'nexmax', sprite: 'nexmax:think', glyph: '🌁 💡 👾', text: 'きりの まんなかに、とうだいが あります。', en: 'In the middle of the fog, there is a lighthouse.' },
-        { speaker: 'sora', sprite: 'sora:normal', glyph: '🌊 👉', text: 'まず、うみぞいの みちへ いきましょう！', en: "First, let's go to the seaside path!" },
+        { speaker: 'sora', sprite: 'sora:normal', glyph: '🌊 👉', text: 'まず、うみの ちかくの みちへ いきましょう！', en: "First, let's go to the seaside path!" },
       ],
     },
   },
@@ -318,7 +318,7 @@ export const MOJI2_SCRIPTS: Record<string, EpisodeScript> = {
     intro: {
       stageId: 'moji-2-8',
       lines: [
-        { bg: 'port_seaside', text: 'うみぞいの みちです。かもめが います。', en: 'The seaside path. There are gulls.' },
+        { bg: 'port_seaside', text: 'うみの ちかくの みちです。かもめが います。', en: 'The seaside path. There are gulls.' },
         { speaker: 'sora', sprite: 'sora:trouble', glyph: '📔 ❓', text: 'わたしの にっき……じが ありません！ 😢', en: 'My diary… the letters are gone!' },
         { glyph: '📔 🕖 🛍️ 🏠', text: '「七(しち)時(じ)に 起(お)きます。いちばで 買(か)います。うちへ 帰(かえ)ります。」……', en: '"I wake up at seven. I shop at the market. I go home." …' },
         { speaker: 'sora', sprite: 'sora:trouble', text: 'まいにち にっきを 書(か)きます。でも、きょうは 書(か)きません……。', en: "I write my diary every day. But today I can't…" },

@@ -63,7 +63,7 @@ export const MOJI3_SCRIPTS: Record<string, EpisodeScript> = {
         { speaker: 'nexmax', sprite: 'nexmax:smile', glyph: '✉️ 👧', text: 'まず、ソラに 手(て)紙(がみ)を 送(おく)りましょう。', en: "First, let's send Sora a letter." },
         { glyph: '🏤 🪧❓', text: 'でも、ゆうびんきょくの ふだの 字(じ)が ありません。', en: 'But the post office signs have lost their letters.' },
         { speaker: 'clerk', sprite: 'clerk:trouble', text: 'この にもつは どこへ 送(おく)りますか？ 切(き)手(て)は どれですか？ わかりません……😰', en: "Where does this parcel go? Which ones are the stamps? I can't tell…" },
-        { glyph: '☂️ 🪧❓', text: 'のきしたの かさの ふだも ありません。かさを 貸(か)しますか？ 借(か)りますか？', en: 'The umbrella sign under the eaves is gone too. Lend one? Borrow one?' },
+        { glyph: '☂️ 🪧❓', text: 'みせの まえの かさの ふだも ありません。かさを 貸(か)しますか？ 借(か)りますか？', en: 'The umbrella sign under the eaves is gone too. Lend one? Borrow one?' },
         { text: '送(おく)ります、切(き)ります、貸(か)します、借(か)ります……かんじが ありませんから、わかりません。', en: 'okurimasu, kirimasu, kashimasu, karimasu… no kanji, so nobody understands.' },
         { glyph: '📮 👀', text: '……モグモグ。ポストの 中(なか)で、手(て)紙(がみ)を 食(た)べる かげが……。', en: 'Munch, munch. Inside the postbox, a shadow is eating the letters…' },
         WRITE,

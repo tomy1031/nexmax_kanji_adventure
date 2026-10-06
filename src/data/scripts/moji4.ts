@@ -165,7 +165,7 @@ export const MOJI4_SCRIPTS: Record<string, EpisodeScript> = {
         { bg: 'miyako_subway', glyph: '🚇 ⬇️', text: 'えきの 下(した)の、地(ち)下(か)鉄(てつ)の ホームです。', en: 'The subway platform under the station.' },
         { speaker: 'sora', sprite: 'sora:normal', glyph: '🚇 ❓', text: '花(はな)ちゃん、地(ち)下(か)鉄(てつ)に 乗(の)った ことが ありますか？', en: 'Hana, have you ever ridden the subway?' },
         { speaker: 'hana', sprite: 'hana:happy', text: 'いいえ、ありません。はじめてです！', en: 'No, never. This is my first time!' },
-        { glyph: '🗺️⬜ 🚇🐢', text: 'でも、ろせんずの 字(じ)が ありません。電(でん)車(しゃ)も とても おそいです。', en: 'But the route map has lost its letters. And the trains are very slow.' },
+        { glyph: '🗺️⬜ 🚇🐢', text: 'でも、電(でん)車(しゃ)の ちずの 字(じ)が ありません。電(でん)車(しゃ)も とても おそいです。', en: 'But the route map has lost its letters. And the trains are very slow.' },
         { speaker: 'conductor', sprite: 'conductor:trouble', text: '仕(し)事(ごと)に 行(い)く 人(ひと)が たくさん います。でも、電(でん)車(しゃ)が 来(き)ません……😰', en: "Lots of people are going to work. But the trains don't come…" },
         { text: '有(ゆう)名(めい)、地(ち)、鉄(てつ)、仕(し)事(ごと)……かんじが ありませんから、わかりません。', en: 'yuumei, chi, tetsu, shigoto… no kanji, so nobody understands.' },
         { glyph: '🕳️ 👀', text: '……ノロノロ。トンネルの 中(なか)を、ゆっくり ほる かげが……。', en: 'Plod, plod. In the tunnel, a shadow is slowly digging…' },
