@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useState } from 'react';
 import { useMapPath } from '../../lib/nav';
 import { Backdrop } from '../../components/ui/Backdrop';
 import { NightStreetBackdrop } from '../write/NightStreet';
@@ -37,7 +37,6 @@ import { assetPath } from '../../lib/assetPath';
 import { DAILY_TOTAL } from '../../data/dailyTasks';
 import { SKILL_INFO, SKILL_OF } from '../../lib/companionSkill';
 import { useBgm } from '../../lib/bgm';
-import * as sfx from '../../lib/sfx';
 
 /**
  * The gem shop (docs/design/11 §5).
@@ -118,19 +117,15 @@ export const GachaScreen = () => {
   const pick = pickupOf(week, met);
 
   const [results, setResults] = useState<Shown[] | null>(null);
-  /** How many of the cards have been turned face-up. */
-  const [revealed, setRevealed] = useState(0);
   const [busy, setBusy] = useState(false);
   const [ratesOpen, setRatesOpen] = useState(false);
-  /** The pull being shown coming down (SummonOverlay), before its cards are dealt. */
+  /** The pull being shown coming out of the book (SummonOverlay), before its cards come out one by one. */
   const [summon, setSummon] = useState<Shown[] | null>(null);
-  /** A card coming out of its character (KanjiReveal): one pull's card, or a ★5 just turned; and how far to keep turning after it. */
-  const [cutIn, setCutIn] = useState<{ r: Shown; resume: number } | null>(null);
+  /** The cards coming out one by one (KanjiReveal), and which one is out now (docs/design/18 §3). */
+  const [seq, setSeq] = useState<{ list: Shown[]; at: number } | null>(null);
   const prefersReduced = useReducedMotion();
   const settingReduced = useGameStore((s) => s.settings.reducedMotion);
   const still = Boolean(prefersReduced || settingReduced);
-  const flipTimers = useRef<ReturnType<typeof setTimeout>[]>([]);
-  useEffect(() => () => flipTimers.current.forEach(clearTimeout), []);
 
   const canSingle = gems >= banner.single && !busy;
 
@@ -192,50 +187,19 @@ export const GachaScreen = () => {
     setSummon(apply(rs));
   };
 
-  /** The capsules have split: deal the cards. One card comes out of its character at once. */
+  /** Out of the book: the cards come out one by one, then the result. */
   const dealt = () => {
     const list = summon ?? [];
     setSummon(null);
     setResults(list);
     setBusy(false);
-    if (list.length === 1) {
-      setRevealed(1);
-      setCutIn({ r: list[0], resume: 1 });
-    } else setRevealed(0);
+    setSeq({ list, at: 0 });
   };
-
-  /**
-   * Turn cards over up to `n`, one after another; a ★5 waits a beat first,
-   * then comes out of its character (KanjiReveal) before the rest go on turning.
-   */
-  const flipTo = (n: number, list: Shown[] = results ?? [], from = revealed) => {
-    flipTimers.current.forEach(clearTimeout);
-    flipTimers.current = [];
-    let at = 0;
-    for (let i = from; i < n; i++) {
-      const r = list[i];
-      at += r.card.rarity === 5 ? 800 : 260;
-      flipTimers.current.push(
-        setTimeout(() => {
-          setRevealed((v) => Math.max(v, i + 1));
-          if (r.card.rarity === 5) setCutIn({ r, resume: n });
-          else if (r.card.rarity === 4) sfx.chime();
-          else sfx.tap();
-        }, at),
-      );
-      if (r.card.rarity === 5) break;
-    }
-  };
-  const closeCutIn = () => {
-    const c = cutIn;
-    setCutIn(null);
-    if (c && c.resume > revealed) flipTo(c.resume, results ?? [], revealed);
-  };
+  /** The card out now has gone: the next one, or the result. */
+  const nextCard = () => setSeq((q) => (q && q.at + 1 < q.list.length ? { ...q, at: q.at + 1 } : null));
 
   const close = () => {
-    flipTimers.current.forEach(clearTimeout);
     setResults(null);
-    setRevealed(0);
     if (firstPulled && !firstDone) setHowTo(true);
   };
 
@@ -506,18 +470,23 @@ export const GachaScreen = () => {
         )}
       </AnimatePresence>
 
-      {/* ひく 演出 (docs/design/17 §2・§3) */}
+      {/* ひく 演出 (docs/design/17・18 §3): the book, then the cards one by one. */}
       <AnimatePresence>{summon && <SummonOverlay key="summon" rarities={summon.map((r) => r.card.rarity)} still={still} showFurigana={showFurigana} onDone={dealt} />}</AnimatePresence>
       <AnimatePresence>
-        {cutIn && (
+        {seq && (
           <KanjiReveal
-            key={cutIn.r.card.id}
-            card={cutIn.r.card}
-            fresh={!cutIn.r.duplicate}
-            note={cutIn.r.note ?? (cutIn.r.guaranteed ? 'てんじょう' : undefined)}
+            key={`${seq.at}-${seq.list[seq.at].card.id}`}
+            card={seq.list[seq.at].card}
+            fresh={!seq.list[seq.at].duplicate}
+            note={seq.list[seq.at].note ?? (seq.list[seq.at].guaranteed ? 'てんじょう' : undefined)}
             showFurigana={showFurigana}
             still={still}
-            onClose={closeCutIn}
+            // One pull's card is already where it waits; among ten a ★3 is quick.
+            arrived={seq.list.length === 1}
+            short={seq.list.length > 1 && seq.list[seq.at].card.rarity === 3}
+            count={seq.list.length > 1 ? `${seq.at + 1} / ${seq.list.length}` : undefined}
+            onClose={nextCard}
+            onSkipAll={seq.list.length > 1 ? () => setSeq(null) : undefined}
           />
         )}
       </AnimatePresence>
@@ -533,13 +502,12 @@ export const GachaScreen = () => {
             className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-[#0d0618]/95 px-4 py-6"
           >
             {isMulti ? (
+              !seq && (
               <MultiResult
                 results={results}
-                revealed={revealed}
                 still={still}
                 showFurigana={showFurigana}
                 isPickup={(c) => bannerId === 'pickup' && (c.id === pick.five.id || pick.fours.some((f) => f.id === c.id))}
-                onFlip={(n) => flipTo(n)}
                 onClose={close}
                 again={
                   canMulti
@@ -553,9 +521,10 @@ export const GachaScreen = () => {
                     : null
                 }
               />
+              )
             ) : (
               // After the companion has come out of their character (KanjiReveal), not under it.
-              !cutIn && <SingleResult r={results[0]} showFurigana={showFurigana} still={still} onClose={close} />
+              !seq && <SingleResult r={results[0]} showFurigana={showFurigana} still={still} onClose={close} />
             )}
           </motion.div>
         )}
