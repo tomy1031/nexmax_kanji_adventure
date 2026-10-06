@@ -101,18 +101,18 @@ export const skillEffect = (kind: SkillKind, rarity: Rarity = 3, bond = 0): Skil
 
 /** Name, icon, colour, and what it does in a line (furigana notation). */
 export const SKILL_INFO: Record<SkillKind, { name: string; icon: string; color: string; says: (e: SkillEffect) => string }> = {
-  heal: { name: 'いやし', icon: '💚', color: '#5fd38a', says: (e) => `HP を ${e.heal} かいふく` },
+  heal: { name: 'いやし', icon: '💚', color: '#5fd38a', says: (e) => `HPが ${e.heal} もどる` },
   guard: {
     name: 'まもり',
     icon: '🛡️',
     color: '#6ab0ff',
-    says: (e) => (e.guards === 1 ? 'つぎの こうげきを ふせぐ' : `こうげきを ${e.guards}回(かい) ふせぐ`),
+    says: (e) => (e.guards === 1 ? 'あいての つぎの こうげきを とめる' : `あいての こうげきを ${e.guards}回(かい) とめる`),
   },
   calm: {
     name: 'おちつき',
     icon: '🍃',
     color: '#8fd8c8',
-    says: (e) => (e.calm! >= 99 ? 'ミスの 目(め)もりを ぜんぶ もどす' : `ミスの 目(め)もりを ${e.calm} もどす`),
+    says: (e) => (e.calm! >= 99 ? 'ミスを ぜんぶ けす' : `ミスを ${e.calm}つ けす`),
   },
   hint: {
     name: 'ヒント',
