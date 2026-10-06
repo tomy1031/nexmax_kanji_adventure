@@ -326,6 +326,15 @@ export const BattleScene = ({
   const [guardNo, setGuardNo] = useState(0);
   const [buffs, setBuffs] = useState({ guards: 0, freeLooks: star5?.freeLooks ?? 0, power: 1, comboShield: 0 });
   const [cut, setCut] = useState<SkillCut | null>(null);
+  /**
+   * What the companion did for the learner this fight, for the result
+   * (2026-10-07「サポートキャラの いる 意味が 伝わりにくい」): strikes blocked,
+   * HP given back, slips taken off, free looks, powered and favoured hits,
+   * COMBOs kept.
+   */
+  const helped = useRef({ guarded: 0, healed: 0, calmed: 0, looks: 0, powered: 0, favoured: 0, comboKept: 0 });
+  /** …as it stood when the fight ended (the result reads this, not the ref). */
+  const [helpedAtEnd, setHelpedAtEnd] = useState<typeof helped.current | null>(null);
   const [talk, setTalk] = useState<{ n: number; text: string } | null>(null);
   const talkNo = useRef(0);
   const companionSay = useCallback((text: string) => setTalk({ n: (talkNo.current += 1), text }), []);
@@ -411,6 +420,7 @@ export const BattleScene = ({
     (kind: 'win' | 'lose', mistakes: number, hpLeft: number) => {
       if (settledRef.current) return;
       settledRef.current = true;
+      setHelpedAtEnd({ ...helped.current });
 
       if (kind === 'lose') {
         setOutcome({ kind: 'lose' });
@@ -472,6 +482,7 @@ export const BattleScene = ({
     if (buffs.guards > 0) {
       // まもり: the strike is blocked.
       setBuffs((b) => ({ ...b, guards: b.guards - 1 }));
+      helped.current.guarded += 1;
       sfx.clang();
       void fieldCtl.start({ x: [0, -3, 3, 0], transition: { duration: 0.25 } });
       say('🛡️ まもった！ ダメージ 0');
@@ -506,6 +517,7 @@ export const BattleScene = ({
         freeLookRef.current = true;
         setFreeLookNow(true);
         setBuffs((b) => ({ ...b, freeLooks: b.freeLooks - 1 }));
+        helped.current.looks += 1;
         say('💡 ヒント！ 見(み)ても こうげきは へらない');
       }
       writerRef.current?.animateStroke();
@@ -569,6 +581,8 @@ export const BattleScene = ({
       const power = buffs.power;
       if (shielded || power !== 1) setBuffs((b) => ({ ...b, power: 1, comboShield: shielded ? b.comboShield - 1 : b.comboShield }));
       if (shielded) companionSay('コンボ、まもったよ！');
+      if (shielded) helped.current.comboKept += 1;
+      if (power !== 1) helped.current.powered += 1;
       // The run's sound: a climb at 3・5・7・10, a soft fall when it ends.
       if (comboMilestone(nextCombo)) atImpact(() => sfx.combo(comboTier(nextCombo).level), 150);
       else if (isComboBreak(combo, nextCombo)) sfx.comboBreak();
@@ -630,6 +644,7 @@ export const BattleScene = ({
 
       // 得意な 武器: the companion's bonus, said out loud so it is seen to count.
       const favoured = result.favoured && individual ? `（とくい ＋${individual.bonus}%）` : '';
+      if (result.favoured && individual) helped.current.favoured += 1;
       const dealt = blow.dealt;
       say(
         blow.held
@@ -850,6 +865,7 @@ export const BattleScene = ({
                         return kanji ? [{ kanji, stars }] : [];
                       }),
                       read: { right: growth.readRight, total: growth.readTotal },
+                      help: individual && skillKind && helpedAtEnd ? { name: individual.shortName, art: individual.art, bonus: individual.bonus, ...helpedAtEnd } : undefined,
                       goal: nextStarGoal(kanjiPool, (id) => progress[id]?.reps ?? 0),
                       exp: (() => {
                         // What the fight added, read off the store (nothing is counted twice).
@@ -875,10 +891,16 @@ export const BattleScene = ({
     setCut({ n: talkNo.current + 1, art: individual.art, name: individual.name, kind: skillKind, does });
     companionSay(linesFor(individual).skill);
     sfx.skill();
-    if (e.heal) setPlayerHp((h) => Math.min(stats.maxHp, h + e.heal!));
     // ★5 ひかりの いやし: every わざ heals too.
-    if (star5?.skillHeal) setPlayerHp((h) => Math.min(stats.maxHp, h + star5.skillHeal!));
-    if (e.calm) setRage((r) => Math.max(0, r - e.calm!));
+    const heal = (e.heal ?? 0) + (star5?.skillHeal ?? 0);
+    if (heal) {
+      helped.current.healed += Math.min(heal, stats.maxHp - playerHp);
+      setPlayerHp((h) => Math.min(stats.maxHp, h + heal));
+    }
+    if (e.calm) {
+      helped.current.calmed += Math.min(rage, e.calm);
+      setRage((r) => Math.max(0, r - e.calm!));
+    }
     if (e.comboAdd) setCombo((c) => c + e.comboAdd!);
     setBuffs((b) => ({
       guards: b.guards + (e.guards ?? 0),

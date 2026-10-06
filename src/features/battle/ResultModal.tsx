@@ -13,6 +13,7 @@ import { hpBonus, patienceBonus } from '../../lib/level';
 import * as sfx from '../../lib/sfx';
 import { playJingle } from '../../lib/bgm';
 import { useStill } from '../../hooks/useStill';
+import { faceStyle } from '../../lib/faceCrop';
 
 /**
  * The end of a fight, as a game says it (2026-09-24「動線 その他の 動きに
@@ -29,6 +30,20 @@ import { useStill } from '../../hooks/useStill';
 type Outcome = { kind: 'win'; stars: 1 | 2 | 3 } | { kind: 'lose' };
 
 const CONFETTI = ['#ffd24a', '#ff7a59', '#5cc0ff', '#7ed36b', '#ff9ad5', '#ffffff'];
+
+/** What the companion did, as short chips (ResultModal growth.help). */
+const helpChips = (h?: { bonus: number; guarded: number; healed: number; calmed: number; looks: number; powered: number; favoured: number; comboKept: number }): string[] =>
+  !h
+    ? []
+    : [
+        h.guarded > 0 ? `🛡️ ${h.guarded}回(かい) まもった` : '',
+        h.healed > 0 ? `💚 HP ＋${h.healed}` : '',
+        h.calmed > 0 ? `🍃 ミス −${h.calmed}` : '',
+        h.looks > 0 ? `💡 ${h.looks}回(かい) ただで 見(み)た` : '',
+        h.powered > 0 ? `💥 ${h.powered}回(かい) つよく` : '',
+        h.comboKept > 0 ? `🔥 コンボ ${h.comboKept}回(かい) まもった` : '',
+        h.favoured > 0 ? `⚔ ＋${h.bonus}% ×${h.favoured}回(かい)` : '',
+      ].filter((c) => c !== '');
 
 export const ResultModal = ({
   outcome,
@@ -101,6 +116,8 @@ export const ResultModal = ({
     goal?: { kanji: KanjiData; left: number; next: 2 | 3 } | null;
     /** ネクマックスの 経験値 (lib/level.ts): what this fight added, the level before and after, and the ceiling. */
     exp?: { gained: number; before: number; after: number; atCap: boolean; kanjiToRaiseCap: number };
+    /** What the companion did (BattleScene): so its being there is seen to count. */
+    help?: { name: string; art: string; bonus: number; guarded: number; healed: number; calmed: number; looks: number; powered: number; favoured: number; comboKept: number };
   };
 }) => {
   const moji = route === 'moji';
@@ -202,7 +219,7 @@ export const ResultModal = ({
           </RubyText>
         </p>
 
-        {growth && (growth.starUps.length > 0 || growth.read.total > 0 || growth.goal || (growth.exp && growth.exp.gained > 0)) && (
+        {growth && (growth.starUps.length > 0 || growth.read.total > 0 || growth.goal || (growth.exp && growth.exp.gained > 0) || helpChips(growth.help).length > 0) && (
           <div className="mt-3 rounded-xl px-3 py-2 text-left" style={{ background: 'rgba(255,255,255,0.55)', border: '2px solid #e0c48a' }}>
             <p className="text-xs font-black" style={{ color: 'var(--ink-2)' }}>
               この たたかいで
@@ -254,6 +271,20 @@ export const ResultModal = ({
               <p className="mt-0.5 text-sm font-black">
                 📖 <RubyText showFurigana={showFurigana}>{`読(よ)めた ${growth.read.right} / ${growth.read.total}`}</RubyText>
               </p>
+            )}
+            {growth.help && helpChips(growth.help).length > 0 && (
+              // The companion's part, in pictures and numbers.
+              <div className="mt-1 flex flex-wrap items-center gap-1">
+                <span aria-hidden className="h-7 w-7 shrink-0 rounded-full border-2 border-[#d4a04a] bg-[#fff8e6]" style={faceStyle(growth.help.art, 28, 1.25)} />
+                <span className="text-xs font-black">
+                  <RubyText showFurigana={showFurigana}>{`${growth.help.name}：`}</RubyText>
+                </span>
+                {helpChips(growth.help).map((c) => (
+                  <span key={c} className="rounded-full bg-[#fff1cf] px-2 text-xs leading-[1.9] font-black text-[#5a3a12]">
+                    <RubyText showFurigana={showFurigana}>{c}</RubyText>
+                  </span>
+                ))}
+              </div>
             )}
             {growth.goal && (
               <p className="mt-0.5 flex flex-wrap items-baseline gap-x-1 text-sm leading-[2] font-black">
