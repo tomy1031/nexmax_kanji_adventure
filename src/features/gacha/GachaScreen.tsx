@@ -317,6 +317,14 @@ export const GachaScreen = () => {
             ))}
           </div>
         )}
+        {bannerId === 'weekday' && (
+          // Tomorrow's friends: a reason to come back.
+          <p className="g-outline-text mt-1 text-xs font-black text-white/90">
+            <RubyText showFurigana={showFurigana}>
+              {`あしたは ${WEEKDAY_KANJI[(day + 1) % 7]}よう日(び)：${CLASS_LABEL[CLASS_OF_ELEMENT[WEEKDAY_ELEMENT[(day + 1) % 7]]].ja}(${CLASS_LABEL[CLASS_OF_ELEMENT[WEEKDAY_ELEMENT[(day + 1) % 7]]].reading})の なかま`}
+            </RubyText>
+          </p>
+        )}
         {bannerId === 'kanji' && (
           <div className="mt-1 flex flex-wrap justify-center gap-1">
             {CARDS.filter((c) => c.id === c.char && met(c)).map((c) => {
@@ -617,8 +625,8 @@ export const GachaScreen = () => {
             arrived={seq.list.length === 1}
             short={seq.list.length > 1 && seq.list[seq.at].card.rarity === 3}
             count={seq.list.length > 1 ? `${seq.at + 1} / ${seq.list.length}` : undefined}
-            // One pull: the player traces its character to call the companion (なぞって よぶ).
-            trace={seq.list.length === 1}
+            // One pull, or a ★5 among ten: the player traces its character to call the companion (なぞって よぶ).
+            trace={seq.list.length === 1 || seq.list[seq.at].card.rarity === 5}
             onClose={nextCard}
             onSkipAll={seq.list.length > 1 ? () => setSeq(null) : undefined}
           />
