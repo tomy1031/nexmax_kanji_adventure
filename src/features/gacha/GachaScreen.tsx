@@ -1,7 +1,5 @@
 import { useState } from 'react';
 import { useMapPath } from '../../lib/nav';
-import { Backdrop } from '../../components/ui/Backdrop';
-import { NightStreetBackdrop } from '../write/NightStreet';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { afterEpisodePath } from '../../data/mojiFlow';
 import { UNLOCKED_ON_MOJI } from '../../data/unlocks';
@@ -10,8 +8,7 @@ import { SummonOverlay } from './SummonOverlay';
 import { KanjiReveal } from './KanjiReveal';
 import { SingleResult } from './SingleResult';
 import { MultiResult } from './MultiResult';
-import { NexmaxSays } from '../../components/ui/Chrome';
-import { kanjiOf } from '../../data/charKanji';
+import { BannerHero, BannerInfo, CardCompare } from './GachaBanner';
 import { useGameStore } from '../../store/gameStore';
 import {
   BANNERS,
@@ -68,35 +65,9 @@ const showcase = (ids: string[], banner: Banner, met: Met): Individual[] => {
   return [...chosen, ...more].slice(0, 3);
 };
 
-/** The banner's picture: its cards standing together, the first one's character large behind them (docs/design/17 §4). */
-const BannerArt = ({ cards }: { cards: Individual[] }) => {
-  const big = cards[0] ? kanjiOf(cards[0].char).kanji : null;
-  return (
-    <div className="relative mx-auto flex h-40 items-end justify-center" aria-hidden>
-      {big && (
-        // Up to the left, above the shorter card beside the first, where the pictures leave it showing.
-        <span className="absolute -top-2 left-1 leading-none font-black" style={{ fontSize: big.length > 1 ? 80 : 112, color: 'rgba(214,140,20,0.42)' }}>
-          {big}
-        </span>
-      )}
-      <div className="absolute inset-x-6 bottom-2 h-24 rounded-full" style={{ background: 'radial-gradient(ellipse, rgba(255,214,110,0.55), transparent 70%)' }} />
-      {cards.map((c, i) => (
-        <img
-          key={c.id}
-          src={assetPath(c.art)}
-          alt=""
-          className="relative object-contain"
-          style={{ height: i === 0 ? '100%' : '72%', order: i === 0 ? 1 : i === 1 ? 0 : 2, marginInline: '-4%' }}
-        />
-      ))}
-    </div>
-  );
-};
-
 export const GachaScreen = () => {
   useBgm('shop');
   const navigate = useNavigate();
-  const moji = useGameStore((st) => st.lastArc) === 'moji';
   const mapPath = useMapPath();
   const showFurigana = useGameStore((s) => s.settings.furigana);
   const gems = useGameStore((s) => s.gems);
@@ -119,6 +90,8 @@ export const GachaScreen = () => {
   const [results, setResults] = useState<Shown[] | null>(null);
   const [busy, setBusy] = useState(false);
   const [ratesOpen, setRatesOpen] = useState(false);
+  const [compareOpen, setCompareOpen] = useState(false);
+  const [rulesOpen, setRulesOpen] = useState(false);
   /** The pull being shown coming out of the book (SummonOverlay), before its cards come out one by one. */
   const [summon, setSummon] = useState<Shown[] | null>(null);
   /** The cards coming out one by one (KanjiReveal), and which one is out now (docs/design/18 §3). */
@@ -205,15 +178,22 @@ export const GachaScreen = () => {
 
   const isMulti = results !== null && results.length > 1;
   const daysToMulti = Math.ceil(Math.max(0, banner.multi - gems) / DAILY_TOTAL);
-  const bannerCards =
+  /** The banner's star (docs/design/18 §5): this week's ★5, or the best card the banner shows. */
+  const featured =
+    bannerId === 'pickup' ? pick.five : showcase(bannerId === 'town' ? ['rin-4', 'teacher', 'baker-4'] : ['ENTJ-5', 'ISTJ-5', 'rin-5'], banner, met)[0];
+  const featuredLabel = bannerId === 'pickup' ? `今週(こんしゅう)の ピックアップ ★${featured.rarity}` : `この ガチャの 目(め)玉(だま) ★${featured.rarity}`;
+  const ribbon =
     bannerId === 'pickup'
-      ? [pick.five, ...pick.fours]
-      : showcase(bannerId === 'town' ? ['rin-4', 'teacher', 'baker-4'] : ['ENTJ-5', 'ISTJ-5', 'rin-5'], banner, met);
+      ? `ピックアップは あと ${daysLeft}日(にち)`
+      : bannerId === 'town'
+        ? '町(まち)の なかまだけ・★4が 出(で)やすい'
+        : 'ぜんぶの なかまが 出(で)る';
 
   return (
-    <div className="g-stage min-h-dvh pb-8">
-      {/* The world being played behind it: the night town on 文字が 消えた 町 (08 §3.8). */}
-      {moji ? <NightStreetBackdrop /> : <Backdrop fixed />}
+    <div className="relative min-h-dvh bg-[#0d0618] pb-8">
+      {/* The gacha square at dusk (docs/design/18 §5). */}
+      <img src={assetPath('img/gacha/pickup_bg.webp')} alt="" aria-hidden className="pointer-events-none fixed inset-0 h-full w-full object-cover" />
+      <div aria-hidden className="pointer-events-none fixed inset-0" style={{ background: 'linear-gradient(180deg, rgba(13,6,24,0.55), rgba(13,6,24,0.15) 30%, rgba(13,6,24,0.35) 65%, rgba(13,6,24,0.8))' }} />
       <header className="g-header sticky top-0 z-20 px-4 pt-[max(12px,env(safe-area-inset-top))] pb-3">
         <div className="flex items-center justify-between">
           <button type="button" className="g-btn g-btn-accent !min-h-[38px] !gap-1 !px-3.5 text-sm" onClick={() => navigate(mapPath)}>
@@ -251,31 +231,33 @@ export const GachaScreen = () => {
         </div>
       </header>
 
-      <div className="mx-auto max-w-md px-4 pt-4 text-center">
-        <div className="g-frame px-4 pt-3 pb-4">
-          <BannerArt cards={bannerCards} />
-          <h2 className="g-title mt-1 text-lg">
+      <main className="relative mx-auto max-w-md px-3 pt-2 text-center">
+        {/* The title plate. */}
+        <div className="relative mx-auto w-[96%]">
+          <img src={assetPath('img/gacha/title_plate.webp')} alt="" aria-hidden className="w-full" />
+          <h2 className="g-outline-text absolute inset-x-[14%] top-[56%] -translate-y-1/2 text-[min(7.5vw,30px)] leading-tight font-black text-[#ffe9a8]">
             <RubyText showFurigana={showFurigana}>{banner.name}</RubyText>
           </h2>
-          <p className="mt-1 text-sm leading-snug" style={{ color: 'var(--ink-2)' }}>
-            {bannerId === 'pickup' ? (
-              <>
-                <Stars n={5} /> <RubyText showFurigana={showFurigana}>{`「${pick.five.name}」が 出(で)やすい！`}</RubyText>
-                <span className="block text-xs">
-                  <RubyText showFurigana={showFurigana}>{`★4「${pick.fours[0].name}」「${pick.fours[1].name}」も。あと ${daysLeft}日(にち)で 入(い)れかわり`}</RubyText>
-                </span>
-              </>
-            ) : bannerId === 'town' ? (
-              <RubyText showFurigana={showFurigana}>町(まち)の なかまだけ。★4が 出(で)やすく、ねだんも やすい。</RubyText>
-            ) : (
-              <RubyText showFurigana={showFurigana}>ぜんぶの なかまの カードが 出(で)ます。</RubyText>
-            )}
-          </p>
+        </div>
+        <p className="g-outline-text -mt-1 text-xs font-bold text-white/90">
+          <RubyText showFurigana={showFurigana}>字(じ)が つなぐ、あたらしい なかま</RubyText>
+        </p>
 
-          {/* Nexmax waits by the buttons (docs/design/17 §4). */}
-          <div className="mt-2 flex justify-center">
-            <NexmaxSays text="どんな なかまに 出会(であ)えるかな？" pose="hello" size={56} flip />
-          </div>
+        <BannerHero card={featured} showFurigana={showFurigana} still={still} />
+
+        <div className="relative z-[1] mx-auto -mt-3 w-[82%]">
+          <img src={assetPath('img/gacha/ribbon.webp')} alt="" aria-hidden className="w-full" />
+          <p className="g-outline-text absolute inset-x-[16%] top-1/2 -translate-y-1/2 text-[13px] font-black text-white">
+            <RubyText showFurigana={showFurigana}>{ribbon}</RubyText>
+          </p>
+        </div>
+
+        <BannerInfo card={featured} label={featuredLabel} showFurigana={showFurigana} />
+        {bannerId === 'pickup' && (
+          <p className="g-outline-text mt-1 text-xs font-bold text-white/90">
+            <RubyText showFurigana={showFurigana}>{`★4 ピックアップ：${pick.fours[0].shortName}・${pick.fours[1].shortName}`}</RubyText>
+          </p>
+        )}
 
           {tickets > 0 && (
             // A ticket: one pull without gems. Above everything while there is one.
@@ -299,43 +281,46 @@ export const GachaScreen = () => {
             </motion.button>
           )}
 
-          {/* 10連を主役にする ------------------------------------------- */}
-          <button type="button" className="g-btn g-btn-primary mt-4 w-full !min-h-[64px] text-lg" disabled={!canMulti} onClick={doMulti}>
-            {busy ? (
-              '…'
-            ) : (
-              <span className="flex flex-col leading-tight">
-                <RubyText showFurigana={showFurigana}>10回(かい) ひく</RubyText>
-                <span className="text-xs font-bold opacity-80">
-                  ◆{banner.multi}
-                  <span className="mx-1">·</span>
-                  <RubyText showFurigana={showFurigana}>1回(かい)ぶん おトク</RubyText>
+          {/* 1回 and 10回, side by side. */}
+          <div className="mt-3 flex gap-2">
+            <button type="button" className="relative flex h-16 flex-1 items-center justify-center disabled:opacity-45" disabled={!canSingle} onClick={doSingle}>
+              <img src={assetPath('img/gacha/btn_blue.webp')} alt="" aria-hidden className="absolute inset-0 h-full w-full" />
+              <span className="g-outline-text relative flex flex-col leading-tight font-black text-white">
+                <span className="text-lg">
+                  <RubyText showFurigana={showFurigana}>1回(かい) ひく</RubyText>
                 </span>
+                <span className="text-xs">◆{banner.single}</span>
               </span>
-            )}
-          </button>
-          <p className="mt-1.5 text-xs" style={{ color: 'var(--color-gold-2)' }}>
-            <RubyText showFurigana={showFurigana}>10回(かい)の 中(なか)に ★4 いじょうが かならず 1枚(まい)</RubyText>
+            </button>
+            <button type="button" className="relative flex h-16 flex-1 items-center justify-center disabled:opacity-45" disabled={!canMulti} onClick={doMulti}>
+              <img src={assetPath('img/gacha/btn_gold.webp')} alt="" aria-hidden className="absolute inset-0 h-full w-full" />
+              <span className="relative flex flex-col leading-tight font-black text-[#3a2414]">
+                <span className="text-lg">
+                  <RubyText showFurigana={showFurigana}>10回(かい) ひく</RubyText>
+                </span>
+                <span className="text-xs">◆{banner.multi}</span>
+              </span>
+            </button>
+          </div>
+          <p className="g-outline-text mt-1 text-xs font-black text-[#ffe9a8]">
+            <RubyText showFurigana={showFurigana}>10回(かい)で ★4 いじょうが かならず 1まい！</RubyText>
           </p>
           {banner.ceiling && (
             // How far the ★5 ceiling is, at a glance (docs/design/16 §6).
-            <div className="mt-2 text-left text-[11px] font-black" style={{ color: 'var(--ink-2)' }}>
+            <div className="mt-2 rounded-xl bg-black/35 px-3 py-1.5 text-left text-[11px] font-black text-white">
               <div className="flex justify-between">
                 <RubyText showFurigana={showFurigana}>{`★5 かくてい まで あと ${pullsUntilStar5(pity)}回(かい)`}</RubyText>
                 <span className="tabular-nums">
                   {pity} / {STAR5_CEILING}
                 </span>
               </div>
-              <div className="mt-0.5 h-2 overflow-hidden rounded-full" style={{ background: 'var(--line)' }}>
+              <div className="mt-0.5 h-2 overflow-hidden rounded-full bg-white/20">
                 <div className="h-full rounded-full" style={{ width: `${(pity / STAR5_CEILING) * 100}%`, background: 'linear-gradient(90deg,#ff8fc1,#ffd36a,#8be0a8,#7fb2ff)' }} />
               </div>
             </div>
           )}
-          <button type="button" className="g-btn g-btn-ghost mt-3 w-full" disabled={!canSingle} onClick={doSingle}>
-            <RubyText showFurigana={showFurigana}>{`1回(かい) ひく（◆${banner.single}）`}</RubyText>
-          </button>
-          {!canMulti && (
-            <p className="mt-2 text-xs" style={{ color: 'var(--ink-2)' }}>
+          {!canMulti && !busy && (
+            <p className="g-outline-text mt-1.5 text-xs text-white/90">
               <RubyText showFurigana={showFurigana}>
                 {daysToMulti > 0
                   ? `10回(かい)ぶんまで あと ◆${banner.multi - gems}。毎日(まいにち)の やること 全部(ぜんぶ)で あと ${daysToMulti}日(にち)。`
@@ -343,49 +328,71 @@ export const GachaScreen = () => {
               </RubyText>
             </p>
           )}
-        </div>
 
-        {/* 確率と天井を かくさない ------------------------------------- */}
-        <div className="g-panel mt-4 p-4 text-left text-xs" style={{ color: 'var(--ink-2)' }}>
-          <p className="g-eyebrow mb-1.5">
-            <RubyText showFurigana={showFurigana}>かくりつ</RubyText>
-          </p>
-          <ul className="space-y-1">
-            <li>
-              {banner.rates[5] > 0 && (
-                <>
-                  <Stars n={5} /> {Math.round(banner.rates[5] * 100)}%・
-                </>
-              )}
-              <Stars n={4} /> {Math.round(banner.rates[4] * 100)}%・<Stars n={3} /> {Math.round(banner.rates[3] * 100)}%
-              <RubyText showFurigana={showFurigana}>（1回(かい)ごと）</RubyText>
-            </li>
-            {bannerId === 'pickup' && (
-              <li>
-                <RubyText showFurigana={showFurigana}>★5・★4が 出(で)たら、その 半分(はんぶん)は 今週(こんしゅう)の カード</RubyText>
-              </li>
-            )}
-            {banner.ceiling && (
-              <li>
-                <RubyText showFurigana={showFurigana}>
-                  {`★5は ${STAR5_CEILING}回(かい)で かならず 出(で)ます。あと ${pullsUntilStar5(pity)}回(かい)（いつもの と ピックアップ）`}
-                </RubyText>
-              </li>
-            )}
-            <li>
-              <RubyText showFurigana={showFurigana}>
-                {`同(おな)じ カード → きずな ＋1。きずなが いっぱい → ◆が もどる（★3 ◆${BOND_REFUND[3]}・★4 ◆${BOND_REFUND[4]}・★5 ◆${BOND_REFUND[5]}）`}
-              </RubyText>
-            </li>
-            <li>
-              <RubyText showFurigana={showFurigana}>お金(かね)は つかいません。ジェムは 書(か)いて もらえます。</RubyText>
-            </li>
-          </ul>
-          <button type="button" data-tap className="g-btn g-btn-ghost mt-3 w-full !min-h-[40px] text-xs" onClick={() => setRatesOpen(true)}>
-            <RubyText showFurigana={showFurigana}>くわしい かくりつ（カードごと） ▶</RubyText>
-          </button>
-        </div>
-      </div>
+          {/* かくりつ・キャラ・きまり: nothing hidden, one tap away. */}
+          <div className="mt-3 flex gap-2">
+            {(
+              [
+                ['かくりつ', () => setRatesOpen(true)],
+                ['キャラ', () => setCompareOpen(true)],
+                ['きまり', () => setRulesOpen(true)],
+              ] as const
+            ).map(([label, open]) => (
+              <button key={label} type="button" data-tap className="relative flex h-11 flex-1 items-center justify-center" onClick={open}>
+                <img src={assetPath('img/gacha/btn_menu.webp')} alt="" aria-hidden className="absolute inset-0 h-full w-full" />
+                <span className="relative text-sm font-black text-[#ffe9a8]">{label}</span>
+              </button>
+            ))}
+          </div>
+      </main>
+
+      <AnimatePresence>
+        {compareOpen && <CardCompare card={featured} owned={owned} showFurigana={showFurigana} still={still} onClose={() => setCompareOpen(false)} />}
+      </AnimatePresence>
+      {/* きまり: the rules in words — chances, the ceiling, きずな, and that money is never used. */}
+      <AnimatePresence>
+        {rulesOpen && (
+          <motion.div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setRulesOpen(false)}>
+            <div role="dialog" aria-modal="true" aria-labelledby="rules-title" className="g-panel-solid w-full max-w-sm p-4 text-left text-xs" style={{ color: 'var(--ink-2)' }} onClick={(e) => e.stopPropagation()}>
+              <h2 id="rules-title" className="g-title text-base">
+                <RubyText showFurigana={showFurigana}>{`${banner.name}の きまり`}</RubyText>
+              </h2>
+              <ul className="mt-2 space-y-1.5">
+                <li>
+                  {banner.rates[5] > 0 && (
+                    <>
+                      <Stars n={5} /> {Math.round(banner.rates[5] * 100)}%・
+                    </>
+                  )}
+                  <Stars n={4} /> {Math.round(banner.rates[4] * 100)}%・<Stars n={3} /> {Math.round(banner.rates[3] * 100)}%
+                  <RubyText showFurigana={showFurigana}>（1回(かい)ごと）</RubyText>
+                </li>
+                {bannerId === 'pickup' && (
+                  <li>
+                    <RubyText showFurigana={showFurigana}>★5・★4が 出(で)たら、その 半分(はんぶん)は 今週(こんしゅう)の カード</RubyText>
+                  </li>
+                )}
+                {banner.ceiling && (
+                  <li>
+                    <RubyText showFurigana={showFurigana}>{`★5は ${STAR5_CEILING}回(かい)で かならず 出(で)ます（いつもの と ピックアップ）`}</RubyText>
+                  </li>
+                )}
+                <li>
+                  <RubyText showFurigana={showFurigana}>
+                    {`同(おな)じ カード → きずな ＋1。きずなが いっぱい → ◆が もどる（★3 ◆${BOND_REFUND[3]}・★4 ◆${BOND_REFUND[4]}・★5 ◆${BOND_REFUND[5]}）`}
+                  </RubyText>
+                </li>
+                <li>
+                  <RubyText showFurigana={showFurigana}>お金(かね)は つかいません。ジェムは 書(か)いて もらえます。</RubyText>
+                </li>
+              </ul>
+              <button type="button" data-tap className="g-btn g-btn-primary mt-3 w-full" onClick={() => setRulesOpen(false)}>
+                <RubyText showFurigana={showFurigana}>とじる</RubyText>
+              </button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* くわしい かくりつ: every card this gacha can give now, and its chance (docs/design/16 §6). */}
       <AnimatePresence>
