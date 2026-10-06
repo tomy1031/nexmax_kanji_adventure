@@ -274,7 +274,11 @@ export const GachaScreen = () => {
               type="button"
               role="tab"
               aria-selected={bannerId === id}
-              onClick={() => setBannerId(id)}
+              onClick={(e) => {
+                setBannerId(id);
+                // The row scrolls: bring the chosen tab, and its neighbours, into view.
+                e.currentTarget.scrollIntoView({ inline: 'center', block: 'nearest', behavior: still ? 'auto' : 'smooth' });
+              }}
               className="g-btn shrink-0 !min-h-[44px] !gap-1 !px-2.5 text-xs"
               style={{ background: bannerId === id ? 'var(--accent)' : 'var(--panel-solid)', color: bannerId === id ? '#fff' : 'var(--ink)' }}
             >
