@@ -55,7 +55,7 @@ export const CLASS_LABEL: Record<WeaponClass, { ja: string; reading: string }> =
  * The first kanji decides the weapon's shape. Its element is the thing the
  * learner can see in the character, so the mapping stays guessable.
  */
-const CLASS_OF_ELEMENT: Record<Element, WeaponClass> = {
+export const CLASS_OF_ELEMENT: Record<Element, WeaponClass> = {
   KA: WeaponClass.SWORD,
   SUI: WeaponClass.BOW,
   MOKU: WeaponClass.STAFF,

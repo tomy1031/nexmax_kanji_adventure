@@ -12,6 +12,14 @@ import { BannerHero, BannerInfo, CardCompare } from './GachaBanner';
 import { useGameStore } from '../../store/gameStore';
 import {
   BANNERS,
+  BANNER_ORDER,
+  WEEKDAY_ELEMENT,
+  WEEKDAY_KANJI,
+  dayOf,
+  featuredOf,
+  kanjiBoost,
+  weekdayBoost,
+  type Boost,
   BOND_REFUND,
   STAR5_CEILING,
   cardRates,
@@ -34,11 +42,18 @@ import { assetPath } from '../../lib/assetPath';
 import { DAILY_TOTAL } from '../../data/dailyTasks';
 import { SKILL_INFO, SKILL_OF } from '../../lib/companionSkill';
 import { useBgm } from '../../lib/bgm';
+import { CLASS_LABEL, CLASS_OF_ELEMENT } from '../../lib/forge/weapon';
+import { ELEMENT_LABEL } from '../../lib/forge/elements';
+import { getKanjiByChar } from '../../lib/kanjiDb';
+import { MOJI_OWN_REPS } from '../../lib/mastery';
+import { kanjiOf } from '../../data/charKanji';
+import { todayKey } from '../../store/gameStore';
 
 /**
  * The gem shop (docs/design/11 §5).
  *
- * Three gachas, each with its odds and ceiling printed under its buttons. The
+ * Five gachas (lib/gacha.ts BANNER_ORDER), each with a picture on its tab and
+ * its odds and ceiling printed under its buttons, and one free pull a day. The
  * reveal is honest: a card's back already shows its rarity (silver ★3, gold
  * ★4, rainbow ★5) before it turns, and a ★5 only takes a beat longer. A
  * duplicate raises that card's きずな, and gives gems back once it is full.
@@ -86,6 +101,20 @@ export const GachaScreen = () => {
   const [week] = useState(() => weekOf());
   const [daysLeft] = useState(() => daysToNextPickup());
   const pick = pickupOf(week, met);
+  // 曜日の ガチャ: today's element. 字の ガチャ: the friends whose own kanji are written (★1).
+  const [day] = useState(() => dayOf());
+  const progress = useGameStore((s) => s.progress);
+  const written = (c: string) => {
+    const k = getKanjiByChar(c);
+    return k != null && (progress[k.id]?.reps ?? 0) >= MOJI_OWN_REPS;
+  };
+  const boost: Boost | undefined = bannerId === 'weekday' ? weekdayBoost(day) : bannerId === 'kanji' ? kanjiBoost(written) : undefined;
+  const boosted = boost ? CARDS.filter((c) => met(c) && boost(c)) : [];
+  const dayClass = CLASS_LABEL[CLASS_OF_ELEMENT[WEEKDAY_ELEMENT[day]]];
+  // One free pull a day, on any gacha.
+  const freeDay = useGameStore((s) => s.freePullDay);
+  const spendFree = useGameStore((s) => s.useFreePull);
+  const freeToday = freeDay !== todayKey();
 
   const [results, setResults] = useState<Shown[] | null>(null);
   const [busy, setBusy] = useState(false);
@@ -116,7 +145,7 @@ export const GachaScreen = () => {
     if (busy || !spendTicket()) return;
     setBusy(true);
     // The first is a ★4 or better: a friend worth taking into the next fight.
-    const r = pull(bannerId, owned, pity, week, Math.random, first, met);
+    const r = pull(bannerId, owned, pity, week, Math.random, first, met, boost);
     setPity(pityAfter(bannerId, pity, r));
     const shown = apply([r]).map((s) => (first ? { ...s, guaranteed: false, note: 'はじめての ★4 かくてい' } : s));
     if (first) setFirstPulled(shown[0]);
@@ -147,15 +176,24 @@ export const GachaScreen = () => {
   const doSingle = () => {
     if (!canSingle || !spendGems(banner.single)) return;
     setBusy(true);
-    const r = pull(bannerId, owned, pity, week, Math.random, false, met);
+    const r = pull(bannerId, owned, pity, week, Math.random, false, met, boost);
     setPity(pityAfter(bannerId, pity, r));
     setSummon(apply([r]));
+  };
+
+  /** Today's free pull, on the gacha shown. */
+  const doFree = () => {
+    if (busy || !spendFree()) return;
+    setBusy(true);
+    const r = pull(bannerId, owned, pity, week, Math.random, false, met, boost);
+    setPity(pityAfter(bannerId, pity, r));
+    setSummon(apply([r]).map((s) => ({ ...s, note: s.note ?? 'きょうの むりょう' })));
   };
 
   const doMulti = () => {
     if (!canMulti || !spendGems(banner.multi)) return;
     setBusy(true);
-    const { results: rs, pityAfter: p } = pullMany(bannerId, owned, pity, week, Math.random, met);
+    const { results: rs, pityAfter: p } = pullMany(bannerId, owned, pity, week, Math.random, met, boost);
     setPity(p);
     setSummon(apply(rs));
   };
@@ -178,16 +216,31 @@ export const GachaScreen = () => {
 
   const isMulti = results !== null && results.length > 1;
   const daysToMulti = Math.ceil(Math.max(0, banner.multi - gems) / DAILY_TOTAL);
-  /** The banner's star (docs/design/18 §5): this week's ★5, or the best card the banner shows. */
+  /** The banner's star (docs/design/18 §5): this week's ★5, the best boosted friend, or the best card the banner shows. */
+  const bestBoosted = [...boosted].sort((a, b) => b.rarity - a.rarity)[0];
   const featured =
-    bannerId === 'pickup' ? pick.five : showcase(bannerId === 'town' ? ['rin-4', 'teacher', 'baker-4'] : ['ENTJ-5', 'ISTJ-5', 'rin-5'], banner, met)[0];
-  const featuredLabel = bannerId === 'pickup' ? `今週(こんしゅう)の ピックアップ ★${featured.rarity}` : `この ガチャの 目(め)玉(だま) ★${featured.rarity}`;
+    bannerId === 'pickup'
+      ? pick.five
+      : bestBoosted ?? showcase(bannerId === 'town' ? ['rin-4', 'teacher', 'baker-4'] : ['ENTJ-5', 'ISTJ-5', 'rin-5'], banner, met)[0];
+  const featuredLabel =
+    bannerId === 'pickup'
+      ? `今週(こんしゅう)の ピックアップ ★${featured.rarity}`
+      : bestBoosted
+        ? `${bannerId === 'weekday' ? 'きょうの' : '書(か)いた 字(じ)の'} なかま ★${featured.rarity}`
+        : `この ガチャの 目(め)玉(だま) ★${featured.rarity}`;
   const ribbon =
     bannerId === 'pickup'
       ? `ピックアップは あと ${daysLeft}日(にち)`
       : bannerId === 'town'
         ? '町(まち)の なかまだけ・★4が 出(で)やすい'
-        : 'ぜんぶの なかまが 出(で)る';
+        : bannerId === 'weekday'
+          ? `${dayClass.ja}(${dayClass.reading})が とくいな なかま ↑`
+          : bannerId === 'kanji'
+            ? boosted.length > 0
+              ? `書(か)いた 字(じ)の なかま ↑（${boosted.length}人(にん)）`
+              : '字(じ)を 書(か)くと なかまが ふえる'
+            : 'ぜんぶの なかまが 出(で)る';
+  const isFeaturedCard = (c: Individual) => featuredOf(bannerId, c.rarity, week, met, boost).some((f) => f.id === c.id);
 
   return (
     <div className="relative min-h-dvh bg-[#0d0618] pb-8">
@@ -214,18 +267,22 @@ export const GachaScreen = () => {
             <span className="g-chip g-chip-gold text-xs tabular-nums">◆ {gems}</span>
           </span>
         </div>
-        <div className="mt-2 flex gap-1.5" role="tablist" aria-label="ガチャの しゅるい">
-          {(['pickup', 'standard', 'town'] as const).map((id) => (
+        {/* Five gachas: a picture on each tab, so they are told apart without reading. */}
+        <div className="-mx-4 mt-2 flex gap-1.5 overflow-x-auto px-4 pb-0.5 [scrollbar-width:none]" role="tablist" aria-label="ガチャの しゅるい">
+          {BANNER_ORDER.map((id) => (
             <button
               key={id}
               type="button"
               role="tab"
               aria-selected={bannerId === id}
               onClick={() => setBannerId(id)}
-              className="g-btn flex-1 !min-h-[38px] !px-1 text-xs"
+              className="g-btn shrink-0 !min-h-[44px] !gap-1 !px-2.5 text-xs"
               style={{ background: bannerId === id ? 'var(--accent)' : 'var(--panel-solid)', color: bannerId === id ? '#fff' : 'var(--ink)' }}
             >
-              <RubyText showFurigana={showFurigana}>{BANNERS[id].name}</RubyText>
+              <span aria-hidden className="text-base">
+                {BANNERS[id].tab.icon}
+              </span>
+              <RubyText showFurigana={showFurigana}>{BANNERS[id].tab.label}</RubyText>
             </button>
           ))}
         </div>
@@ -242,6 +299,42 @@ export const GachaScreen = () => {
         <p className="g-outline-text -mt-1 text-xs font-bold text-white/90">
           <RubyText showFurigana={showFurigana}>字(じ)が つなぐ、あたらしい なかま</RubyText>
         </p>
+
+        {/* 曜日: the week's kanji — the first the town gave back — with today's lit. 字: the friends' kanji already written. */}
+        {bannerId === 'weekday' && (
+          <div className="mt-1 flex justify-center gap-1" aria-label={`きょうは ${WEEKDAY_KANJI[day][0]}よう日`}>
+            {WEEKDAY_KANJI.map((k, i) => (
+              <span
+                key={k}
+                className="flex h-11 w-10 items-end justify-center rounded-lg border-2 pb-0.5 text-xl leading-none font-black"
+                style={
+                  i === day
+                    ? { background: ELEMENT_LABEL[WEEKDAY_ELEMENT[i]].color, borderColor: '#fff3b0', color: '#1a0f26', boxShadow: `0 0 12px ${ELEMENT_LABEL[WEEKDAY_ELEMENT[i]].color}`, transform: 'scale(1.15)' }
+                    : { background: 'rgba(20,12,6,0.6)', borderColor: 'rgba(255,233,168,0.35)', color: 'rgba(255,233,168,0.6)' }
+                }
+              >
+                <RubyText showFurigana={showFurigana}>{k}</RubyText>
+              </span>
+            ))}
+          </div>
+        )}
+        {bannerId === 'kanji' && (
+          <div className="mt-1 flex flex-wrap justify-center gap-1">
+            {CARDS.filter((c) => c.id === c.char && met(c)).map((c) => {
+              const k = kanjiOf(c.char).kanji;
+              const on = [...k].every(written);
+              return (
+                <span
+                  key={c.id}
+                  className="flex h-7 min-w-7 items-center justify-center rounded-md border px-1 text-sm leading-none font-black"
+                  style={on ? { background: '#fff8e6', borderColor: '#f2c45a', color: '#24180d' } : { background: 'rgba(20,12,6,0.6)', borderColor: 'rgba(255,255,255,0.2)', color: 'rgba(255,255,255,0.35)' }}
+                >
+                  {on ? <RubyText showFurigana={false}>{k}</RubyText> : '？'}
+                </span>
+              );
+            })}
+          </div>
+        )}
 
         <BannerHero card={featured} showFurigana={showFurigana} still={still} />
 
@@ -278,6 +371,25 @@ export const GachaScreen = () => {
                   <RubyText showFurigana={showFurigana}>{first ? '★4 いじょう かくてい！' : `のこり ${tickets}まい`}</RubyText>
                 </span>
               </span>
+            </motion.button>
+          )}
+
+          {freeToday && (
+            // One free pull a day (2026-10-07): the reason to open the gacha today.
+            <motion.button
+              type="button"
+              data-tap
+              className="g-btn mt-3 w-full !min-h-[56px] text-base"
+              style={{ background: 'linear-gradient(180deg,#9df0b0,#3fae5a)', color: '#0f2a14', borderColor: '#e3ffe8' }}
+              disabled={busy}
+              onClick={doFree}
+              animate={still ? undefined : { scale: [1, 1.03, 1] }}
+              transition={{ duration: 1.4, repeat: Infinity }}
+            >
+              <span aria-hidden className="text-2xl">
+                🎁
+              </span>
+              <RubyText showFurigana={showFurigana}>きょうの 1回(かい) むりょう！</RubyText>
             </motion.button>
           )}
 
@@ -372,9 +484,22 @@ export const GachaScreen = () => {
                     <RubyText showFurigana={showFurigana}>★5・★4が 出(で)たら、その 半分(はんぶん)は 今週(こんしゅう)の カード</RubyText>
                   </li>
                 )}
+                {bannerId === 'weekday' && (
+                  <li>
+                    <RubyText showFurigana={showFurigana}>{`まいにち かわります。きょうは ${dayClass.ja}(${dayClass.reading})が とくいな なかまが、★ごとに 半分(はんぶん) 出(で)ます`}</RubyText>
+                  </li>
+                )}
+                {bannerId === 'kanji' && (
+                  <li>
+                    <RubyText showFurigana={showFurigana}>なかまの 字(じ)を 書(か)くと（★1）、その なかまが ★ごとに 半分(はんぶん) 出(で)ます</RubyText>
+                  </li>
+                )}
+                <li>
+                  <RubyText showFurigana={showFurigana}>1日(にち)に 1回(かい) むりょうで ひけます</RubyText>
+                </li>
                 {banner.ceiling && (
                   <li>
-                    <RubyText showFurigana={showFurigana}>{`★5は ${STAR5_CEILING}回(かい)で かならず 出(で)ます（いつもの と ピックアップ）`}</RubyText>
+                    <RubyText showFurigana={showFurigana}>{`★5は ${STAR5_CEILING}回(かい)で かならず 出(で)ます（町(まち)の ガチャ いがい）`}</RubyText>
                   </li>
                 )}
                 <li>
@@ -418,7 +543,7 @@ export const GachaScreen = () => {
                 <RubyText showFurigana={showFurigana}>1回(かい)ごとの かくりつです。まだ もって いない カードが 先(さき)に 出(で)ます。お話(はなし)で まだ 会(あ)って いない 町(まち)の 人(ひと)は 出(で)ません。</RubyText>
               </p>
               <ul className="mt-2 min-h-0 flex-1 overflow-y-auto pr-1 text-xs">
-                {cardRates(bannerId, owned, week, met).map(({ card, rate }) => (
+                {cardRates(bannerId, owned, week, met, boost).map(({ card, rate }) => (
                   <li key={card.id} className="flex items-center gap-2 border-b py-1" style={{ borderColor: 'var(--line)' }}>
                     <Stars n={card.rarity} />
                     <span className="min-w-0 flex-1 truncate font-bold">
@@ -514,7 +639,7 @@ export const GachaScreen = () => {
                 results={results}
                 still={still}
                 showFurigana={showFurigana}
-                isPickup={(c) => bannerId === 'pickup' && (c.id === pick.five.id || pick.fours.some((f) => f.id === c.id))}
+                isPickup={isFeaturedCard}
                 onClose={close}
                 again={
                   canMulti
