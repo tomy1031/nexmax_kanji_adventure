@@ -8,6 +8,7 @@ import { UNLOCKED_ON_MOJI } from '../../data/unlocks';
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import { SummonOverlay } from './SummonOverlay';
 import { KanjiReveal } from './KanjiReveal';
+import { SingleResult } from './SingleResult';
 import { useGameStore } from '../../store/gameStore';
 import {
   BANNERS,
@@ -32,7 +33,6 @@ import { RubyText } from '../../components/ui/Ruby';
 import { assetPath } from '../../lib/assetPath';
 import { DAILY_TOTAL } from '../../data/dailyTasks';
 import { SKILL_INFO, SKILL_OF } from '../../lib/companionSkill';
-import { linesFor } from '../../data/companionLines';
 import { useBgm } from '../../lib/bgm';
 import * as sfx from '../../lib/sfx';
 
@@ -520,7 +520,8 @@ export const GachaScreen = () => {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-black/75 px-5 py-6"
+            // One pull's result reads on its own: the screen behind goes almost dark.
+            className={`fixed inset-0 z-50 flex flex-col items-center justify-center px-5 py-6 ${isMulti ? 'bg-black/75' : 'bg-[#0d0618]/95'}`}
           >
             {isMulti ? (
               <>
@@ -610,93 +611,13 @@ export const GachaScreen = () => {
                 )}
               </>
             ) : (
-              <SingleCard r={results[0]} face={revealed > 0} showFurigana={showFurigana} onClose={close} />
+              // After the companion has come out of their character (KanjiReveal), not under it.
+              !cutIn && <SingleResult r={results[0]} showFurigana={showFurigana} still={still} onClose={close} />
             )}
           </motion.div>
         )}
       </AnimatePresence>
     </div>
-  );
-};
-
-/** One pull: the card turns, then the companion says hello. */
-const SingleCard = ({ r, face, showFurigana, onClose }: { r: Shown; face: boolean; showFurigana: boolean; onClose: () => void }) => {
-  const kind = SKILL_OF[r.card.char];
-  const info = SKILL_INFO[kind];
-  return (
-    <motion.div
-      initial={{ scale: 0.85, y: 20 }}
-      animate={{ scale: 1, y: 0 }}
-      transition={{ type: 'spring', stiffness: 300, damping: 22 }}
-      className="g-panel-solid w-full max-w-sm p-5 text-center"
-      style={{ borderColor: FRAME[r.card.rarity], boxShadow: r.card.rarity === 5 ? '0 0 28px rgba(255,150,200,0.7)' : undefined }}
-    >
-      {!face ? (
-        <div className="mx-auto flex h-60 w-44 items-center justify-center rounded-2xl text-4xl font-black text-white" style={{ background: BACK[r.card.rarity] }}>
-          ★{r.card.rarity}
-        </div>
-      ) : (
-        <>
-          {(r.note || r.guaranteed) && (
-            <p className="g-eyebrow" style={{ color: 'var(--color-gold-2)' }}>
-              <RubyText showFurigana={showFurigana}>{r.note ?? 'てんじょう'}</RubyText>
-            </p>
-          )}
-          {/* Its stars, one by one, then the friend steps out of the light. */}
-          <p aria-label={`★${r.card.rarity}`} className="flex justify-center gap-0.5 text-xl leading-none">
-            {Array.from({ length: r.card.rarity }, (_, i) => (
-              <motion.span
-                key={i}
-                aria-hidden
-                style={{ color: r.card.rarity === 5 ? '#d0567a' : '#e8a317' }}
-                initial={{ scale: 0, rotate: -90 }}
-                animate={{ scale: 1, rotate: 0 }}
-                transition={{ delay: 0.1 + i * 0.1, type: 'spring', stiffness: 420, damping: 14 }}
-              >
-                ★
-              </motion.span>
-            ))}
-          </p>
-          <motion.img
-            src={assetPath(r.card.art)}
-            alt=""
-            aria-hidden
-            className="mx-auto my-1 h-48 object-contain"
-            style={{ filter: `drop-shadow(0 0 14px ${r.card.rarity === 5 ? 'rgba(255,150,200,0.8)' : r.card.rarity === 4 ? 'rgba(255,210,90,0.8)' : 'rgba(200,215,240,0.7)'})` }}
-            initial={{ scale: 0.5, opacity: 0, y: 20 }}
-            animate={{ scale: 1, opacity: 1, y: 0 }}
-            transition={{ type: 'spring', stiffness: 260, damping: 16 }}
-          />
-          <p className="g-title text-lg">
-            <RubyText showFurigana={showFurigana}>{r.card.name}</RubyText>
-          </p>
-          <p className="mt-1 rounded-2xl bg-white/70 px-3 py-1.5 text-sm leading-snug font-bold">
-            「<RubyText showFurigana={showFurigana}>{linesFor(r.card).start}</RubyText>」
-          </p>
-          <p className="mt-2 text-xs" style={{ color: 'var(--ink-2)' }}>
-            {info.icon} <RubyText showFurigana={showFurigana}>{`わざ「${info.name}」`}</RubyText>
-          </p>
-          {r.duplicate ? (
-            <p className="g-chip g-chip-gold mt-3 text-xs">
-              <RubyText showFurigana={showFurigana}>{r.bondTo ? `もう いる カード。きずな ♥${r.bondTo}` : `きずなは いっぱい。◆${r.refund} もどりました`}</RubyText>
-            </p>
-          ) : (
-            <motion.p
-              className="g-chip mt-3 text-sm"
-              style={{ background: '#e2453c', color: '#fff', borderColor: 'transparent' }}
-              initial={{ scale: 2.4, rotate: -14, opacity: 0 }}
-              animate={{ scale: 1, rotate: -3, opacity: 1 }}
-              transition={{ delay: 0.55, type: 'spring', stiffness: 480, damping: 16 }}
-            >
-              <RubyText showFurigana={showFurigana}>NEW! 新(あたら)しい なかま！</RubyText>
-            </motion.p>
-          )}
-        </>
-      )}
-      <button type="button" className="g-btn g-btn-primary mt-4 w-full" onClick={onClose}>
-        OK
-      </button>
-    </motion.div>
   );
 };
 
