@@ -232,9 +232,11 @@ const FeatureTags = ({ cleared, showFurigana, onOpen }: { cleared: readonly stri
 };
 
 /**
- * The way into the gacha (docs/design/16 §4): a big glowing machine under
+ * The way into the gacha (docs/design/16 §4): a big glowing thing under
  * まいにち, not a small tag — and a red tag when a pull can be
  * made now. NEW and a ring until it is first tapped, as the other features.
+ * It is the book of words the cards come out of (docs/design/18 §3: no capsule
+ * machine, 2026-10-06「カードなのにカプセルなのも必然性がない」).
  */
 const GachaMachine = ({ showFurigana, still, onOpen }: { showFurigana: boolean; still: boolean; onOpen: () => void }) => {
   const gems = useGameStore((s) => s.gems);
@@ -270,7 +272,7 @@ const GachaMachine = ({ showFurigana, still, onOpen }: { showFurigana: boolean; 
         />
       )}
       <motion.img
-        src={assetPath('img/gacha/machine.webp')}
+        src={assetPath('img/gacha/book.webp')}
         alt=""
         aria-hidden
         draggable={false}
