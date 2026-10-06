@@ -5,7 +5,7 @@ import { assetPath } from '../../lib/assetPath';
 import { linesFor } from '../../data/companionLines';
 import { kanjiOf } from '../../data/charKanji';
 import type { Individual } from '../../data/individuals';
-import { WrittenKanji } from './WrittenKanji';
+import { WrittenWord } from './WrittenKanji';
 import * as sfx from '../../lib/sfx';
 
 /**
@@ -142,7 +142,7 @@ export const KanjiReveal = ({
           <div className="relative" style={{ height: slipW * 1.56 }}>
             <img src={assetPath('img/gacha/slip.webp')} alt="" className="absolute inset-0 h-full w-full object-contain" />
             <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
-              {phase !== 'fly' && <WrittenKanji char={k.kanji} size={Math.round(slipW * 0.68)} still={still} onDone={() => setPhase((p) => (p === 'write' ? 'read' : p))} />}
+              {phase !== 'fly' && <WrittenWord word={k.kanji} size={Math.round(slipW * 0.68)} still={still} onDone={() => setPhase((p) => (p === 'write' ? 'read' : p))} />}
             </div>
           </div>
           {(phase === 'read' || phase === 'shadow') && (
@@ -194,7 +194,8 @@ export const KanjiReveal = ({
           <motion.span
             aria-hidden
             className="pointer-events-none absolute top-[36%] left-1/2 -translate-x-1/2 -translate-y-1/2 leading-none font-black"
-            style={{ fontSize: 'min(92vw, 54dvh)', color: 'rgba(255,236,190,0.17)' }}
+            // Two characters stand one above the other, as on the slip.
+            style={{ fontSize: k.kanji.length > 1 ? 'min(52vw, 30dvh)' : 'min(92vw, 54dvh)', color: 'rgba(255,236,190,0.17)', writingMode: k.kanji.length > 1 ? 'vertical-rl' : undefined }}
             initial={{ scale: still ? 1 : 1.3, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             transition={{ duration: 0.6, ease: 'easeOut' }}

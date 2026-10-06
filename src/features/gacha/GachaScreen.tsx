@@ -76,7 +76,7 @@ const BannerArt = ({ cards }: { cards: Individual[] }) => {
     <div className="relative mx-auto flex h-40 items-end justify-center" aria-hidden>
       {big && (
         // Up to the left, above the shorter card beside the first, where the pictures leave it showing.
-        <span className="absolute -top-2 left-1 text-[112px] leading-none font-black" style={{ color: 'rgba(214,140,20,0.42)' }}>
+        <span className="absolute -top-2 left-1 leading-none font-black" style={{ fontSize: big.length > 1 ? 80 : 112, color: 'rgba(214,140,20,0.42)' }}>
           {big}
         </span>
       )}
