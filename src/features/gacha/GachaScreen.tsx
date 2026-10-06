@@ -13,6 +13,8 @@ import { useGameStore } from '../../store/gameStore';
 import {
   BANNERS,
   BANNER_ORDER,
+  STEP_UP,
+  pullStepUp,
   WEEKDAY_ELEMENT,
   WEEKDAY_KANJI,
   dayOf,
@@ -116,6 +118,9 @@ export const GachaScreen = () => {
   const freeDay = useGameStore((s) => s.freePullDay);
   const spendFree = useGameStore((s) => s.useFreePull);
   const freeToday = freeDay !== todayKey();
+  // ステップアップ: which step the next ten are on, and what it promises.
+  const stepUp = useGameStore((s) => s.stepUp ?? 0) % STEP_UP.length;
+  const stepText = (i: number) => (STEP_UP[i].five ? '★5 かくてい！' : `★4いじょう ${STEP_UP[i].fours}まい`);
 
   const [results, setResults] = useState<Shown[] | null>(null);
   const [busy, setBusy] = useState(false);
@@ -192,6 +197,14 @@ export const GachaScreen = () => {
   const doMulti = () => {
     if (!canMulti || !spendGems(banner.multi)) return;
     setBusy(true);
+    if (bannerId === 'stepup') {
+      // ステップアップ: this step's promise, then the next step.
+      const { results: rs, pityAfter: p, nextStep } = pullStepUp(stepUp, owned, pity, week, Math.random, met);
+      setPity(p);
+      useGameStore.setState({ stepUp: nextStep });
+      setSummon(apply(rs));
+      return;
+    }
     const { results: rs, pityAfter: p } = pullMany(bannerId, owned, pity, week, Math.random, met, boost);
     setPity(p);
     setSummon(apply(rs));
@@ -232,6 +245,8 @@ export const GachaScreen = () => {
       ? `ピックアップは あと ${daysLeft}日(にち)`
       : bannerId === 'town'
         ? '町(まち)の なかまだけ・★4が 出(で)やすい'
+        : bannerId === 'stepup'
+          ? `ステップ ${stepUp + 1}：${stepText(stepUp)}`
         : bannerId === 'weekday'
           ? `${dayClass.ja}(${dayClass.reading})が とくいな なかま ↑`
           : bannerId === 'kanji'
@@ -405,8 +420,29 @@ export const GachaScreen = () => {
             </motion.button>
           )}
 
-          {/* 1回 and 10回, side by side. */}
+          {bannerId === 'stepup' && (
+            // The three steps, the one the next ten are on lit.
+            <div className="mt-3 flex gap-1" aria-label={`ステップ ${stepUp + 1}`}>
+              {STEP_UP.map((_, i) => (
+                <span
+                  key={i}
+                  className="flex flex-1 flex-col items-center rounded-lg border-2 px-1 py-0.5 text-[11px] leading-tight font-black"
+                  style={
+                    i === stepUp
+                      ? { background: 'linear-gradient(180deg,#ffe39a,#e8a317)', borderColor: '#fff3b0', color: '#3a2414' }
+                      : { background: 'rgba(20,12,6,0.55)', borderColor: 'rgba(255,233,168,0.3)', color: 'rgba(255,233,168,0.75)' }
+                  }
+                >
+                  <span className="text-xs">🪜 {i + 1}</span>
+                  <RubyText showFurigana={showFurigana}>{stepText(i)}</RubyText>
+                </span>
+              ))}
+            </div>
+          )}
+
+          {/* 1回 and 10回, side by side (ステップアップ: ten only). */}
           <div className="mt-3 flex gap-2">
+            {bannerId !== 'stepup' && (
             <button type="button" className="relative flex h-16 flex-1 items-center justify-center disabled:opacity-45" disabled={!canSingle} onClick={doSingle}>
               <img src={assetPath('img/gacha/btn_blue.webp')} alt="" aria-hidden className="absolute inset-0 h-full w-full" />
               <span className="g-outline-text relative flex flex-col leading-tight font-black text-white">
@@ -416,6 +452,7 @@ export const GachaScreen = () => {
                 <span className="text-xs">◆{banner.single}</span>
               </span>
             </button>
+            )}
             <button type="button" className="relative flex h-16 flex-1 items-center justify-center disabled:opacity-45" disabled={!canMulti} onClick={doMulti}>
               <img src={assetPath('img/gacha/btn_gold.webp')} alt="" aria-hidden className="absolute inset-0 h-full w-full" />
               <span className="relative flex flex-col leading-tight font-black text-[#3a2414]">
@@ -427,7 +464,7 @@ export const GachaScreen = () => {
             </button>
           </div>
           <p className="g-outline-text mt-1 text-xs font-black text-[#ffe9a8]">
-            <RubyText showFurigana={showFurigana}>10回(かい)で ★4 いじょうが かならず 1まい！</RubyText>
+            <RubyText showFurigana={showFurigana}>{bannerId === 'stepup' ? `こんどの 10回(かい)：${stepText(stepUp)}` : '10回(かい)で ★4 いじょうが かならず 1まい！'}</RubyText>
           </p>
           {banner.ceiling && (
             // How far the ★5 ceiling is, at a glance (docs/design/16 §6).
@@ -499,6 +536,11 @@ export const GachaScreen = () => {
                 {bannerId === 'weekday' && (
                   <li>
                     <RubyText showFurigana={showFurigana}>{`まいにち かわります。きょうは ${dayClass.ja}(${dayClass.reading})が とくいな なかまが、★ごとに 半分(はんぶん) 出(で)ます`}</RubyText>
+                  </li>
+                )}
+                {bannerId === 'stepup' && (
+                  <li>
+                    <RubyText showFurigana={showFurigana}>10回(かい)ずつ ひきます。1回(かい)目(め) ★4いじょう 1まい・2回(かい)目(め) 3まい・3回(かい)目(め) ★5 かくてい。そのあと 1回(かい)目(め)に もどります</RubyText>
                   </li>
                 )}
                 {bannerId === 'kanji' && (

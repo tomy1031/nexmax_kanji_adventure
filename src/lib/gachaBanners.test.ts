@@ -84,3 +84,22 @@ describe('1日 1回 むりょう', () => {
     expect(useGameStore.getState().useFreePull()).toBe(true);
   });
 });
+
+describe('ステップアップ', () => {
+  it('keeps each step’s promise, then starts over', async () => {
+    const { pullStepUp, STEP_UP } = await import('./gacha');
+    for (let seed = 1; seed <= 40; seed++) {
+      const rnd = seeded(seed);
+      const a = pullStepUp(0, [], 0, 0, rnd);
+      expect(a.results.filter((r) => r.card.rarity >= 4).length).toBeGreaterThanOrEqual(STEP_UP[0].fours);
+      expect(a.nextStep).toBe(1);
+      const b = pullStepUp(1, [], 0, 0, rnd);
+      expect(b.results.filter((r) => r.card.rarity >= 4).length).toBeGreaterThanOrEqual(STEP_UP[1].fours);
+      expect(b.nextStep).toBe(2);
+      const c = pullStepUp(2, [], 0, 0, rnd);
+      expect(c.results.some((r) => r.card.rarity === 5)).toBe(true);
+      expect(c.nextStep).toBe(0);
+      expect(a.results.length + b.results.length + c.results.length).toBe(30);
+    }
+  });
+});
