@@ -255,7 +255,7 @@ export const MOJI1_SCRIPTS: Record<string, EpisodeScript> = {
         { bg: 'naniwa_market', fx: ['darkclouds'], sprite: 'mojikui_price:normal', glyph: '🌉 💨', text: 'モジクイは つぎの まちへ にげました。', en: 'The Mojikui fled to the next district.' },
         { fx: ['spring'], sprite: 'vendor:happy', glyph: '百(ひゃく) 千(せん) 万(まん) 円(えん)', text: 'ねふだが もどりました！', en: 'The price tags came back!' },
         { speaker: 'vendor', sprite: 'vendor:happy', glyph: '🍎 = 百(ひゃく)円(えん)', text: 'りんごは 百(ひゃく)円(えん)です！', en: 'Apples are 100 yen!' },
-        { speaker: 'nexmax', sprite: 'nexmax:smile', text: 'いくらですか？ ……百(ひゃく)円(えん)！ よめました！ 🙆‍♂️', en: 'How much? …100 yen! I can read it!' },
+        { speaker: 'nexmax', sprite: 'nexmax:smile', text: 'いくらですか？ ……百(ひゃく)円(えん)！ わかりました！ 🙆‍♂️', en: 'How much? …100 yen! I can read it!' },
         { speaker: 'nexmax', sprite: 'nexmax:guide', glyph: '📖 ✨', text: 'ずかんに、ぶきと なかまが あります！', en: 'The collection is open: your weapons and companions are in the picture book!' },
         { speaker: 'nexmax', sprite: 'nexmax:determined', glyph: '🌉 👉', text: 'モジクイを おいかけましょう！', en: "Let's chase the Mojikui!" },
       ],

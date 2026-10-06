@@ -5,6 +5,7 @@ import { MOJI1_SCRIPTS } from './scripts/moji1';
 import { MOJI2_SCRIPTS } from './scripts/moji2';
 import { MOJI3_SCRIPTS } from './scripts/moji3';
 import { MOJI4_SCRIPTS } from './scripts/moji4';
+import { KANA_SCRIPTS } from './scripts/kana';
 
 /**
  * みんなの日本語 1冊目 — the words a player reads beside the story
@@ -20,7 +21,8 @@ const plain = (s: string) => s.replace(/\([^)]*\)/g, '');
 const PAST_LEVEL: [RegExp, string][] = [
   [/(こう|ろう|よう|ぼう|おう)[！!。、]/, 'volitional (行こう)'],
   [/(きめろ|見よ|ひかれ|すすめ[！!。…]|がんばれ|とんで いけ)/, 'imperative'],
-  [/(よめ|読め|はなせ|話せ|のめ|飲め|よべ|あるけ|歩け|かえれ|帰れ|書け|かけ)(ます|ません|る|ない|た)/, 'potential'],
+  [/(よめ|読め|はなせ|話せ|のめ|飲め|よべ|あるけ|歩け|かえれ|帰れ|書け|うれ|売れ)(ます|ません|る|ない|た)/, 'potential'],
+  [/たべられ|食べられ/, 'passive'],
   [/(られ|えば|けば|れば|なら、|たら、|だら、|かもしれ|ていく|ず[、。！])/, 'passive, conditional or literary'],
   [/みたい/, 'みたい'],
 ];
@@ -52,6 +54,13 @@ describe('the story says why a word cannot be read', () => {
 
   it('uses no potential form (よめません), which is 27課', () => {
     const bad = scripts.flatMap((s) => s.lines.flatMap((l) => levelIssues(s.stageId, l.text).filter((m) => m.includes('potential'))));
+    expect(bad).toEqual([]);
+  });
+
+  it('keeps 0章 (かな) to the plain words a beginner has: no potential, no passive', () => {
+    const bad = Object.values(KANA_SCRIPTS).flatMap((k) => [k.intro, k.outro]).flatMap((s) =>
+      s.lines.flatMap((l) => [l.text, l.ja ?? ''].flatMap((t) => levelIssues(s.stageId, t).filter((m) => /potential|passive/.test(m)))),
+    );
     expect(bad).toEqual([]);
   });
 });
