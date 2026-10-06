@@ -25,7 +25,7 @@ import { star5CleanMul, star5ComboAfterBreak, star5GaugeGain, star5GaugeStart, s
 import { SKILL_INFO, SKILL_OF, gaugeGain, skillEffect, skillGaugeFull } from '../../lib/companionSkill';
 import { HURT_LINE, linesFor } from '../../data/companionLines';
 import { tipDue, tipOf, type TipId } from '../../data/fightRules';
-import type { CompanionView, SkillCut } from './CompanionFx';
+import type { BuffView, CompanionView, SkillCut } from './CompanionFx';
 import {
   computeDamage,
   counterDamage,
@@ -388,11 +388,22 @@ export const BattleScene = ({
   const ownsTarget = target ? progress[target.id]?.obtainedAt != null : false;
   const targetStars: Stars = target ? starsOf(progress[target.id]?.reps ?? 0) : 0;
 
-  // The companion says hello once the intro band has gone.
+  // The companion says hello once the intro band has gone — and, until its
+  // わざ has been explained once, what it is there for (2026-10-07「サポートキャラの
+  // いる 意味が 伝わりにくい」).
   useEffect(() => {
     if (!skillKind || !individual) return;
     const t = setTimeout(() => companionSay(linesFor(individual).start), 1600);
-    return () => clearTimeout(t);
+    const why = useGameStore.getState().tipsSeen.includes('skill')
+      ? 0
+      : window.setTimeout(() => {
+          const info = SKILL_INFO[skillKind];
+          companionSay(`${info.icon} わざ: ${info.says(skillEffect(skillKind, individual.rarity, useGameStore.getState().bonds?.[individual.id] ?? 0))}`);
+        }, 4400);
+    return () => {
+      clearTimeout(t);
+      clearTimeout(why);
+    };
     // Once per fight.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -518,7 +529,12 @@ export const BattleScene = ({
       const lookedFree = freeLookRef.current;
       freeLookRef.current = false;
       setFreeLookNow(false);
-      if (skillKind) setGauge((g) => Math.min(gaugeFull, g + star5GaugeGain(gaugeGain(mistakes, hinted || lookedFree), star5)));
+      if (skillKind) {
+        const g = Math.min(gaugeFull, gauge + star5GaugeGain(gaugeGain(mistakes, hinted || lookedFree), star5));
+        setGauge(g);
+        // The first time the ring fills: how to use it, once.
+        if (g >= gaugeFull) tellTip('skill');
+      }
       // A look at the stroke order counts against the stars like a slip.
       const nextMistakes = totalMistakes + mistakes + (hinted ? 1 : 0);
       setTotalMistakes(nextMistakes);
@@ -666,7 +682,7 @@ export const BattleScene = ({
       tutorial, totalMistakes, target, progress, recordReview, recordRep, weapon, individual, stage.boss,
       rust, bossHp, playerHp, settle, heroCtl, enemyCtl, turn, stats.attackPct, ownsTarget, hinted,
       mastery, targetStars, kanjiPool, combo, say, difficulty, skillKind, gaugeFull, buffs, companionSay, tellTip, star5,
-      sealIds, broken, easy,
+      sealIds, broken, easy, gauge,
     ],
   );
 
@@ -700,7 +716,11 @@ export const BattleScene = ({
         return;
       }
       gainExp(EXP_READ);
-      if (skillKind) setGauge((g) => Math.min(gaugeFull, g + 1));
+      if (skillKind) {
+        const g = Math.min(gaugeFull, gauge + 1);
+        setGauge(g);
+        if (g >= gaugeFull) tellTip('skill');
+      }
       const clean = computeDamage({
         weapon,
         individual,
@@ -732,7 +752,7 @@ export const BattleScene = ({
       }
       atImpact(finishRead, IMPACT_MS + 600);
     },
-    [mastery, readQ, readPicked, say, addSlip, gainExp, weapon, individual, stage.boss.element, stage.boss.hp, rust, stats.attackPct, heroCtl, enemyCtl, turn, bossHp, settle, totalMistakes, playerHp, finishRead, combo, skillKind, gaugeFull, star5, sealIds, broken, tellTip],
+    [mastery, readQ, readPicked, say, addSlip, gainExp, weapon, individual, stage.boss.element, stage.boss.hp, rust, stats.attackPct, heroCtl, enemyCtl, turn, bossHp, settle, totalMistakes, playerHp, finishRead, combo, skillKind, gaugeFull, star5, sealIds, broken, tellTip, gauge],
   );
 
   // What this clear opens. One per stage at most, announced with a line of
@@ -869,6 +889,13 @@ export const BattleScene = ({
     }));
     say(`${info.icon} ${info.name}！ ${does}`);
   };
+  // What a わざ still holds, as pictures over Nexmax.
+  const buffViews: BuffView[] = [
+    ...(buffs.guards > 0 ? [{ icon: '🛡️', label: `×${buffs.guards}`, color: SKILL_INFO.guard.color }] : []),
+    ...(buffs.freeLooks > 0 ? [{ icon: '💡', label: `×${buffs.freeLooks}`, color: SKILL_INFO.hint.color }] : []),
+    ...(buffs.power !== 1 ? [{ icon: '💥', label: `×${buffs.power}`, color: SKILL_INFO.power.color }] : []),
+    ...(buffs.comboShield > 0 ? [{ icon: '🔥', label: `×${buffs.comboShield}`, color: SKILL_INFO.combo.color }] : []),
+  ];
   const companionView: CompanionView | null =
     skillKind && individual
       ? { art: individual.art, name: individual.name, kind: skillKind, gauge, full: gaugeFull, talk, onSkill: fireSkill }
@@ -932,6 +959,7 @@ export const BattleScene = ({
           onFlee={onFlee}
           read={readQ ? { ...readQ, n: turn, picked: readPicked, onPick: handleReadPick, onNext: finishRead } : null}
           seals={sealIds.map((id) => ({ id, char: kanjiPool.find((k) => k.id === id)?.char ?? '', open: broken.includes(id) }))}
+          buffs={buffViews}
         />
         {overlays}
       </>

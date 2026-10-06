@@ -8,7 +8,7 @@ import { comboMultiplier } from '../lib/mastery';
  *
  * Pictures first, short Japanese, English behind EN, as in starPerks.ts.
  */
-export type TipId = 'noModel' | 'stars' | 'hunted' | 'combo' | 'counter' | 'read' | 'seal';
+export type TipId = 'noModel' | 'stars' | 'hunted' | 'combo' | 'counter' | 'read' | 'seal' | 'skill';
 
 export interface FightRule {
   id: TipId;
@@ -38,6 +38,12 @@ export const FIGHT_RULES: FightRule[] = [
     text: 'あいては 字(じ)を もって います。字(じ)を ぜんぶ 書(か)いて、たおしましょう！',
     en: 'It holds the letters. It cannot fall until you have written every one of them.',
   },
+  {
+    id: 'skill',
+    icons: '🤝',
+    text: '書(か)くと なかまの わが たまる。いっぱい → かおを タップ → わざ',
+    en: "Writing fills your friend's ring. When it is full, tap their face for a special move.",
+  },
 ];
 
 /** ★の ひみつ (starPerks.ts) in one line, for its turn among the tips. */
@@ -55,7 +61,7 @@ export const STARS_TIP: FightRule = {
  * happens there (BattleScene). Both pages stay a tap away on じゅんび.
  */
 export const READY_TIPS: readonly TipId[] = ['noModel', 'stars', 'hunted'];
-export const BATTLE_TIPS: readonly TipId[] = ['counter', 'combo', 'read', 'seal'];
+export const BATTLE_TIPS: readonly TipId[] = ['counter', 'combo', 'read', 'seal', 'skill'];
 
 export const tipOf = (id: TipId): FightRule => (id === 'stars' ? STARS_TIP : FIGHT_RULES.find((r) => r.id === id)!);
 
