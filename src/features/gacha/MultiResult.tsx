@@ -94,7 +94,7 @@ export const MultiResult = ({
                   {/* The companion's character, in a bead of light. */}
                   <span
                     aria-hidden
-                    className="absolute top-[38%] right-0.5 flex h-7 w-7 items-center justify-center rounded-full text-base leading-none font-black text-[#2a1d12] shadow"
+                    className={`absolute top-[38%] right-0.5 flex h-7 min-w-7 items-center justify-center rounded-full px-0.5 leading-none font-black text-[#2a1d12] shadow ${k.kanji.length > 1 ? 'text-[11px]' : 'text-base'}`}
                     style={{ background: BEAD[r.card.rarity], border: '1.5px solid rgba(255,255,255,0.9)' }}
                   >
                     {k.kanji}

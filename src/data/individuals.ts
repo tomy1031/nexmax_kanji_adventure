@@ -36,6 +36,12 @@ export interface Individual {
   name: string;
   /** Short name for tight spaces. */
   shortName: string;
+  /**
+   * What they are, when the name alone does not say it: the robot's old title
+   * (「まじめの ネクマックス」) or the town person's name in the story (「とけいだいの 人」)
+   * — the card name is their character's reading (docs/design/18 §1).
+   */
+  role?: string;
   /** One line on who they are, N5-readable, furigana notation. */
   tagline: string;
   /** Portrait, relative to public/. */
@@ -63,15 +69,18 @@ type RobotDef = Omit<Individual, 'char' | 'rarity' | 'kind'>;
 const robot = (d: RobotDef): Individual => ({ ...d, char: d.id, rarity: d.rank === 'SPECIAL' ? 4 : 3, kind: 'robot' });
 
 /**
- * The sixteen. Names and taglines follow NexmaxAcademy's personality ledger so
- * a learner who met them there recognises them here.
+ * The sixteen. Taglines follow NexmaxAcademy's personality ledger, and the
+ * ledger's title stays as each one's role (「まじめの ネクマックス」); the name is
+ * the reading of their character (data/charKanji.ts, docs/design/18 §1):
+ * 正 タダシ, 守 マモル, 夢 ユメ …
  */
 const ROBOTS: RobotDef[] = [
   // --- 物語でもらう個体 ---------------------------------------------------
   {
     id: 'ISTJ',
-    name: 'まじめの ネクマックス',
-    shortName: 'まじめ',
+    name: 'タダシ',
+    shortName: 'タダシ',
+    role: 'まじめの ネクマックス',
     tagline: '決(き)めた ことを 最後(さいご)まで します。',
     art: portrait('ISTJ'),
     emblem: emblem('ISTJ'),
@@ -82,8 +91,9 @@ const ROBOTS: RobotDef[] = [
   },
   {
     id: 'ISFJ',
-    name: 'みまもりの ネクマックス',
-    shortName: 'みまもり',
+    name: 'マモル',
+    shortName: 'マモル',
+    role: 'みまもりの ネクマックス',
     tagline: '静(しず)かに、みんなを 助(たす)けます。',
     art: portrait('ISFJ'),
     emblem: emblem('ISFJ'),
@@ -94,8 +104,9 @@ const ROBOTS: RobotDef[] = [
   },
   {
     id: 'ESTP',
-    name: 'スタートの ネクマックス',
-    shortName: 'スタート',
+    name: 'ススム',
+    shortName: 'ススム',
+    role: 'スタートの ネクマックス',
     tagline: 'まず、やって みます。',
     art: portrait('ESTP'),
     emblem: emblem('ESTP'),
@@ -108,8 +119,9 @@ const ROBOTS: RobotDef[] = [
   // --- ガチャ（ふつう） ---------------------------------------------------
   {
     id: 'ESTJ',
-    name: 'まとめの ネクマックス',
-    shortName: 'まとめ',
+    name: 'カナメ',
+    shortName: 'カナメ',
+    role: 'まとめの ネクマックス',
     tagline: '順番(じゅんばん)を 決(き)めて、進(すす)めます。',
     art: portrait('ESTJ'),
     emblem: emblem('ESTJ'),
@@ -120,8 +132,9 @@ const ROBOTS: RobotDef[] = [
   },
   {
     id: 'ESFJ',
-    name: 'おせわの ネクマックス',
-    shortName: 'おせわ',
+    name: 'ユウ',
+    shortName: 'ユウ',
+    role: 'おせわの ネクマックス',
     tagline: '人(ひと)と 人(ひと)を つなぎます。',
     art: portrait('ESFJ'),
     emblem: emblem('ESFJ'),
@@ -132,8 +145,9 @@ const ROBOTS: RobotDef[] = [
   },
   {
     id: 'INTP',
-    name: 'なぜなぜの ネクマックス',
-    shortName: 'なぜなぜ',
+    name: 'コウ',
+    shortName: 'コウ',
+    role: 'なぜなぜの ネクマックス',
     tagline: '仕組(しく)みを 調(しら)べます。',
     art: portrait('INTP'),
     emblem: emblem('INTP'),
@@ -144,8 +158,9 @@ const ROBOTS: RobotDef[] = [
   },
   {
     id: 'ENTP',
-    name: 'アイデアの ネクマックス',
-    shortName: 'アイデア',
+    name: 'アラタ',
+    shortName: 'アラタ',
+    role: 'アイデアの ネクマックス',
     tagline: 'もっと いい やり方(かた)を 見(み)つけます。',
     art: portrait('ENTP'),
     emblem: emblem('ENTP'),
@@ -156,8 +171,9 @@ const ROBOTS: RobotDef[] = [
   },
   {
     id: 'INFJ',
-    name: 'おもいやりの ネクマックス',
-    shortName: 'おもいやり',
+    name: 'ココロ',
+    shortName: 'ココロ',
+    role: 'おもいやりの ネクマックス',
     tagline: '人(ひと)の 気持(きも)ちを 考(かんが)えます。',
     art: portrait('INFJ'),
     emblem: emblem('INFJ'),
@@ -168,8 +184,9 @@ const ROBOTS: RobotDef[] = [
   },
   {
     id: 'INFP',
-    name: 'ゆめの ネクマックス',
-    shortName: 'ゆめ',
+    name: 'ユメ',
+    shortName: 'ユメ',
+    role: 'ゆめの ネクマックス',
     tagline: '好(す)きな ことを 大事(だいじ)に します。',
     art: portrait('INFP'),
     emblem: emblem('INFP'),
@@ -180,8 +197,9 @@ const ROBOTS: RobotDef[] = [
   },
   {
     id: 'ENFP',
-    name: 'わくわくの ネクマックス',
-    shortName: 'わくわく',
+    name: 'タビ',
+    shortName: 'タビ',
+    role: 'わくわくの ネクマックス',
     tagline: '新(あたら)しい ことに 人(ひと)を さそいます。',
     art: portrait('ENFP'),
     emblem: emblem('ENFP'),
@@ -192,8 +210,9 @@ const ROBOTS: RobotDef[] = [
   },
   {
     id: 'ISTP',
-    name: 'どうぐの ネクマックス',
-    shortName: 'どうぐ',
+    name: 'タクミ',
+    shortName: 'タクミ',
+    role: 'どうぐの ネクマックス',
     tagline: '手(て)を 動(うご)かして 直(なお)します。',
     art: portrait('ISTP'),
     emblem: emblem('ISTP'),
@@ -204,8 +223,9 @@ const ROBOTS: RobotDef[] = [
   },
   {
     id: 'ISFP',
-    name: 'デザインの ネクマックス',
-    shortName: 'デザイン',
+    name: 'イロハ',
+    shortName: 'イロハ',
+    role: 'デザインの ネクマックス',
     tagline: 'きれいに 作(つく)ります。',
     art: portrait('ISFP'),
     emblem: emblem('ISFP'),
@@ -216,8 +236,9 @@ const ROBOTS: RobotDef[] = [
   },
   {
     id: 'ESFP',
-    name: 'もりあげの ネクマックス',
-    shortName: 'もりあげ',
+    name: 'ウタ',
+    shortName: 'ウタ',
+    role: 'もりあげの ネクマックス',
     tagline: '今(いま)、ここを 楽(たの)しく します。',
     art: portrait('ESFP'),
     emblem: emblem('ESFP'),
@@ -230,8 +251,9 @@ const ROBOTS: RobotDef[] = [
   // --- ガチャ（めずらしい） -----------------------------------------------
   {
     id: 'INTJ',
-    name: 'よそうの ネクマックス',
-    shortName: 'よそう',
+    name: 'サキ',
+    shortName: 'サキ',
+    role: 'よそうの ネクマックス',
     tagline: '先(さき)を 見(み)て、道(みち)を 作(つく)ります。',
     art: portrait('INTJ'),
     emblem: emblem('INTJ'),
@@ -242,8 +264,9 @@ const ROBOTS: RobotDef[] = [
   },
   {
     id: 'ENTJ',
-    name: 'あんないの ネクマックス',
-    shortName: 'あんない',
+    name: 'ミチ',
+    shortName: 'ミチ',
+    role: 'あんないの ネクマックス',
     tagline: 'みんなと ゴールへ 進(すす)みます。',
     art: portrait('ENTJ'),
     emblem: emblem('ENTJ'),
@@ -254,8 +277,9 @@ const ROBOTS: RobotDef[] = [
   },
   {
     id: 'ENFJ',
-    name: 'おうえんの ネクマックス',
-    shortName: 'おうえん',
+    name: 'ヒカリ',
+    shortName: 'ヒカリ',
+    role: 'おうえんの ネクマックス',
     tagline: 'みんなを 元気(げんき)に します。',
     art: portrait('ENFJ'),
     emblem: emblem('ENFJ'),
@@ -272,14 +296,18 @@ export const INDIVIDUALS: readonly Individual[] = ROBOTS.map(robot);
 /**
  * 町の なかま (11 §4.1, 2026-10-03「町の 人は ネクマックスタイプで なくても 良い」):
  * people of Naniwa Town the player has helped, at ★3 in their town clothes.
+ * On the cards everyone goes by their character's reading (docs/design/18 §1,
+ * 「町の 人は カードだけ」): the story still says とけいだいの 人, kept as their
+ * role. リン keeps her own name (she came from abroad; 鈴 and 林 have no stroke data).
  */
-const town = (id: string, name: string, tagline: string, favours: WeaponClass, resists: Element, meets: string): Individual => ({
+const town = (id: string, name: string, tagline: string, favours: WeaponClass, resists: Element, meets: string, role?: string): Individual => ({
   id,
   char: id,
   rarity: 3,
   kind: 'town',
   name,
   shortName: name,
+  ...(role ? { role } : {}),
   tagline,
   art: `img/chara/naniwa/folk_${id}_happy.webp`,
   // No badge of their own: the portrait stands in for it.
@@ -292,16 +320,16 @@ const town = (id: string, name: string, tagline: string, favours: WeaponClass, r
 });
 
 export const TOWN: readonly Individual[] = [
-  town('rin', 'リンさん', '本(ほん)が だいすきな りゅうがくせい。', WeaponClass.SPEAR, Element.KOU, 'moji-1-7'),
+  town('rin', 'リン', '本(ほん)が だいすきな りゅうがくせい。', WeaponClass.SPEAR, Element.KOU, 'moji-1-7'),
   town('yamada', '山(やま)田(だ)さん', 'ナニワタウンの やさしい 人(ひと)。', WeaponClass.STAFF, Element.MOKU, 'moji-1-2'),
-  town('teacher', '先(せん)生(せい)', '日本語(にほんご)学校(がっこう)の 先(せん)生(せい)。', WeaponClass.SWORD, Element.KIN, 'moji-1-6'),
-  town('doctor', 'お医(い)者(しゃ)さん', 'みんなの けんこうを まもります。', WeaponClass.SHIELD, Element.SUI, 'moji-1-7'),
-  town('baker', 'パンやさん', 'まいあさ おいしい パンを やきます。', WeaponClass.HAMMER, Element.KA, 'moji-1-9'),
-  town('keeper', 'とけいだいの 人(ひと)', '町(まち)の 時間(じかん)を まもります。', WeaponClass.AXE, Element.DO, 'moji-1-8'),
+  town('teacher', 'マナブ', '日本語(にほんご)学校(がっこう)の 先(せん)生(せい)。', WeaponClass.SWORD, Element.KIN, 'moji-1-6', '先(せん)生(せい)'),
+  town('doctor', 'オサム', 'みんなの けんこうを まもります。', WeaponClass.SHIELD, Element.SUI, 'moji-1-7', 'お医(い)者(しゃ)さん'),
+  town('baker', 'アサヒ', 'まいあさ おいしい パンを やきます。', WeaponClass.HAMMER, Element.KA, 'moji-1-9', 'パンやさん'),
+  town('keeper', 'トキ', '町(まち)の 時間(じかん)を まもります。', WeaponClass.AXE, Element.DO, 'moji-1-8', 'とけいだいの 人(ひと)'),
   // 2章 ミナトタウン（docs/design/13）: はじめての ともだち ソラと、町で 会う 二人。
   town('sora', 'ソラ', 'ミナトタウンの 子(こ)。えいがと 英(えい)語(ご)が 好(す)き。', WeaponClass.BOW, Element.SUI, 'moji-2-3'),
-  town('usher', 'えいがかんの 人(ひと)', 'むかしの ゆめは えいがスター。', WeaponClass.DAGGER, Element.KOU, 'moji-2-10'),
-  town('photographer', 'しゃしんやさん', 'お茶(ちゃ)も 出(だ)す しゃしんやさん。', WeaponClass.STAFF, Element.AN, 'moji-2-9'),
+  town('usher', 'セイラ', 'むかしの ゆめは えいがスター。', WeaponClass.DAGGER, Element.KOU, 'moji-2-10', 'えいがかんの 人(ひと)'),
+  town('photographer', 'マコト', 'お茶(ちゃ)も 出(だ)す しゃしんやさん。', WeaponClass.STAFF, Element.AN, 'moji-2-9', 'しゃしんやさん'),
   // 3章 マンプクタウン（docs/design/14）: 料理人に なりたい ハナ。
   town('hana', 'ハナ', 'りょうりにんが ゆめの 12さい。ラーメンが 好(す)き。', WeaponClass.DAGGER, Element.KA, 'moji-3-2'),
 ];
@@ -310,13 +338,13 @@ export const TOWN: readonly Individual[] = [
  * ★4・★5 — the same character dressed up (11 §4.1). Same わざ and weapon,
  * stronger: the favoured-weapon bonus +10 a step, the わざ by rarity.
  */
-const dressed = (char: string, rarity: 4 | 5, title: string, fullName?: string): Individual => {
+const dressed = (char: string, rarity: 4 | 5, title: string): Individual => {
   const base = [...ROBOTS.map(robot), ...TOWN].find((i) => i.id === char)!;
   return {
     ...base,
     id: `${char}-${rarity}`,
     rarity,
-    name: fullName ?? `${title} ${base.shortName}`,
+    name: `${title} ${base.shortName}`,
     art: `img/chara/cards/${char}-${rarity}.webp`,
     rank: rarity === 5 ? Rank.SPECIAL : Rank.STANDARD,
     bonus: base.bonus + (rarity - base.rarity) * 10,
@@ -350,7 +378,7 @@ export const DRESSED: readonly Individual[] = [
   dressed('baker', 4, 'クリスマスの'),
   dressed('keeper', 4, 'ほしぞらの'),
   dressed('rin', 5, 'まつりの'),
-  dressed('keeper', 5, 'じかんの', 'じかんの まほうつかい'),
+  dressed('keeper', 5, 'じかんの まほうつかい'),
   dressed('sora', 4, 'えいがかんとくの'),
   dressed('sora', 5, 'みなとの キャプテン'),
   dressed('photographer', 4, 'おちゃの めいじん'),

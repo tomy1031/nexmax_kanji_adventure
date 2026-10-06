@@ -117,3 +117,25 @@ export const WrittenKanji = ({
 };
 
 export default WrittenKanji;
+
+/**
+ * A name of one or two characters (data/charKanji.ts), written one after the
+ * other, top to bottom like a name on a slip.
+ */
+export const WrittenWord = ({ word, size, still, ink, onDone }: { word: string; size: number; still: boolean; ink?: string; onDone?: () => void }) => {
+  const chars = [...word];
+  const [at, setAt] = useState(0);
+  // Two characters share the height of one big one.
+  const each = chars.length > 1 ? Math.round(size * 0.62) : size;
+  return (
+    <div className="flex flex-col items-center" style={{ gap: chars.length > 1 ? size * 0.02 : 0 }}>
+      {chars.map((c, i) =>
+        i <= at ? (
+          <WrittenKanji key={c + i} char={c} size={each} still={still} ink={ink} onDone={() => (i < chars.length - 1 ? setAt(i + 1) : onDone?.())} />
+        ) : (
+          <div key={c + i} style={{ width: each, height: each }} aria-hidden />
+        ),
+      )}
+    </div>
+  );
+};
