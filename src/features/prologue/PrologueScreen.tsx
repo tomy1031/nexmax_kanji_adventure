@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
+import { AnimatePresence, motion } from 'framer-motion';
 import { RubyText } from '../../components/ui/Ruby';
 import { assetPath } from '../../lib/assetPath';
 import { useGameStore } from '../../store/gameStore';
@@ -9,6 +9,7 @@ import { PROLOGUE, PROLOGUE_ASK, PROLOGUE_EXITS, PROLOGUE_PICTURE, type Prologue
 import { useBgm } from '../../lib/bgm';
 import { preloadImages } from '../../lib/preload';
 import { episodeArt } from '../../data/episodeArt';
+import { useStill } from '../../hooks/useStill';
 
 /**
  * プロローグ (08 §10.2): the world, the shadow, the fallen robot, and you —
@@ -167,8 +168,7 @@ export const PrologueScreen = () => {
     const st = useGameStore.getState();
     return st.tutorials.prologue || st.clearedStages.length > 0;
   });
-  const reduced = useGameStore((s) => s.settings.reducedMotion);
-  const still = Boolean(useReducedMotion() || reduced);
+  const still = useStill();
   const [beat, setBeat] = useState(0);
   const done = beat >= PROLOGUE.length;
   const current = PROLOGUE[Math.min(beat, PROLOGUE.length - 1)];

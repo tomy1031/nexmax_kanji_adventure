@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react';
 import type { ReactNode } from 'react';
 import { useSafeBack } from '../../lib/nav';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
   GiAnvilImpact,
   GiBackpack,
@@ -45,6 +45,7 @@ const FIRST_PAIR = [...'火山'];
 import { useBgm } from '../../lib/bgm';
 import { useCompoundsVersion } from '../../data/compounds';
 import * as sfx from '../../lib/sfx';
+import { useStill } from '../../hooks/useStill';
 
 /**
  * The forge — 漢字やさん (the layout example delivered with the parts,
@@ -248,9 +249,7 @@ export const ForgeScreen = () => {
   const recordFound = useGameStore((s) => s.recordFound);
   const recordMiss = useGameStore((s) => s.recordMiss);
   const cleared = useGameStore((s) => s.clearedStages);
-  const prefersReduced = useReducedMotion();
-  const settingReduced = useGameStore((s) => s.settings.reducedMotion);
-  const still = Boolean(prefersReduced || settingReduced);
+  const still = useStill();
 
   const [slots, setSlots] = useState<KanjiData[]>([]);
   const [made, setMade] = useState<Weapon | null>(null);

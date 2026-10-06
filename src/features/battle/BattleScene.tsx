@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { motion, AnimatePresence, useAnimationControls, useReducedMotion } from 'framer-motion';
+import { motion, AnimatePresence, useAnimationControls } from 'framer-motion';
 import type { StageDef } from '../../data/stages';
 import type { KanjiData } from '../../types/kanji';
 import KanjiWriterCanvas, { type KanjiWriterHandle } from '../../components/KanjiWriterCanvas';
@@ -50,6 +50,7 @@ import { nextStarGoal } from '../../data/starPerks';
 import { EXP_BOSS_FIRST, EXP_BOSS_REPEAT, EXP_READ, applyLevel, levelInfo, levelOf, ownedCount } from '../../lib/level';
 import { useCompoundsVersion } from '../../data/compounds';
 import { askFrom, sealFloor, strikeSealed } from '../../lib/seals';
+import { useStill } from '../../hooks/useStill';
 
 /** How long a fight tip stays up. */
 const TIP_MS = 4200;
@@ -194,9 +195,7 @@ export const BattleScene = ({
   const tutorial = mode === 'tutorial';
 
   const showFurigana = useGameStore((s) => s.settings.furigana);
-  const prefersReduced = useReducedMotion();
-  const settingReduced = useGameStore((s) => s.settings.reducedMotion);
-  const still = Boolean(prefersReduced || settingReduced);
+  const still = useStill();
   const equippedId = useGameStore((s) => s.equippedWeapon);
   const activeIndividualId = useGameStore((s) => s.activeIndividual);
   const weapons = useGameStore((s) => s.weapons);

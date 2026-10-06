@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useReducedMotion } from 'framer-motion';
 import { useSafeBack } from '../../lib/nav';
 import { Backdrop } from '../../components/ui/Backdrop';
 import { NightStreetBackdrop } from '../write/NightStreet';
@@ -31,6 +32,8 @@ export const SettingsScreen = () => {
   const moji = useGameStore((st) => st.lastArc) === 'moji';
   const safeBack = useSafeBack();
   const settings = useGameStore((s) => s.settings);
+  // The device asks for less motion (macOS・iOS「視差効果を減らす／動きを減らす」): say so, and let the game play everything anyway.
+  const deviceReduced = Boolean(useReducedMotion());
   const setSetting = useGameStore((s) => s.setSetting);
   const resetSave = useGameStore((s) => s.resetSave);
   const showFurigana = settings.furigana;
@@ -77,10 +80,12 @@ export const SettingsScreen = () => {
       key: 'reducedMotion' as const,
       icon: '🌀',
       label: '動(うご)きを 少(すく)なく する',
-      note: '画面(がめん)の 動(うご)きが 気(き)に なる ときに。',
-      en: 'Less movement on screen.',
+      note: '画面(がめん)の 動(うご)きが 気(き)に なる ときに。ガチャの 場面(ばめん)は ぜんぶ 出(で)ます。ゆれる・とぶ・回(まわ)る 動(うご)きが ふわっと に なります。',
+      en: 'Less movement on screen. Every scene still plays; shaking, flying and spinning become fades.',
     },
   ];
+  const fullMotion = useGameStore((s) => s.fullMotion);
+  const setFullMotion = useGameStore((s) => s.setFullMotion);
   const en = (text: string) => (
     <span lang="en" className="block text-[11px] leading-snug" style={{ color: 'var(--ink-2)' }}>
       {text}
@@ -143,6 +148,34 @@ export const SettingsScreen = () => {
               </button>
             </li>
           ))}
+          {/* Only when the device asks for less motion: otherwise it would change nothing. */}
+          {deviceReduced && (
+            <li className="g-panel flex items-center gap-3 p-4">
+              <span aria-hidden className="w-7 shrink-0 text-center text-xl font-black">
+                ✨
+              </span>
+              <div className="min-w-0 flex-1">
+                <p className="text-sm">
+                  <RubyText showFurigana={showFurigana}>動(うご)きを ぜんぶ 出(だ)す</RubyText>
+                </p>
+                <p className="text-xs" style={{ color: 'var(--ink-2)' }}>
+                  <RubyText showFurigana={showFurigana}>この 端末(たんまつ)は「動(うご)きを 減(へ)らす」が オンです。オンに すると、ゲームの 動(うご)きを ぜんぶ 出(だ)します。</RubyText>
+                </p>
+                {en('Your device asks for less motion. Turn this on to play every animation anyway.')}
+              </div>
+              <button
+                type="button"
+                role="switch"
+                aria-checked={fullMotion}
+                aria-label="動きを ぜんぶ 出す"
+                onClick={() => setFullMotion(!fullMotion)}
+                className="relative h-8 w-14 shrink-0 rounded-full transition-colors"
+                style={{ background: fullMotion ? 'var(--accent)' : 'var(--line)' }}
+              >
+                <span className="absolute top-1 h-6 w-6 rounded-full bg-white shadow transition-[left]" style={{ left: fullMotion ? '28px' : '4px' }} />
+              </button>
+            </li>
+          )}
         </ul>
 
         {/* クレジット — ライセンス上 必要 ------------------------------- */}

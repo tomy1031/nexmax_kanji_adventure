@@ -3,7 +3,7 @@ import { useMapPath } from '../../lib/nav';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { afterEpisodePath } from '../../data/mojiFlow';
 import { UNLOCKED_ON_MOJI } from '../../data/unlocks';
-import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { SummonOverlay } from './SummonOverlay';
 import { KanjiReveal } from './KanjiReveal';
 import { SingleResult } from './SingleResult';
@@ -48,6 +48,7 @@ import { getKanjiByChar } from '../../lib/kanjiDb';
 import { MOJI_OWN_REPS } from '../../lib/mastery';
 import { kanjiOf } from '../../data/charKanji';
 import { todayKey } from '../../store/gameStore';
+import { useStill } from '../../hooks/useStill';
 
 /**
  * The gem shop (docs/design/11 §5).
@@ -125,9 +126,7 @@ export const GachaScreen = () => {
   const [summon, setSummon] = useState<Shown[] | null>(null);
   /** The cards coming out one by one (KanjiReveal), and which one is out now (docs/design/18 §3). */
   const [seq, setSeq] = useState<{ list: Shown[]; at: number } | null>(null);
-  const prefersReduced = useReducedMotion();
-  const settingReduced = useGameStore((s) => s.settings.reducedMotion);
-  const still = Boolean(prefersReduced || settingReduced);
+  const still = useStill();
 
   const canSingle = gems >= banner.single && !busy;
 

@@ -127,6 +127,8 @@ export interface GameState {
   streak: { count: number; lastDate: string };
   /** `english`: word meanings in English start shown (EN on the kanji card, ？ことば in the story). */
   settings: { furigana: boolean; muted: boolean; reducedMotion: boolean; bgmOff: boolean; english: boolean };
+  /** ✨ 動きを ぜんぶ 出す: play every animation even when the device asks for less motion (hooks/useStill.ts). */
+  fullMotion: boolean;
   /** One-off explainers the player has already been shown. */
   /** intro: むかし編の 0話. prologue: 文字が 消えた 町の プロローグ (08 §10.2). stars: じゅんびの ★の ひみつ. */
   tutorials: { forge: boolean; intro: boolean; prologue: boolean; stars: boolean; tools: boolean; gacha: boolean; firstWeapon: boolean };
@@ -205,6 +207,7 @@ export interface GameActions {
   resetPity: () => void;
   setSetting: <K extends keyof GameState['settings']>(key: K, value: GameState['settings'][K]) => void;
   markTutorialSeen: (key: keyof GameState['tutorials']) => void;
+  setFullMotion: (on: boolean) => void;
   markTipSeen: (id: string) => void;
   setLastArc: (arc: GameState['lastArc']) => void;
   setStartPath: (path: GameState['startPath']) => void;
@@ -256,6 +259,7 @@ const initialState: GameState = {
   daily: freshDaily(),
   streak: { count: 0, lastDate: '' },
   settings: { furigana: true, muted: false, reducedMotion: false, bgmOff: false, english: true },
+  fullMotion: false,
   tutorials: { forge: false, intro: false, prologue: false, stars: false, tools: false, gacha: false, firstWeapon: false },
   // A new player starts on the new route (08 §10.2).
   lastArc: 'moji',
@@ -527,6 +531,8 @@ export const useGameStore = create<GameState & GameActions>()(
       resetPity: () => set({ pityCount: 0 }),
 
       setSetting: (key, value) => set((s) => ({ settings: { ...s.settings, [key]: value } })),
+
+      setFullMotion: (on) => set({ fullMotion: on }),
 
       markTutorialSeen: (key) => set((s) => ({ tutorials: { ...s.tutorials, [key]: true } })),
 

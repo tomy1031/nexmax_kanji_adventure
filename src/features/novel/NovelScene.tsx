@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react';
-import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import type { CastMember, NovelScript } from '../../types/novel';
 import { RubyText } from '../../components/ui/Ruby';
 import { assetPath } from '../../lib/assetPath';
@@ -16,6 +16,7 @@ import { nameRevealed } from '../../lib/nameReveal';
 import { useKnownKana } from '../kana/useKnownKana';
 import { useOwnedKanji } from '../moji/useOwnedKanji';
 import { useBgm, type BgmTrack } from '../../lib/bgm';
+import { useStill } from '../../hooks/useStill';
 
 /**
  * The novel scene, set in a moving picture book.
@@ -113,8 +114,7 @@ export const NovelScene = ({ script, cast, onFinish, chapter, renderText, speech
   const [enFor, setEnFor] = useState<number | null>(null);
   /** The line whose text has finished appearing (a tap while it appears shows it all). */
   const [shown, setShown] = useState(-1);
-  const reducedSetting = useGameStore((s) => s.settings.reducedMotion);
-  const still = Boolean(useReducedMotion() || reducedSetting);
+  const still = useStill();
   useEffect(() => stopSpeaking, []);
 
   const castById = useMemo(() => new Map(cast.map((c) => [c.id, c])), [cast]);

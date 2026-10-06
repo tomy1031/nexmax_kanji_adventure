@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
-import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
-import { useGameStore } from '../../store/gameStore';
+import { AnimatePresence, motion } from 'framer-motion';
 import { PAGE_H, PAGE_W, toDataUrl } from './paper';
 import { SCENES, type Layer } from './scenes';
 import { layerId } from './layerId';
@@ -8,6 +7,7 @@ import { RENDERED } from './rendered.generated';
 import { assetPath } from '../../lib/assetPath';
 import SceneSigns from './SceneSigns';
 import { signPageX, signPageY } from './hasSign';
+import { useStill } from '../../hooks/useStill';
 
 /**
  * 動く 絵本 — the animated picture book.
@@ -113,9 +113,7 @@ interface PictureBookProps {
 }
 
 export const PictureBook = ({ scene, fx = [], className, children, still: holdStill = false, signHold, signsFaint }: PictureBookProps) => {
-  const prefersReduced = useReducedMotion();
-  const settingReduced = useGameStore((s) => s.settings.reducedMotion);
-  const still = Boolean(prefersReduced || settingReduced || holdStill);
+  const still = useStill() || holdStill;
   const { ref, size } = useCoverSize();
 
   const def = SCENES[scene] ?? SCENES.mukashi_village;
