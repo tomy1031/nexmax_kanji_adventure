@@ -324,6 +324,8 @@ export interface NaniwaBattleViewProps {
   seals?: readonly SealView[];
   /** What a わざ still holds for the coming writes, over Nexmax (CompanionFx BuffStrip). */
   buffs?: readonly BuffView[];
+  /** A kanji just written back out of the opponent (字の ふういん), furigana notation: it flies up to its talisman. `n` is new each time. */
+  freed?: { n: number; ruby: string } | null;
 }
 
 export const NaniwaBattleView = ({
@@ -369,6 +371,7 @@ export const NaniwaBattleView = ({
   overlay,
   seals = [],
   buffs = [],
+  freed = null,
 }: NaniwaBattleViewProps) => {
   const fieldPhoto = field ? SCENES[field]?.photo : undefined;
   const colRef = useRef<HTMLDivElement>(null);
@@ -453,6 +456,22 @@ export const NaniwaBattleView = ({
                     style={{ fontSize: cq(hit.critical ? 96 : 76), color: hit.critical ? '#ffe27a' : '#fff6dc' }}
                   >
                     {hit.damage}
+                  </motion.span>
+                )}
+              </AnimatePresence>
+              {/* 字の ふういん: the written kanji comes out of the opponent and flies up to its talisman. */}
+              <AnimatePresence>
+                {freed && (
+                  <motion.span
+                    key={`freed${freed.n}`}
+                    aria-hidden
+                    className="pointer-events-none absolute top-[30%] left-1/2 flex aspect-square -translate-x-1/2 items-center justify-center rounded-[1.5cqw] border-[0.5cqw] border-[#f2c45a] leading-none font-black text-[#24180d]"
+                    style={{ width: cq(120), fontSize: cq(84), background: 'linear-gradient(180deg,#fffaf0,#f1e2bf)', boxShadow: `0 0 ${cq(30)} rgba(255,211,106,0.95)` }}
+                    initial={still ? { opacity: 0 } : { opacity: 0, scale: 0.4, y: 0 }}
+                    animate={still ? { opacity: [0, 1, 1, 0] } : { opacity: [0, 1, 1, 0], scale: [0.4, 1.3, 1, 0.5], y: ['0%', '-10%', '-10%', '-160%'], x: ['-50%', '-50%', '-50%', '10%'] }}
+                    transition={{ duration: 1.3, times: [0, 0.2, 0.6, 1] }}
+                  >
+                    <RubyText showFurigana={showFurigana}>{freed.ruby}</RubyText>
                   </motion.span>
                 )}
               </AnimatePresence>
