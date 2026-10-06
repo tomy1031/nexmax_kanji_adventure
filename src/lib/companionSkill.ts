@@ -99,33 +99,37 @@ export const skillEffect = (kind: SkillKind, rarity: Rarity = 3, bond = 0): Skil
   }
 };
 
-/** Name, icon, colour, and what it does in a line (furigana notation). */
-export const SKILL_INFO: Record<SkillKind, { name: string; icon: string; color: string; says: (e: SkillEffect) => string }> = {
-  heal: { name: 'いやし', icon: '💚', color: '#5fd38a', says: (e) => `HPが ${e.heal} もどる` },
+/** Name, icon, colour, and what it does in a line (furigana notation), and in English for the EN setting. */
+export const SKILL_INFO: Record<SkillKind, { name: string; icon: string; color: string; says: (e: SkillEffect) => string; en: (e: SkillEffect) => string }> = {
+  heal: { name: 'いやし', icon: '💚', color: '#5fd38a', says: (e) => `HPが ${e.heal} もどる`, en: (e) => `Heals ${e.heal} HP.` },
   guard: {
     name: 'まもり',
     icon: '🛡️',
     color: '#6ab0ff',
     says: (e) => (e.guards === 1 ? 'あいての つぎの こうげきを とめる' : `あいての こうげきを ${e.guards}回(かい) とめる`),
+    en: (e) => (e.guards === 1 ? 'Blocks the next attack.' : `Blocks ${e.guards} attacks.`),
   },
   calm: {
     name: 'おちつき',
     icon: '🍃',
     color: '#8fd8c8',
     says: (e) => (e.calm! >= 99 ? 'ミスを ぜんぶ けす' : `ミスを ${e.calm}つ けす`),
+    en: (e) => (e.calm! >= 99 ? 'Clears every slip.' : `Takes back ${e.calm} slips.`),
   },
   hint: {
     name: 'ヒント',
     icon: '💡',
     color: '#ffd36a',
     says: (e) => `書(か)きじゅんを 見(み)ても こうげきが へらない（${e.freeLooks}字(じ)）`,
+    en: (e) => `Look at the stroke order without losing power (${e.freeLooks} letter${e.freeLooks === 1 ? '' : 's'}).`,
   },
-  power: { name: 'ちから', icon: '💥', color: '#ff7a4a', says: (e) => `つぎの 字(じ)の こうげき ×${e.power}` },
+  power: { name: 'ちから', icon: '💥', color: '#ff7a4a', says: (e) => `つぎの 字(じ)の こうげき ×${e.power}`, en: (e) => `The next letter hits ×${e.power}.` },
   combo: {
     name: 'コンボ',
     icon: '🔥',
     color: '#ff6fa0',
     says: (e) => `＋${e.comboAdd}・${e.comboShield}字(じ) まちがえても コンボが 切(き)れない`,
+    en: (e) => `COMBO +${e.comboAdd}; ${e.comboShield} slips will not break it.`,
   },
 };
 

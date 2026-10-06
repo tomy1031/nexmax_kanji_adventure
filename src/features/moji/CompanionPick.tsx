@@ -31,6 +31,7 @@ export const CompanionPick = ({ bossElement, showFurigana }: { bossElement: Elem
   const activeId = useGameStore((s) => s.activeIndividual);
   const setActive = useGameStore((s) => s.setActiveIndividual);
   const bonds = useGameStore((s) => s.bonds);
+  const english = useGameStore((s) => s.settings.english);
   const [open, setOpen] = useState(false);
   const list = owned.map((id) => getIndividual(id)).filter((i): i is Individual => i != null);
   if (list.length === 0) return null;
@@ -57,6 +58,11 @@ export const CompanionPick = ({ bossElement, showFurigana }: { bossElement: Elem
               <span className="block text-[11px] leading-snug font-bold" style={{ color: 'var(--ink-2)' }}>
                 {info.icon} <RubyText showFurigana={showFurigana}>{`わざ「${info.name}」 ${info.says(skillEffect(kind, active.rarity, bonds?.[active.id] ?? 0))}`}</RubyText>
               </span>
+              {english && (
+                <span lang="en" className="block text-[11px] leading-snug font-bold" style={{ color: '#1b4f8f' }}>
+                  {info.en(skillEffect(kind, active.rarity, bonds?.[active.id] ?? 0))}
+                </span>
+              )}
               <span className="block text-[11px] leading-snug font-bold" style={{ color: 'var(--ink-2)' }}>
                 <RubyText showFurigana={showFurigana}>{`とくいな 武器(ぶき): ${classLine(active)}`}</RubyText>
               </span>
