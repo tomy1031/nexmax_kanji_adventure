@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState, type CSSProperties, type ReactNod
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
 import { RubyText } from '../../components/ui/Ruby';
-import { useGameStore } from '../../store/gameStore';
+import { todayKey, useGameStore } from '../../store/gameStore';
 import { MOJI_CHAPTERS, isChapterReady, townOf } from '../../data/mojiRoute';
 import { KANA_EPISODES, isKanaEpisodeUnlocked, type KanaEpisode } from '../../data/kana';
 import KanaText from '../kana/KanaText';
@@ -242,10 +242,21 @@ const FeatureTags = ({ cleared, showFurigana, onOpen }: { cleared: readonly stri
 const GachaMachine = ({ showFurigana, still, onOpen }: { showFurigana: boolean; still: boolean; onOpen: () => void }) => {
   const gems = useGameStore((s) => s.gems);
   const tickets = useGameStore((s) => s.gachaTickets);
+  // The free pull of the day (lib/gacha.ts): the reason to drop by today.
+  const freeToday = useGameStore((s) => s.freePullDay) !== todayKey();
   const [seen] = useState(readSeen);
   const fresh = !seen.includes(Feature.GACHA);
   // 「できます」reads plainer than ひける (2026-10-05).
-  const can = tickets > 0 ? `チケット ${tickets}まい！` : gems >= MULTI_COST ? '10回(かい) できます！' : gems >= PULL_COST ? '1回(かい) できます！' : null;
+  const can =
+    tickets > 0
+      ? `チケット ${tickets}まい！`
+      : freeToday
+        ? '🎁 きょう むりょう！'
+        : gems >= MULTI_COST
+          ? '10回(かい) できます！'
+          : gems >= PULL_COST
+            ? '1回(かい) できます！'
+            : null;
   const glow = fresh || can != null;
   return (
     <motion.button
