@@ -70,7 +70,8 @@ export const KanjiReveal = ({
   /** A ★5 has its own, louder show (2026-10-06「星5の演出はスペシャルに」). */
   const five = card.rarity === 5;
   const power = star5PowerOf(card.id);
-  const [phase, setPhase] = useState<Phase>(still ? 'entry' : 'enter');
+  // 動きを 少なく keeps every step (2026-10-06: it used to jump to the companion) — only gentler.
+  const [phase, setPhase] = useState<Phase>('enter');
   // The card's width: big on a phone, not huge on a tablet.
   const [cardW] = useState(() => Math.round(Math.min(window.innerWidth * 0.56, window.innerHeight * 0.3, 240)));
   const line = linesFor(card).start;
@@ -179,20 +180,20 @@ export const KanjiReveal = ({
             maskPosition: 'center',
             willChange: 'transform, opacity',
           }}
-          initial={{ opacity: 0, scale: 0.86, y: 30 }}
-          animate={{ opacity: 0.92, scale: 1, y: 0 }}
+          initial={still ? { opacity: 0 } : { opacity: 0, scale: 0.86, y: 30 }}
+          animate={still ? { opacity: 0.92 } : { opacity: 0.92, scale: 1, y: 0 }}
           transition={{ duration: 0.7, ease: 'easeOut' }}
         />
       )}
 
-      {/* A ★5: a rainbow ring turns behind the card from the moment it comes. */}
-      {five && cardShown && !still && (
+      {/* A ★5: a rainbow ring turns behind the card from the moment it comes (still, with 動きを 少なく). */}
+      {five && cardShown && (
         <motion.div
           aria-hidden
           className="pointer-events-none absolute top-[38%] left-1/2 aspect-square -translate-x-1/2 -translate-y-1/2 rounded-full"
           style={{ width: cardW * 2.1, background: 'conic-gradient(from 0deg, rgba(255,143,193,0.75), rgba(255,211,106,0.75), rgba(139,224,168,0.75), rgba(127,178,255,0.75), rgba(197,139,255,0.75), rgba(255,143,193,0.75))', maskImage: 'radial-gradient(circle, transparent 38%, #000 40%, #000 52%, transparent 70%)', WebkitMaskImage: 'radial-gradient(circle, transparent 38%, #000 40%, #000 52%, transparent 70%)', willChange: 'transform' }}
-          initial={{ opacity: 0, scale: 0.5 }}
-          animate={{ opacity: 1, scale: 1, rotate: 360 }}
+          initial={still ? { opacity: 0 } : { opacity: 0, scale: 0.5 }}
+          animate={still ? { opacity: 1 } : { opacity: 1, scale: 1, rotate: 360 }}
           transition={{ opacity: { duration: 0.4 }, scale: { duration: 0.5 }, rotate: { duration: 3, repeat: Infinity, ease: 'linear' } }}
         />
       )}
@@ -203,15 +204,15 @@ export const KanjiReveal = ({
           aria-hidden
           className="absolute top-[38%] left-1/2"
           style={{ width: cardW, marginLeft: -cardW / 2, marginTop: -cardW * 0.75, willChange: 'transform, opacity' }}
-          initial={arrived ? { y: 0, scale: 1, rotate: 0, opacity: 1 } : { y: '-40vh', scale: 0.4, rotate: -14, opacity: 0 }}
-          animate={phase === 'shadow' ? { y: 0, scale: 0.7, rotate: 0, opacity: 0.92 } : { y: 0, scale: 1, rotate: 0, opacity: 1 }}
+          initial={arrived ? { y: 0, scale: 1, rotate: 0, opacity: 1 } : still ? { y: 0, scale: 1, rotate: 0, opacity: 0 } : { y: '-40vh', scale: 0.4, rotate: -14, opacity: 0 }}
+          animate={phase === 'shadow' ? { y: 0, scale: still ? 1 : 0.7, rotate: 0, opacity: 0.92 } : { y: 0, scale: 1, rotate: 0, opacity: 1 }}
           transition={phase === 'enter' ? { type: 'spring', stiffness: 170, damping: 18 } : { duration: 0.6, ease: 'easeInOut' }}
         >
           {/* It turns: the back narrows away, the paper widens in. */}
           <motion.div
             key={phase === 'enter' ? 'back' : 'paper'}
-            initial={{ scaleX: phase === 'enter' ? 1 : 0 }}
-            animate={{ scaleX: 1 }}
+            initial={still ? { opacity: phase === 'enter' ? 1 : 0 } : { scaleX: phase === 'enter' ? 1 : 0 }}
+            animate={still ? { opacity: 1 } : { scaleX: 1 }}
             transition={{ duration: 0.18, ease: 'easeOut' }}
           >
             {phase === 'enter' ? (
@@ -219,7 +220,7 @@ export const KanjiReveal = ({
             ) : (
               <GachaCard card={card} face="paper" width={cardW} showFurigana={showFurigana}>
                 {phase !== 'turn' && (
-                  <WrittenWord word={k.kanji} size={Math.round(cardW * 0.7)} still={still || short} onDone={() => setPhase((p) => (p === 'write' ? 'read' : p))} />
+                  <WrittenWord word={k.kanji} size={Math.round(cardW * 0.7)} still={short} onDone={() => setPhase((p) => (p === 'write' ? 'read' : p))} />
                 )}
               </GachaCard>
             )}
@@ -351,8 +352,8 @@ export const KanjiReveal = ({
           <motion.div
             className="absolute inset-x-[-6%] top-[76%] flex items-center gap-3 overflow-hidden border-y-[3px] border-[#e8c26a] py-2 pr-[10%] pl-[9%]"
             style={{ background: light.band, rotate: '-4deg', boxShadow: '0 6px 18px rgba(0,0,0,0.45)' }}
-            initial={{ x: still ? 0 : '110%' }}
-            animate={{ x: 0 }}
+            initial={still ? { x: 0, opacity: 0 } : { x: '110%' }}
+            animate={still ? { x: 0, opacity: 1 } : { x: 0 }}
             transition={{ delay: still ? 0 : 0.75, type: 'spring', stiffness: 260, damping: 26 }}
           >
             <span aria-hidden className="h-16 w-16 shrink-0 rounded-full border-[3px] border-[#e8c26a] bg-[#fff8e6]" style={faceStyle(card.art, 58, 1.15)} />

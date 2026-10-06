@@ -48,7 +48,7 @@ export const SummonOverlay = ({ rarities, still, showFurigana, onDone }: { rarit
     onDone();
   };
   /** 引く: the player pulls the bookmark's cord (or taps); the book opens and everything after counts from then. */
-  const [pulled, setPulled] = useState(still);
+  const [pulled, setPulled] = useState(false);
   const pull = () => {
     if (pulled) return;
     sfx.tap();
@@ -74,14 +74,12 @@ export const SummonOverlay = ({ rarities, still, showFurigana, onDone }: { rarit
     if (!pulled) return;
     const timers: ReturnType<typeof setTimeout>[] = [];
     const at = (s: number, f: () => void) => timers.push(setTimeout(f, s * 1000));
-    if (still) at(0.3, finish);
-    else {
-      at(LIGHT_UP, () => sfx.chime());
-      rarities.forEach((r, i) => at(OUT + step * i, () => sfx.star(Math.min(2, r - 3))));
-      if (top === 5) at(landed + 0.05, () => sfx.fanfare());
-      else if (confirm) at(landed + 0.05, () => sfx.chime());
-      at(doneAt, finish);
-    }
+    // The same steps with 動きを 少なく too — only gentler (2026-10-06: it used to skip them all).
+    at(LIGHT_UP, () => sfx.chime());
+    rarities.forEach((r, i) => at(OUT + step * i, () => sfx.star(Math.min(2, r - 3))));
+    if (top === 5) at(landed + 0.05, () => sfx.fanfare());
+    else if (confirm) at(landed + 0.05, () => sfx.chime());
+    at(doneAt, finish);
     return () => timers.forEach(clearTimeout);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pulled]);
@@ -140,7 +138,7 @@ export const SummonOverlay = ({ rarities, still, showFurigana, onDone }: { rarit
               aria-hidden
               className="absolute inset-x-0 bottom-0 w-full"
               style={{ transformOrigin: '50% 100%', willChange: 'transform' }}
-              animate={{ scale: [1, 1.015, 1] }}
+              animate={still ? undefined : { scale: [1, 1.015, 1] }}
               transition={{ duration: 1.6, repeat: Infinity, ease: 'easeInOut' }}
             />
             <motion.button
@@ -160,7 +158,7 @@ export const SummonOverlay = ({ rarities, still, showFurigana, onDone }: { rarit
                 e.stopPropagation();
                 pull();
               }}
-              animate={{ rotate: [-3, 3, -3] }}
+              animate={still ? undefined : { rotate: [-3, 3, -3] }}
               transition={{ duration: 2.2, repeat: Infinity, ease: 'easeInOut' }}
             >
               {/* The cord: red silk with gold edges, and a golden tassel. */}
@@ -172,7 +170,7 @@ export const SummonOverlay = ({ rarities, still, showFurigana, onDone }: { rarit
               aria-hidden
               className="pointer-events-none absolute text-3xl"
               style={{ left: bw * 0.5 + bw * 0.08, top: bh - bw * 0.3 }}
-              animate={{ y: [0, 16, 0] }}
+              animate={still ? undefined : { y: [0, 16, 0] }}
               transition={{ duration: 1, repeat: Infinity }}
             >
               👇
@@ -194,8 +192,8 @@ export const SummonOverlay = ({ rarities, still, showFurigana, onDone }: { rarit
               aria-hidden
               className="absolute inset-0 h-full w-full"
               style={{ transformOrigin: '50% 100%', willChange: 'transform' }}
-              initial={{ scaleY: still ? 1 : 0.85, opacity: still ? 1 : 0 }}
-              animate={{ scaleY: [0.85, 1.08, 1, 1.03, 1], opacity: 1 }}
+              initial={still ? { opacity: 0 } : { scaleY: 0.85, opacity: 0 }}
+              animate={still ? { opacity: 1 } : { scaleY: [0.85, 1.08, 1, 1.03, 1], opacity: 1 }}
               transition={{ duration: 0.9, ease: 'easeOut' }}
             />
             {/* The cover flies open: a flash of the page light. */}
@@ -237,7 +235,6 @@ export const SummonOverlay = ({ rarities, still, showFurigana, onDone }: { rarit
 
       {/* The cards, face down, out of the pages to where they wait. */}
       {pulled &&
-        !still &&
         rarities.map((r, i) => {
           const rest = restOf(i);
           const c = size.card;
@@ -249,15 +246,16 @@ export const SummonOverlay = ({ rarities, still, showFurigana, onDone }: { rarit
               aria-hidden
               className="absolute top-1/2 left-1/2"
               style={{ width: c, height: c * 1.5, marginLeft: -c / 2, marginTop: -c * 0.75, willChange: 'transform, opacity', boxShadow: r >= 4 ? `0 0 ${c * 0.25}px ${GLOW[r]}` : undefined, borderRadius: c * 0.06 }}
-              initial={{ x: from.x, y: from.y, scale: 0.2, rotate: -40, opacity: 0 }}
-              animate={{ x: rest.x, y: rest.y, scale: 1, rotate: [-40, 200, 360], opacity: 1 }}
+              // 動きを 少なく: they appear where they wait, not flying.
+              initial={still ? { x: rest.x, y: rest.y, opacity: 0 } : { x: from.x, y: from.y, scale: 0.2, rotate: -40, opacity: 0 }}
+              animate={still ? { x: rest.x, y: rest.y, opacity: 1 } : { x: rest.x, y: rest.y, scale: 1, rotate: [-40, 200, 360], opacity: 1 }}
               transition={{ delay: OUT + step * i, duration: FLY, ease: 'easeOut' }}
             />
           );
         })}
 
       {/* 確定演出: a ★5 (or one pull's ★4) is said out loud before anything turns — honest, and loud. */}
-      {pulled && confirm && !still && (
+      {pulled && confirm && (
         <>
           {/* The light flashes the card's colour, the screen shakes. */}
           <motion.div
@@ -265,8 +263,9 @@ export const SummonOverlay = ({ rarities, still, showFurigana, onDone }: { rarit
             className="pointer-events-none absolute inset-0"
             style={{ background: top === 5 ? 'linear-gradient(135deg, #ff8fc1, #ffd36a, #8be0a8, #7fb2ff, #c58bff)' : 'radial-gradient(circle, #fff3b0, #e8a317)' }}
             initial={{ opacity: 0 }}
-            animate={{ opacity: [0, 0.85, 0, 0.5, 0] }}
-            transition={{ delay: landed, duration: 0.7, times: [0, 0.15, 0.4, 0.55, 1] }}
+            // 動きを 少なく: one soft glow, no flashing.
+            animate={still ? { opacity: [0, 0.35, 0] } : { opacity: [0, 0.85, 0, 0.5, 0] }}
+            transition={still ? { delay: landed, duration: 1 } : { delay: landed, duration: 0.7, times: [0, 0.15, 0.4, 0.55, 1] }}
           />
           {top === 5 && (
             <motion.div
@@ -274,13 +273,15 @@ export const SummonOverlay = ({ rarities, still, showFurigana, onDone }: { rarit
               className="pointer-events-none absolute top-[30%] left-1/2 aspect-square w-[160vmax] -translate-x-1/2 -translate-y-1/2"
               style={{ background: 'repeating-conic-gradient(from 0deg, rgba(255,143,193,0.3) 0deg 8deg, transparent 8deg 18deg, rgba(127,178,255,0.3) 18deg 26deg, transparent 26deg 36deg)', willChange: 'transform, opacity' }}
               initial={{ opacity: 0, rotate: 0 }}
-              animate={{ opacity: 1, rotate: 120 }}
+              animate={still ? { opacity: 1 } : { opacity: 1, rotate: 120 }}
               transition={{ delay: landed, duration: confirmFor, ease: 'linear' }}
             />
           )}
-          <div className="pointer-events-none absolute inset-x-0 top-[30%] h-0">
-            <StarBurst delay={landed + 0.1} rainbow={top === 5} n={top === 5 ? 18 : 10} />
-          </div>
+          {!still && (
+            <div className="pointer-events-none absolute inset-x-0 top-[30%] h-0">
+              <StarBurst delay={landed + 0.1} rainbow={top === 5} n={top === 5 ? 18 : 10} />
+            </div>
+          )}
           {/* 「★5 かくてい！」, a letter at a time, bouncing in. */}
           <motion.div
             className="absolute inset-x-0 top-[47%] flex items-center justify-center py-2"
@@ -301,9 +302,9 @@ export const SummonOverlay = ({ rarities, still, showFurigana, onDone }: { rarit
                   WebkitTextStroke: '1.5px rgba(60,20,80,0.9)',
                   minWidth: c === ' ' ? '0.4em' : undefined,
                 }}
-                initial={{ y: -80, scale: 2.2, opacity: 0 }}
-                animate={{ y: 0, scale: 1, opacity: 1 }}
-                transition={{ delay: landed + 0.25 + i * 0.07, type: 'spring', stiffness: 520, damping: 14 }}
+                initial={still ? { opacity: 0 } : { y: -80, scale: 2.2, opacity: 0 }}
+                animate={still ? { opacity: 1 } : { y: 0, scale: 1, opacity: 1 }}
+                transition={still ? { delay: landed + 0.25, duration: 0.4 } : { delay: landed + 0.25 + i * 0.07, type: 'spring', stiffness: 520, damping: 14 }}
               >
                 {c}
               </motion.span>
