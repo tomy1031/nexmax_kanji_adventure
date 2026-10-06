@@ -40,8 +40,8 @@ export const CHAR_KANJI: Readonly<Record<string, CharKanji>> = {
   // --- 町の なかま: 名前・しごとから（リンは 外国から 来た 子で 名前は その まま）------
   rin: { kanji: '本', reading: 'ほん', words: ['日(に)本(ほん)', '本(ほん)当(とう)', '本(ほん)屋(や)'] },
   yamada: { kanji: '山田', reading: 'やまだ', words: ['火(か)山(ざん)', '山(やま)道(みち)', '田(た)んぼ'] },
-  teacher: { kanji: '学', reading: 'まなぶ', words: ['学(がっ)校(こう)', '大(だい)学(がく)', '学(まな)ぶ'] },
-  doctor: { kanji: '治', reading: 'おさむ', words: ['治(なお)る', '明(めい)治(じ)', '政(せい)治(じ)'] },
+  teacher: { kanji: '学美', reading: 'まなみ', words: ['学(がっ)校(こう)', '大(だい)学(がく)', '美(うつく)しい'] },
+  doctor: { kanji: '治', reading: 'なお', words: ['治(なお)る', '明(めい)治(じ)', '政(せい)治(じ)'] },
   baker: { kanji: '朝日', reading: 'あさひ', words: ['毎(まい)朝(あさ)', '朝(あさ)ごはん', '毎(まい)日(にち)'] },
   keeper: { kanji: '時', reading: 'とき', words: ['時(じ)間(かん)', '時(と)計(けい)', '何(なん)時(じ)'] },
   sora: { kanji: '空', reading: 'そら', words: ['青(あお)空(ぞら)', '空(くう)港(こう)', '空(くう)気(き)'] },
