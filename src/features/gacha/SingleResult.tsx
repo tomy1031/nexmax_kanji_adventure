@@ -6,6 +6,7 @@ import { assetPath } from '../../lib/assetPath';
 import { kanjiOf } from '../../data/charKanji';
 import type { Individual } from '../../data/individuals';
 import { SKILL_INFO, SKILL_OF, skillEffect } from '../../lib/companionSkill';
+import { star5PowerOf } from '../../lib/star5Power';
 
 /**
  * 1回の けっか (docs/design/17 §2.6〜2.7), after the companion has stepped out
@@ -36,6 +37,7 @@ export const SingleResult = ({ r, showFurigana, still, onClose }: { r: SinglePul
   const kind = SKILL_OF[r.card.char];
   const info = SKILL_INFO[kind];
   const effect = skillEffect(kind, r.card.rarity, r.bondTo ?? 0);
+  const star5 = star5PowerOf(r.card.id);
   const says = !r.duplicate
     ? 'あたらしい なかまが 加(くわ)わったよ！'
     : r.bondTo
@@ -131,6 +133,17 @@ export const SingleResult = ({ r, showFurigana, still, onClose }: { r: SinglePul
         <p className="mt-3 text-sm leading-[1.9]">
           <RubyText showFurigana={showFurigana}>{r.card.tagline}</RubyText>
         </p>
+        {star5 && (
+          // ★5 だけの ちから (docs/design/18 §2).
+          <div className="mt-2 rounded-xl border-2 border-[#d0567a] px-3 py-2 text-sm" style={{ background: 'linear-gradient(90deg, #fff0f7, #fff8e6)' }}>
+            <p className="font-black" style={{ color: '#a8325a' }}>
+              <RubyText showFurigana={showFurigana}>{`★5 だけの ちから「${star5.name}」`}</RubyText>
+            </p>
+            <p className="text-xs leading-[1.9]" style={{ color: 'var(--ink-2)' }}>
+              <RubyText showFurigana={showFurigana}>{star5.says}</RubyText>
+            </p>
+          </div>
+        )}
         <div className="mt-2 rounded-xl px-3 py-2 text-sm" style={{ background: 'var(--line)' }}>
           <p className="font-black">
             {info.icon} <RubyText showFurigana={showFurigana}>{`わざ「${info.name}」`}</RubyText>

@@ -21,6 +21,7 @@ import { getGear } from '../../data/equipment';
 import * as sfx from '../../lib/sfx';
 import { comboMilestone, comboTier, isComboBreak, strokeEnd, strokeLift } from '../../lib/combo';
 import type { StrokeSpark } from './ComboFx';
+import { star5CleanMul, star5ComboAfterBreak, star5GaugeGain, star5GaugeStart, star5PowerOf, withStar5Stats } from '../../lib/star5Power';
 import { SKILL_INFO, SKILL_OF, gaugeGain, skillEffect, skillGaugeFull } from '../../lib/companionSkill';
 import { HURT_LINE, linesFor } from '../../data/companionLines';
 import { tipDue, tipOf, type TipId } from '../../data/fightRules';
@@ -210,8 +211,11 @@ export const BattleScene = ({
   const [startOwned] = useState(() => ownedCount(useGameStore.getState().progress));
   const level = mastery && !tutorial ? levelOf(startExp, startOwned) : 1;
 
+  // ★5 だけの ちから (docs/design/18 §2): where the companion's わざ works.
+  const star5 = mastery && !tutorial ? star5PowerOf(activeIndividualId)?.effect : undefined;
+
   // Worn gear: shield, armour, charm. The tutorial fight is gear-less. The
-  // level adds HP and patience on the new route.
+  // level adds HP and patience on the new route, and a ★5 (空・時) may too.
   const stats = useMemo(() => {
     const gear = statsFromGear(
       tutorial
@@ -220,8 +224,8 @@ export const BattleScene = ({
             .map((id) => getGear(id))
             .filter((g) => g != null),
     );
-    return mastery ? applyLevel(gear, level) : gear;
-  }, [equippedGear, tutorial, mastery, level]);
+    return withStar5Stats(mastery ? applyLevel(gear, level) : gear, star5);
+  }, [equippedGear, tutorial, mastery, level, star5]);
   const patience = basePatienceValue + stats.patience;
 
   // The forge's words beyond the core arrive just after start (data/compounds.ts): read again then.
@@ -308,10 +312,10 @@ export const BattleScene = ({
   const fightSeedRef = useRef(0);
   const [outcome, setOutcome] = useState<Outcome>(null);
   /** わざ: the gauge, what a used one still holds for the coming writes, the cut-in and the companion's bubble. */
-  const [gauge, setGauge] = useState(0);
+  const [gauge, setGauge] = useState(() => star5GaugeStart(star5, gaugeFull));
   /** Strikes the shield took — the worn shield kicks with each (GearFront). */
   const [guardNo, setGuardNo] = useState(0);
-  const [buffs, setBuffs] = useState({ guards: 0, freeLooks: 0, power: 1, comboShield: 0 });
+  const [buffs, setBuffs] = useState({ guards: 0, freeLooks: star5?.freeLooks ?? 0, power: 1, comboShield: 0 });
   const [cut, setCut] = useState<SkillCut | null>(null);
   const [talk, setTalk] = useState<{ n: number; text: string } | null>(null);
   const talkNo = useRef(0);
@@ -496,7 +500,7 @@ export const BattleScene = ({
       const lookedFree = freeLookRef.current;
       freeLookRef.current = false;
       setFreeLookNow(false);
-      if (skillKind) setGauge((g) => Math.min(gaugeFull, g + gaugeGain(mistakes, hinted || lookedFree)));
+      if (skillKind) setGauge((g) => Math.min(gaugeFull, g + star5GaugeGain(gaugeGain(mistakes, hinted || lookedFree), star5)));
       // A look at the stroke order counts against the stars like a slip.
       const nextMistakes = totalMistakes + mistakes + (hinted ? 1 : 0);
       setTotalMistakes(nextMistakes);
@@ -522,7 +526,7 @@ export const BattleScene = ({
       const critical = mastery && targetStars === 3 && clean;
       // コンボ (わざ): a slip may pass without ending the run.
       const shielded = mastery && !clean && combo > 0 && buffs.comboShield > 0;
-      const nextCombo = mastery && clean ? combo + 1 : shielded ? combo : 0;
+      const nextCombo = mastery && clean ? combo + 1 : shielded ? combo : star5ComboAfterBreak(combo, star5);
       setCombo(nextCombo);
       if (nextCombo >= 3) tellTip('combo');
       // ちから (わざ): this write hits harder, once.
@@ -542,7 +546,7 @@ export const BattleScene = ({
         attackPct: stats.attackPct,
         owned: ownsTarget && !tutorial && !mastery,
         hinted,
-        mastery: mastery ? masteryMultiplier(targetStars, clean) * comboMultiplier(nextCombo) * power : 1,
+        mastery: mastery ? masteryMultiplier(targetStars, clean) * comboMultiplier(nextCombo) * power * star5CleanMul(clean && !lookedFree, star5) : 1,
       });
       setHinted(false);
       const struck = { n: turn, damage: result.damage, critical };
@@ -628,7 +632,7 @@ export const BattleScene = ({
     [
       tutorial, totalMistakes, target, progress, recordReview, recordRep, weapon, individual, stage.boss,
       rust, bossHp, playerHp, settle, heroCtl, enemyCtl, turn, stats.attackPct, ownsTarget, hinted,
-      mastery, targetStars, kanjiPool, combo, say, difficulty, skillKind, gaugeFull, buffs, companionSay, tellTip,
+      mastery, targetStars, kanjiPool, combo, say, difficulty, skillKind, gaugeFull, buffs, companionSay, tellTip, star5,
     ],
   );
 
@@ -674,7 +678,7 @@ export const BattleScene = ({
         hinted: false,
         mastery: masteryMultiplier(starsOf(repsNow(readQ.kanji.id)), false),
       });
-      const damage = readDamage(clean.damage);
+      const damage = Math.round(readDamage(clean.damage) * (star5?.readingMul ?? 1));
       void heroCtl.start({ x: [0, -12, 0], rotate: [0, -6, 0], transition: { duration: 0.4 } });
       void enemyCtl.start({ x: [0, 14, -8, 0], transition: { duration: 0.45, delay: IMPACT_MS / 1000 } });
       atImpact(() => sfx.hit(), IMPACT_MS - 120);
@@ -690,7 +694,7 @@ export const BattleScene = ({
       }
       atImpact(finishRead, IMPACT_MS + 600);
     },
-    [mastery, readQ, readPicked, say, addSlip, gainExp, weapon, individual, stage.boss.element, rust, stats.attackPct, heroCtl, enemyCtl, turn, bossHp, settle, totalMistakes, playerHp, finishRead, combo, skillKind, gaugeFull],
+    [mastery, readQ, readPicked, say, addSlip, gainExp, weapon, individual, stage.boss.element, rust, stats.attackPct, heroCtl, enemyCtl, turn, bossHp, settle, totalMistakes, playerHp, finishRead, combo, skillKind, gaugeFull, star5],
   );
 
   // What this clear opens. One per stage at most, announced with a line of
@@ -814,6 +818,8 @@ export const BattleScene = ({
     companionSay(linesFor(individual).skill);
     sfx.skill();
     if (e.heal) setPlayerHp((h) => Math.min(stats.maxHp, h + e.heal!));
+    // ★5 ひかりの いやし: every わざ heals too.
+    if (star5?.skillHeal) setPlayerHp((h) => Math.min(stats.maxHp, h + star5.skillHeal!));
     if (e.calm) setRage((r) => Math.max(0, r - e.calm!));
     if (e.comboAdd) setCombo((c) => c + e.comboAdd!);
     setBuffs((b) => ({
