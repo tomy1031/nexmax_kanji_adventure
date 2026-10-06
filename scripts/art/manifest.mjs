@@ -640,6 +640,8 @@ const NEXMAX_NANIWA = [
   nxPainted('determined', 'determined and ready: leaning forward, both fists clenched in front of his chest (not covering the chest mark), brows set, a confident grin; the chest mark glowing with a warm amber light.', 'いそぐ・がんばる（「かく！」「いそいで！」）'),
   nxPainted('guide', 'guiding: one arm stretched out pointing up and to the side with his mitten hand, the other hand on his hip, a cheerful encouraging smile, looking toward where he points.', 'あんない（「うえ！👆」「かいて！」）'),
   nxPainted('hello', 'greeting: waving one hand high above his head, the other hand at his side, a bright friendly smile.', 'あいさつ'),
+  // ガチャを 回す（docs/design/17 §2）: 機械の 右の ハンドルの 玉に 手を 重ねて 置く ので、手の 中は 空っぽ。
+  nxPainted('crank', 'turning a big crank with all his strength: his whole body faces to the LEFT in a three-quarter view, both mitten hands stretched out to the left at chest height, held close together as if gripping one round knob there (his hands are empty — nothing drawn in them), leaning his weight into the turn with one boot braced behind him, eyes squeezed into happy curved lines of effort, mouth open in a cheerful shout. The chest mark stays visible.', 'ガチャを ひく ときの「ガチャ開始」（機械の ハンドルを 回す）'),
 ];
 
 // ---------------------------------------------------------------------------
@@ -1020,6 +1022,18 @@ const GACHA_ART = [
     used: 'はじめての ガチャ チケット（1章 4話の あと）', note: '白い 背景を import.mjs が 切り抜く（prop）' },
   { ...naniwa('gacha_portal', 'a magical summoning scene at night above the rooftops of the steampunk town: in the center of the picture a huge glowing circle of golden light floats in the air, made of concentric rings, gear-like notches and small dots of light (NO letters, NO symbols that look like writing), beams of warm light shooting up from it into a deep indigo starry sky, glowing orbs of sky-blue, gold and rainbow light swirling around it, lantern-lit rooftops far below. Dramatic, magical and joyful. No people.', 'ガチャを ひく ときの 演出の 背景'),
     group: 'gacha', out: 'img/gacha/portal.webp' },
+  // ひく ときの 演出（docs/design/17 §2）: カプセルは まん中で 上下に 切って われる ので、正面・上下 対称に。
+  ...[
+    [3, 'silver', 'the top half is clear pale silver-blue glass with soft white light glowing inside; the bottom half is glossy pearl-silver enamel'],
+    [4, 'gold', 'the top half is clear warm amber-gold glass with golden light glowing inside; the bottom half is glossy polished gold enamel'],
+    [5, 'rainbow', 'the top half is clear iridescent glass shimmering in soft rainbow colors (pink, gold, mint, sky-blue, lilac) with bright light glowing inside; the bottom half is glossy pearl-white enamel with a rainbow sheen'],
+  ].map(([r, name, look]) => ({
+    id: `gacha_capsule_${r}`, group: 'gacha', prio: 'A', out: `img/gacha/capsule_${r}.webp`, kind: 'prop', bgmode: 'white', keepWhite: true, refs: ['public/img/gacha/machine.webp'], style: ['GACHA_PROP'],
+    diff: `The item: one ${name} capsule ball from the capsule machine in the reference image, seen exactly straight from the front: a perfect circle, perfectly symmetrical left to right, cut horizontally exactly through its middle by a thin polished brass band with tiny rivets; ${look}. One soft white highlight on the glass. A few small sparkles close around it. Nothing inside the glass but light.`,
+    used: `ガチャを ひく ときの カプセル（★${r}）`, note: '白い 背景を import.mjs が 切り抜く（prop）。まん中の 帯で 上下に 切って われる' })),
+  { id: 'gacha_slip', group: 'gacha', prio: 'A', out: 'img/gacha/slip.webp', kind: 'prop', bgmode: 'white', keepWhite: true, refs: ['public/img/gacha/machine.webp'], style: ['GACHA_PROP'],
+    diff: 'The item: a tall upright paper slip like a small hanging scroll, seen exactly straight from the front, flat, perfectly symmetrical: cream-white washi paper with a soft fiber texture, a thin gold foil border inset a little from the edges, a short polished brass rod across the top and the bottom. The whole middle of the paper is completely blank and plain — no writing, no marks, no pattern — because a character is written on it in the game. A faint warm glow around the paper.',
+    used: 'ガチャを ひく ときに カプセルから 出る お札（字を 書き順どおりに 書く）', note: '白い 背景を import.mjs が 切り抜く（prop）' },
 ];
 
 export const ASSETS = [...NEXMAX, ...GENDAI, ...MUKASHI_FOLK, ...ENEMIES, ...CREATURES, ...BG, ...NANIWA, ...PORT, ...FOOD, ...MIYAKO, ...NEXMAX_NANIWA, ...FOLK, ...PROLOGUE_ART, ...PROLOGUE_EATEN, ...MAPS, ...ICONS, ...CARDS, ...WEAPONS, ...GEAR_ART, ...GACHA_ART];
