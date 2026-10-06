@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { AnimatePresence, motion, useAnimationControls, useReducedMotion } from 'framer-motion';
+import { AnimatePresence, motion, useAnimationControls } from 'framer-motion';
 import KanjiWriterCanvas, { type KanjiWriterHandle } from '../../components/KanjiWriterCanvas';
 import { NaniwaBattleView } from '../battle/NaniwaBattleView';
 import LightFlow, { type Flow } from '../battle/LightFlow';
@@ -17,6 +17,7 @@ import { linesFor } from '../../data/companionLines';
 import { getIndividual, type Individual } from '../../data/individuals';
 import type { CompanionView, SkillCut } from '../battle/CompanionFx';
 import { throughWard, versusSkill, versusSkillSays } from './versusSkill';
+import { useStill } from '../../hooks/useStill';
 
 /** One stamp at a time: a moment between them, so they stay a greeting, not a flood. */
 const STAMP_COOLDOWN_MS = 1500;
@@ -90,8 +91,7 @@ export const VersusFight = ({ round, opponentName, opponentImg, weaponBonus, inc
   const showFurigana = useGameStore((s) => s.settings.furigana);
   const progress = useGameStore((s) => s.progress);
   const recordReview = useGameStore((s) => s.recordReview);
-  const settingReduced = useGameStore((s) => s.settings.reducedMotion);
-  const still = Boolean(useReducedMotion() || settingReduced);
+  const still = useStill();
 
   const writerRef = useRef<KanjiWriterHandle>(null);
   const boardRef = useRef<HTMLDivElement>(null);

@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useMapPath } from '../../lib/nav';
 import { RubyText } from '../../components/ui/Ruby';
 import { useGameStore } from '../../store/gameStore';
@@ -28,6 +28,7 @@ import { SELF_HIT, SLIPS_TO_SELF_HIT, writeDamage } from './rules';
 import { SKILL_INFO, SKILL_OF, type SkillKind } from '../../lib/companionSkill';
 import { throughWard, versusSkill } from './versusSkill';
 import { useCompoundsVersion } from '../../data/compounds';
+import { useStill } from '../../hooks/useStill';
 
 /**
  * たいせん — two players, the same kanji, who writes them better.
@@ -115,8 +116,7 @@ export const VersusScreen = () => {
   const versus = useGameStore((s) => s.versus);
   const recordVersus = useGameStore((s) => s.recordVersusResult);
   const owned = useOwnedKanji();
-  const reduced = useGameStore((s) => s.settings.reducedMotion);
-  const still = Boolean(useReducedMotion() || reduced);
+  const still = useStill();
   // A short phone (SE) keeps the lobby on one screen with a smaller Nexmax.
   const compact = useCompactHeight();
   const online = useOnline();

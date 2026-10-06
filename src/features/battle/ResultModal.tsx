@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { motion, useReducedMotion } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { GiCrossedSwords, GiOpenBook, GiAnvil, GiPathDistance } from 'react-icons/gi';
 import { RubyText } from '../../components/ui/Ruby';
 import { LogoText } from '../../components/ui/LogoText';
@@ -12,6 +12,7 @@ import { NEXT_STAR_GAIN } from '../../data/starPerks';
 import { hpBonus, patienceBonus } from '../../lib/level';
 import * as sfx from '../../lib/sfx';
 import { playJingle } from '../../lib/bgm';
+import { useStill } from '../../hooks/useStill';
 
 /**
  * The end of a fight, as a game says it (2026-09-24「動線 その他の 動きに
@@ -104,8 +105,7 @@ export const ResultModal = ({
 }) => {
   const moji = route === 'moji';
   const showFurigana = useGameStore((s) => s.settings.furigana);
-  const reduced = useGameStore((s) => s.settings.reducedMotion);
-  const still = Boolean(useReducedMotion() || reduced);
+  const still = useStill();
   const win = outcome.kind === 'win';
   const stars = win ? outcome.stars : 0;
   const [shownGems, setShownGems] = useState(still ? gems : 0);

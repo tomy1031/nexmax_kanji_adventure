@@ -1,12 +1,13 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
+import { AnimatePresence, motion } from 'framer-motion';
 import { assetPath } from '../../lib/assetPath';
 import { RubyText } from '../../components/ui/Ruby';
 import { useGameStore } from '../../store/gameStore';
 import { useBgm } from '../../lib/bgm';
 import { preloadImages } from '../../lib/preload';
 import { PROLOGUE_PICTURE } from '../../data/scripts/prologue';
+import { useStill } from '../../hooks/useStill';
 
 /**
  * Title (the layout example delivered with the parts, 「ChatGPT 画像 2026年9月29日
@@ -114,9 +115,7 @@ export const TitleScreen = () => {
   useEffect(() => {
     if (!canContinue) preloadImages([...new Set(Object.values(PROLOGUE_PICTURE))]);
   }, [canContinue]);
-  const prefersReduced = useReducedMotion();
-  const settingReduced = useGameStore((s) => s.settings.reducedMotion);
-  const still = Boolean(prefersReduced || settingReduced);
+  const still = useStill();
 
   // A new player starts with the prologue of 文字が 消えた 町 (08 §10.2). A
   // returning one is asked first (08 §3.8): はじめから keeps the record, and

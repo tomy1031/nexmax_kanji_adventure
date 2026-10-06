@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
+import { AnimatePresence, motion } from 'framer-motion';
 import { RubyText } from '../../components/ui/Ruby';
 import { useGameStore } from '../../store/gameStore';
 import { MOJI_CHAPTERS, isChapterReady, townOf } from '../../data/mojiRoute';
@@ -24,6 +24,7 @@ import { episodeArt } from '../../data/episodeArt';
 import { Feature, isFeatureUnlocked } from '../../data/unlocks';
 import { MULTI_COST, PULL_COST } from '../../lib/gacha';
 import { isVersusConfigured } from '../../lib/versusConfig';
+import { useStill } from '../../hooks/useStill';
 
 /**
  * ステージせんたく — 文字が 消えた 町の 入口 (08 §3.7).
@@ -428,9 +429,7 @@ export const MojiRouteMap = () => {
   const fresh = params.get('new');
   // Back from a replay (?at=): the sheet opens on the episode just played, with no NEW.
   const at = params.get('at');
-  const prefersReduced = useReducedMotion();
-  const settingReduced = useGameStore((s) => s.settings.reducedMotion);
-  const still = Boolean(prefersReduced || settingReduced);
+  const still = useStill();
   // This screen is "home": つづきから, もどる and the end of every episode come back here.
   useEffect(() => setLastArc('moji'), [setLastArc]);
 

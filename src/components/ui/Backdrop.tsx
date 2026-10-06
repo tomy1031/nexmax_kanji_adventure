@@ -1,9 +1,10 @@
 import { useMemo } from 'react';
-import { motion, useReducedMotion } from 'framer-motion';
+import { motion } from 'framer-motion';
 import PictureBook from '../../features/picturebook/PictureBook';
 import { RubyText } from './Ruby';
 import { LogoText } from './LogoText';
 import { useGameStore } from '../../store/gameStore';
+import { useStill } from '../../hooks/useStill';
 
 /**
  * The world behind every menu screen: the moving picture book, soft light
@@ -30,9 +31,7 @@ export const Backdrop = ({
   /** A colour laid over the picture, under the specks (e.g. night on the title). */
   wash?: string;
 }) => {
-  const prefersReduced = useReducedMotion();
-  const settingReduced = useGameStore((st) => st.settings.reducedMotion);
-  const still = Boolean(prefersReduced || settingReduced);
+  const still = useStill();
   // Fixed positions per mount, so the specks do not jump on re-render.
   const specks = useMemo(
     () =>
