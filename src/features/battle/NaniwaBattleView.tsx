@@ -103,6 +103,72 @@ const RoundKey = ({ icon: Icon, label, onClick, style }: { icon: typeof GiCog; l
   </motion.button>
 );
 
+/** One kanji the opponent holds (lib/seals.ts): sealed until it is written in this fight. */
+export interface SealView {
+  id: string;
+  char: string;
+  open: boolean;
+}
+
+/**
+ * 字の ふういん: the kanji the opponent holds, as talismans under its bar.
+ * Sealed, a dark one with a lock; written, it turns to paper with its kanji.
+ * Read at a glance — no words: the fight ends when every talisman is open.
+ * Once they all are, the row folds into one 🔓 a moment later: the kanji the
+ * fight asks again must not stand there to copy (手本なしで 書く).
+ */
+const SealRow = ({ seals, still }: { seals: readonly SealView[]; still: boolean }) => {
+  const left = seals.filter((x) => !x.open).length;
+  const w = Math.min(50, Math.floor(560 / seals.length) - 6);
+  const [folded, setFolded] = useState(false);
+  useEffect(() => {
+    if (left > 0) return;
+    const t = setTimeout(() => setFolded(true), 1600);
+    return () => clearTimeout(t);
+  }, [left]);
+  if (folded)
+    return (
+      <motion.span
+        className="absolute flex items-center justify-center rounded-full border-[0.3cqw] border-[#f2c45a] bg-[#140c06]/85 leading-none"
+        style={{ ...onTop(941 - 24 - 70, 176, 70, 50), fontSize: cq(30) }}
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        role="img"
+        aria-label="あいての 字 ぜんぶ もどった"
+      >
+        🔓
+      </motion.span>
+    );
+  return (
+    <div
+      className="absolute flex items-start justify-end gap-[0.6cqw]"
+      style={onTop(941 - 24 - 600, 176, 600, 80)}
+      role="img"
+      aria-label={left > 0 ? `あいての 字 あと ${left}` : 'あいての 字 ぜんぶ もどった'}
+    >
+      {seals.map((x) => (
+        <motion.span
+          key={x.id}
+          className="relative flex items-center justify-center rounded-[0.6cqw] border-[0.3cqw] leading-none font-black"
+          style={{
+            width: cq(w),
+            height: cq(Math.round(w * 1.35)),
+            fontSize: cq(Math.round(w * 0.72)),
+            ...(x.open
+              ? { background: 'linear-gradient(180deg,#fffaf0,#f1e2bf)', borderColor: '#f2c45a', color: '#24180d', boxShadow: `0 0 ${cq(14)} rgba(255,211,106,0.9)` }
+              : { background: 'linear-gradient(180deg,#3a2350,#1a0f26)', borderColor: '#8a6bb0', color: '#d9c4ff' }),
+          }}
+          initial={false}
+          animate={x.open ? (still ? { opacity: 1 } : { scale: [1.6, 1], rotate: [-12, 0] }) : { scale: 1 }}
+          transition={{ type: 'spring', stiffness: 380, damping: 14 }}
+        >
+          {x.open ? x.char : <span style={{ fontSize: cq(Math.round(w * 0.5)) }}>🔒</span>}
+        </motion.span>
+      ))}
+    </div>
+  );
+};
+
 /** A reading turn as the view needs it (BattleScene, lib/readTurn.ts). */
 export interface ReadTurnView {
   kanji: KanjiData;
@@ -254,6 +320,8 @@ export interface NaniwaBattleViewProps {
   read?: ReadTurnView | null;
   /** Laid over the column, for what only one kind of fight has (たいせん's stamps). */
   overlay?: ReactNode;
+  /** 字の ふういん (lib/seals.ts): the kanji the opponent holds, open once written. */
+  seals?: readonly SealView[];
 }
 
 export const NaniwaBattleView = ({
@@ -297,6 +365,7 @@ export const NaniwaBattleView = ({
   onFlee,
   read = null,
   overlay,
+  seals = [],
 }: NaniwaBattleViewProps) => {
   const fieldPhoto = field ? SCENES[field]?.photo : undefined;
   const colRef = useRef<HTMLDivElement>(null);
@@ -457,6 +526,7 @@ export const NaniwaBattleView = ({
                 />
               ))}
             </div>
+            {seals.length > 0 && <SealRow seals={seals} still={still} />}
           </div>
         </motion.div>
 

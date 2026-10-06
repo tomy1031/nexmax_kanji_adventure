@@ -49,6 +49,7 @@ import { isReadTurn, readDamage, readQuestion } from '../../lib/readTurn';
 import { nextStarGoal } from '../../data/starPerks';
 import { EXP_BOSS_FIRST, EXP_BOSS_REPEAT, EXP_READ, applyLevel, levelInfo, levelOf, ownedCount } from '../../lib/level';
 import { useCompoundsVersion } from '../../data/compounds';
+import { askFrom, sealFloor, strikeSealed } from '../../lib/seals';
 
 /** How long a fight tip stays up. */
 const TIP_MS = 4200;
@@ -115,6 +116,12 @@ interface BattleSceneProps {
   difficulty?: Difficulty;
   /** A line for the first win that closes something (まとめの ボス:「1章 クリア！」). */
   clearLine?: string;
+  /**
+   * 字の ふういん (lib/seals.ts, new route): the kanji the opponent holds — it
+   * asks them first and cannot fall until each is written once. The whole pool
+   * when absent; Hard passes the ones it sized its HP for.
+   */
+  seals?: readonly KanjiData[];
 }
 
 type Outcome = { kind: 'win'; stars: 1 | 2 | 3 } | { kind: 'lose' } | null;
@@ -177,6 +184,7 @@ export const BattleScene = ({
   mastery = false,
   difficulty = 'normal',
   clearLine,
+  seals,
 }: BattleSceneProps) => {
   // The new route's Mojikui fights have their own, bigger tune.
   useBgm(mastery ? 'boss' : 'battle');
@@ -365,8 +373,13 @@ export const BattleScene = ({
   // known one, chosen once per turn (the count moves as the learner writes).
   const askedRef = useRef<Record<string, number>>({});
   const repsNow = (id: string) => useGameStore.getState().progress[id]?.reps ?? 0;
+  // 字の ふういん: the kanji it holds (only ones it can ask), and those written back so far.
+  const [sealIds] = useState<string[]>(() =>
+    mastery && !tutorial ? (seals ?? kanjiPool).filter((k) => kanjiPool.some((p) => p.id === k.id)).map((k) => k.id) : [],
+  );
+  const [broken, setBroken] = useState<string[]>([]);
   const [weakestId, setWeakestId] = useState<string | null>(() =>
-    mastery ? (pickWeakest(kanjiPool, repsNow, {}, null)?.id ?? null) : null,
+    mastery ? (pickWeakest(askFrom(kanjiPool, sealIds, []), repsNow, {}, null)?.id ?? null) : null,
   );
   const target = mastery ? (kanjiPool.find((k) => k.id === weakestId) ?? kanjiPool[0]) : kanjiPool[turn % kanjiPool.length];
   const ownsTarget = target ? progress[target.id]?.obtainedAt != null : false;
@@ -549,7 +562,13 @@ export const BattleScene = ({
         mastery: mastery ? masteryMultiplier(targetStars, clean) * comboMultiplier(nextCombo) * power * star5CleanMul(clean && !lookedFree, star5) : 1,
       });
       setHinted(false);
-      const struck = { n: turn, damage: result.damage, critical };
+      // 字の ふういん: this write gives its kanji back; the opponent keeps a share of HP for each still held.
+      const nextBroken = target && sealIds.includes(target.id) && !broken.includes(target.id) ? [...broken, target.id] : broken;
+      const sealsLeft = sealIds.length - nextBroken.length;
+      const blow = strikeSealed(bossHp, result.damage, sealFloor(stage.boss.hp, sealIds.length, sealsLeft));
+      if (nextBroken !== broken) setBroken(nextBroken);
+      if (blow.held) tellTip('seal');
+      const struck = { n: turn, damage: blow.dealt, critical };
 
       if (mastery) {
         // The light: from the board into Nexmax, then out at the opponent.
@@ -583,26 +602,32 @@ export const BattleScene = ({
         else if (starUp) sfx.star(starUp - 1);
       }
 
-      const nextBossHp = Math.max(0, bossHp - result.damage);
+      const nextBossHp = blow.hp;
       setBossHp(nextBossHp);
 
       // 得意な 武器: the companion's bonus, said out loud so it is seen to count.
       const favoured = result.favoured && individual ? `（とくい ＋${individual.bonus}%）` : '';
+      const dealt = blow.dealt;
       say(
-        (power !== 1 ? `💥 ×${power}！ ` : '') +
-        (critical
-          ? `字(じ)の わざ！ ${result.damage} ダメージ`
-          : starUp
-            ? `★${starUp}に なった！ ${result.damage} ダメージ`
-            : result.perfect
-          ? `かんぺき！ ${result.damage} ダメージ`
-          : hinted
-            ? `かきじゅんを みたので はんぶん。${result.damage} ダメージ`
-          : result.elementMultiplier > 1
-            ? `こうかは ばつぐん！ ${result.damage} ダメージ`
-            : result.elementMultiplier < 1
-              ? `こうかは いまひとつ。${result.damage} ダメージ`
-              : `${result.damage} ダメージ`) + favoured,
+        blow.held
+          ? `🔒 あと ${sealsLeft}字(じ)！ ${dealt} ダメージ`
+          : sealIds.length > 0 && sealsLeft === 0 && nextBroken !== broken && nextBossHp > 0
+            ? `🔓 字(じ)が ぜんぶ もどった！ ${dealt} ダメージ`
+            : (power !== 1 ? `💥 ×${power}！ ` : '') +
+              (critical
+                ? `字(じ)の わざ！ ${dealt} ダメージ`
+                : starUp
+                  ? `★${starUp}に なった！ ${dealt} ダメージ`
+                  : result.perfect
+                    ? `かんぺき！ ${dealt} ダメージ`
+                    : hinted
+                      ? `かきじゅんを みたので はんぶん。${dealt} ダメージ`
+                      : result.elementMultiplier > 1
+                        ? `こうかは ばつぐん！ ${dealt} ダメージ`
+                        : result.elementMultiplier < 1
+                          ? `こうかは いまひとつ。${dealt} ダメージ`
+                          : `${dealt} ダメージ`) +
+              favoured,
       );
 
       if (nextBossHp <= 0) {
@@ -614,7 +639,7 @@ export const BattleScene = ({
 
       if (mastery && target) {
         askedRef.current[target.id] = (askedRef.current[target.id] ?? 0) + 1;
-        setWeakestId(pickWeakest(kanjiPool, repsNow, askedRef.current, target.id)?.id ?? null);
+        setWeakestId(pickWeakest(askFrom(kanjiPool, sealIds, nextBroken), repsNow, askedRef.current, target.id)?.id ?? null);
         // The next turn may be a reading one: the opponent throws a kanji.
         if (isReadTurn(turn + 1, writesPerReadFor(difficulty))) {
           if (!fightSeedRef.current) fightSeedRef.current = Math.floor(Math.random() * 100000) + 1;
@@ -633,6 +658,7 @@ export const BattleScene = ({
       tutorial, totalMistakes, target, progress, recordReview, recordRep, weapon, individual, stage.boss,
       rust, bossHp, playerHp, settle, heroCtl, enemyCtl, turn, stats.attackPct, ownsTarget, hinted,
       mastery, targetStars, kanjiPool, combo, say, difficulty, skillKind, gaugeFull, buffs, companionSay, tellTip, star5,
+      sealIds, broken,
     ],
   );
 
@@ -678,15 +704,19 @@ export const BattleScene = ({
         hinted: false,
         mastery: masteryMultiplier(starsOf(repsNow(readQ.kanji.id)), false),
       });
-      const damage = Math.round(readDamage(clean.damage) * (star5?.readingMul ?? 1));
+      const sealsLeft = sealIds.length - broken.length;
+      // A reading gives no kanji back: the seals still hold.
+      const blow = strikeSealed(bossHp, Math.round(readDamage(clean.damage) * (star5?.readingMul ?? 1)), sealFloor(stage.boss.hp, sealIds.length, sealsLeft));
+      const damage = blow.dealt;
       void heroCtl.start({ x: [0, -12, 0], rotate: [0, -6, 0], transition: { duration: 0.4 } });
       void enemyCtl.start({ x: [0, 14, -8, 0], transition: { duration: 0.45, delay: IMPACT_MS / 1000 } });
       atImpact(() => sfx.hit(), IMPACT_MS - 120);
       atImpact(() => setHit({ n: turn, damage }));
       // The bar follows hpDelay, so it drops with the number.
-      const nextBossHp = Math.max(0, bossHp - damage);
+      const nextBossHp = blow.hp;
       setBossHp(nextBossHp);
-      say(`はね返(かえ)した！ ${damage} ダメージ`);
+      if (blow.held) tellTip('seal');
+      say(blow.held ? `🔒 あと ${sealsLeft}字(じ)！ ${damage} ダメージ` : `はね返(かえ)した！ ${damage} ダメージ`);
       if (nextBossHp <= 0) {
         bossDownRef.current = true;
         settleTimer.current = setTimeout(() => settle('win', totalMistakes, playerHp), WIN_DELAY_MASTERY_MS);
@@ -694,7 +724,7 @@ export const BattleScene = ({
       }
       atImpact(finishRead, IMPACT_MS + 600);
     },
-    [mastery, readQ, readPicked, say, addSlip, gainExp, weapon, individual, stage.boss.element, rust, stats.attackPct, heroCtl, enemyCtl, turn, bossHp, settle, totalMistakes, playerHp, finishRead, combo, skillKind, gaugeFull, star5],
+    [mastery, readQ, readPicked, say, addSlip, gainExp, weapon, individual, stage.boss.element, stage.boss.hp, rust, stats.attackPct, heroCtl, enemyCtl, turn, bossHp, settle, totalMistakes, playerHp, finishRead, combo, skillKind, gaugeFull, star5, sealIds, broken, tellTip],
   );
 
   // What this clear opens. One per stage at most, announced with a line of
@@ -891,6 +921,7 @@ export const BattleScene = ({
           hintFree={hinted || freeLookNow || buffs.freeLooks > 0}
           onFlee={onFlee}
           read={readQ ? { ...readQ, n: turn, picked: readPicked, onPick: handleReadPick, onNext: finishRead } : null}
+          seals={sealIds.map((id) => ({ id, char: kanjiPool.find((k) => k.id === id)?.char ?? '', open: broken.includes(id) }))}
         />
         {overlays}
       </>

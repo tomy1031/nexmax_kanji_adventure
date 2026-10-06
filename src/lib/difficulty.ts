@@ -129,6 +129,8 @@ export interface HardFight {
   patience: number;
   pool: KanjiData[];
   writesPerRead: number;
+  /** 字の ふういん (lib/seals.ts): the kanji its HP was sized for, each to be written once before it falls. */
+  seals: KanjiData[];
 }
 
 /** What a Hard fight is sized from: the story's boss and patience, how many kanji it asks for, and from which. */
@@ -152,6 +154,7 @@ export const hardFightFor = (t: HardTarget, save: LoadoutSave): HardFight => {
     patience: hardPatience(t.patience),
     pool: t.pool,
     writesPerRead: HARD_WRITES_PER_READ,
+    seals: asked,
   };
 };
 
