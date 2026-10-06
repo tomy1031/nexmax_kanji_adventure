@@ -12,6 +12,8 @@ import { GachaCard } from './GachaCard';
 import { StarBurst, StarFall } from './Sparkles';
 import { star5PowerOf } from '../../lib/star5Power';
 import * as sfx from '../../lib/sfx';
+import { useGameStore } from '../../store/gameStore';
+import { getKanjiByChar } from '../../lib/kanjiDb';
 
 /**
  * One card comes out (docs/design/17 §2, 18 §3): from the book it comes to
@@ -82,6 +84,11 @@ export const KanjiReveal = ({
   // The card's width: big on a phone, not huge on a tablet.
   const [cardW] = useState(() => Math.round(Math.min(window.innerWidth * 0.56, window.innerHeight * 0.3, 240)));
   const line = linesFor(card).start;
+  const english = useGameStore((s) => s.settings.english);
+  const meaning = [...k.kanji]
+    .map((c) => getKanjiByChar(c)?.meanings[0])
+    .filter((m) => m != null)
+    .join(' + ');
   // なぞって よぶ: tracing until it is written, or おまかせ (it writes itself).
   const [auto, setAuto] = useState(!trace);
   const [traced, setTraced] = useState(false);
@@ -100,7 +107,8 @@ export const KanjiReveal = ({
     const after: Partial<Record<Phase, [Phase, number]>> = {
       enter: ['turn', arrived ? 200 : short ? 300 : 520],
       turn: ['write', 360],
-      read: short ? ['burst', 420] : ['shadow', 650],
+      // A beat longer than the reading alone: its meaning (EN) is under it.
+      read: short ? ['burst', 420] : ['shadow', 1000],
       shadow: ['burst', card.rarity === 5 ? 1300 : 900],
       burst: ['entry', 340],
     };
@@ -280,6 +288,12 @@ export const KanjiReveal = ({
               transition={{ duration: 0.3 }}
             >
               {k.reading}
+              {/* What the character means, in English (on by default): a reason to care about it before reading it. */}
+              {english && meaning && (
+                <span lang="en" className="block text-base font-bold text-[#ffe9a8]">
+                  {meaning}
+                </span>
+              )}
             </motion.p>
           )}
         </motion.div>
