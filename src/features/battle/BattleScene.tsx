@@ -391,6 +391,7 @@ export const BattleScene = ({
     mastery && !tutorial ? (seals ?? kanjiPool).filter((k) => kanjiPool.some((p) => p.id === k.id)).map((k) => k.id) : [],
   );
   const [broken, setBroken] = useState<string[]>([]);
+  const [freed, setFreed] = useState<{ n: number; ruby: string } | null>(null);
   const [weakestId, setWeakestId] = useState<string | null>(() =>
     mastery ? (pickWeakest(askFrom(kanjiPool, sealIds, []), repsNow, {}, null)?.id ?? null) : null,
   );
@@ -609,7 +610,15 @@ export const BattleScene = ({
       const nextBroken = target && sealIds.includes(target.id) && !broken.includes(target.id) ? [...broken, target.id] : broken;
       const sealsLeft = sealIds.length - nextBroken.length;
       const blow = strikeSealed(bossHp, result.damage, sealFloor(stage.boss.hp, sealIds.length, sealsLeft));
-      if (nextBroken !== broken) setBroken(nextBroken);
+      if (nextBroken !== broken) {
+        // The kanji comes back out of the opponent when the light lands, flies to its talisman, and it opens.
+        const ruby = target ? kanjiRuby(target) : '';
+        const n = turn;
+        atImpact(() => {
+          setBroken(nextBroken);
+          setFreed({ n, ruby });
+        });
+      }
       if (blow.held) tellTip('seal');
       const struck = { n: turn, damage: blow.dealt, critical };
 
@@ -994,6 +1003,7 @@ export const BattleScene = ({
           onFlee={onFlee}
           read={readQ ? { ...readQ, n: turn, picked: readPicked, onPick: handleReadPick, onNext: finishRead } : null}
           seals={sealIds.map((id) => ({ id, char: kanjiPool.find((k) => k.id === id)?.char ?? '', open: broken.includes(id) }))}
+          freed={freed}
           buffs={buffViews}
         />
         {overlays}
