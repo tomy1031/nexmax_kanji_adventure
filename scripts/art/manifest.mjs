@@ -1035,6 +1035,10 @@ const GACHA_ART = [
   { id: 'gacha_book', group: 'gacha', prio: 'A', out: 'img/gacha/book.webp', kind: 'prop', bgmode: 'white', refs: ['public/img/gacha/machine.webp'], style: ['GACHA_PROP'],
     diff: 'The item: a big magical book of words standing open on an ornate polished brass lectern with small gears and rivets: a thick antique book with a deep navy leather cover and gold corner pieces, open in the middle, its cream pages glowing with warm golden light that spills upward, three blank glowing cards floating up out of the pages, little stars and sparkles around it. The pages are blank — no letters, no writing, no symbols. Chunky, magical, inviting.',
     used: '地図の ガチャの 入口・ひく ときの 本', note: '白い 背景を import.mjs が 切り抜く（prop）' },
+  // 引く 演出（2026-10-06「引く時の演出は欲しい」）: 閉じた 本の しおりの ひもを 引くと ひらく。ひもは 画面で 描く。
+  { id: 'gacha_book_closed', group: 'gacha', prio: 'A', out: 'img/gacha/book_closed.webp', kind: 'prop', bgmode: 'white', refs: ['public/img/gacha/book.webp'], style: ['GACHA_PROP'],
+    diff: 'The item: exactly the same big magical book and ornate polished brass lectern as in the reference image, from the same angle and at the same size, but the book is CLOSED: its thick deep navy leather cover with gold corner pieces lies shut on the lectern, a round golden clasp with a small blue gem on the front edge, a faint warm golden glow leaking from between the pages, a few sparkles. No ribbon, no bookmark, no letters, no symbols.',
+    used: 'ひく 前の 本（ひもを 引くと ひらく）', note: '白い 背景を import.mjs が 切り抜く（prop）' },
   ...[
     [3, 'silver', 'pale silver and soft steel-blue pearl enamel with polished silver filigree'],
     [4, 'gold', 'rich glossy gold enamel with deep navy accents and polished gold filigree'],

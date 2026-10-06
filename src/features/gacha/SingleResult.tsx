@@ -2,8 +2,8 @@ import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { RubyText } from '../../components/ui/Ruby';
 import { NexmaxSays } from '../../components/ui/Chrome';
-import { assetPath } from '../../lib/assetPath';
 import { kanjiOf } from '../../data/charKanji';
+import { GachaCard } from './GachaCard';
 import type { Individual } from '../../data/individuals';
 import { SKILL_INFO, SKILL_OF, skillEffect } from '../../lib/companionSkill';
 import { star5PowerOf } from '../../lib/star5Power';
@@ -105,7 +105,9 @@ export const SingleResult = ({ r, showFurigana, still, onClose }: { r: SinglePul
           <span className="absolute -top-3 -left-2 rotate-[-10deg] rounded-lg border-2 border-white bg-[#e2453c] px-2 py-0.5 text-sm font-black text-white shadow">NEW!</span>
         )}
         <div className="flex items-center gap-3">
-          <img src={assetPath(r.card.art)} alt="" aria-hidden className="h-32 w-28 shrink-0 object-contain" />
+          <div className="shrink-0">
+            <GachaCard card={r.card} face="front" width={100} showFurigana={showFurigana} still={still} />
+          </div>
           <div className="min-w-0 flex-1">
             <p aria-label={`★${r.card.rarity}`} className="text-lg leading-none" style={{ color: r.card.rarity === 5 ? '#d0567a' : '#e8a317' }}>
               {'★'.repeat(r.card.rarity)}
