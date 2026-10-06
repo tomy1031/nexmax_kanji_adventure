@@ -116,9 +116,20 @@ export const NovelScene = ({ script, cast, onFinish, chapter, renderText, speech
   const [shown, setShown] = useState(-1);
   const still = useStill();
   useEffect(() => stopSpeaking, []);
+  // 🔊 じどう (2026-10-07「ちゃんと 読める 人は 少ない…楽しく できる 工夫」): each line read aloud as it comes.
+  const autoVoice = useGameStore((s) => s.autoVoice);
+  const setAutoVoice = useGameStore((s) => s.setAutoVoice);
 
   const castById = useMemo(() => new Map(cast.map((c) => [c.id, c])), [cast]);
   const line = script.lines[index];
+  // じどう: say the line once it is on screen; the next line cuts the last one off (speak cancels first).
+  useEffect(() => {
+    if (!autoVoice || !canSpeak()) return;
+    const t = (speechFor ? speechFor(line.text) : line.text) ?? '';
+    if (t) speak(t);
+    // Once per line, not again when the words or the English are opened.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [index, autoVoice]);
 
   // Fetch every portrait this script will show, so a change of expression
   // never leaves an empty gap while the picture loads.
@@ -482,6 +493,24 @@ export const NovelScene = ({ script, cast, onFinish, chapter, renderText, speech
                       }}
                     >
                       🔊 よみあげ
+                    </button>
+                  )}
+                  {canSpeak() && (
+                    // Every line read aloud as it comes: the story followed by ear.
+                    <button
+                      type="button"
+                      aria-pressed={autoVoice}
+                      aria-label="じどうで よみあげ"
+                      className={tone.pill}
+                      style={autoVoice ? { background: '#f2c45a', color: '#2a1a0c' } : undefined}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        // On: the line is said at once (the effect above); off: it stops.
+                        if (autoVoice) stopSpeaking();
+                        setAutoVoice(!autoVoice);
+                      }}
+                    >
+                      {autoVoice ? '🔊 じどう ON' : '🔈 じどう'}
                     </button>
                   )}
                   {line.en && (
