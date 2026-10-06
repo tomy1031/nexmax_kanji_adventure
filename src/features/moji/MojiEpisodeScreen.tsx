@@ -77,6 +77,9 @@ const StarRow = ({ reps, size = 14 }: { reps: number; size?: number }) => {
 };
 
 /** じゅんび: the episode's kanji with their stars, and the fight. */
+/** The difficulty a link asks for (?mode=), ふつう when it asks for none. */
+const modeOf = (m: string | null): Difficulty => (m === 'easy' || m === 'hard' ? m : 'normal');
+
 const ReadyScreen = ({
   ep,
   kanji,
@@ -105,7 +108,7 @@ const ReadyScreen = ({
   /** The story again, for an episode already cleared (it opens here, not on the story). */
   onStory?: () => void;
   difficulty?: Difficulty;
-  /** ふつう ⇄ 👹 ハード, offered once the episode is cleared (lib/difficulty.ts). */
+  /** 🌱 やさしい ・ ふつう ・ 👹 ハード, open from the first fight (lib/difficulty.ts). */
   onDifficulty?: (d: Difficulty) => void;
   /** Hard's opponent as it stands now — it grows with the player. */
   hard?: HardFight;
@@ -130,7 +133,11 @@ const ReadyScreen = ({
     : weakest < 3
       ? pickWeakest(kanji, (id) => progress[id]?.reps ?? 0, {}, null)?.id
       : undefined;
+  // What has been won here: a higher win counts for the lower difficulties (2026-10-07).
   const hardWon = useGameStore((s) => s.hardStages.includes(ep.id));
+  const clearedHere = useGameStore((s) => s.clearedStages.includes(ep.id));
+  const easyOnly = useGameStore((s) => (s.easyStages ?? []).includes(ep.id));
+  const won: Record<Difficulty, boolean> = { easy: clearedHere || hardWon, normal: (clearedHere && !easyOnly) || hardWon, hard: hardWon };
   // What the stars are for and how the fight goes: told one at a time, a rule a
   // visit (2026-10-04「じゅんびの 説明も 1つずつ」, data/fightRules.ts); the
   // whole of it a tap away. Reading it all counts as told.
@@ -178,20 +185,20 @@ const ReadyScreen = ({
               </p>
               {onDifficulty && (
                 <div className="flex shrink-0 overflow-hidden rounded-full border-2 border-[#caa468] text-[11px] font-black" role="group" aria-label="むずかしさ">
-                  {(['normal', 'hard'] as const).map((d) => (
+                  {(['easy', 'normal', 'hard'] as const).map((d) => (
                     <button
                       key={d}
                       type="button"
                       aria-pressed={difficulty === d}
                       onClick={() => onDifficulty(d)}
-                      className="px-2 leading-[1.9]"
+                      className="px-1.5 leading-[1.9]"
                       style={
                         difficulty === d
-                          ? { background: d === 'hard' ? 'var(--color-danger)' : '#caa468', color: '#fff' }
+                          ? { background: d === 'hard' ? 'var(--color-danger)' : d === 'easy' ? '#4f9a3c' : '#caa468', color: '#fff' }
                           : { background: 'rgba(255,255,255,0.7)', color: 'var(--ink-2)' }
                       }
                     >
-                      {d === 'hard' ? `👹 ハード${hardWon ? ' ✓' : ''}` : 'ふつう'}
+                      {`${d === 'hard' ? '👹ハード' : d === 'easy' ? '🌱やさしい' : 'ふつう'}${won[d] ? '✓' : ''}`}
                     </button>
                   ))}
                 </div>
@@ -218,7 +225,9 @@ const ReadyScreen = ({
                 {isHard
                   ? (hardNote ??
                     (hard.pool.length > kanji.length ? '前(まえ)の 話(はなし)の 字(じ)も 出(で)る' : '書(か)く たびに 読(よ)む ターン'))
-                  : '手本(てほん)なしで 書(か)く'}
+                  : difficulty === 'easy'
+                    ? '手本(てほん)を 見(み)て 書(か)く・ミス ＋2'
+                    : '手本(てほん)なしで 書(か)く'}
               </RubyText>
             </p>
           </div>
@@ -392,13 +401,10 @@ const EpisodePlayer = ({ id }: { id: string }) => {
   const [idx, setIdx] = useState(0);
   const [practice, setPractice] = useState<KanjiData | null>(null);
   const [battleKey, setBattleKey] = useState(0);
-  // ふつう or 👹 ハード (lib/difficulty.ts): Hard once the episode is cleared.
-  // ?mode=hard keeps it across a trip to 漢字やさん.
-  const hardOpen = isHardOpen(ep.id, cleared);
-  const [difficulty, setDifficulty] = useState<Difficulty>(() =>
-    params.get('mode') === 'hard' && isHardOpen(ep.id, useGameStore.getState().clearedStages) ? 'hard' : 'normal',
-  );
-  const hard = hardOpen && difficulty === 'hard';
+  // やさしい・ふつう・👹 ハード (lib/difficulty.ts), open from the first fight.
+  // ?mode= keeps it across a trip to 漢字やさん.
+  const [difficulty, setDifficulty] = useState<Difficulty>(() => modeOf(params.get('mode')));
+  const hard = difficulty === 'hard';
   // Hard's opponent as it stands — じゅんび shows it, and it grows as the player does.
   const weapons = useGameStore((s) => s.weapons);
   const equippedWeapon = useGameStore((s) => s.equippedWeapon);
@@ -411,8 +417,12 @@ const EpisodePlayer = ({ id }: { id: string }) => {
   );
   // …and fixed as the fight starts: writing mid-fight must not move it.
   const [fight, setFight] = useState<HardFight | null>(null);
+  // A Hard win on an episode already cleared is a rematch: back to じゅんび, not the story's end.
+  const [rematch, setRematch] = useState(false);
   const startFight = () => {
-    setFight(hard ? hardFight(ep, useGameStore.getState()) : null);
+    const s = useGameStore.getState();
+    setFight(hard ? hardFight(ep, s) : null);
+    setRematch(isHardOpen(ep.id, s.clearedStages));
     setBattleKey((n) => n + 1);
   };
 
@@ -429,7 +439,7 @@ const EpisodePlayer = ({ id }: { id: string }) => {
   const back = params.get('back');
   const leave = () => navigate(back?.startsWith('/') ? back : '/map/moji');
   const toReady = () => setPhase('ready');
-  const forgeHere = `/forge?back=${encodeURIComponent(`/moji/${ep.id}?at=ready${hard ? '&mode=hard' : ''}`)}`;
+  const forgeHere = `/forge?back=${encodeURIComponent(`/moji/${ep.id}?at=ready${difficulty !== 'normal' ? `&mode=${difficulty}` : ''}`)}`;
 
   // The win records the clear (BattleScene); the story's end moves on.
   const finish = () => {
@@ -501,8 +511,8 @@ const EpisodePlayer = ({ id }: { id: string }) => {
             }}
             onForge={isForgeOpen(cleared) && canForge(progress) ? () => navigate(forgeHere) : undefined}
             onStory={cleared.includes(ep.id) ? () => setPhase('intro') : undefined}
-            difficulty={hard ? 'hard' : 'normal'}
-            onDifficulty={hardOpen ? setDifficulty : undefined}
+            difficulty={difficulty}
+            onDifficulty={setDifficulty}
             hard={hardNow}
           />
         );
@@ -539,12 +549,12 @@ const EpisodePlayer = ({ id }: { id: string }) => {
             kanjiPool={fight ? fight.pool : kanji}
             patience={fight ? fight.patience : basePatience(ep.order)}
             seals={fight?.seals}
-            difficulty={fight ? 'hard' : 'normal'}
+            difficulty={fight ? 'hard' : difficulty === 'easy' ? 'easy' : 'normal'}
             mastery
             onFinish={leave}
             onFlee={toReady}
-            // Hard is a rematch: back to じゅんび, not through the story again.
-            onNext={fight ? toReady : () => setPhase('outro')}
+            // Hard on a cleared episode is a rematch: back to じゅんび, not through the story again.
+            onNext={fight && rematch ? toReady : () => setPhase('outro')}
             onRetry={startFight}
             onPractice={toReady}
             onForge={() => navigate(forgeHere)}
@@ -593,11 +603,8 @@ const FinalePlayer = ({ id }: { id: string }) => {
   const [battleKey, setBattleKey] = useState(0);
   const shown = useMemo(() => finalePool(f, progress), [f, progress]);
 
-  const hardOpen = isHardOpen(f.id, cleared);
-  const [difficulty, setDifficulty] = useState<Difficulty>(() =>
-    params.get('mode') === 'hard' && isHardOpen(f.id, useGameStore.getState().clearedStages) ? 'hard' : 'normal',
-  );
-  const hard = hardOpen && difficulty === 'hard';
+  const [difficulty, setDifficulty] = useState<Difficulty>(() => modeOf(params.get('mode')));
+  const hard = difficulty === 'hard';
   const weapons = useGameStore((s) => s.weapons);
   const equippedWeapon = useGameStore((s) => s.equippedWeapon);
   const activeIndividual = useGameStore((s) => s.activeIndividual);
@@ -610,9 +617,11 @@ const FinalePlayer = ({ id }: { id: string }) => {
   // What the fight asks, fixed as it starts: writing mid-fight must not move it.
   const [fight, setFight] = useState<HardFight | null>(null);
   const [pool, setPool] = useState<KanjiData[]>(shown);
+  const [rematch, setRematch] = useState(false);
   const startFight = () => {
     const s = useGameStore.getState();
     setFight(hard ? hardFinaleFight(f, s) : null);
+    setRematch(isHardOpen(f.id, s.clearedStages));
     setPool(finalePool(f, s.progress));
     setBattleKey((n) => n + 1);
   };
@@ -629,7 +638,7 @@ const FinalePlayer = ({ id }: { id: string }) => {
   const back = params.get('back');
   const leave = () => navigate(back?.startsWith('/') ? back : '/map/moji');
   const toReady = () => setPhase('ready');
-  const forgeHere = `/forge?back=${encodeURIComponent(`/moji/${f.id}?at=ready${hard ? '&mode=hard' : ''}`)}`;
+  const forgeHere = `/forge?back=${encodeURIComponent(`/moji/${f.id}?at=ready${difficulty !== 'normal' ? `&mode=${difficulty}` : ''}`)}`;
   const finish = () => {
     const path = afterEpisodePath(f.id, useGameStore.getState().clearedStages);
     if (path) navigate(path);
@@ -659,8 +668,8 @@ const FinalePlayer = ({ id }: { id: string }) => {
             }}
             onForge={isForgeOpen(cleared) && canForge(progress) ? () => navigate(forgeHere) : undefined}
             onStory={script && cleared.includes(f.id) ? () => setPhase('intro') : undefined}
-            difficulty={hard ? 'hard' : 'normal'}
-            onDifficulty={hardOpen ? setDifficulty : undefined}
+            difficulty={difficulty}
+            onDifficulty={setDifficulty}
             hard={hardNow}
             heading={`👾 ${f.boss.name}が ねらう 字(じ)`}
             hardNote={`${chapter.order}章(しょう)の 字(じ)が ぜんぶ 出(で)る`}
@@ -693,12 +702,12 @@ const FinalePlayer = ({ id }: { id: string }) => {
             kanjiPool={fight ? fight.pool : pool}
             patience={fight ? fight.patience : f.patience}
             seals={fight?.seals}
-            difficulty={fight ? 'hard' : 'normal'}
+            difficulty={fight ? 'hard' : difficulty === 'easy' ? 'easy' : 'normal'}
             mastery
             clearLine={`${chapter.order}章(しょう)「${chapter.title}」 クリア！`}
             onFinish={leave}
             onFlee={toReady}
-            onNext={fight ? toReady : script ? () => setPhase('outro') : finish}
+            onNext={fight && rematch ? toReady : script ? () => setPhase('outro') : finish}
             onRetry={startFight}
             onPractice={toReady}
             onForge={() => navigate(forgeHere)}

@@ -37,7 +37,7 @@ import { assetPath } from '../../lib/assetPath';
 import { GameIcon } from '../../components/ui/GameIcon';
 import { Feature, featuresUnlockedBy, FEATURE_INTRO, isFeatureUnlocked } from '../../data/unlocks';
 import { HARD_BONUS_GEMS, PERFECT_BONUS_GEMS } from '../../data/clearRewards';
-import { writesPerReadFor, type Difficulty } from '../../lib/difficulty';
+import { EASY_PATIENCE_ADD, writesPerReadFor, type Difficulty } from '../../lib/difficulty';
 import PictureBook from '../picturebook/PictureBook';
 import EnemyArt from './EnemyArt';
 import { MASTERY_REPS, comboMultiplier, masteryMultiplier, pickWeakest, starsOf, type Stars } from '../../lib/mastery';
@@ -111,7 +111,8 @@ interface BattleSceneProps {
   /**
    * Hard (lib/difficulty.ts): the caller sizes the opponent, its patience
    * and the kanji; here it reads after every write, and the first Hard win
-   * pays its bonus. New route only.
+   * pays its bonus. やさしい: the model shows faintly, two more slips pass,
+   * and a write earns no ★ (it was traced). New route only.
    */
   difficulty?: Difficulty;
   /** A line for the first win that closes something (まとめの ボス:「1章 クリア！」). */
@@ -131,7 +132,7 @@ type Outcome = { kind: 'win'; stars: 1 | 2 | 3 } | { kind: 'lose' } | null;
  * fight: a band sweeps across with the opponent's name, a drum and a sweep.
  * It never blocks input for long (1.6 s) and taps go straight through.
  */
-const BattleIntro = ({ bossName, hard = false, showFurigana }: { bossName: string; hard?: boolean; showFurigana: boolean }) => {
+const BattleIntro = ({ bossName, difficulty = 'normal', showFurigana }: { bossName: string; difficulty?: Difficulty; showFurigana: boolean }) => {
   const [on, setOn] = useState(true);
   useEffect(() => {
     sfx.battleStart();
@@ -160,7 +161,7 @@ const BattleIntro = ({ bossName, hard = false, showFurigana }: { bossName: strin
               たたかい 開始(かいし)！
             </LogoText>
             <p className="g-onbg text-sm font-black">
-              <RubyText showFurigana={showFurigana}>{`${hard ? '👹 ハード ・ ' : ''}あいて：${bossName}`}</RubyText>
+              <RubyText showFurigana={showFurigana}>{`${difficulty === 'hard' ? '👹 ハード ・ ' : difficulty === 'easy' ? '🌱 やさしい ・ ' : ''}あいて：${bossName}`}</RubyText>
             </p>
           </motion.div>
         </motion.div>
@@ -234,7 +235,8 @@ export const BattleScene = ({
     );
     return withStar5Stats(mastery ? applyLevel(gear, level) : gear, star5);
   }, [equippedGear, tutorial, mastery, level, star5]);
-  const patience = basePatienceValue + stats.patience;
+  const easy = mastery && difficulty === 'easy';
+  const patience = basePatienceValue + stats.patience + (easy ? EASY_PATIENCE_ADD : 0);
 
   // The forge's words beyond the core arrive just after start (data/compounds.ts): read again then.
   const wordsV = useCompoundsVersion();
@@ -340,6 +342,7 @@ export const BattleScene = ({
   });
   const markPerfect = useGameStore((s) => s.markPerfect);
   const markHard = useGameStore((s) => s.markHard);
+  const markTier = useGameStore((s) => s.markTier);
 
   const settledRef = useRef(false);
   // The boss is down and the win is on its way (settleTimer). Nothing the
@@ -423,12 +426,14 @@ export const BattleScene = ({
         granted = grantIndividual(stage.grants) ? stage.grants : null;
       }
       if (gems) addGems(gems);
-      // かんぺき (★3, no mistake): once per stage, a little more (09 §3 B).
-      const perfect = mastery && stars === 3 && markPerfect(stage.id);
+      // かんぺき (★3, no mistake): once per stage, a little more (09 §3 B). Not on やさしい: the model was there.
+      const perfect = mastery && !easy && stars === 3 && markPerfect(stage.id);
       if (perfect) addGems(PERFECT_BONUS_GEMS);
       // The first Hard win: once per stage (09 §3 D).
       const hard = mastery && difficulty === 'hard' && markHard(stage.id);
       if (hard) addGems(HARD_BONUS_GEMS);
+      // Which difficulty it was won on: a higher win counts for the lower ones.
+      if (mastery) markTier(stage.id, difficulty);
       clearStage(stage.id);
       setRewards({
         gems: gems + (perfect ? PERFECT_BONUS_GEMS : 0) + (hard ? HARD_BONUS_GEMS : 0),
@@ -437,7 +442,7 @@ export const BattleScene = ({
         hard,
       });
     },
-    [tutorial, alreadyCleared, stage, addGems, clearStage, grantIndividual, stats.maxHp, mastery, gainExp, markPerfect, difficulty, markHard, individual, bondFromWin, companionSay],
+    [tutorial, alreadyCleared, stage, addGems, clearStage, grantIndividual, stats.maxHp, mastery, gainExp, markPerfect, difficulty, markHard, markTier, easy, individual, bondFromWin, companionSay],
   );
 
   /**
@@ -522,7 +527,10 @@ export const BattleScene = ({
       // 0話, where 一 was obtained minutes ago and three quick writes would
       // push its first review a week out.
       let starUp: Stars | null = null;
-      if (!tutorial && target && progress[target.id]?.obtainedAt != null) {
+      // やさしい traces the model: not a review, not a write from memory.
+      if (easy) {
+        // nothing to record
+      } else if (!tutorial && target && progress[target.id]?.obtainedAt != null) {
         recordReview(target.id, mistakes);
       } else if (mastery && target && mistakes === 0 && !hinted && !lookedFree) {
         // Written from memory without a slip: that is a write, and it counts.
@@ -658,7 +666,7 @@ export const BattleScene = ({
       tutorial, totalMistakes, target, progress, recordReview, recordRep, weapon, individual, stage.boss,
       rust, bossHp, playerHp, settle, heroCtl, enemyCtl, turn, stats.attackPct, ownsTarget, hinted,
       mastery, targetStars, kanjiPool, combo, say, difficulty, skillKind, gaugeFull, buffs, companionSay, tellTip, star5,
-      sealIds, broken,
+      sealIds, broken, easy,
     ],
   );
 
@@ -800,7 +808,8 @@ export const BattleScene = ({
               opened={outcome.kind === 'win' ? opened : []}
               tutorial={tutorial}
               hasNext={!!onNext}
-              nextLabel={difficulty === 'hard' ? 'じゅんびに もどる' : undefined}
+              // A Hard rematch goes back to じゅんび; a first win (on any difficulty) goes on with the story.
+              nextLabel={difficulty === 'hard' && clearedAtStart ? 'じゅんびに もどる' : undefined}
               // Hard grows with the player: writing more does not shrink it, fewer slips do.
               loseHint={difficulty === 'hard' ? 'ハードは ミスを へらすと 勝(か)てる。ゆっくり 書(か)こう。' : undefined}
               onNext={() => onNext?.()}
@@ -869,7 +878,7 @@ export const BattleScene = ({
   if (mastery) {
     return (
       <>
-        <BattleIntro bossName={stage.boss.name} hard={difficulty === 'hard'} showFurigana={showFurigana} />
+        <BattleIntro bossName={stage.boss.name} difficulty={difficulty} showFurigana={showFurigana} />
         <NaniwaBattleView
           bossName={stage.boss.name}
           bossImg={stage.boss.img}
@@ -891,6 +900,7 @@ export const BattleScene = ({
               char={target.char}
               size={px}
               quizMode
+              showSample={easy}
               surface="ink"
               onCorrectStroke={(d) => onStroke(d, px)}
               onMistake={handleMistake}
@@ -907,7 +917,7 @@ export const BattleScene = ({
           flash={flash}
           flashKey={flashNo}
           tip={tip}
-          idle={turn === 0 && !flash ? '💡 書(か)いた 字(じ)の 光(ひかり)で こうげき！' : null}
+          idle={turn === 0 && !flash ? (easy ? '🌱 うすい 字(じ)を なぞって こうげき！' : '💡 書(か)いた 字(じ)の 光(ひかり)で こうげき！') : null}
           hit={hit}
           combo={combo}
           still={still}

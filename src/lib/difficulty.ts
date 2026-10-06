@@ -25,7 +25,17 @@ import { WRITES_PER_READ } from './readTurn';
  * throws a kanji to read after every write. New-route episodes only.
  */
 
-export type Difficulty = 'normal' | 'hard';
+/**
+ * やさしい (2026-10-07「hardを クリアすれば easy normal分も クリア扱い」): the
+ * model shows faintly and the opponent lets two more slips pass. It is still
+ * writing — every kanji, as everywhere — but tracing, so it earns no ★ and no
+ * かんぺき. All three are open from the first fight; a win counts for the
+ * difficulties under it (gameStore easyStages, hardStages).
+ */
+export type Difficulty = 'easy' | 'normal' | 'hard';
+
+/** Extra slips やさしい lets pass. */
+export const EASY_PATIENCE_ADD = 2;
 
 /** Clean writes per kanji asked, at today's strength. */
 export const HARD_WRITES_PER_KANJI = 2.5;
@@ -121,7 +131,11 @@ export const hardPool = (ep: MojiEpisode): KanjiData[] =>
     .map((c) => getKanjiByChar(c))
     .filter((k) => k != null);
 
-/** Hard opens with the episode's first clear. */
+/**
+ * Whether the episode is cleared. Hard opened here until 2026-10-07; now every
+ * difficulty is open from the first fight, and this says whether a Hard win
+ * is a rematch (back to じゅんび) or the story's own fight (on to its end).
+ */
 export const isHardOpen = (episodeId: string, cleared: readonly string[]): boolean => cleared.includes(episodeId);
 
 export interface HardFight {

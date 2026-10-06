@@ -85,6 +85,12 @@ export interface GameState {
   perfectStages: string[];
   /** Stages won once in Hard (lib/difficulty.ts): its bonus is paid once. */
   hardStages: string[];
+  /**
+   * Stages won so far only on やさしい (lib/difficulty.ts): cleared — the story
+   * goes on — but not yet without the model. A win on ふつう or ハード takes
+   * a stage off (the higher win counts for the lower, 2026-10-07).
+   */
+  easyStages: string[];
   /** The fight's rules told one at a time (data/fightRules.ts FIGHT_TIPS), each once. */
   tipsSeen: string[];
   /** Nexmax individuals owned, by id. */
@@ -167,6 +173,8 @@ export interface GameActions {
   markPerfect: (stageId: string) => boolean;
   /** Records a Hard win. True only the first time for that stage. */
   markHard: (stageId: string) => boolean;
+  /** Records which difficulty a win was on (easyStages). Call before clearStage. */
+  markTier: (stageId: string, difficulty: 'easy' | 'normal' | 'hard') => void;
   addGems: (n: number) => void;
   spendGems: (n: number) => boolean;
   grantIndividual: (id: string) => boolean;
@@ -227,6 +235,7 @@ const initialState: GameState = {
   clearedStages: [],
   perfectStages: [],
   hardStages: [],
+  easyStages: [],
   tipsSeen: [],
   individuals: [],
   activeIndividual: null,
@@ -363,6 +372,13 @@ export const useGameStore = create<GameState & GameActions>()(
         set((s) => ({ hardStages: [...s.hardStages, stageId] }));
         return true;
       },
+
+      markTier: (stageId, difficulty) =>
+        set((s) => {
+          const easy = s.easyStages ?? [];
+          if (difficulty === 'easy') return s.clearedStages.includes(stageId) || easy.includes(stageId) ? {} : { easyStages: [...easy, stageId] };
+          return easy.includes(stageId) ? { easyStages: easy.filter((id) => id !== stageId) } : {};
+        }),
 
       clearStage: (stageId) => {
         get().rollDailyIfNeeded();

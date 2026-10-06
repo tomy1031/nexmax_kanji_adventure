@@ -327,6 +327,7 @@ const FinaleCard = ({
   /** Tapped while locked: what opens it. */
   onLocked: (why: string) => void;
 }) => {
+  const easyOnly = useGameStore((s) => s.easyStages ?? []);
   const f = finaleOf(chapterId);
   if (!f || !isFinaleReady(f)) return null;
   const done = cleared.includes(f.id);
@@ -352,6 +353,11 @@ const FinaleCard = ({
           {perfect.includes(f.id) && (
             <span className="ml-1" role="img" aria-label="かんぺき">
               👑
+            </span>
+          )}
+          {easyOnly.includes(f.id) && (
+            <span className="ml-1" role="img" aria-label="やさしい クリア">
+              🌱
             </span>
           )}
           {hard.includes(f.id) && (
@@ -465,6 +471,7 @@ export const MojiRouteMap = () => {
   const startPath = useGameStore((s) => s.startPath);
   const perfect = useGameStore((s) => s.perfectStages);
   const hard = useGameStore((s) => s.hardStages);
+  const easyOnly = useGameStore((s) => s.easyStages ?? []);
   const next = nextUpWithFinale(cleared, startPath);
   // The episode the つづき bubble points at: fetch its pictures while the player looks at the map.
   useEffect(() => {
@@ -780,6 +787,12 @@ export const MojiRouteMap = () => {
                                         {perfect.includes(ep.id) && (
                                           <span className="ml-1" role="img" aria-label="かんぺき">
                                             👑
+                                          </span>
+                                        )}
+                                        {/* Won so far only on やさしい: a sprout — ふつう is still to win. */}
+                                        {easyOnly.includes(ep.id) && (
+                                          <span className="ml-1" role="img" aria-label="やさしい クリア">
+                                            🌱
                                           </span>
                                         )}
                                         {/* Won on Hard (09 §4): the demon's mark. */}
