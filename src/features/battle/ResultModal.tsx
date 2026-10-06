@@ -60,6 +60,7 @@ export const ResultModal = ({
   hasNext,
   nextLabel,
   loseHint,
+  easyWin = false,
   onNext,
   onStages,
   onRetry,
@@ -90,6 +91,8 @@ export const ResultModal = ({
   nextLabel?: string;
   /** What to do about a loss, when writing more is not the answer (Hard: fewer slips). */
   loseHint?: string;
+  /** Won on やさしい (with the model): the next step is ふつう, without it. */
+  easyWin?: boolean;
   onNext: () => void;
   onStages: () => void;
   onRetry: () => void;
@@ -321,6 +324,12 @@ export const ResultModal = ({
         {hard && (
           <p className="mt-2 text-sm font-black" style={{ color: 'var(--color-danger)' }}>
             <RubyText showFurigana={showFurigana}>👹 ハードに はじめて 勝(か)った！</RubyText>
+          </p>
+        )}
+        {win && easyWin && (
+          // The way up: the same fight without the model.
+          <p className="mt-2 text-sm font-black" style={{ color: '#2f7d4a' }}>
+            <RubyText showFurigana={showFurigana}>🌱 つぎは「ふつう」で、手本(てほん) なしで 書(か)きましょう！</RubyText>
           </p>
         )}
         {milestone && (

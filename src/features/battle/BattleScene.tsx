@@ -854,6 +854,7 @@ export const BattleScene = ({
               gems={rewards.gems}
               perfect={rewards.perfect}
               hard={rewards.hard}
+              easyWin={easy}
               milestone={outcome.kind === 'win' && !clearedAtStart && !tutorial ? clearLine : undefined}
               // Gems show on the new route once the gacha gives them a use (1章 4話).
               showGems={!mastery || isFeatureUnlocked(Feature.GACHA, useGameStore.getState().clearedStages)}
