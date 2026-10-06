@@ -9,6 +9,7 @@ import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import { SummonOverlay } from './SummonOverlay';
 import { KanjiReveal } from './KanjiReveal';
 import { SingleResult } from './SingleResult';
+import { MultiResult } from './MultiResult';
 import { useGameStore } from '../../store/gameStore';
 import {
   BANNERS,
@@ -52,13 +53,6 @@ interface Shown extends PullResult {
   /** Why this card was certain, when it was not the ceiling (the first ticket). */
   note?: string;
 }
-
-const BACK: Record<number, string> = {
-  3: 'linear-gradient(145deg, #d9dee8, #9aa3b5)',
-  4: 'linear-gradient(145deg, #ffe39a, #d9a12b)',
-  5: 'linear-gradient(145deg, #ff8fc1, #ffd36a 35%, #8be0a8 60%, #7fb2ff 85%, #c58bff)',
-};
-const FRAME: Record<number, string> = { 3: '#b8c0cf', 4: '#e8a317', 5: '#d0567a' };
 
 const Stars = ({ n }: { n: number }) => (
   <span aria-label={`★${n}`} className="leading-none" style={{ color: n === 5 ? '#d0567a' : '#e8a317' }}>
@@ -235,7 +229,6 @@ export const GachaScreen = () => {
   };
 
   const isMulti = results !== null && results.length > 1;
-  const allRevealed = results !== null && revealed >= results.length;
   const daysToMulti = Math.ceil(Math.max(0, banner.multi - gems) / DAILY_TOTAL);
   const bannerCards =
     bannerId === 'pickup'
@@ -520,96 +513,30 @@ export const GachaScreen = () => {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            // One pull's result reads on its own: the screen behind goes almost dark.
-            className={`fixed inset-0 z-50 flex flex-col items-center justify-center px-5 py-6 ${isMulti ? 'bg-black/75' : 'bg-[#0d0618]/95'}`}
+            // The result reads on its own: the screen behind goes almost dark.
+            className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-[#0d0618]/95 px-4 py-6"
           >
             {isMulti ? (
-              <>
-                <p className="g-eyebrow mb-3 text-white/80">
-                  <RubyText showFurigana={showFurigana}>{allRevealed ? '10回(かい)の けっか' : 'カードを タップして めくる'}</RubyText>
-                </p>
-                <div className="grid w-full max-w-sm grid-cols-5 gap-2">
-                  {results.map((r, i) => {
-                    const face = i < revealed;
-                    return (
-                      <motion.button
-                        key={`${r.card.id}-${i}`}
-                        type="button"
-                        onClick={() => flipTo(i + 1)}
-                        // Dealt in one by one, then turned on a tap.
-                        initial={{ opacity: 0, y: -60, rotateY: 180, scale: 0.5 }}
-                        animate={{ opacity: 1, y: 0, rotateY: face ? 0 : 180, scale: face ? 1 : 0.96 }}
-                        transition={{ duration: 0.3, delay: face || still ? 0 : i * 0.07 }}
-                        className="relative flex aspect-[3/4] flex-col items-center justify-center overflow-hidden rounded-lg p-1"
-                        style={{
-                          background: face ? 'var(--panel-solid)' : BACK[r.card.rarity],
-                          border: `2px solid ${FRAME[r.card.rarity]}`,
-                          boxShadow: r.card.rarity === 5 ? '0 0 14px rgba(255,150,200,0.8)' : r.card.rarity === 4 ? '0 0 10px rgba(255,210,90,0.6)' : undefined,
-                        }}
-                        aria-label={face ? r.card.shortName : `${i + 1}まいめ ★${r.card.rarity}`}
-                      >
-                        {face ? (
-                          <>
-                            <img src={assetPath(r.card.art)} alt="" aria-hidden className="h-auto w-full object-contain" />
-                            <span className="text-[8px] leading-none">
-                              <Stars n={r.card.rarity} />
-                            </span>
-                            {!r.duplicate && (
-                              <span className="absolute top-0.5 left-0.5 rounded bg-[#e2453c] px-0.5 text-[8px] leading-[1.4] font-black text-white">NEW</span>
-                            )}
-                            {r.duplicate && (
-                              <span className="absolute top-0.5 left-0.5 rounded bg-[#d0567a] px-0.5 text-[8px] leading-[1.4] font-black text-white">
-                                {r.bondTo ? `♥${r.bondTo}` : `◆${r.refund}`}
-                              </span>
-                            )}
-                          </>
-                        ) : (
-                          <>
-                            {/* The card is turned away (rotateY 180): turn the label back so it reads. */}
-                            <span className="text-lg font-black text-white/90 drop-shadow" style={{ transform: 'scaleX(-1)' }} aria-hidden>
-                              ★{r.card.rarity}
-                            </span>
-                            {r.card.rarity >= 4 && !still && (
-                              // A ★4 or ★5 face down shimmers: something good is under it.
-                              <motion.span
-                                aria-hidden
-                                className="pointer-events-none absolute inset-0"
-                                style={{ background: 'linear-gradient(115deg, transparent 30%, rgba(255,255,255,0.75) 50%, transparent 70%)', willChange: 'transform' }}
-                                animate={{ x: ['-120%', '120%'] }}
-                                transition={{ duration: r.card.rarity === 5 ? 0.9 : 1.4, repeat: Infinity, repeatDelay: 0.3 }}
-                              />
-                            )}
-                          </>
-                        )}
-                      </motion.button>
-                    );
-                  })}
-                </div>
-                <div className="mt-4 flex w-full max-w-sm gap-2">
-                  {!allRevealed ? (
-                    <button type="button" className="g-btn g-btn-ghost flex-1 !bg-white/90" onClick={() => flipTo(results.length)}>
-                      <RubyText showFurigana={showFurigana}>ぜんぶ めくる</RubyText>
-                    </button>
-                  ) : (
-                    <button type="button" className="g-btn g-btn-primary flex-1" onClick={close}>
-                      OK
-                    </button>
-                  )}
-                </div>
-                {allRevealed && (
-                  <p className="mt-3 text-center text-xs text-white/85">
-                    <RubyText showFurigana={showFurigana}>
-                      {[
-                        `新(あたら)しい カード ${results.filter((r) => !r.duplicate).length}枚(まい)`,
-                        results.some((r) => r.bondTo) ? `きずな ＋${results.filter((r) => r.bondTo).length}` : '',
-                        results.some((r) => r.refund) ? `◆${results.reduce((n, r) => n + r.refund, 0)} もどりました` : '',
-                      ]
-                        .filter(Boolean)
-                        .join(' ・ ')}
-                    </RubyText>
-                  </p>
-                )}
-              </>
+              <MultiResult
+                results={results}
+                revealed={revealed}
+                still={still}
+                showFurigana={showFurigana}
+                isPickup={(c) => bannerId === 'pickup' && (c.id === pick.five.id || pick.fours.some((f) => f.id === c.id))}
+                onFlip={(n) => flipTo(n)}
+                onClose={close}
+                again={
+                  canMulti
+                    ? {
+                        cost: banner.multi,
+                        go: () => {
+                          close();
+                          doMulti();
+                        },
+                      }
+                    : null
+                }
+              />
             ) : (
               // After the companion has come out of their character (KanjiReveal), not under it.
               !cutIn && <SingleResult r={results[0]} showFurigana={showFurigana} still={still} onClose={close} />
