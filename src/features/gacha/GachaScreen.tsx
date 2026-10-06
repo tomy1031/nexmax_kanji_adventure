@@ -10,6 +10,8 @@ import { SummonOverlay } from './SummonOverlay';
 import { KanjiReveal } from './KanjiReveal';
 import { SingleResult } from './SingleResult';
 import { MultiResult } from './MultiResult';
+import { NexmaxSays } from '../../components/ui/Chrome';
+import { kanjiOf } from '../../data/charKanji';
 import { useGameStore } from '../../store/gameStore';
 import {
   BANNERS,
@@ -60,7 +62,6 @@ const Stars = ({ n }: { n: number }) => (
   </span>
 );
 
-/** The banner's picture: its cards standing together. */
 /** The banner's three faces: the chosen ones the story has met, topped up with others it can give. */
 const showcase = (ids: string[], banner: Banner, met: Met): Individual[] => {
   const chosen = ids.map((id) => getIndividual(id)!).filter(met);
@@ -68,20 +69,30 @@ const showcase = (ids: string[], banner: Banner, met: Met): Individual[] => {
   return [...chosen, ...more].slice(0, 3);
 };
 
-const BannerArt = ({ cards }: { cards: Individual[] }) => (
-  <div className="relative mx-auto flex h-40 items-end justify-center" aria-hidden>
-    <div className="absolute inset-x-6 bottom-2 h-24 rounded-full" style={{ background: 'radial-gradient(ellipse, rgba(255,214,110,0.55), transparent 70%)' }} />
-    {cards.map((c, i) => (
-      <img
-        key={c.id}
-        src={assetPath(c.art)}
-        alt=""
-        className="relative object-contain"
-        style={{ height: i === 0 ? '100%' : '72%', order: i === 0 ? 1 : i === 1 ? 0 : 2, marginInline: '-4%' }}
-      />
-    ))}
-  </div>
-);
+/** The banner's picture: its cards standing together, the first one's character large behind them (docs/design/17 §4). */
+const BannerArt = ({ cards }: { cards: Individual[] }) => {
+  const big = cards[0] ? kanjiOf(cards[0].char).kanji : null;
+  return (
+    <div className="relative mx-auto flex h-40 items-end justify-center" aria-hidden>
+      {big && (
+        // Up to the left, above the shorter card beside the first, where the pictures leave it showing.
+        <span className="absolute -top-2 left-1 text-[112px] leading-none font-black" style={{ color: 'rgba(214,140,20,0.42)' }}>
+          {big}
+        </span>
+      )}
+      <div className="absolute inset-x-6 bottom-2 h-24 rounded-full" style={{ background: 'radial-gradient(ellipse, rgba(255,214,110,0.55), transparent 70%)' }} />
+      {cards.map((c, i) => (
+        <img
+          key={c.id}
+          src={assetPath(c.art)}
+          alt=""
+          className="relative object-contain"
+          style={{ height: i === 0 ? '100%' : '72%', order: i === 0 ? 1 : i === 1 ? 0 : 2, marginInline: '-4%' }}
+        />
+      ))}
+    </div>
+  );
+};
 
 export const GachaScreen = () => {
   useBgm('shop');
@@ -296,6 +307,11 @@ export const GachaScreen = () => {
               <RubyText showFurigana={showFurigana}>ぜんぶの なかまの カードが 出(で)ます。</RubyText>
             )}
           </p>
+
+          {/* Nexmax waits by the buttons (docs/design/17 §4). */}
+          <div className="mt-2 flex justify-center">
+            <NexmaxSays text="どんな なかまに 出会(であ)えるかな？" pose="hello" size={56} flip />
+          </div>
 
           {tickets > 0 && (
             // A ticket: one pull without gems. Above everything while there is one.
