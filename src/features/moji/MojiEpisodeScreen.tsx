@@ -80,6 +80,14 @@ const StarRow = ({ reps, size = 14 }: { reps: number; size?: number }) => {
 /** The difficulty a link asks for (?mode=), ふつう when it asks for none. */
 const modeOf = (m: string | null): Difficulty => (m === 'easy' || m === 'hard' ? m : 'normal');
 
+/**
+ * The difficulties are offered from the second fight on: the very first one
+ * (1章 1話, or wherever the town begins) teaches the fight itself, one thing
+ * at a time (2026-10-04「説明は 1つずつ」). After any town win, all three are
+ * open on every episode — before its own first clear too.
+ */
+const offersDifficulty = (cleared: readonly string[]): boolean => cleared.some((id) => id.startsWith('moji-'));
+
 const ReadyScreen = ({
   ep,
   kanji,
@@ -512,7 +520,7 @@ const EpisodePlayer = ({ id }: { id: string }) => {
             onForge={isForgeOpen(cleared) && canForge(progress) ? () => navigate(forgeHere) : undefined}
             onStory={cleared.includes(ep.id) ? () => setPhase('intro') : undefined}
             difficulty={difficulty}
-            onDifficulty={setDifficulty}
+            onDifficulty={offersDifficulty(cleared) ? setDifficulty : undefined}
             hard={hardNow}
           />
         );
@@ -669,7 +677,7 @@ const FinalePlayer = ({ id }: { id: string }) => {
             onForge={isForgeOpen(cleared) && canForge(progress) ? () => navigate(forgeHere) : undefined}
             onStory={script && cleared.includes(f.id) ? () => setPhase('intro') : undefined}
             difficulty={difficulty}
-            onDifficulty={setDifficulty}
+            onDifficulty={offersDifficulty(cleared) ? setDifficulty : undefined}
             hard={hardNow}
             heading={`👾 ${f.boss.name}が ねらう 字(じ)`}
             hardNote={`${chapter.order}章(しょう)の 字(じ)が ぜんぶ 出(で)る`}
