@@ -187,8 +187,9 @@ const ReadyScreen = ({
             )}
           </span>
           <div className="min-w-0 flex-1">
-            <div className="flex items-center justify-between gap-1">
-              <p className="text-xs font-black" style={{ color: 'var(--color-danger)' }}>
+            {/* On a narrow phone the three difficulties go under the label, not squeeze it onto two lines. */}
+            <div className="flex flex-wrap items-center justify-between gap-1">
+              <p className="text-xs font-black whitespace-nowrap" style={{ color: 'var(--color-danger)' }}>
                 <RubyText showFurigana={showFurigana}>つぎの あいて</RubyText>
               </p>
               {onDifficulty && (
