@@ -38,7 +38,7 @@ export const STAR5_CEILING = 30;
 /** Gems back for a duplicate whose きずな is already full, by its rarity. */
 export const BOND_REFUND: Record<Rarity, number> = { 3: 20, 4: 60, 5: 200 };
 
-export const BannerId = { STANDARD: 'standard', PICKUP: 'pickup', TOWN: 'town', WEEKDAY: 'weekday', KANJI: 'kanji' } as const;
+export const BannerId = { STANDARD: 'standard', PICKUP: 'pickup', TOWN: 'town', WEEKDAY: 'weekday', KANJI: 'kanji', STEPUP: 'stepup' } as const;
 export type BannerId = (typeof BannerId)[keyof typeof BannerId];
 
 export interface Banner {
@@ -108,10 +108,33 @@ export const BANNERS: Record<BannerId, Banner> = {
     ceiling: true,
     has: () => true,
   },
+  // ステップアップ: ten at a time only, and each ten promises more (STEP_UP).
+  stepup: {
+    id: 'stepup',
+    name: 'ステップアップ',
+    tab: { icon: '🪜', label: 'ステップ' },
+    single: PULL_COST,
+    multi: MULTI_COST,
+    rates: { 5: 0.03, 4: 0.17, 3: 0.8 },
+    ceiling: true,
+    has: () => true,
+  },
 };
 
+/**
+ * ステップアップ (2026-10-07「ガチャの 種類も もっと 増やして」): ten pulls a
+ * step, and each step promises more — ★4 or better on one card, then on
+ * three, then a ★5 — then it starts over. Saving up is rewarded, and the
+ * third step is a ★5 for certain.
+ */
+export const STEP_UP: readonly { fours: number; five: boolean }[] = [
+  { fours: 1, five: false },
+  { fours: 3, five: false },
+  { fours: 1, five: true },
+];
+
 /** The tabs, in order. */
-export const BANNER_ORDER: readonly BannerId[] = ['pickup', 'weekday', 'kanji', 'standard', 'town'];
+export const BANNER_ORDER: readonly BannerId[] = ['pickup', 'stepup', 'weekday', 'kanji', 'standard', 'town'];
 
 /** Who comes up more on 曜日の ガチャ and 字の ガチャ: half of every rarity, when there is one of that rarity. */
 export type Boost = (c: Individual) => boolean;
@@ -179,13 +202,14 @@ export const pull = (
   atLeast4 = false,
   met: Met = everyone,
   boost?: Boost,
+  atLeast5 = false,
 ): PullResult => {
   const banner = BANNERS[bannerId];
   const ceilingHit = banner.ceiling && pity + 1 >= STAR5_CEILING;
   const roll = random();
   let rarity: Rarity = ceilingHit ? 5 : roll < banner.rates[5] ? 5 : roll < banner.rates[5] + banner.rates[4] ? 4 : 3;
-  const promised = atLeast4 && rarity === 3;
-  if (promised) rarity = 4;
+  const promised = (atLeast4 && rarity === 3) || (atLeast5 && rarity < 5);
+  if (promised) rarity = atLeast5 ? 5 : 4;
 
   const pool = metOr(
     CARDS.filter((c) => c.rarity === rarity && banner.has(c)),
@@ -293,4 +317,34 @@ export const pullMany = (
     p = pityAfter(bannerId, p, r);
   }
   return { results, pityAfter: p };
+};
+
+/**
+ * One step of ステップアップ: ten pulls, the step's promise kept on the last
+ * cards — ★4 or better on the last `fours` if the ten have not given that
+ * many, and a ★5 on the last if the step promises one and none came.
+ */
+export const pullStepUp = (
+  step: number,
+  owned: readonly string[],
+  pity: number,
+  week: number,
+  random: () => number = Math.random,
+  met: Met = everyone,
+): { results: PullResult[]; pityAfter: number; nextStep: number } => {
+  const promise = STEP_UP[mod(step, STEP_UP.length)];
+  const results: PullResult[] = [];
+  const seen = [...owned];
+  let p = pity;
+  for (let i = 0; i < MULTI_COUNT; i++) {
+    const left = MULTI_COUNT - i;
+    const fours = results.filter((r) => r.card.rarity >= 4).length;
+    const needFour = promise.fours - fours >= left;
+    const needFive = promise.five && left === 1 && !results.some((r) => r.card.rarity === 5);
+    const r = pull('stepup', seen, p, week, random, needFour, met, undefined, needFive);
+    results.push(r);
+    if (!seen.includes(r.card.id)) seen.push(r.card.id);
+    p = pityAfter('stepup', p, r);
+  }
+  return { results, pityAfter: p, nextStep: mod(step + 1, STEP_UP.length) };
 };

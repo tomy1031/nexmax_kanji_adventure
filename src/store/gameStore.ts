@@ -117,6 +117,8 @@ export interface GameState {
   gachaTickets: number;
   /** The day the free pull was last used (todayKey): one a day (lib/gacha.ts, 2026-10-07). */
   freePullDay: string | null;
+  /** ステップアップ: the step the next ten pulls are on (lib/gacha.ts STEP_UP), 0-based. */
+  stepUp: number;
   /** きずな by card id, 0..BOND_MAX (docs/design/11 §4.2): a duplicate pull or a ★3 win with it along. */
   bonds: Record<string, number>;
   /** The day each card last gained きずな from a win — one a day. */
@@ -257,6 +259,7 @@ const initialState: GameState = {
   pityCount: 0,
   gachaTickets: 0,
   freePullDay: null,
+  stepUp: 0,
   bonds: {},
   bondDays: {},
   daily: freshDaily(),
