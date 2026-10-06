@@ -296,7 +296,7 @@ export const WordBook = () => {
                             <RubyText showFurigana={showFurigana}>
                               {openTier + 1 === MAX_HINT
                                 ? answerLocked
-                                  ? `こたえは あと ${MISSES_BEFORE_ANSWER - openMisses} 回(かい) はずすと 見(み)られます`
+                                  ? `あと ${MISSES_BEFORE_ANSWER - openMisses} 回(かい) まちがえたら、こたえが 出(で)ます`
                                   : `こたえを 見(み)る（🖌${nextTierCost}）`
                                 : openTier + 1 === 2
                                   ? `読(よ)みかたを 見(み)る（🖌${nextTierCost}）`

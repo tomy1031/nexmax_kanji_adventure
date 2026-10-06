@@ -108,7 +108,7 @@ export const ZukanScreen = () => {
         {tab === 'kana' ? (
           <section className="g-parchment p-3">
             <p className="mb-2 text-sm font-black">
-              <RubyText showFurigana={showFurigana}>{`書(か)ける かな ${kanaDone} / ${HIRAGANA.length + KATAKANA.length}`}</RubyText>
+              <RubyText showFurigana={showFurigana}>{`書(か)いた かな ${kanaDone} / ${HIRAGANA.length + KATAKANA.length}`}</RubyText>
             </p>
             {[HIRAGANA, KATAKANA].map((set, i) => (
               <div key={i} className="mb-2 grid grid-cols-10 gap-1">

@@ -62,7 +62,7 @@ export const GEAR: GearItem[] = [
     name: '目(め)の おまもり',
     kanji: ['目'],
     stage: 'mukashi-2',
-    blurb: 'よく 見(み)て 書(か)ける。敵(てき)が 動(うご)くまでの ミスが 1(ひと)つ ふえる。',
+    blurb: 'よく 見(み)て 書(か)きます。敵(てき)が 動(うご)くまでの ミスが 1(ひと)つ ふえる。',
     patience: 1,
     icon: 'GiEyeTarget',
   },

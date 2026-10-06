@@ -221,7 +221,7 @@ export const KanaDrill = ({ kana, onDone, onExit, scene }: KanaDrillProps) => {
             </>
           ) : (
             <p className="text-sm font-bold" style={{ color: 'var(--ink-2)' }}>
-              <KanaText known={known}>{showSample ? 'てほんを なぞろう' : 'てほん なしで かこう'}</KanaText>
+              <KanaText known={known}>{showSample ? 'てほんを なぞって ください' : 'てほん なしで かいて ください'}</KanaText>
               <span className="block text-xs" lang="en">
                 {showSample ? 'Trace the model.' : 'Now write it without the model.'}
               </span>

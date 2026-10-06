@@ -831,7 +831,7 @@ export const BattleScene = ({
               // A Hard rematch goes back to じゅんび; a first win (on any difficulty) goes on with the story.
               nextLabel={difficulty === 'hard' && clearedAtStart ? 'じゅんびに もどる' : undefined}
               // Hard grows with the player: writing more does not shrink it, fewer slips do.
-              loseHint={difficulty === 'hard' ? 'ハードは ミスを へらすと 勝(か)てる。ゆっくり 書(か)こう。' : undefined}
+              loseHint={difficulty === 'hard' ? 'ハードです。ミスを へらしましょう。ゆっくり 書(か)いて ください。' : undefined}
               onNext={() => onNext?.()}
               onStages={onFinish}
               onRetry={() => onRetry?.()}
@@ -1106,7 +1106,7 @@ export const BattleScene = ({
                     <FillIn kanji={target} showFurigana={showFurigana} />
                   </span>
                   <span className="text-[11px] font-bold" style={{ color: 'var(--ink-2)' }}>
-                    <RubyText showFurigana={showFurigana}>□に 入(はい)る 字(じ)を 書(か)こう</RubyText>
+                    <RubyText showFurigana={showFurigana}>□に 入(はい)る 字(じ)を 書(か)きましょう</RubyText>
                   </span>
                 </p>
               )}
@@ -1139,7 +1139,7 @@ export const BattleScene = ({
               <RubyText showFurigana={showFurigana}>
                 {ownsTarget
                   ? '持(も)っている 字(じ)。字(じ)の 力(ちから)で こうげき ＋20%'
-                  : 'まだ 持(も)っていない 字(じ)。れんしゅうすると 書(か)けるように なる'}
+                  : 'まだ 持(も)っていない 字(じ)。れんしゅうしましょう'}
               </RubyText>
             </p>
           )}

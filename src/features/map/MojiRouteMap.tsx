@@ -600,7 +600,7 @@ export const MojiRouteMap = () => {
                   ) : nextFinale ? (
                     <RubyText showFurigana={showFurigana}>{`👾 ${nextFinale.title}`}</RubyText>
                   ) : (
-                    <RubyText showFurigana={showFurigana}>★を ふやそう</RubyText>
+                    <RubyText showFurigana={showFurigana}>★を ふやしましょう</RubyText>
                   )}
                 </span>
               </span>
@@ -884,7 +884,7 @@ export const MojiRouteMap = () => {
                 <dl className="mt-2 grid grid-cols-[1fr_auto] gap-x-4 gap-y-1.5 text-sm font-bold">
                   {(
                     [
-                      ['書(か)ける かな', `${known.size} / ${kanaTotal}`],
+                      ['書(か)いた かな', `${known.size} / ${kanaTotal}`],
                       ['手(て)に 入(い)れた 漢字(かんじ)（★1）', `${owned.size}`],
                       ['漢字(かんじ)マスター（★3）', `${masters}`],
                       ['クリアした 話(はなし)', `${episodesCleared} / ${allEpisodes.length}`],
