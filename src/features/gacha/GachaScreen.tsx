@@ -7,7 +7,7 @@ import { afterEpisodePath } from '../../data/mojiFlow';
 import { UNLOCKED_ON_MOJI } from '../../data/unlocks';
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import { SummonOverlay } from './SummonOverlay';
-import { Star5CutIn } from './Star5CutIn';
+import { KanjiReveal } from './KanjiReveal';
 import { useGameStore } from '../../store/gameStore';
 import {
   BANNERS,
@@ -119,7 +119,7 @@ export const GachaScreen = () => {
   const [ratesOpen, setRatesOpen] = useState(false);
   /** The pull being shown coming down (SummonOverlay), before its cards are dealt. */
   const [summon, setSummon] = useState<Shown[] | null>(null);
-  /** A ★5 just turned: its cut-in, and how far to keep turning after it. */
+  /** A card coming out of its character (KanjiReveal): one pull's card, or a ★5 just turned; and how far to keep turning after it. */
   const [cutIn, setCutIn] = useState<{ r: Shown; resume: number } | null>(null);
   const prefersReduced = useReducedMotion();
   const settingReduced = useGameStore((s) => s.settings.reducedMotion);
@@ -187,19 +187,21 @@ export const GachaScreen = () => {
     setSummon(apply(rs));
   };
 
-  /** The light has burst: deal the cards. One card turns by itself. */
+  /** The capsules have split: deal the cards. One card comes out of its character at once. */
   const dealt = () => {
     const list = summon ?? [];
     setSummon(null);
     setResults(list);
-    setRevealed(0);
     setBusy(false);
-    if (list.length === 1) flipTo(1, list, 0);
+    if (list.length === 1) {
+      setRevealed(1);
+      setCutIn({ r: list[0], resume: 1 });
+    } else setRevealed(0);
   };
 
   /**
    * Turn cards over up to `n`, one after another; a ★5 waits a beat first,
-   * then has the whole screen (Star5CutIn) before the rest go on turning.
+   * then comes out of its character (KanjiReveal) before the rest go on turning.
    */
   const flipTo = (n: number, list: Shown[] = results ?? [], from = revealed) => {
     flipTimers.current.forEach(clearTimeout);
@@ -495,9 +497,21 @@ export const GachaScreen = () => {
         )}
       </AnimatePresence>
 
-      {/* ひく 演出 (docs/design/16 §5) */}
-      <AnimatePresence>{summon && <SummonOverlay key="summon" rarities={summon.map((r) => r.card.rarity)} still={still} onDone={dealt} />}</AnimatePresence>
-      <AnimatePresence>{cutIn && <Star5CutIn key={cutIn.r.card.id} card={cutIn.r.card} fresh={!cutIn.r.duplicate} showFurigana={showFurigana} still={still} onClose={closeCutIn} />}</AnimatePresence>
+      {/* ひく 演出 (docs/design/17 §2・§3) */}
+      <AnimatePresence>{summon && <SummonOverlay key="summon" rarities={summon.map((r) => r.card.rarity)} still={still} showFurigana={showFurigana} onDone={dealt} />}</AnimatePresence>
+      <AnimatePresence>
+        {cutIn && (
+          <KanjiReveal
+            key={cutIn.r.card.id}
+            card={cutIn.r.card}
+            fresh={!cutIn.r.duplicate}
+            note={cutIn.r.note ?? (cutIn.r.guaranteed ? 'てんじょう' : undefined)}
+            showFurigana={showFurigana}
+            still={still}
+            onClose={closeCutIn}
+          />
+        )}
+      </AnimatePresence>
 
       {/* 結果 ------------------------------------------------------------ */}
       <AnimatePresence>
