@@ -538,6 +538,7 @@ const EpisodePlayer = ({ id }: { id: string }) => {
             }}
             kanjiPool={fight ? fight.pool : kanji}
             patience={fight ? fight.patience : basePatience(ep.order)}
+            seals={fight?.seals}
             difficulty={fight ? 'hard' : 'normal'}
             mastery
             onFinish={leave}
@@ -691,6 +692,7 @@ const FinalePlayer = ({ id }: { id: string }) => {
             stage={{ id: f.id, bg: f.bg, boss: fight ? { ...f.boss, hp: fight.boss.hp, attack: fight.boss.attack } : f.boss, reward: f.reward }}
             kanjiPool={fight ? fight.pool : pool}
             patience={fight ? fight.patience : f.patience}
+            seals={fight?.seals}
             difficulty={fight ? 'hard' : 'normal'}
             mastery
             clearLine={`${chapter.order}章(しょう)「${chapter.title}」 クリア！`}
