@@ -115,6 +115,8 @@ export interface GameState {
    * there and then, shown how (docs/design/16 §3).
    */
   gachaTickets: number;
+  /** The day the free pull was last used (todayKey): one a day (lib/gacha.ts, 2026-10-07). */
+  freePullDay: string | null;
   /** きずな by card id, 0..BOND_MAX (docs/design/11 §4.2): a duplicate pull or a ★3 win with it along. */
   bonds: Record<string, number>;
   /** The day each card last gained きずな from a win — one a day. */
@@ -169,6 +171,8 @@ export interface GameActions {
   clearStage: (stageId: string) => void;
   /** Spends one ガチャチケット. False when there is none. */
   useGachaTicket: () => boolean;
+  /** Uses today's free pull. False when it is already used today. */
+  useFreePull: () => boolean;
   /** Records a かんぺき clear. True only the first time for that stage. */
   markPerfect: (stageId: string) => boolean;
   /** Records a Hard win. True only the first time for that stage. */
@@ -246,6 +250,7 @@ const initialState: GameState = {
   gems: 0,
   pityCount: 0,
   gachaTickets: 0,
+  freePullDay: null,
   bonds: {},
   bondDays: {},
   daily: freshDaily(),
@@ -395,6 +400,13 @@ export const useGameStore = create<GameState & GameActions>()(
       },
 
       addGems: (n) => set((s) => ({ gems: s.gems + n })),
+
+      useFreePull: () => {
+        const today = todayKey();
+        if (get().freePullDay === today) return false;
+        set({ freePullDay: today });
+        return true;
+      },
 
       useGachaTicket: () => {
         if (get().gachaTickets <= 0) return false;
