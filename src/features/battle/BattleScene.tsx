@@ -617,6 +617,10 @@ export const BattleScene = ({
         atImpact(() => {
           setBroken(nextBroken);
           setFreed({ n, ruby });
+          // A small bright chime as it flies: heard, not read. The last one rings louder (all back).
+          // (Not when this write also wins: the win has its own jingle.)
+          if (nextBroken.length === sealIds.length && blow.hp > 0) atImpact(() => sfx.fanfare(), 350);
+          else sfx.chime();
         });
       }
       if (blow.held) tellTip('seal');
