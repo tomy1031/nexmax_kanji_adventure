@@ -44,7 +44,7 @@ export const STAR5_POWER: Readonly<Record<string, Star5Power>> = {
   'ENFP-5': { name: 'たびは つづく', says: 'コンボが 切(き)れても 半分(はんぶん) のこる', effect: { comboKeepHalf: true } },
   'INTJ-5': { name: '先(さき)よみ', says: '書(か)きじゅんを 見(み)るのが 1回(かい) ただ（たたかい ごとに）', effect: { freeLooks: 1 } },
   'ENTJ-5': { name: 'ちかみち', says: 'わざの ゲージが 1つ 多(おお)く たまる', effect: { gaugeBonus: 1 } },
-  'ENFJ-5': { name: 'ひかりの いやし', says: 'わざを つかうと HP も 15 かいふく', effect: { skillHeal: 15 } },
+  'ENFJ-5': { name: 'ひかりの いやし', says: 'わざを つかった とき、HPも 15 もどる', effect: { skillHeal: 15 } },
   'rin-5': { name: 'よみの ちから', says: '読(よ)みの もんだいの こうげき 2ばい', effect: { readingMul: 2 } },
   'keeper-5': { name: '時(とき)とめ', says: 'てきが こうげき する までの ミスが 1つ 多(おお)い', effect: { patience: 1 } },
   'sora-5': { name: '大(おお)空(ぞら)', says: 'HP の さいだいが ＋20', effect: { maxHp: 20 } },
