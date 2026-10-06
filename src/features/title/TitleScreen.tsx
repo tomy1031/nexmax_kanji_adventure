@@ -157,7 +157,7 @@ export const TitleScreen = () => {
         >
           <img
             src={art('logo')}
-            alt="ネクマックスの漢字アドベンチャー　なくなった ことばを 取りもどそう！"
+            alt="ネクマックスの漢字アドベンチャー　なくなった ことばを 取りもどしましょう！"
             fetchPriority="high"
             className="block h-auto w-full"
           />

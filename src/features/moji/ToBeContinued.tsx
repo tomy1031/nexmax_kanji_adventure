@@ -84,7 +84,7 @@ export const ToBeContinued = ({
           </div>
         )}
         <div className="mt-2 flex justify-center">
-          <NexmaxSays text={target ? '⭐を ふやそう！' : 'ぜんぶ ⭐⭐⭐！'} pose="cheer" size={56} />
+          <NexmaxSays text={target ? '⭐を ふやしましょう！' : 'ぜんぶ ⭐⭐⭐！'} pose="cheer" size={56} />
         </div>
         <div className="mt-4 flex flex-col gap-2">
           {target && (

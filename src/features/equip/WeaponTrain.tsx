@@ -108,7 +108,7 @@ export const WeaponTrain = ({ recipeId, onClose }: { recipeId: string; onClose: 
 
       {!canToday && !result ? (
         <p className="mt-6 max-w-xs text-center text-sm leading-relaxed">
-          <RubyText showFurigana={showFurigana}>きょうは もう 強化(きょうか) しました。あした また 書(か)こう。日(ひ)を あけて 書(か)くと、よく おぼえられます。</RubyText>
+          <RubyText showFurigana={showFurigana}>きょうは もう 強化(きょうか) しました。あした また 書(か)きましょう。毎日(まいにち) すこしずつ 書(か)きましょう。</RubyText>
         </p>
       ) : result ? (
         <motion.div className="mt-6 flex flex-col items-center gap-2 text-center" initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}>

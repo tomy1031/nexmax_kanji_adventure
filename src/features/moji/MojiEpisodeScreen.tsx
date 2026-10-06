@@ -243,7 +243,7 @@ const ReadyScreen = ({
               {isHard
                 ? '👹 ハードの あいては 強(つよ)いです。ミスを へらしましょう！'
                 : weakest >= 2
-                  ? 'じゅんび ばっちり！ たたかおう。'
+                  ? 'じゅんび ばっちり！ たたかいましょう。'
                   : '★が 多(おお)い 字(じ)は、こうげきが 強(つよ)いです。たくさん 書(か)きましょう！'}
             </RubyText>
             <span className="block text-xs font-black" style={{ color: 'var(--accent-2)' }}>

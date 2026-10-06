@@ -63,7 +63,7 @@ export const CompanionPick = ({ bossElement, showFurigana }: { bossElement: Elem
             </>
           ) : (
             <span className="block text-sm font-black">
-              <RubyText showFurigana={showFurigana}>なかまを えらぼう</RubyText>
+              <RubyText showFurigana={showFurigana}>なかまを えらんで ください</RubyText>
             </span>
           )}
         </span>

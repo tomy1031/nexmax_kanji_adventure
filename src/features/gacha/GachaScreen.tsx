@@ -568,7 +568,7 @@ export const GachaScreen = () => {
             <div className="g-parchment absolute inset-x-6 top-[max(70px,12dvh)] mx-auto max-w-sm px-4 py-3 text-center">
               <p className="text-base leading-[2] font-black">
                 <img src={assetPath('img/gacha/ticket.webp')} alt="" aria-hidden className="mr-1 inline h-6 w-auto align-middle" />
-                <RubyText showFurigana={showFurigana}>チケットで なかまを よぼう！</RubyText>
+                <RubyText showFurigana={showFurigana}>チケットで なかまを よびましょう！</RubyText>
               </p>
               <p className="text-sm leading-[1.9]" style={{ color: 'var(--ink-2)' }}>
                 <RubyText showFurigana={showFurigana}>はじめての 1回(かい)は ★4 いじょうが 出(で)ます。</RubyText>
