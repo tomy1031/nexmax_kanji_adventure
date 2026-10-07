@@ -22,7 +22,7 @@ import { useBgm } from '../../lib/bgm';
 import { preloadImages } from '../../lib/preload';
 import { episodeArt } from '../../data/episodeArt';
 import { Feature, isFeatureUnlocked } from '../../data/unlocks';
-import { MULTI_COST, PULL_COST } from '../../lib/gacha';
+import { MULTI_COST, PULL_COST, STEP_UP } from '../../lib/gacha';
 import { isVersusConfigured } from '../../lib/versusConfig';
 import { useStill } from '../../hooks/useStill';
 
@@ -244,6 +244,8 @@ const GachaMachine = ({ showFurigana, still, onOpen }: { showFurigana: boolean; 
   const tickets = useGameStore((s) => s.gachaTickets);
   // The free pull of the day (lib/gacha.ts): the reason to drop by today.
   const freeToday = useGameStore((s) => s.freePullDay) !== todayKey();
+  // ステップアップ's last step is a ★5 for certain: worth saying when it can be pulled.
+  const stepUp = useGameStore((s) => s.stepUp ?? 0) % STEP_UP.length;
   const [seen] = useState(readSeen);
   const fresh = !seen.includes(Feature.GACHA);
   // 「できます」reads plainer than ひける (2026-10-05).
@@ -252,6 +254,8 @@ const GachaMachine = ({ showFurigana, still, onOpen }: { showFurigana: boolean; 
       ? `チケット ${tickets}まい！`
       : freeToday
         ? '🎁 きょう むりょう！'
+        : STEP_UP[stepUp].five && gems >= MULTI_COST
+          ? '🪜 ★5 かくてい！'
         : gems >= MULTI_COST
           ? '10回(かい) できます！'
           : gems >= PULL_COST
