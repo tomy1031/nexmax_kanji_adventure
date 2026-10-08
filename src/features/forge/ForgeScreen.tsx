@@ -380,7 +380,6 @@ export const ForgeScreen = () => {
 
   // The forge's words beyond the core arrive just after start (data/compounds.ts): read again then.
   const wordsV = useCompoundsVersion();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   const preview = useMemo(() => {
     if (slots.length < 2) return null;
     if (target === 'weapon') {
