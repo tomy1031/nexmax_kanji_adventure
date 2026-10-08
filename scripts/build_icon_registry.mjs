@@ -11,7 +11,7 @@
  */
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 
-const SOURCES = ['src/lib/forge/weapon.ts', 'src/data/stages.ts', 'src/data/scripts/tutorial.ts', 'src/data/equipment.ts', 'src/data/gendaiStages.ts'];
+const SOURCES = ['src/lib/forge/weapon.ts', 'src/lib/forge/gear.ts', 'src/data/stages.ts', 'src/data/scripts/tutorial.ts', 'src/data/equipment.ts', 'src/data/gendaiStages.ts'];
 const OUT = 'src/lib/gameIcons.ts';
 
 const names = new Set();

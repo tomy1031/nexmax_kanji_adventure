@@ -299,7 +299,7 @@ export const ICON_POOL: Record<WeaponClass, string[]> = {
 // ---------------------------------------------------------------------------
 
 /** The reading a kanji lends to a made-up name: kun first, stripped of okurigana. */
-const nameReading = (k: KanjiData): string => {
+export const nameReading = (k: KanjiData): string => {
   const kun = k.kun[0]?.replace(/\(.*\)/, '');
   if (kun) return kun;
   return k.on[0] ?? '';
@@ -353,31 +353,65 @@ const ATTACK_BAND: Record<Rarity, { floor: number; span: number }> = {
   5: { floor: 66, span: 30 },
 };
 
-const attackFor = (rarity: Rarity, kanji: KanjiData[]): number => {
-  // Average, not total: three characters must not beat two for being three.
+/** How heavy the recipe's characters are, 0..1: 1 stroke → 0, 20+ → 1. The average, so three never beat two for being three. */
+export const heavinessOf = (kanji: KanjiData[]): number => {
   const avg = kanji.reduce((n, k) => n + k.strokes, 0) / kanji.length;
-  // 1 stroke -> 0, 20+ strokes -> 1.
-  const heaviness = Math.min(1, Math.max(0, (avg - 1) / 19));
+  return Math.min(1, Math.max(0, (avg - 1) / 19));
+};
+
+const attackFor = (rarity: Rarity, kanji: KanjiData[]): number => {
   const { floor, span } = ATTACK_BAND[rarity];
-  return Math.round(floor + heaviness * span);
+  return Math.round(floor + heavinessOf(kanji) * span);
+};
+
+/**
+ * What a recipe is, before it is a weapon, a shield or a body piece
+ * (gear.ts): the word it spells, its element, its ★, how far along the route
+ * its kanji are, and whether it is a かくし word. One function, so the three
+ * things the forge makes keep the same rules.
+ */
+export interface ForgeCore {
+  /** The kanji ids joined with '+'. */
+  id: string;
+  word: string;
+  seed: number;
+  compound: Compound | null;
+  element: Element;
+  rarity: Rarity;
+  stage: number;
+  hidden: boolean;
+  /** 0..1 (heavinessOf). */
+  heaviness: number;
+}
+
+export const forgeCore = (kanji: KanjiData[]): ForgeCore | null => {
+  if (kanji.length < 2 || kanji.length > 3) return null;
+  const id = kanji.map((k) => k.id).join('+');
+  const word = kanji.map((k) => k.char).join('');
+  const seed = hash(id);
+  const compound = compoundFor(word);
+  const hidden = compound != null && isHiddenWeapon(word);
+  return {
+    id,
+    word,
+    seed,
+    compound,
+    element: elementOf(kanji[0]),
+    rarity: hidden ? (5 as Rarity) : rarityFor(compound, kanji, seed),
+    stage: stageOfWord(kanji.map((k) => k.char)),
+    hidden,
+    heaviness: heavinessOf(kanji),
+  };
 };
 
 /**
  * Build the weapon a recipe makes. Pure: same input, same output, no state.
  */
 export const forgeWeapon = (kanji: KanjiData[]): Weapon | null => {
-  if (kanji.length < 2 || kanji.length > 3) return null;
-
-  const id = kanji.map((k) => k.id).join('+');
-  const word = kanji.map((k) => k.char).join('');
-  const seed = hash(id);
-
-  const compound = compoundFor(word);
-  const element = elementOf(kanji[0]);
+  const core = forgeCore(kanji);
+  if (!core) return null;
+  const { id, word, seed, compound, element, rarity, stage, hidden } = core;
   const weaponClass = classOf(kanji[0]);
-  const hidden = compound != null && isHiddenWeapon(word);
-  const rarity = hidden ? (5 as Rarity) : rarityFor(compound, kanji, seed);
-  const stage = stageOfWord(kanji.map((k) => k.char));
 
   const weight = kanji.reduce((n, k) => n + k.strokes, 0);
   // A real word grows with the route: the later its kanji, the harder it hits

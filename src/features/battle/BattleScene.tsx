@@ -224,6 +224,8 @@ export const BattleScene = ({
 
   // Worn gear: shield, armour, charm. The tutorial fight is gear-less. The
   // level adds HP and patience on the new route, and a ★5 (空・時) may too.
+  // The forge's words beyond the core arrive just after start (data/compounds.ts): read again then.
+  const wordsV = useCompoundsVersion();
   const stats = useMemo(() => {
     const gear = statsFromGear(
       tutorial
@@ -233,12 +235,12 @@ export const BattleScene = ({
             .filter((g) => g != null),
     );
     return withStar5Stats(mastery ? applyLevel(gear, level) : gear, star5);
-  }, [equippedGear, tutorial, mastery, level, star5]);
+    // A forged shield or body piece is built from its kanji (lib/forge/gear.ts): it changes when the words arrive.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [equippedGear, tutorial, mastery, level, star5, wordsV]);
   const easy = mastery && difficulty === 'easy';
   const patience = basePatienceValue + stats.patience + (easy ? EASY_PATIENCE_ADD : 0);
 
-  // The forge's words beyond the core arrive just after start (data/compounds.ts): read again then.
-  const wordsV = useCompoundsVersion();
   const weapon = useMemo(() => {
     if (weaponOverride) return weaponOverride;
     const recipe = weapons.find((w) => w.id === equippedId);
