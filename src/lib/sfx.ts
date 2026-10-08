@@ -26,6 +26,9 @@ import { useGameStore } from '../store/gameStore';
  *   comboBreak — a COMBO ending: a soft fall.
  *   skill  — a companion's わざ: a rising sweep and a bell chord.
  *
+ * The gacha's book: cordTick — its bookmark cord coming out a notch at a
+ * time; unlatch — its clasp springing open.
+ *
  * Respects せってい → 音を 消す. Browsers only allow audio after a tap, which
  * every one of these follows.
  */
@@ -289,4 +292,23 @@ export const beam = () => {
   tone(ac, { at: t, freq: 300, dur: 0.3, type: 'sine', gain: 0.07, glideTo: 1400 });
   noiseBurst(ac, { at: t + 0.28, dur: 0.24, type: 'bandpass', from: 4000, to: 900, q: 1.2, gain: 0.32 });
   tone(ac, { at: t + 0.28, freq: 880, dur: 0.24, type: 'square', gain: 0.03, glideTo: 440 });
+};
+
+/** The gacha's bookmark cord coming out of the book a notch at a time: a small wooden click, higher each notch (`n` 0..2). */
+export const cordTick = (n = 0) => {
+  const ac = audio();
+  if (!ac) return;
+  const t = ac.currentTime;
+  tone(ac, { at: t, freq: 520 + n * 160, dur: 0.05, type: 'triangle', gain: 0.07, glideTo: 420 + n * 140 });
+  noiseBurst(ac, { at: t, dur: 0.035, type: 'bandpass', from: 3200, to: 2400, q: 3, gain: 0.07 });
+};
+
+/** Its clasp springing open: a bright snap of metal, then a rush of air as the book lets go. */
+export const unlatch = () => {
+  const ac = audio();
+  if (!ac) return;
+  const t = ac.currentTime;
+  tone(ac, { at: t, freq: 1900, dur: 0.06, type: 'square', gain: 0.05, glideTo: 1200 });
+  tone(ac, { at: t + 0.03, freq: 2700, dur: 0.2, type: 'triangle', gain: 0.06 });
+  noiseBurst(ac, { at: t + 0.05, dur: 0.45, type: 'bandpass', from: 600, to: 4200, q: 0.9, gain: 0.35 });
 };
