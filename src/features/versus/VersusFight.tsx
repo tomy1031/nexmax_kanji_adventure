@@ -18,6 +18,7 @@ import { getIndividual, type Individual } from '../../data/individuals';
 import type { CompanionView, SkillCut } from '../battle/CompanionFx';
 import { throughWard, versusSkill, versusSkillSays } from './versusSkill';
 import { useStill } from '../../hooks/useStill';
+import { useQuiet } from '../../store/uiStore';
 
 /** One stamp at a time: a moment between them, so they stay a greeting, not a flood. */
 const STAMP_COOLDOWN_MS = 1500;
@@ -101,6 +102,8 @@ export const VersusFight = ({ round, opponentName, opponentImg, weaponBonus, inc
   const enemyCtl = useAnimationControls();
   const fieldCtl = useAnimationControls();
 
+  // No 称号 popup over a match (AchievementToast).
+  useQuiet();
   const [myHp, setMyHpState] = useState(VS_MAX_HP);
   const [theirHp, setTheirHpState] = useState(VS_MAX_HP);
   // Mirrors, so a hit is judged outside a state updater (onEnd records the result).

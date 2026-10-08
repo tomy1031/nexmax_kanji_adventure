@@ -12,7 +12,8 @@ import {
   isReviewDue,
 } from '../lib/level';
 import { DEFAULT_VERSUS_STATS, type VersusStats } from '../features/versus/types';
-import { FoundVia, HINT_COST, MAX_HINT, TITLES, TRY_COST_2, TRY_COST_3, earnsTitle } from '../lib/forge/discovery';
+import { FoundVia, HINT_COST, MAX_HINT, TRY_COST_2, TRY_COST_3, earnsTitle } from '../lib/forge/discovery';
+import { getAchievement, isTaken } from '../data/achievements';
 import { getGear, type GearSlot } from '../data/equipment';
 import { forgeTargetOf, forgedGearId, gearFromId, type ForgedSlot } from '../lib/forge/gear';
 import { getKanjiById } from '../lib/kanjiDb';
@@ -157,8 +158,15 @@ export interface GameState {
   exp: number;
   /** Words discovered, and how. */
   foundWords: Record<string, FoundVia>;
-  /** 称号 whose ◆ has been taken, by title word (lib/forge/discovery.ts TITLES, TitlesScreen). */
+  /** 称号 whose ◆ has been taken, by achievement id (data/achievements.ts, TitlesScreen). */
   titleRewards: string[];
+  /**
+   * 称号 already announced (AchievementToast), by id. Null on a save from
+   * before them: the first look marks what is earned without a popup each.
+   */
+  titlesSeen: string[] | null;
+  /** Every write that counted — kanji, review, kana — for 書いた 回数 (reps stop at ten a kanji). */
+  writes: number;
   /** Hint tier opened per word. */
   hints: Record<string, number>;
   /** Wrong guesses per word — the answer tier needs a few. */
@@ -229,8 +237,10 @@ export interface GameActions {
   tryCost: (kanjiCount: number) => number;
   /** Record a discovery. Returns false if it was already known. */
   recordFound: (word: string, via: FoundVia) => boolean;
-  /** Take a 称号's ◆, once, when it is earned. The gems given, or null. */
-  claimTitle: (word: string) => number | null;
+  /** Take a 称号's ◆ (by achievement id), once, when it is earned. The gems given, or null. */
+  claimTitle: (id: string) => number | null;
+  /** Remember that these 称号 have been announced. */
+  markTitlesSeen: (ids: readonly string[]) => void;
   /** Buy the next hint tier for a word. Returns the tier now open, or null. */
   buyHint: (word: string) => number | null;
   recordMiss: (word: string) => void;
@@ -284,6 +294,8 @@ const initialState: GameState = {
   exp: 0,
   foundWords: {},
   titleRewards: [],
+  titlesSeen: null,
+  writes: 0,
   hints: {},
   misses: {},
   kana: {},
@@ -325,6 +337,7 @@ export const useGameStore = create<GameState & GameActions>()(
             progress: { ...s.progress, [kanjiId]: next },
             // Writing is the only source of ink.
             sumi: s.sumi + 1,
+            writes: s.writes + 1,
             exp: s.exp + gained,
             daily: {
               ...s.daily,
@@ -363,6 +376,7 @@ export const useGameStore = create<GameState & GameActions>()(
               },
             },
             sumi: s.sumi + 1,
+            writes: s.writes + 1,
             exp: s.exp + gained,
             daily: {
               ...s.daily,
@@ -585,13 +599,20 @@ export const useGameStore = create<GameState & GameActions>()(
         return true;
       },
 
-      claimTitle: (word) => {
-        const title = TITLES.find((t) => t.word === word);
+      claimTitle: (id) => {
+        const a = getAchievement(id);
         const state = get();
-        if (!title || state.titleRewards.includes(word) || state.earnedFoundCount() < title.at) return null;
-        set((s) => ({ gems: s.gems + title.gems, titleRewards: [...s.titleRewards, word] }));
-        return title.gems;
+        if (!a || isTaken(state.titleRewards, a) || a.family.measure(state) < a.at) return null;
+        set((s) => ({ gems: s.gems + a.gems, titleRewards: [...s.titleRewards, a.id] }));
+        return a.gems;
       },
+
+      markTitlesSeen: (ids) =>
+        set((s) => {
+          const seen = s.titlesSeen ?? [];
+          const fresh = ids.filter((id) => !seen.includes(id));
+          return fresh.length || s.titlesSeen == null ? { titlesSeen: [...seen, ...fresh] } : s;
+        }),
 
       buyHint: (word) => {
         const current = get().hints[word] ?? 1; // the meaning is always free
@@ -621,7 +642,7 @@ export const useGameStore = create<GameState & GameActions>()(
 
       recordKanaRep: (kana) => {
         const n = (get().kana[kana] ?? 0) + 1;
-        set((s) => ({ kana: { ...s.kana, [kana]: n } }));
+        set((s) => ({ kana: { ...s.kana, [kana]: n }, writes: s.writes + 1 }));
         return n;
       },
 
@@ -651,6 +672,11 @@ export const useGameStore = create<GameState & GameActions>()(
           daily: { ...current.daily, ...(p.daily ?? {}) },
           // Saves from before the level (2026-10-03) start at 0.
           exp: typeof p.exp === 'number' ? p.exp : current.exp,
+          // Saves from before the count (2026-10-08): what the progress still shows was written.
+          writes:
+            typeof p.writes === 'number'
+              ? p.writes
+              : Object.values(p.progress ?? {}).reduce((n, x) => n + (x?.reps ?? 0), 0) + Object.values(p.kana ?? {}).reduce((n, x) => n + x, 0),
           streak: { ...current.streak, ...(p.streak ?? {}) },
           equippedGear: { ...current.equippedGear, ...(p.equippedGear ?? {}) },
         };

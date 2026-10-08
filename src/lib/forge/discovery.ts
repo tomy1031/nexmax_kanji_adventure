@@ -327,6 +327,11 @@ export const TITLES: Title[] = [
   { at: 55, word: '名人', reading: 'めいじん', ruby: '名人(めいじん)', en: 'master', gems: 150 },
   { at: 80, word: '先生', reading: 'せんせい', ruby: '先生(せんせい)', en: 'teacher', gems: 200 },
   { at: 105, word: '生き字引', reading: 'いきじびき', ruby: '生(い)き字引(じびき)', en: 'walking dictionary', gems: 300 },
+  // 2026-10-08「称号の 段も 足して」: the route holds hundreds of words to find now
+  // (漢字やさん, ことば図鑑's ？ cards, 字カード), so the ladder goes on past 105.
+  { at: 150, word: '学者', reading: 'がくしゃ', ruby: '学者(がくしゃ)', en: 'scholar', gems: 200 },
+  { at: 220, word: '博士', reading: 'はかせ', ruby: '博士(はかせ)', en: 'doctor of words', gems: 250 },
+  { at: 320, word: '文豪', reading: 'ぶんごう', ruby: '文豪(ぶんごう)', en: 'great writer', gems: 300 },
 ];
 
 export const titleFor = (earnedCount: number): Title | null => {

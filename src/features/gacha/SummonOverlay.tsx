@@ -5,6 +5,7 @@ import { assetPath } from '../../lib/assetPath';
 import * as sfx from '../../lib/sfx';
 import { PullCord } from './PullCord';
 import { StarBurst } from './Sparkles';
+import { useQuiet } from '../../store/uiStore';
 
 /**
  * ことばの 本 → カード (docs/design/18 §3). The pull is already decided when
@@ -41,6 +42,8 @@ const OUT = UNLATCH + 1.0;
 const FLY = 0.6;
 
 export const SummonOverlay = ({ rarities, still, showFurigana, onDone }: { rarities: number[]; still: boolean; showFurigana: boolean; onDone: () => void }) => {
+  // The summoning plays out first; a 称号 for the new なかま comes after (AchievementToast).
+  useQuiet();
   const n = rarities.length;
   const top = Math.max(...rarities);
   const step = n > 1 ? 0.09 : 0;

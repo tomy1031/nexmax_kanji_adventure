@@ -128,8 +128,12 @@ describe('titles', () => {
     expect(nextTitle(999)).toBeNull();
   });
 
-  it('is reachable: the N5 set alone can carry a learner to the last title', () => {
-    expect(wordsFor(N5).length).toBeGreaterThanOrEqual(TITLES[TITLES.length - 1].at);
+  it('is reachable: the N5 set alone can carry a learner through むかし編\'s ladder (up to 生き字引)', () => {
+    // 2026-10-08「称号の 段も 足して」: 学者・博士・文豪 come after it, for the new route's
+    // hundreds of words (data/achievements.test.ts checks those against the route).
+    const mukashiLast = TITLES.find((t) => t.word === '生き字引')!;
+    expect(wordsFor(N5).length).toBeGreaterThanOrEqual(mukashiLast.at);
+    expect(TITLES[TITLES.length - 1].at).toBeGreaterThan(mukashiLast.at);
   });
 });
 

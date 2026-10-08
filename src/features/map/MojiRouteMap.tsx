@@ -25,7 +25,7 @@ import { Feature, isFeatureUnlocked } from '../../data/unlocks';
 import { MULTI_COST, PULL_COST, STEP_UP } from '../../lib/gacha';
 import { isVersusConfigured } from '../../lib/versusConfig';
 import { useStill } from '../../hooks/useStill';
-import { TITLES, earnsTitle, titleFor } from '../../lib/forge/discovery';
+import { ACHIEVEMENTS, claimable, reachedIds } from '../../data/achievements';
 
 /**
  * ステージせんたく — 文字が 消えた 町の 入口 (08 §3.7).
@@ -439,12 +439,9 @@ export const MojiRouteMap = () => {
   const cleared = useGameStore((s) => s.clearedStages);
   const progress = useGameStore((s) => s.progress);
   const streak = useGameStore((s) => s.streak);
-  // 称号 (TitlesScreen): the one held now, and how many ◆ are waiting to be taken.
-  const foundWords = useGameStore((s) => s.foundWords);
-  const titleRewards = useGameStore((s) => s.titleRewards);
-  const titleEarned = useMemo(() => Object.values(foundWords).filter(earnsTitle).length, [foundWords]);
-  const title = titleFor(titleEarned);
-  const titleClaimable = TITLES.filter((t) => titleEarned >= t.at && !titleRewards.includes(t.word)).reduce((n, t) => n + t.gems, 0);
+  // 称号 (TitlesScreen, data/achievements.ts): how many are held, and how many ◆ wait to be taken.
+  const titlesGot = useGameStore((s) => reachedIds(s).length);
+  const titleClaimable = useGameStore((s) => claimable(s, s.titleRewards).reduce((n, a) => n + a.gems, 0));
   const known = useKnownKana();
   const owned = useOwnedKanji();
   const [params] = useSearchParams();
@@ -910,7 +907,7 @@ export const MojiRouteMap = () => {
                       ['漢字(かんじ)マスター（★3）', `${masters}`],
                       ['クリアした 話(はなし)', `${episodesCleared} / ${allEpisodes.length}`],
                       ['毎日(まいにち) つづけた 日(ひ)', `${streak.count}`],
-                      ['称号(しょうごう)', title ? title.ruby : '—'],
+                      ['とった 称号(しょうごう)', `${titlesGot} / ${ACHIEVEMENTS.length}`],
                     ] as const
                   ).map(([label, value]) => (
                     <div key={label} className="contents">
