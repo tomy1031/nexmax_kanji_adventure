@@ -12,7 +12,7 @@ import {
   isReviewDue,
 } from '../lib/level';
 import { DEFAULT_VERSUS_STATS, type VersusStats } from '../features/versus/types';
-import { FoundVia, HINT_COST, MAX_HINT, TRY_COST_2, TRY_COST_3, earnsTitle } from '../lib/forge/discovery';
+import { FoundVia, HINT_COST, MAX_HINT, TITLES, TRY_COST_2, TRY_COST_3, earnsTitle } from '../lib/forge/discovery';
 import { getGear, type GearSlot } from '../data/equipment';
 import { forgeTargetOf, forgedGearId, gearFromId, type ForgedSlot } from '../lib/forge/gear';
 import { getKanjiById } from '../lib/kanjiDb';
@@ -157,6 +157,8 @@ export interface GameState {
   exp: number;
   /** Words discovered, and how. */
   foundWords: Record<string, FoundVia>;
+  /** 称号 whose ◆ has been taken, by title word (lib/forge/discovery.ts TITLES, TitleScreen). */
+  titleRewards: string[];
   /** Hint tier opened per word. */
   hints: Record<string, number>;
   /** Wrong guesses per word — the answer tier needs a few. */
@@ -227,6 +229,8 @@ export interface GameActions {
   tryCost: (kanjiCount: number) => number;
   /** Record a discovery. Returns false if it was already known. */
   recordFound: (word: string, via: FoundVia) => boolean;
+  /** Take a 称号's ◆, once, when it is earned. The gems given, or null. */
+  claimTitle: (word: string) => number | null;
   /** Buy the next hint tier for a word. Returns the tier now open, or null. */
   buyHint: (word: string) => number | null;
   recordMiss: (word: string) => void;
@@ -279,6 +283,7 @@ const initialState: GameState = {
   sumi: 0,
   exp: 0,
   foundWords: {},
+  titleRewards: [],
   hints: {},
   misses: {},
   kana: {},
@@ -578,6 +583,14 @@ export const useGameStore = create<GameState & GameActions>()(
         if (get().foundWords[word]) return false;
         set((s) => ({ foundWords: { ...s.foundWords, [word]: via } }));
         return true;
+      },
+
+      claimTitle: (word) => {
+        const title = TITLES.find((t) => t.word === word);
+        const state = get();
+        if (!title || state.titleRewards.includes(word) || state.earnedFoundCount() < title.at) return null;
+        set((s) => ({ gems: s.gems + title.gems, titleRewards: [...s.titleRewards, word] }));
+        return title.gems;
       },
 
       buyHint: (word) => {

@@ -52,6 +52,7 @@ const chunks = {
   // Versus brings the network library.
   versus: () => import('./features/versus/VersusScreen'),
   words: () => import('./features/words/WordBook'),
+  titles: () => import('./features/words/TitlesScreen'),
   tutorial: () => import('./features/tutorial/TutorialStage'),
 };
 const ArcSelect = lazy(orReload(chunks.arcSelect));
@@ -62,6 +63,7 @@ const CollectionScreen = lazy(orReload(chunks.collection));
 const DailyScreen = lazy(orReload(chunks.daily));
 const VersusScreen = lazy(orReload(chunks.versus));
 const WordBook = lazy(orReload(chunks.words));
+const TitlesScreen = lazy(orReload(chunks.titles));
 const TutorialStage = lazy(orReload(chunks.tutorial));
 // For testing only (せってい → この ゲームに ついて ×7): not warmed with the rest.
 const DebugScreen = lazy(orReload(() => import('./features/dev/DebugScreen')));
@@ -187,6 +189,7 @@ const App = () => {
             <Route path="/daily" element={<Later><DailyScreen /></Later>} />
             <Route path="/versus" element={<Later><VersusScreen /></Later>} />
             <Route path="/words" element={<Later><WordBook /></Later>} />
+            <Route path="/titles" element={<Later><TitlesScreen /></Later>} />
             <Route path="/tutorial" element={<Later><TutorialStage /></Later>} />
             <Route path="/prologue" element={<PrologueScreen />} />
             <Route path="/kana/:id" element={<KanaEpisode />} />

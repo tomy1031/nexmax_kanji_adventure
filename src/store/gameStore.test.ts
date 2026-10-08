@@ -233,3 +233,23 @@ describe('漢字やさん: the kanji decide what they make (docs/design/19 §2)'
   });
 });
 
+describe('称号の ◆ (TitlesScreen)', () => {
+  it('gives a title\'s gems once it is earned, and only once', () => {
+    const words = (n: number, via: 'aimed' | 'town') => Object.fromEntries(Array.from({ length: n }, (_, i) => [`w${via}${i}`, via]));
+    useGameStore.setState({ gems: 0, foundWords: { ...words(9, 'aimed'), ...words(5, 'town') } });
+    // Nine looked for, five handed over by the town: 見習い (10) is not earned yet.
+    expect(useGameStore.getState().claimTitle('見習い')).toBeNull();
+    useGameStore.setState((s) => ({ foundWords: { ...s.foundWords, last: 'learned' } }));
+    expect(useGameStore.getState().claimTitle('見習い')).toBe(50);
+    expect(useGameStore.getState().gems).toBe(50);
+    expect(useGameStore.getState().claimTitle('見習い')).toBeNull();
+    expect(useGameStore.getState().claimTitle('一人前')).toBeNull();
+    expect(useGameStore.getState().gems).toBe(50);
+  });
+
+  it('reads a save from before it with no ◆ taken', () => {
+    const merge = useGameStore.persist.getOptions().merge!;
+    const current = useGameStore.getState();
+    expect((merge({ gems: 5 }, current) as typeof current).titleRewards).toEqual([]);
+  });
+});
