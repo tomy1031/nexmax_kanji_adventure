@@ -16,6 +16,8 @@ import {
   TITLES,
   answerChoices,
   readingChoices,
+  earnsTitle,
+  FoundVia,
 } from './discovery';
 import { MUKASHI_STAGES } from '../../data/stages';
 
@@ -195,5 +197,15 @@ describe('ことばを 字から 見つける (docs/design/19 §4)', () => {
       expect(new Set(rs).size, c.word).toBe(3);
       for (const r of rs) expect(Math.abs([...r].length - [...c.reading].length), `${c.word} ${r}`).toBeLessThanOrEqual(1);
     }
+  });
+});
+
+describe('titles (docs/design/19 §4)', () => {
+  it('count what the player looked for, not what was handed over', () => {
+    expect(earnsTitle(FoundVia.AIMED)).toBe(true);
+    expect(earnsTitle(FoundVia.LUCKY)).toBe(true);
+    expect(earnsTitle(FoundVia.LEARNED)).toBe(true);
+    expect(earnsTitle(FoundVia.TOLD)).toBe(false);
+    expect(earnsTitle(FoundVia.TOWN)).toBe(false);
   });
 });

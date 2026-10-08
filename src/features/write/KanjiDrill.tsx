@@ -19,6 +19,7 @@ import { hasSign } from '../picturebook/hasSign';
 import { streetOf } from '../../lib/signStreet';
 import * as sfx from '../../lib/sfx';
 import { useOwnedKanji } from '../moji/useOwnedKanji';
+import NewWords from '../zukan/NewWords';
 import { jinglePlaying, useBgm } from '../../lib/bgm';
 
 /** The ★1 cards that still explain ★★ and ★★★: 1話's five kanji. */
@@ -520,13 +521,13 @@ export const KanjiDrill = ({ kanji, onObtained, onExit, onDone, nextLabel = 'つ
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex items-center justify-center bg-black/55 px-6"
+            className="fixed inset-0 z-50 flex justify-center overflow-y-auto bg-black/55 px-6 pt-10 pb-4"
           >
             <motion.div
               initial={{ scale: 0.86, y: 14 }}
               animate={{ scale: 1, y: 0 }}
               transition={{ type: 'spring', stiffness: 320, damping: 22 }}
-              className="g-parchment w-full max-w-sm px-6 py-6 text-center"
+              className="g-parchment my-auto w-full max-w-sm px-6 py-6 text-center"
             >
               <div className="relative">
                 <StarBurst />
@@ -538,7 +539,7 @@ export const KanjiDrill = ({ kanji, onObtained, onExit, onDone, nextLabel = 'つ
                 initial={{ rotate: -8, scale: 0.6 }}
                 animate={{ rotate: 0, scale: 1 }}
                 transition={{ type: 'spring', stiffness: 200, damping: 12 }}
-                className="mx-auto flex h-40 w-32 flex-col items-center justify-center rounded-2xl text-[64px] leading-[1.4] font-black"
+                className={`mx-auto flex flex-col items-center justify-center rounded-2xl leading-[1.4] font-black ${compact ? 'h-28 w-24 text-[48px]' : 'h-40 w-32 text-[64px]'}`}
                 style={{
                   background: 'linear-gradient(160deg,#fffbe8,#ffe7a3)',
                   border: '4px solid #4f9a3c',
@@ -563,6 +564,8 @@ export const KanjiDrill = ({ kanji, onObtained, onExit, onDone, nextLabel = 'つ
                 </li>
               </ul>
               )}
+              {/* この 字の ことば: writing a kanji leads on to its words (docs/design/19 §4 C). */}
+              <NewWords char={kanji.char} max={compact ? 1 : 2} />
               <button type="button" className="g-btn g-btn-primary mt-5 w-full text-lg" onClick={onDone ?? onExit}>
                 <RubyText showFurigana={showFurigana}>{nextLabel}</RubyText>
               </button>
@@ -589,13 +592,13 @@ export const KanjiDrill = ({ kanji, onObtained, onExit, onDone, nextLabel = 'つ
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex items-center justify-center bg-black/55 px-6"
+            className="fixed inset-0 z-50 flex justify-center overflow-y-auto bg-black/55 px-6 pt-10 pb-4"
           >
             <motion.div
               initial={{ scale: 0.86, y: 14 }}
               animate={{ scale: 1, y: 0 }}
               transition={{ type: 'spring', stiffness: 320, damping: 22 }}
-              className="g-parchment w-full max-w-sm px-6 py-6 text-center"
+              className="g-parchment my-auto w-full max-w-sm px-6 py-6 text-center"
             >
               <div className="g-btn-red mx-auto -mt-10 mb-3 inline-block rounded-xl px-4 py-1 text-sm font-black">
                 <RubyText showFurigana={showFurigana}>{obtained ? (goal != null ? '★3 漢字(かんじ)マスター！' : '10こ 集(あつ)まった！') : 'ふくしゅう できた'}</RubyText>
@@ -604,7 +607,7 @@ export const KanjiDrill = ({ kanji, onObtained, onExit, onDone, nextLabel = 'つ
                 initial={{ rotate: -8, scale: 0.6 }}
                 animate={{ rotate: 0, scale: 1 }}
                 transition={{ type: 'spring', stiffness: 200, damping: 12 }}
-                className="mx-auto flex h-40 w-32 flex-col items-center justify-center rounded-2xl text-[64px] leading-[1.4] font-black"
+                className={`mx-auto flex flex-col items-center justify-center rounded-2xl leading-[1.4] font-black ${compact ? 'h-28 w-24 text-[48px]' : 'h-40 w-32 text-[64px]'}`}
                 style={{
                   background: 'linear-gradient(160deg,#fffbe8,#ffe7a3)',
                   border: '4px solid #4f9a3c',
@@ -627,6 +630,7 @@ export const KanjiDrill = ({ kanji, onObtained, onExit, onDone, nextLabel = 'つ
                     : 'ふくしゅうとして 1回(かい) 記録(きろく)した。さびた 武器(ぶき)も 直(なお)る。'}
                 </RubyText>
               </p>
+              {obtained && <NewWords char={kanji.char} max={compact ? 1 : 2} />}
               <button type="button" className="g-btn g-btn-primary mt-5 w-full text-lg" onClick={onDone ?? onExit}>
                 <RubyText showFurigana={showFurigana}>{nextLabel}</RubyText>
               </button>

@@ -12,7 +12,7 @@ import {
   isReviewDue,
 } from '../lib/level';
 import { DEFAULT_VERSUS_STATS, type VersusStats } from '../features/versus/types';
-import { FoundVia, HINT_COST, MAX_HINT, TRY_COST_2, TRY_COST_3 } from '../lib/forge/discovery';
+import { FoundVia, HINT_COST, MAX_HINT, TRY_COST_2, TRY_COST_3, earnsTitle } from '../lib/forge/discovery';
 import { getGear, type GearSlot } from '../data/equipment';
 import { forgedGearId, gearFromId, type ForgedSlot } from '../lib/forge/gear';
 import { ALL_KANJI } from '../data/kanji.generated';
@@ -589,7 +589,7 @@ export const useGameStore = create<GameState & GameActions>()(
         set((s) => ({ misses: { ...s.misses, [word]: (s.misses[word] ?? 0) + 1 } })),
 
       earnedFoundCount: () =>
-        Object.values(get().foundWords).filter((v) => v !== FoundVia.TOLD).length,
+        Object.values(get().foundWords).filter(earnsTitle).length,
 
       recordVersusResult: (won, ratingDelta) =>
         set((s) => ({
