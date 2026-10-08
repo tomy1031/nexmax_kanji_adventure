@@ -22,7 +22,8 @@ import { applyLevel, levelOf, ownedCount } from '../../lib/level';
 import { charRuby } from '../../lib/reading';
 import { REPS_TO_OBTAIN } from '../../types/kanji';
 import { Feature, isFeatureUnlocked } from '../../data/unlocks';
-import { isForgeOpen, mastersOf } from '../../data/mojiFlow';
+import { isEpisodeOpen, isForgeOpen, mastersOf } from '../../data/mojiFlow';
+import { getMojiEpisode } from '../../data/mojiEpisodes';
 import * as sfx from '../../lib/sfx';
 import PictureBook from '../picturebook/PictureBook';
 import { NightStreetBackdrop } from '../write/NightStreet';
@@ -44,6 +45,17 @@ import { useCompoundsVersion } from '../../data/compounds';
  */
 
 type Slot = 'weapon' | GearSlot;
+
+/** What a piece adds, in one short line: 🛡 ＋3 ・ ❤ ＋20 ・ ✋ ＋1 ・ ⚔ ＋10%. */
+const effectText = (g: GearItem): string =>
+  [
+    g.defense ? `🛡 ＋${g.defense}` : '',
+    g.hp ? `❤ ＋${g.hp}` : '',
+    g.patience ? `✋ ＋${g.patience}` : '',
+    g.attackPct ? `⚔ ＋${g.attackPct}%` : '',
+  ]
+    .filter(Boolean)
+    .join(' ・ ');
 /** What 漢字やさん makes for a slot, for its button. */
 const MAKE_LABEL: Record<Exclude<Slot, 'charm'>, string> = { weapon: '武器(ぶき)', shield: '盾(たて)', body: 'よろい' };
 const SLOTS: { slot: Slot; icon: string; pos: string }[] = [
@@ -72,6 +84,8 @@ export const EquipScreen = () => {
 
   const [slot, setSlot] = useState<Slot>('weapon');
   const [showAll, setShowAll] = useState(false);
+  /** 新ルート: the pieces of episodes not reached yet, folded until asked for. */
+  const [showLater, setShowLater] = useState(false);
   /** 強化 (11 §6): the weapon being worked on, by recipe id. */
   const [training, setTraining] = useState<string | null>(null);
 
@@ -115,6 +129,24 @@ export const EquipScreen = () => {
   // A stage's gear is shown once the learner has reached that stage.
   const reached = new Set(['mukashi-1', ...cleared, ...cleared.map((id) => id.replace(/\d+$/, (n) => String(Number(n) + 1)))]);
   const inView = (g: GearItem) => moji || reached.has(g.stage);
+  /** 新ルート: an episode's piece is near once that episode is open (the old routes' pieces always are). */
+  const near = (g: GearItem) => {
+    const ep = getMojiEpisode(g.stage);
+    return !ep || isEpisodeOpen(ep, cleared);
+  };
+  /**
+   * The table's pieces for a slot. On 新ルート (30-odd charms): what can be
+   * made now first, then what is made, then what still needs a kanji — and
+   * of those only the open episodes' unless 先の 話の ぶん is opened.
+   */
+  const tableFor = (sl: GearSlot): { list: GearItem[]; later: number } => {
+    const all = GEAR.filter((g) => g.slot === sl).filter((g) => showAll || inView(g));
+    if (!moji) return { list: all, later: 0 };
+    const rank = (g: GearItem) => (gear.includes(g.id) ? 1 : missingFor(g, owned).length === 0 ? 0 : 2);
+    const sorted = all.map((g, i) => ({ g, i })).sort((a, b) => rank(a.g) - rank(b.g) || a.i - b.i).map(({ g }) => g);
+    const far = sorted.filter((g) => rank(g) === 2 && !near(g));
+    return { list: showLater ? sorted : sorted.filter((g) => !far.includes(g)), later: far.length };
+  };
 
   const slotItem = (s: Slot) => (s === 'weapon' ? (weapon ? { name: weapon.name, icon: weapon.icon } : null) : getGear(equippedGear[s]));
 
@@ -335,9 +367,7 @@ export const EquipScreen = () => {
                 })}
 
             {slot !== 'weapon' &&
-              GEAR.filter((g) => g.slot === slot)
-                .filter((g) => showAll || inView(g))
-                .map((g) => {
+              tableFor(slot).list.map((g) => {
                   const made = gear.includes(g.id);
                   const on = equippedGear[g.slot] === g.id;
                   const missing = missingFor(g, owned);
@@ -363,6 +393,9 @@ export const EquipScreen = () => {
                           <>
                             <p className="text-[11px] leading-[1.8]">
                               <RubyText showFurigana={showFurigana}>{g.blurb}</RubyText>
+                            </p>
+                            <p className="text-[11px] font-black" style={{ color: '#7a4a26' }}>
+                              {effectText(g)}
                             </p>
                             {!made && (
                               <div className="mt-0.5 flex flex-wrap items-center gap-1 text-[11px] font-bold">
@@ -411,6 +444,19 @@ export const EquipScreen = () => {
                     </li>
                   );
                 })}
+            {slot !== 'weapon' && moji && tableFor(slot).later > 0 && (
+              <li>
+                <button
+                  type="button"
+                  className="w-full rounded-full border-2 border-white/80 bg-[#23456e]/80 px-3 py-1.5 text-xs font-black text-white"
+                  onClick={() => setShowLater((v) => !v)}
+                >
+                  <RubyText showFurigana={showFurigana}>
+                    {showLater ? '▲ 先(さき)の 話(わ)の ぶんを しまう' : `▼ 先(さき)の 話(わ)で 作(つく)る もの（${tableFor(slot).later}）`}
+                  </RubyText>
+                </button>
+              </li>
+            )}
           </ul>
 
           {slot !== 'charm' && forgeOpen && (

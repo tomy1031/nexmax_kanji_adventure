@@ -987,7 +987,7 @@ const WEAPONS = Object.entries(WEAPON_SHAPES).flatMap(([cls, shape]) => [weapon(
 // そうび（data/equipment.ts）: 盾は 体の 前、よろいは 背中、おまもりは 頭の そば。
 // ---------------------------------------------------------------------------
 
-const gear = (id, what) => ({
+const gear = (id, what, keepWhite = false) => ({
   id: `gear_${id.replace(/-/g, '_')}`,
   group: 'gear',
   prio: 'A',
@@ -999,6 +999,8 @@ const gear = (id, what) => ({
   diff: `The item: ${what}`,
   used: `そうび ${id}（data/equipment.ts）。ネクマックスに 着せる・もちもの`,
   note: '白い 背景を import.mjs が 切り抜く（prop）',
+  // めがねの レンズ・紙・リボンの 白は 中に のこす
+  ...(keepWhite ? { keepWhite: true } : {}),
 });
 
 const GEAR_ART = [
@@ -1013,6 +1015,40 @@ const GEAR_ART = [
   gear('charm-toki', 'a small brass pocket-watch amulet with a clock face showing only tick marks (no numbers), a red tassel and a sky-blue chain.'),
   gear('charm-hon', 'a bookmark charm: a slim decorated bookmark with a little open-book emblem at the top (blank pages, no letters) and a red ribbon tassel.'),
   gear('charm-tomo', 'a friendship knot charm: two colorful braided cords (pink and sky-blue) tied together in a heart-shaped knot, with small beads.'),
+  // 新ルートの アクセサリ（docs/design/19 §3）: 1話に 1つ
+  gear('charm-tsuki', "a pendant charm: a golden crescent moon hanging from a thin sky-blue chain, with a small round pale-yellow gem at its tip."),
+  gear('charm-yama', "a round brass bell charm (a Japanese suzu) with a small green mountain shape engraved on it, a red cord and tassel."),
+  gear('charm-mitsuboshi', "a round badge charm with three small golden stars in a row on a navy plate, a sky-blue rim."),
+  gear('charm-hachi', "a small open folding fan charm, wide at the top and narrow at the bottom, red and gold with a white edge, and a gold tassel."),
+  gear('charm-senen', "a small round coin purse charm (a gamaguchi with a brass kiss-lock clasp), pale green, with one plain gold coin peeking out."),
+  gear('charm-sensei', "a pair of round glasses with thin gold frames hanging on a sky-blue cord, as a charm."),
+  gear('charm-isha', "a stethoscope charm: a small silver chest piece with a sky-blue tube curled in a loop and a tiny red heart gem on it."),
+  gear('charm-asa', "a small round twin-bell alarm clock charm, sunny yellow, its white face showing only tick marks, a tiny sun ornament on top."),
+  gear('charm-mainichi', "a small tear-off desk calendar charm: a thick stack of white pages on a sky-blue stand, the top page blank with a red band at its top.", true),
+  gear('charm-gakkou', "a school badge charm: a shield-shaped navy emblem with a golden open book (blank pages) and a pink cherry blossom on it."),
+  gear('charm-densha', "a train ticket charm: a small pale-orange ticket card with a tiny train silhouette printed on it and one punched round hole, on a sky-blue clip."),
+  gear('charm-atarashii', "a big fresh pink-and-white ribbon bow charm with two long tails and a small sparkling gem at its knot.", true),
+  gear('charm-aoi', "a star-shaped charm cut from shining sky-blue crystal with a white highlight, a silver ring at its top."),
+  gear('charm-tebukuro', "a pair of chunky white mecha gloves with sky-blue knuckle plates and navy cuffs, lying side by side (empty gloves, nobody wearing them)."),
+  gear('charm-sakana', "a cute fish-shaped key-chain charm, orange and white with one round eye, on a silver key ring."),
+  gear('charm-migihidari', "a pair of drop earrings side by side: one sky-blue teardrop gem and one pink teardrop gem, each on a small silver hook."),
+  gear('charm-inu', "a round badge charm with a cute shiba dog face on it, cream and orange, a navy rim."),
+  gear('charm-maiku', "a small retro stand microphone charm with a round silver head and a red body, a sky-blue cord loop."),
+  gear('charm-kaerimichi', "a small hand lantern charm with a brass frame and warm amber glass glowing softly inside, a ring handle at its top."),
+  gear('charm-shashin', "a heart-shaped golden locket pendant, half open, an empty little frame inside (no picture), on a fine gold chain."),
+  gear('charm-eiga', "a movie ticket stub charm: a red ticket with a small film-reel picture on it and one perforated torn edge."),
+  gear('charm-kitte', "a postage-stamp brooch: a small square stamp with wavy perforated edges showing a tiny blue mountain and a sun, set in a thin gold frame."),
+  gear('charm-tabi', "a brass pocket compass charm with its lid open, a red and white needle, its dial showing only small tick marks."),
+  gear('charm-hana', "a flower crown of small pink, white and yellow blossoms with green leaves, drawn as a ring seen from the front."),
+  gear('charm-ame', "a teardrop-shaped charm of clear aqua-blue glass with a tiny white sparkle inside, hanging from a sky-blue cap and ring.", true),
+  gear('charm-tsukuru', "a pair of brass steampunk goggles with round amber lenses and a brown leather strap."),
+  gear('charm-akarui', "a light-bulb lamp charm: a round glowing light bulb shining warm white, on a brass screw base with a small ring.", true),
+  gear('charm-omoi', "a small heavy ship's anchor charm, dark iron grey with a coil of navy rope around its shank."),
+  gear('charm-genki', "a Japanese omamori charm bag in bright red with a round golden sun embroidered on it and a gold knotted cord."),
+  gear('charm-yuumei', "a big shining gold medal with a red ribbon, a star embossed in its center."),
+  gear('charm-miyako', "a small round red paper lantern (chochin) charm with black top and bottom rims and a gold tassel, nothing written on it."),
+  gear('charm-yoru', "a hanging ornament of three small golden stars and a little crescent moon on thin strings, like a mobile, from a sky-blue ring."),
+  gear('charm-ashi', "a winged anklet charm: a sky-blue band with two little white feathered wings on its sides."),
 ];
 
 // ---------------------------------------------------------------------------
