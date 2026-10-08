@@ -18,17 +18,20 @@ const LEVEL_ORDER: Record<JlptLevel, number> = { N5: 0, N4: 1, N3: 2 };
 
 /**
  * Real words with the kanji, for its card: words the player can already
- * read whole first (every kanji in them written), then the learner-level
- * core before the dictionary's wider words, then the most basic (N5 before
- * N4), then the shortest.
+ * read whole first (every kanji in them written) — of those, the ones not in
+ * ことば図鑑 yet (`found`) before the ones that are, so the card keeps
+ * offering a word to learn (docs/design/19 §4) — then the learner-level core
+ * before the dictionary's wider words, then the most basic (N5 before N4),
+ * then the shortest.
  */
-export const cardWords = (char: string, owned: ReadonlySet<string>, limit = 3): Compound[] =>
+export const cardWords = (char: string, owned: ReadonlySet<string>, limit = 3, found: ReadonlySet<string> = new Set()): Compound[] =>
   getCompounds()
     .filter((c) => c.word.includes(char))
     .map((c) => ({ c, readable: [...c.word].every((ch) => owned.has(ch)) }))
     .sort(
       (a, b) =>
         Number(b.readable) - Number(a.readable) ||
+        (a.readable ? Number(found.has(a.c.word)) - Number(found.has(b.c.word)) : 0) ||
         // The learner-level core first: the dictionary's long tail is for finding, not for the card.
         (a.c.tier ?? 0) - (b.c.tier ?? 0) ||
         LEVEL_ORDER[a.c.level] - LEVEL_ORDER[b.c.level] ||

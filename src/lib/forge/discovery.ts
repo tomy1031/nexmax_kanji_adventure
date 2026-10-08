@@ -1,5 +1,6 @@
 import type { Compound } from '../../types/forge';
 import { compoundsVersion, getCompounds } from '../../data/compounds';
+import { isHiddenWeapon } from '../../data/hiddenWeapons';
 
 /**
  * Turning the compound table into a treasure hunt.
@@ -23,6 +24,8 @@ export const FoundVia = {
   LUCKY: 'lucky',
   /** Opened with the last hint tier. Does not count toward titles. */
   TOLD: 'told',
+  /** Learned from a kanji's card in ずかん, by reading it (docs/design/19 §4). */
+  LEARNED: 'learned',
 } as const;
 export type FoundVia = (typeof FoundVia)[keyof typeof FoundVia];
 
@@ -116,6 +119,68 @@ export const cardFor = (compound: Compound): WordCard => {
 
   const masked = chars.map((ch, i) => (i === hiddenIndex ? '？' : ch)).join('');
   return { compound, hiddenIndex, masked };
+};
+
+// ---------------------------------------------------------------------------
+// Finding a word without the forge (docs/design/19 §4)
+// ---------------------------------------------------------------------------
+
+/** すみ for one answer on a card in ことば図鑑: cheaper than a forge try, never free. */
+export const ANSWER_COST = 1;
+
+/** FNV-1a, so a card offers the same choices every time it is opened. */
+const seedOf = (s: string): number => {
+  let h = 0x811c9dc5;
+  for (let i = 0; i < s.length; i++) {
+    h ^= s.charCodeAt(i);
+    h = Math.imul(h, 0x01000193) >>> 0;
+  }
+  return h >>> 0;
+};
+
+/** `n` of `pool`, picked by the seed, in a seeded order. */
+const pickSeeded = <T>(pool: readonly T[], n: number, seed: number): T[] => {
+  const left = [...pool];
+  const out: T[] = [];
+  let x = seed || 1;
+  while (out.length < n && left.length) {
+    x = (Math.imul(x, 1103515245) + 12345) >>> 0;
+    out.push(left.splice(x % left.length, 1)[0]);
+  }
+  return out;
+};
+
+/**
+ * The kanji to choose from on a ？ card: the hidden one and three the player
+ * owns that would NOT make a word in its place — a second right answer
+ * (？人 → 大人 and 友人) would be marked wrong for the card's own meaning.
+ */
+export const answerChoices = (card: WordCard, owned: ReadonlySet<string>): string[] => {
+  buildIndexes();
+  const chars = [...card.compound.word];
+  const right = chars[card.hiddenIndex];
+  const wrong = [...owned].filter((c) => {
+    if (c === right) return false;
+    const w = chars.map((ch, i) => (i === card.hiddenIndex ? c : ch)).join('');
+    return !byWord!.has(w);
+  });
+  const seed = seedOf(card.compound.word);
+  return pickSeeded([right, ...pickSeeded(wrong.sort(), 3, seed)], 4, seed >>> 3);
+};
+
+/**
+ * Readings to choose from when a word is learned from its kanji's card: its
+ * own and two of other learner-level words just as long (so the length gives
+ * nothing away). A かくし word's reading is never one of them.
+ */
+export const readingChoices = (compound: Compound): string[] => {
+  buildIndexes();
+  const len = [...compound.reading].length;
+  const others = [
+    ...new Set(getCompounds().filter((c) => (c.tier ?? 0) === 0 && !isHiddenWeapon(c.word)).map((c) => c.reading)),
+  ].filter((r) => r !== compound.reading && Math.abs([...r].length - len) <= 1);
+  const seed = seedOf(compound.word);
+  return pickSeeded([compound.reading, ...pickSeeded(others.sort(), 2, seed)], 3, seed >>> 5);
 };
 
 /** Cards for everything craftable now and not yet found. */

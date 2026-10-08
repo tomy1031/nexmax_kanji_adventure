@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { RubyText } from '../../components/ui/Ruby';
@@ -13,7 +13,7 @@ import KanjiWriterCanvas, { type KanjiWriterHandle } from '../../components/Kanj
 import { cardWords, episodeOfKanji } from '../../data/kanjiCard';
 import { episodePath, isEpisodeOpen } from '../../data/mojiFlow';
 import { MOJI_CHAPTERS } from '../../data/mojiRoute';
-import KanjiBackText from '../moji/KanjiBackText';
+import WordLearn from './WordLearn';
 import { useOwnedKanji } from '../moji/useOwnedKanji';
 import { useEscapeToClose } from '../../hooks/useEscapeToClose';
 
@@ -79,7 +79,10 @@ export const KanjiCard = ({
   const stars = starsOf(reps);
   const have = stars > 0;
   const left = repsToNextStar(reps);
-  const words = cardWords(kanji.char, owned);
+  // Read as the card opens (and turns): a word learned on it stays where it is meanwhile.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const found = useMemo(() => new Set(Object.keys(useGameStore.getState().foundWords)), [kanji.id]);
+  const words = cardWords(kanji.char, owned, 3, found);
   const ep = episodeOfKanji(kanji.char);
   const open = ep ? isEpisodeOpen(ep, cleared) : false;
   const sound = /\(([^)]*)\)/.exec(kanjiRuby(kanji))?.[1] ?? kanji.char;
@@ -171,16 +174,10 @@ export const KanjiCard = ({
         )}
 
         {words.length > 0 && (
+          // ことば: the kanji in words; one the player can read whole can be learned into ことば図鑑 (WordLearn).
           <ul className="mt-2 flex flex-col gap-1">
             {words.map((w) => (
-              <li key={w.word} className="rounded-xl bg-white/70 px-3 py-1 text-[15px] leading-[2] font-black">
-                <KanjiBackText owned={owned}>{`${w.word}(${w.reading})`}</KanjiBackText>
-                {en && (
-                  <span lang="en" className="ml-2 text-[13px] font-bold" style={{ color: '#1b4f8f' }}>
-                    {w.gloss}
-                  </span>
-                )}
-              </li>
+              <WordLearn key={w.word} word={w} owned={owned} en={en} />
             ))}
           </ul>
         )}

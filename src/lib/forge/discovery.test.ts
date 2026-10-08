@@ -14,6 +14,8 @@ import {
   HINT_COST,
   TRY_COST_2,
   TITLES,
+  answerChoices,
+  readingChoices,
 } from './discovery';
 import { MUKASHI_STAGES } from '../../data/stages';
 
@@ -158,6 +160,40 @@ describe('titles in furigana', () => {
     for (const t of TITLES) {
       expect(stripRuby(t.ruby)).toBe(t.word);
       expect(unreadKanji(t.ruby)).toEqual([]);
+    }
+  });
+});
+
+describe('ことばを 字から 見つける (docs/design/19 §4)', () => {
+  const owned = new Set([...'日本人大火山水中国月学生先']);
+
+  it('offers the hidden kanji and three that make no word in its place', () => {
+    for (const c of wordsFor(owned)) {
+      const card = cardFor(c);
+      const choices = answerChoices(card, owned);
+      const right = [...c.word][card.hiddenIndex];
+      expect(choices, c.word).toContain(right);
+      expect(new Set(choices).size, c.word).toBe(choices.length);
+      expect(choices.length, c.word).toBe(Math.min(4, owned.size));
+      for (const x of choices.filter((x) => x !== right)) {
+        const made = [...c.word].map((ch, i) => (i === card.hiddenIndex ? x : ch)).join('');
+        // A second right answer would be marked wrong: none is offered.
+        expect(compoundFor(made), `${c.word}: ${made}`).toBeNull();
+      }
+    }
+  });
+
+  it('offers the same choices each time a card is opened', () => {
+    const card = cardFor(wordsFor(owned)[0]);
+    expect(answerChoices(card, owned)).toEqual(answerChoices(card, owned));
+  });
+
+  it('asks a word\'s reading out of three, all about as long', () => {
+    for (const c of wordsFor(owned).slice(0, 20)) {
+      const rs = readingChoices(c);
+      expect(rs, c.word).toContain(c.reading);
+      expect(new Set(rs).size, c.word).toBe(3);
+      for (const r of rs) expect(Math.abs([...r].length - [...c.reading].length), `${c.word} ${r}`).toBeLessThanOrEqual(1);
     }
   });
 });
