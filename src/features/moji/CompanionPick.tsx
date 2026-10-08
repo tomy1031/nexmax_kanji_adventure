@@ -4,7 +4,7 @@ import { RubyText } from '../../components/ui/Ruby';
 import { assetPath } from '../../lib/assetPath';
 import { useGameStore } from '../../store/gameStore';
 import { getIndividual, type Individual } from '../../data/individuals';
-import { CLASS_LABEL } from '../../lib/forge/weapon';
+import { classRuby } from '../../lib/forge/weapon';
 import { ELEMENT_LABEL, type Element } from '../../lib/forge/elements';
 import { SKILL_INFO, SKILL_OF, skillEffect } from '../../lib/companionSkill';
 
@@ -21,7 +21,7 @@ export const Stars = ({ n }: { n: number }) => (
   </span>
 );
 
-const classLine = (ind: Individual) => `${CLASS_LABEL[ind.favours].ja}(${CLASS_LABEL[ind.favours].reading}) ＋${ind.bonus}%`;
+const classLine = (ind: Individual) => `${classRuby(ind.favours)} ＋${ind.bonus}%`;
 
 /** Halves the opponent's strike when it is of the element this companion resists (lib/battle.ts counterDamage). */
 const resistsLine = (el: Element) => `${ELEMENT_LABEL[el].ja}(${ELEMENT_LABEL[el].reading})の こうげき 半分(はんぶん)`;

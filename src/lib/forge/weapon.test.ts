@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import { forgeWeapon, forgeSingleBlade, weaponOf, discoverableCompounds, ICON_POOL, WeaponClass } from './weapon';
+import { forgeWeapon, forgeSingleBlade, weaponOf, discoverableCompounds, ICON_POOL, WeaponClass, classOf } from './weapon';
+import { MOJI_EPISODES } from '../../data/mojiEpisodes';
 import { elementOf, Element, effectiveness } from './elements';
 import { getKanjiByChar } from '../kanjiDb';
 
@@ -80,6 +81,31 @@ describe('forgeWeapon', () => {
   it('takes its shape from the first kanji', () => {
     expect(forgeWeapon([k('火'), k('水')])!.weaponClass).toBe(WeaponClass.SWORD);
     expect(forgeWeapon([k('水'), k('火')])!.weaponClass).toBe(WeaponClass.BOW);
+  });
+
+  it('makes 無 kanji into Nexmax\'s robot weapons by the kind of word, never a shield', () => {
+    // 2026-10-08「盾が 武器に なって いるのは 変」: a shield is worn, not swung.
+    expect(Object.values(WeaponClass)).not.toContain('SHIELD');
+    const shape = (c: string) => classOf(k(c));
+    for (const c of '人父母友手足口男女子医者員') expect(shape(c), c).toBe(WeaponClass.FIST);
+    for (const c of '一二三十百千万半毎何今昼晩曜') expect(shape(c), c).toBe(WeaponClass.GEAR);
+    for (const c of '行来入出歩待送帰起休立話聞使') expect(shape(c), c).toBe(WeaponClass.DRILL);
+    for (const c of '上下中外右左東西南北前後近') expect(shape(c), c).toBe(WeaponClass.CANNON);
+    for (const c of '大小新古長短物') expect(shape(c), c).toBe(WeaponClass.MAGNET);
+    expect(forgeWeapon([k('人'), k('口')])!.weaponClass).toBe(WeaponClass.FIST);
+    expect(forgeWeapon([k('人'), k('口')])!.name).toBe('人口(じんこう)の ロケットパンチ');
+  });
+
+  it('spreads the route\'s kanji over many shapes, none of them most of the forge', () => {
+    const route = MOJI_EPISODES.flatMap((e) => e.kanji).map(k);
+    const count = new Map<string, number>();
+    for (const kj of route) count.set(classOf(kj), (count.get(classOf(kj)) ?? 0) + 1);
+    // Every robot weapon has a fair share of first kanji…
+    for (const c of [WeaponClass.FIST, WeaponClass.GEAR, WeaponClass.DRILL, WeaponClass.CANNON, WeaponClass.MAGNET]) {
+      expect(count.get(c) ?? 0, c).toBeGreaterThanOrEqual(12);
+    }
+    // …and no shape takes more than a fifth of them (無 as one shape took two in three).
+    expect(Math.max(...count.values())).toBeLessThanOrEqual(route.length / 5);
   });
 
   it('is deterministic', () => {

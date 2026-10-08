@@ -4,7 +4,7 @@ import { NexmaxSays } from '../../components/ui/Chrome';
 import { assetPath } from '../../lib/assetPath';
 import { kanjiOf } from '../../data/charKanji';
 import { cardsOf, type Individual } from '../../data/individuals';
-import { CLASS_LABEL } from '../../lib/forge/weapon';
+import { classRuby } from '../../lib/forge/weapon';
 import { SKILL_INFO, SKILL_OF, skillEffect } from '../../lib/companionSkill';
 import { star5PowerOf } from '../../lib/star5Power';
 import { GachaCard } from './GachaCard';
@@ -82,7 +82,7 @@ export const HereIsGreat = ({ card, showFurigana }: { card: Individual; showFuri
   const items: { icon: string; head: string; body: string; en?: string }[] = [];
   if (power) items.push({ icon: '🌈', head: `★5 だけの ちから「${power.name}」`, body: power.says, en: power.en });
   items.push({ icon: info.icon, head: `わざ「${info.name}」`, body: info.says(skillEffect(kind, card.rarity)), en: info.en(skillEffect(kind, card.rarity)) });
-  items.push({ icon: '⚔️', head: 'とくいな 武(ぶ)器(き)', body: `${CLASS_LABEL[card.favours].ja}(${CLASS_LABEL[card.favours].reading})で こうげき ＋${card.bonus}%`, en: `Attack +${card.bonus}% with this weapon.` });
+  items.push({ icon: '⚔️', head: 'とくいな 武(ぶ)器(き)', body: `${classRuby(card.favours)}で こうげき ＋${card.bonus}%`, en: `Attack +${card.bonus}% with this weapon.` });
   return (
     <ul className="space-y-1.5">
       {items.map((it) => (

@@ -948,7 +948,7 @@ const CARDS = [
 ];
 
 // ---------------------------------------------------------------------------
-// 武器（11 §6）: 8つの 形 × ふつう・金。戦いで ネクマックスの 背中に 積む。
+// 武器（11 §6）: 12の 形 × ふつう・金。戦いで ネクマックスの 背中に 積む。
 // ---------------------------------------------------------------------------
 
 const weapon = (cls, gold, shape) => ({
@@ -973,7 +973,12 @@ const WEAPON_SHAPES = {
   STAFF: 'a mecha staff — a slim staff topped with a ring that holds a floating round orb.',
   HAMMER: 'a mecha hammer — a big round-ended hammer head with two little thrusters on its back, on a short handle.',
   DAGGER: 'a pair of mecha daggers — two short curved blades crossed over each other, joined at one mounting joint.',
-  SHIELD: 'a mecha shield — a rounded kite shield with a small cannon-like emitter in its center.',
+  // 無の 字は ネクマックス 自身の 武器（2026-10-08「盾が 武器なのは 変」）: 人・数と時・動き・方向・ようす
+  FIST: 'a mecha rocket punch — the fist itself is the weapon: one big chunky detached mechanical fist (a closed hand with four rounded fingers and a thumb, no claws) on a short forearm cuff, with a ring of three small rocket thrusters around the back of the cuff and the mounting joint on its side. It looks ready to fly off and punch.',
+  GEAR: 'a mecha gear cutter — one big round cog wheel with chunky rounded teeth all around its rim, like a clock\'s gear, a round hub at its center holding the glass core, on a short arm that ends in the mounting joint. Flat and wide, seen at a slant so its face shows.',
+  DRILL: 'a mecha drill — a short, fat cone-shaped drill bit with a deep spiral groove (like a construction robot\'s drill arm, not a lance), on a round motor housing with the mounting joint at its back.',
+  CANNON: 'a mecha cannon — a short, fat round cannon barrel with a wide round muzzle and two raised sky-blue bands, on a compact rounded turret base with the mounting joint. The muzzle is dark inside; no smoke, no fire, no projectile.',
+  MAGNET: 'a mecha magnet — one big horseshoe (U-shaped) magnet whose two tips are capped in bright red, its curved top set into a sky-blue mecha housing with the mounting joint. No lines or sparks around it.',
 };
 
 const WEAPONS = Object.entries(WEAPON_SHAPES).flatMap(([cls, shape]) => [weapon(cls, false, shape), weapon(cls, true, shape)]);

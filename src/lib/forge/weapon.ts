@@ -36,11 +36,17 @@ export const WeaponClass = {
   STAFF: 'STAFF',
   HAMMER: 'HAMMER',
   DAGGER: 'DAGGER',
-  SHIELD: 'SHIELD',
+  // 無 — Nexmax's own robot weapons, one for each kind of word (classOf).
+  FIST: 'FIST',
+  GEAR: 'GEAR',
+  DRILL: 'DRILL',
+  CANNON: 'CANNON',
+  MAGNET: 'MAGNET',
 } as const;
 export type WeaponClass = (typeof WeaponClass)[keyof typeof WeaponClass];
 
-export const CLASS_LABEL: Record<WeaponClass, { ja: string; reading: string }> = {
+/** The shape's name: kanji with its reading, or katakana on its own (a robot's weapon is a loanword). */
+export const CLASS_LABEL: Record<WeaponClass, { ja: string; reading?: string }> = {
   SWORD: { ja: '剣', reading: 'けん' },
   AXE: { ja: '斧', reading: 'おの' },
   SPEAR: { ja: '槍', reading: 'やり' },
@@ -48,12 +54,29 @@ export const CLASS_LABEL: Record<WeaponClass, { ja: string; reading: string }> =
   STAFF: { ja: '杖', reading: 'つえ' },
   HAMMER: { ja: '槌', reading: 'つち' },
   DAGGER: { ja: '短刀', reading: 'たんとう' },
-  SHIELD: { ja: '盾', reading: 'たて' },
+  FIST: { ja: 'ロケットパンチ' },
+  GEAR: { ja: 'ギアカッター' },
+  DRILL: { ja: 'ドリル' },
+  CANNON: { ja: 'キャノン' },
+  MAGNET: { ja: 'マグネット' },
+};
+
+/** The shape's name in furigana notation: 剣(けん), ドリル. */
+export const classRuby = (cls: WeaponClass): string => {
+  const { ja, reading } = CLASS_LABEL[cls];
+  return reading ? `${ja}(${reading})` : ja;
 };
 
 /**
  * The first kanji decides the weapon's shape. Its element is the thing the
  * learner can see in the character, so the mapping stays guessable.
+ *
+ * 無 has no one shape: two kanji in three land there, and a forge that turned
+ * all of them into one thing (a shield, until 2026-10-08) made the same
+ * weapon over and over. Its kanji are told apart by what kind of word they
+ * are (classOf), each kind a weapon of Nexmax's own; MAGNET stands for the
+ * family where a single shape is wanted (the gacha's day of the week never
+ * names 無).
  */
 export const CLASS_OF_ELEMENT: Record<Element, WeaponClass> = {
   KA: WeaponClass.SWORD,
@@ -63,7 +86,76 @@ export const CLASS_OF_ELEMENT: Record<Element, WeaponClass> = {
   DO: WeaponClass.HAMMER,
   KOU: WeaponClass.SPEAR,
   AN: WeaponClass.DAGGER,
-  MU: WeaponClass.SHIELD,
+  MU: WeaponClass.MAGNET,
+};
+
+/**
+ * 無の 字の 武器 (2026-10-08「盾が 武器に なって いるのは 変。ネクマックスに
+ * 相応しい 武器を」): what kind of word the kanji is, read off its English
+ * gloss like its element (elements.ts) — first kind in this order wins, so
+ * 起 "wake up" is a movement before "up" can make it a direction.
+ *
+ *   人・からだ (人 父 友 手 …)        → ロケットパンチ: Nexmax's fist flies out
+ *   数・時 (一 百 半 毎 今 曜 …)       → ギアカッター: a spinning cog, like a clock's
+ *   動き (行 来 出 歩 送 …)          → ドリル: it turns and drives forward
+ *   方向・場所 (上 右 東 中 前 …)      → キャノン: it aims one way
+ *   ほか — ようす・もの (大 新 長 物 …) → マグネット: it pulls
+ */
+const MU_KINDS: [WeaponClass, string[]][] = [
+  [
+    WeaponClass.FIST,
+    ['person', 'people', 'man', 'woman', 'men', 'women', 'boy', 'girl', 'child', 'children', 'baby', 'father',
+     'mother', 'parent', 'parents', 'brother', 'sister', 'husband', 'wife', 'family', 'friend', 'companion',
+     'master', 'owner', 'guest', 'host', 'doctor', 'employee', 'member', 'company', 'society', 'self', 'oneself',
+     'king', 'lord', 'citizen', 'hand', 'arm', 'finger', 'foot', 'leg', 'mouth', 'face', 'head', 'neck', 'tooth',
+     'name'],
+  ],
+  [
+    WeaponClass.GEAR,
+    ['one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten', 'hundred', 'thousand',
+     'million', 'half', 'every', 'each', 'all', 'many', 'much', 'few', 'several', 'both', 'what', 'times',
+     'double', 'twice', 'first', 'second', 'now', 'present', 'daytime', 'nightfall', 'weekday', 'early', 'late',
+     'past', 'future', 'today', 'tomorrow', 'yesterday', 'always', 'age', 'period', 'era'],
+  ],
+  [
+    WeaponClass.DRILL,
+    ['go', 'come', 'enter', 'exit', 'leave', 'return', 'arrive', 'depart', 'gone', 'pass', 'walk', 'run', 'stand',
+     'sit', 'rest', 'wait', 'meet', 'send', 'lend', 'borrow', 'give', 'receive', 'take', 'carry', 'hold', 'put',
+     'push', 'pull', 'throw', 'catch', 'use', 'travel', 'move', 'ride', 'fly', 'wake', 'rouse', 'rise', 'raise',
+     'revolve', 'turn', 'change', 'begin', 'start', 'follow', 'visit', 'talk', 'speak', 'tell', 'hear', 'listen',
+     'copy', 'reflect', 'attend', 'doing', 'do', 'exertion', 'practice', 'answer', 'ask', 'open', 'shut', 'wear'],
+  ],
+  [
+    WeaponClass.CANNON,
+    ['above', 'up', 'below', 'down', 'top', 'bottom', 'middle', 'inside', 'outside', 'center', 'centre', 'left',
+     'right', 'north', 'south', 'east', 'west', 'before', 'after', 'front', 'back', 'behind', 'ahead', 'previous',
+     'next', 'near', 'far', 'interval', 'space', 'between', 'side', 'direction', 'way', 'corner', 'edge', 'beyond',
+     'outer', 'inner', 'position'],
+  ],
+];
+const MU_KIND_OF = new Map<string, WeaponClass>();
+for (const [cls, words] of MU_KINDS) for (const w of words) if (!MU_KIND_OF.has(w)) MU_KIND_OF.set(w, cls);
+
+const classCache = new Map<string, WeaponClass>();
+
+/** The shape a kanji gives a weapon when it comes first: its element's, or for 無 its kind of word's. */
+export const classOf = (k: KanjiData): WeaponClass => {
+  const element = elementOf(k);
+  if (element !== Element.MU) return CLASS_OF_ELEMENT[element];
+  const hit = classCache.get(k.id);
+  if (hit) return hit;
+  const words = k.meanings.flatMap((m) => m.toLowerCase().split(/[^a-z-]+/)).filter(Boolean);
+  let found: WeaponClass = WeaponClass.MAGNET;
+  outer: for (const [cls] of MU_KINDS) {
+    for (const w of words) {
+      if (MU_KIND_OF.get(w) === cls) {
+        found = cls;
+        break outer;
+      }
+    }
+  }
+  classCache.set(k.id, found);
+  return found;
 };
 
 export const Rarity = {
@@ -180,9 +272,25 @@ export const ICON_POOL: Record<WeaponClass, string[]> = {
     'GiPlainDagger', 'GiCurvyKnife', 'GiThrownDaggers', 'GiSai', 'GiShardSword',
     'GiPoisonBottle', 'GiDaggerRose', 'GiNeedleDrill', 'GiBlackHandShield', 'GiShadowFollower',
   ],
-  SHIELD: [
-    'GiVikingShield', 'GiTempleGate', 'GiRoundShield', 'GiEdgedShield', 'GiCheckedShield',
-    'GiShieldBash', 'GiTribalShield', 'GiTemplarShield', 'GiStoneWall', 'GiSurroundedShield',
+  FIST: [
+    'GiFist', 'GiPunch', 'GiPunchBlast', 'GiBoxingGlove', 'GiRobotGrab',
+    'GiMechanicalArm', 'GiBrassKnuckles', 'GiStrong',
+  ],
+  GEAR: [
+    'GiCog', 'GiGears', 'GiSpinningBlades', 'GiCircularSaw', 'GiCircularSawblade',
+    'GiGearHammer', 'GiShuriken', 'GiPocketWatch',
+  ],
+  DRILL: [
+    'GiDrill', 'GiScrew', 'GiScrewdriver', 'GiSpiralArrow', 'GiVortex',
+    'GiTornado', 'GiRocketThruster', 'GiMineWagon',
+  ],
+  CANNON: [
+    'GiCannon', 'GiCannonBall', 'GiCannonShot', 'GiTurret', 'GiArtilleryShell',
+    'GiLaserBlast', 'GiFireRay', 'GiRocket',
+  ],
+  MAGNET: [
+    'GiMagnet', 'GiMagnetBlast', 'GiMagnetMan', 'GiElectric', 'GiLightningArc',
+    'GiSparkPlug', 'GiBatteryPack', 'GiPowerGenerator',
   ],
 };
 
@@ -266,7 +374,7 @@ export const forgeWeapon = (kanji: KanjiData[]): Weapon | null => {
 
   const compound = compoundFor(word);
   const element = elementOf(kanji[0]);
-  const weaponClass = CLASS_OF_ELEMENT[element];
+  const weaponClass = classOf(kanji[0]);
   const hidden = compound != null && isHiddenWeapon(word);
   const rarity = hidden ? (5 as Rarity) : rarityFor(compound, kanji, seed);
   const stage = stageOfWord(kanji.map((k) => k.char));
@@ -281,6 +389,7 @@ export const forgeWeapon = (kanji: KanjiData[]): Weapon | null => {
   const icon = pool[seed % pool.length];
 
   const classLabel = CLASS_LABEL[weaponClass];
+  const className = classRuby(weaponClass);
   const elementLabel = ELEMENT_LABEL[element];
 
   let name: string;
@@ -291,13 +400,13 @@ export const forgeWeapon = (kanji: KanjiData[]): Weapon | null => {
     // A real word. Say the word, its reading and its meaning — this is the
     // moment the vocabulary actually lands.
     plainName = `${compound.word}の${classLabel.ja}`;
-    name = `${compound.word}(${compound.reading})の ${classLabel.ja}(${classLabel.reading})`;
+    name = `${compound.word}(${compound.reading})の ${className}`;
     blurb = `${hidden ? 'かくし武器(ぶき)！ ' : ''}「${compound.word}」は ${compound.gloss}。本当(ほんとう)に ある 言葉(ことば)。`;
   } else {
     // Not a word. Still a weapon — named by reading the characters aloud.
     const reading = kanji.map(nameReading).join('');
     plainName = `${word}の${classLabel.ja}`;
-    name = `${word}(${reading})の ${classLabel.ja}(${classLabel.reading})`;
+    name = `${word}(${reading})の ${className}`;
     blurb = `${elementLabel.ja}(${elementLabel.reading})の ちから。組(く)み合(あ)わせても 言葉(ことば)には ならない。`;
   }
 

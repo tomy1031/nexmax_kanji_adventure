@@ -5,7 +5,7 @@ import { assetPath } from '../../lib/assetPath';
 import { useGameStore, BOND_MAX } from '../../store/gameStore';
 import { CARDS, CHARACTERS, cardsOf, type Individual } from '../../data/individuals';
 import { isMet } from '../../lib/gacha';
-import { CLASS_LABEL } from '../../lib/forge/weapon';
+import { classRuby } from '../../lib/forge/weapon';
 import { ELEMENT_LABEL } from '../../lib/forge/elements';
 import { SKILL_INFO, SKILL_OF, skillEffect } from '../../lib/companionSkill';
 
@@ -147,7 +147,7 @@ export const CompanionBook = ({ showFurigana }: { showFurigana: boolean }) => {
                         </span>
                         <span className="block text-[11px] leading-snug font-bold" style={{ color: 'var(--ink-2)' }}>
                           <RubyText showFurigana={showFurigana}>
-                            {`${CLASS_LABEL[c.favours].ja}(${CLASS_LABEL[c.favours].reading}) ＋${c.bonus}% ・ ${ELEMENT_LABEL[c.resists].ja}(${ELEMENT_LABEL[c.resists].reading})に 強(つよ)い`}
+                            {`${classRuby(c.favours)} ＋${c.bonus}% ・ ${ELEMENT_LABEL[c.resists].ja}(${ELEMENT_LABEL[c.resists].reading})に 強(つよ)い`}
                           </RubyText>
                         </span>
                         {mine && (
