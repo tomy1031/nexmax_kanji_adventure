@@ -314,7 +314,7 @@ export interface Title {
   /** The word in furigana notation, split where the okurigana is. */
   ruby: string;
   en: string;
-  /** ◆ ジェム given once when it is earned (TitleScreen, 2026-10-08「称号の 特典が 得られる 画面」). */
+  /** ◆ ジェム given once when it is earned (TitlesScreen, 2026-10-08「称号の 特典が 得られる 画面」). */
   gems: number;
 }
 

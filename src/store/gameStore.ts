@@ -157,7 +157,7 @@ export interface GameState {
   exp: number;
   /** Words discovered, and how. */
   foundWords: Record<string, FoundVia>;
-  /** 称号 whose ◆ has been taken, by title word (lib/forge/discovery.ts TITLES, TitleScreen). */
+  /** 称号 whose ◆ has been taken, by title word (lib/forge/discovery.ts TITLES, TitlesScreen). */
   titleRewards: string[];
   /** Hint tier opened per word. */
   hints: Record<string, number>;
