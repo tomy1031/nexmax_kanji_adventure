@@ -16,9 +16,12 @@ import {
   HINT_COST,
   MAX_HINT,
   MISSES_BEFORE_ANSWER,
+  ANSWER_COST,
+  answerChoices,
   FoundVia,
   type WordCard,
 } from '../../lib/forge/discovery';
+import * as sfx from '../../lib/sfx';
 import { charRuby } from '../../lib/reading';
 import { RubyText } from '../../components/ui/Ruby';
 import { useCompoundsVersion } from '../../data/compounds';
@@ -48,6 +51,8 @@ export const WordBook = () => {
   const sumi = useGameStore((s) => s.sumi);
   const buyHint = useGameStore((s) => s.buyHint);
   const recordFound = useGameStore((s) => s.recordFound);
+  const recordMiss = useGameStore((s) => s.recordMiss);
+  const spendSumi = useGameStore((s) => s.spendSumi);
   const earnedFoundCount = useGameStore((s) => s.earnedFoundCount);
 
   // On 文字が 消えた 町 a kanji is the player's at ★1 (MOJI_OWN_REPS), and the
@@ -56,7 +61,13 @@ export const WordBook = () => {
   /** Text straight on the backdrop: dark ink on the picture book, light on the night town. */
   const onBg = moji ? 'text-[#f4f1ff] [text-shadow:0_1px_4px_rgba(0,0,0,0.7)] [&_rt]:text-[#d9d2f5]' : 'g-onbg';
   const [tab, setTab] = useState<Tab>('cards');
-  const [open, setOpen] = useState<WordCard | null>(null);
+  const [open, setOpenCard] = useState<WordCard | null>(null);
+  /** The kanji already tried on the open card (each one is a miss). */
+  const [tried, setTried] = useState<string[]>([]);
+  const setOpen = (c: WordCard | null) => {
+    setOpenCard(c);
+    setTried([]);
+  };
 
   const owned = useMemo(
     () => new Set(ALL_KANJI.filter((k) => (progress[k.id]?.reps ?? 0) >= (moji ? MOJI_OWN_REPS : REPS_TO_OBTAIN)).map((k) => k.char)),
@@ -80,6 +91,25 @@ export const WordBook = () => {
   const openMisses = open ? (misses[open.compound.word] ?? 0) : 0;
   const nextTierCost = openTier < MAX_HINT ? HINT_COST[openTier + 1] : null;
   const answerLocked = openTier + 1 === MAX_HINT && openMisses < MISSES_BEFORE_ANSWER;
+
+  /**
+   * こたえる (docs/design/19 §4): pick the hidden kanji right here, for one
+   * すみ. Right is ねらって 見つけた, as in the forge; wrong counts as a miss
+   * (three open the last hint) and is struck off.
+   */
+  const choices = useMemo(() => (open ? answerChoices(open, owned) : []), [open, owned]);
+  const answer = (c: string) => {
+    if (!open || !spendSumi(ANSWER_COST)) return;
+    const word = open.compound.word;
+    if (c === [...word][open.hiddenIndex]) {
+      recordFound(word, FoundVia.AIMED);
+      sfx.chime();
+    } else {
+      recordMiss(word);
+      setTried((t) => [...t, c]);
+      sfx.fizz();
+    }
+  };
 
   return (
     <div className="g-stage min-h-dvh pb-8">
@@ -270,14 +300,48 @@ export const WordBook = () => {
                             ? 'こたえを 見(み)て 開(ひら)きました。'
                             : via === FoundVia.LUCKY
                               ? 'ぐうぜん 見(み)つけました。'
-                              : 'ねらって 見(み)つけました。'}
+                              : via === FoundVia.LEARNED
+                                ? 'ずかんの 字(じ)カードで おぼえました。'
+                                : 'ねらって 見(み)つけました。'}
                         </RubyText>
                       </p>
                     ) : (
                       <>
-                        <p className="mt-4 text-xs" style={{ color: 'var(--ink-3)' }}>
+                        {/* こたえる: the hidden kanji, out of four the player owns */}
+                        {choices.length > 1 && (
+                          <div className="mt-4">
+                            <p className="text-xs font-black" style={{ color: 'var(--ink-2)' }}>
+                              <RubyText showFurigana={showFurigana}>{`「？」は どの 字(じ)？（1回(かい) 🖌${ANSWER_COST}）`}</RubyText>
+                            </p>
+                            <div className="mt-1.5 grid grid-cols-4 gap-2">
+                              {choices.map((c) => {
+                                const out = tried.includes(c);
+                                return (
+                                  <button
+                                    key={c}
+                                    type="button"
+                                    data-tap
+                                    disabled={out || sumi < ANSWER_COST}
+                                    onClick={() => answer(c)}
+                                    aria-label={c}
+                                    className="g-btn g-btn-ghost !min-h-[52px] !px-0 text-2xl leading-[1.6] font-black disabled:opacity-35"
+                                    style={out ? { textDecoration: 'line-through' } : undefined}
+                                  >
+                                    <RubyText showFurigana={showFurigana}>{charRuby(c)}</RubyText>
+                                  </button>
+                                );
+                              })}
+                            </div>
+                            {tried.length > 0 && (
+                              <p className="mt-1 text-xs font-bold" style={{ color: '#c0392b' }}>
+                                <RubyText showFurigana={showFurigana}>ちがいます。もう 一度(いちど)！</RubyText>
+                              </p>
+                            )}
+                          </div>
+                        )}
+                        <p className="mt-3 text-xs" style={{ color: 'var(--ink-3)' }}>
                           <RubyText showFurigana={showFurigana}>
-                            {moji ? '漢字(かんじ)やさんで この 言葉(ことば)を 作(つく)ると 見(み)つかります。' : '合成(ごうせい)で この 言葉(ことば)を 作(つく)ると 見(み)つかります。'}
+                            {moji ? '漢字(かんじ)やさんで この 言葉(ことば)を 作(つく)っても 見(み)つかります。' : '合成(ごうせい)で この 言葉(ことば)を 作(つく)っても 見(み)つかります。'}
                           </RubyText>
                         </p>
 

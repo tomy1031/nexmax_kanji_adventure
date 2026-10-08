@@ -29,4 +29,14 @@ describe('ずかんの 字カード', () => {
     const order = { N5: 0, N4: 1, N3: 2 } as const;
     for (let i = 1; i < words.length; i++) expect(order[words[i].level]).toBeGreaterThanOrEqual(order[words[i - 1].level]);
   });
+
+  it('offers a word not in ことば図鑑 yet before one that is (docs/design/19 §4)', () => {
+    const owned = new Set(['火', '山', '花']);
+    const [first] = cardWords('火', owned);
+    const [next] = cardWords('火', owned, 3, new Set([first.word]));
+    expect(next.word).not.toBe(first.word);
+    expect([...next.word].every((c) => owned.has(c))).toBe(true);
+    // A word found stays on the card, after the new ones.
+    expect(cardWords('火', owned, 10, new Set([first.word])).map((w) => w.word)).toContain(first.word);
+  });
 });
