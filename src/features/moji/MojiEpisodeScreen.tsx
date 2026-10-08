@@ -20,6 +20,10 @@ import { getMojiEpisode, type MojiEpisode } from '../../data/mojiEpisodes';
 import { MOJI_CHAPTERS } from '../../data/mojiRoute';
 import { MOJI1_PRELUDE } from '../../data/scripts/moji1';
 import { MOJI_CAST, MOJI_SCRIPTS } from '../../data/mojiScripts';
+import { storyWordsUpTo } from '../../data/storyWords';
+import { FoundVia } from '../../lib/forge/discovery';
+import type { Compound } from '../../types/forge';
+import TownWords from './TownWords';
 import { Feature, UNLOCKED_ON_MOJI, isFeatureUnlocked } from '../../data/unlocks';
 import { HARD_BONUS_GEMS } from '../../data/clearRewards';
 import { afterEpisodePath, canForge, isChapterOpen, isForgeOpen } from '../../data/mojiFlow';
@@ -59,7 +63,7 @@ import { faceStyle } from '../../lib/faceCrop';
  * (KanjiBackText).
  */
 
-type Phase = 'prelude' | 'intro' | 'write' | 'encounter' | 'ready' | 'practice' | 'battle' | 'outro' | 'end';
+type Phase = 'prelude' | 'intro' | 'write' | 'encounter' | 'ready' | 'practice' | 'battle' | 'outro' | 'words' | 'end';
 
 const SCRIPTS = MOJI_SCRIPTS;
 const CAST = [...MOJI_CAST];
@@ -462,8 +466,20 @@ const EpisodePlayer = ({ id }: { id: string }) => {
   const toReady = () => setPhase('ready');
   const forgeHere = `/forge?back=${encodeURIComponent(`/moji/${ep.id}?at=ready${difficulty !== 'normal' ? `&mode=${difficulty}` : ''}`)}`;
 
-  // The win records the clear (BattleScene); the story's end moves on.
+  /** 町の ことば found at this story's end (docs/design/19 §4 D), shown before moving on. */
+  const [townWords, setTownWords] = useState<Compound[]>([]);
+  /** The story's end: first the words it gave to ことば図鑑, if any, then on (`proceed`). */
   const finish = () => {
+    const state = useGameStore.getState();
+    const fresh = storyWordsUpTo(ep.id, owned).filter((w) => !state.foundWords[w.word]);
+    if (!fresh.length) return proceed();
+    for (const w of fresh) state.recordFound(w.word, FoundVia.TOWN);
+    setTownWords(fresh);
+    setPhase('words');
+  };
+
+  // The win records the clear (BattleScene); the story's end moves on.
+  const proceed = () => {
     const state = useGameStore.getState();
     // 1章 2話 opens 漢字やさん: the first weapon (火山) is made there now, together (docs/design/16 §2).
     if (ep.id === UNLOCKED_ON_MOJI.forge && !state.tutorials.firstWeapon) {
@@ -583,6 +599,8 @@ const EpisodePlayer = ({ id }: { id: string }) => {
         );
       case 'outro':
         return <NovelScene look="night" key="outro" script={lines.outro} cast={CAST} chapter={label} renderText={renderText} onFinish={finish} />;
+      case 'words':
+        return <TownWords scene={ep.bg} words={townWords} onNext={proceed} />;
       case 'end':
         return (
           <ToBeContinued

@@ -26,7 +26,15 @@ export const FoundVia = {
   TOLD: 'told',
   /** Learned from a kanji's card in ずかん, by reading it (docs/design/19 §4). */
   LEARNED: 'learned',
+  /**
+   * Met in the story, once every kanji in it is the player's (data/storyWords.ts).
+   * Given, not looked for, so like TOLD it does not count toward titles.
+   */
+  TOWN: 'town',
 } as const;
+
+/** Whether a find counts toward the titles: the player looked for it (forge, book, card), not was handed it. */
+export const earnsTitle = (via: FoundVia): boolean => via !== FoundVia.TOLD && via !== FoundVia.TOWN;
 export type FoundVia = (typeof FoundVia)[keyof typeof FoundVia];
 
 /** Cost in すみ of each hint tier. Tier 0 and 1 are free. */

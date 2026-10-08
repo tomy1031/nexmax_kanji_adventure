@@ -1,6 +1,7 @@
 import type { Compound } from '../types/forge';
 import type { JlptLevel } from '../types/kanji';
 import { getCompounds } from './compounds';
+import { isHiddenWeapon } from './hiddenWeapons';
 import { MOJI_EPISODES, type MojiEpisode } from './mojiEpisodes';
 
 /**
@@ -26,7 +27,8 @@ const LEVEL_ORDER: Record<JlptLevel, number> = { N5: 0, N4: 1, N3: 2 };
  */
 export const cardWords = (char: string, owned: ReadonlySet<string>, limit = 3, found: ReadonlySet<string> = new Set()): Compound[] =>
   getCompounds()
-    .filter((c) => c.word.includes(char))
+    // A かくし word is found only by trying (data/hiddenWeapons.ts): the card never shows it.
+    .filter((c) => c.word.includes(char) && !isHiddenWeapon(c.word))
     .map((c) => ({ c, readable: [...c.word].every((ch) => owned.has(ch)) }))
     .sort(
       (a, b) =>

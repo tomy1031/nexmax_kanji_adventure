@@ -39,4 +39,9 @@ describe('ずかんの 字カード', () => {
     // A word found stays on the card, after the new ones.
     expect(cardWords('火', owned, 10, new Set([first.word])).map((w) => w.word)).toContain(first.word);
   });
+
+  it('never shows a かくし word: it is found only by trying', () => {
+    // 日月 is 1章 1話's かくし word.
+    expect(cardWords('月', new Set(['日', '月']), 50).map((w) => w.word)).not.toContain('日月');
+  });
 });
