@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useSafeBack } from '../../lib/nav';
 import { Backdrop } from '../../components/ui/Backdrop';
 import { NightStreetBackdrop } from '../write/NightStreet';
@@ -43,6 +44,7 @@ type Tab = 'cards' | 'chars';
 export const WordBook = () => {
   // もどる returns where the player came from (漢字やさん, ずかん…), the map only on a direct load.
   const safeBack = useSafeBack();
+  const navigate = useNavigate();
   const showFurigana = useGameStore((s) => s.settings.furigana);
   const progress = useGameStore((s) => s.progress);
   const foundWords = useGameStore((s) => s.foundWords);
@@ -132,11 +134,10 @@ export const WordBook = () => {
           <span className={`${onBg} font-bold tabular-nums`}>
             <RubyText showFurigana={showFurigana}>見(み)つけた</RubyText> {foundCount} / {all.length}
           </span>
-          {title && (
-            <span className="g-chip g-chip-gold !py-0.5">
-              <RubyText showFurigana={showFurigana}>{title.ruby}</RubyText>
-            </span>
-          )}
+          {/* The title held, and the way to every title and its ◆ (TitlesScreen). */}
+          <button type="button" data-tap className="g-chip g-chip-gold !py-0.5" onClick={() => navigate('/titles')}>
+            🏅 <RubyText showFurigana={showFurigana}>{title ? title.ruby : '称号(しょうごう)'}</RubyText> ▶
+          </button>
         </div>
         {upcoming && (
           <p className={`${onBg} mt-1 text-[11px] font-bold`}>

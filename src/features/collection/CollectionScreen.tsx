@@ -17,6 +17,7 @@ import { useCompoundsVersion } from '../../data/compounds';
 import { sortWeapons, useWeaponSort } from '../../lib/forge/weaponSort';
 import { WeaponSortBar, WeaponTags } from '../equip/WeaponSortBar';
 import { HIDDEN_WEAPONS } from '../../data/hiddenWeapons';
+import { gearFromId } from '../../lib/forge/gear';
 import { isMet } from '../../lib/gacha';
 import { getMojiEpisode } from '../../data/mojiEpisodes';
 import { isChapterOpen } from '../../data/mojiFlow';
@@ -57,7 +58,12 @@ export const CollectionScreen = () => {
     return sortWeapons(list, weaponSort, new Map(weapons.map((r) => [r.id, r.craftedAt]))).map((weapon) => ({ weapon, rust: rustOf.get(weapon.id) ?? 0 }));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [weapons, progress, wordsV, weaponSort]);
-  const hiddenFound = forged.filter((f) => f.weapon.hidden).length;
+  // A かくし word may come out a shield or a body piece (its stroke total, lib/forge/gear.ts): those count too.
+  const gear = useGameStore((s) => s.gear);
+  const hiddenFound = new Set([
+    ...forged.filter((f) => f.weapon.hidden).map((f) => f.weapon.word),
+    ...gear.map((id) => gearFromId(id)).filter((p) => p?.hidden).map((p) => p!.word),
+  ]).size;
   // Out of the ones in the chapters open so far: a later chapter's are not counted against the player yet.
   const hiddenOpen = Object.values(HIDDEN_WEAPONS).filter((id) => {
     const ep = getMojiEpisode(id);

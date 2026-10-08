@@ -154,3 +154,43 @@ export const gearFromId = (id: string): ForgedPart | null => {
 export const forgedGearArt = (slot: ForgedSlot, element: Element): string => `img/gear/forged/${slot}_${element.toLowerCase()}.webp`;
 
 export const isCape = (slot: ForgedSlot, element: Element): boolean => slot === 'body' && CAPE_ELEMENTS.has(element);
+
+// ---------------------------------------------------------------------------
+// What the kanji make (2026-10-08「選べると 全部 同じ 漢字で 固めて しまう。
+// 漢字の 何かで 固有に 分かれる 仕組みを」)
+// ---------------------------------------------------------------------------
+
+/** What the forge makes from a recipe. */
+export type ForgeTarget = 'weapon' | ForgedSlot;
+
+/**
+ * Total strokes, three ways round: 1・4・7・10 … a weapon, 2・5・8 … a
+ * shield, 3・6・9 … a body piece. The kanji decide, not the player, so one
+ * strong word gives one thing, and a player who wants a shield looks for
+ * another word. Strokes are what a learner already counts, so the rule can
+ * be worked out (and the forge says the sum: 4＋3＝7画 → 武器). Order
+ * does not change it — 火山 and 山火 are both weapons.
+ */
+export const TARGET_BY_REMAINDER: readonly ForgeTarget[] = ['body', 'weapon', 'shield'];
+
+export const strokeTotal = (kanji: readonly KanjiData[]): number => kanji.reduce((n, k) => n + k.strokes, 0);
+
+/**
+ * What these kanji make: one kanji is 0話's 太刀; two or three go by
+ * TARGET_BY_REMAINDER — a かくし word too (an exception would give it away:
+ * the sum would say one thing and the forge make another), so an episode's
+ * かくし word may be a かくし盾 or a かくしよろい. Null when the forge takes
+ * no such recipe.
+ */
+export const forgeTargetOf = (kanji: KanjiData[]): ForgeTarget | null => {
+  if (kanji.length === 1) return 'weapon';
+  if (kanji.length > 3) return null;
+  return TARGET_BY_REMAINDER[strokeTotal(kanji) % 3];
+};
+
+/** The stroke totals that make a target, for the forge's legend: 1・4・7 … */
+export const totalsFor = (target: ForgeTarget, n = 3): number[] => {
+  const r = TARGET_BY_REMAINDER.indexOf(target);
+  const first = r === 0 ? 3 : r;
+  return Array.from({ length: n }, (_, i) => first + 3 * i);
+};

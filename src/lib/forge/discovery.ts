@@ -314,17 +314,19 @@ export interface Title {
   /** The word in furigana notation, split where the okurigana is. */
   ruby: string;
   en: string;
+  /** ◆ ジェム given once when it is earned (TitlesScreen, 2026-10-08「称号の 特典が 得られる 画面」). */
+  gems: number;
 }
 
 /** Earned on words found by guessing. Words opened with the answer do not count. */
 export const TITLES: Title[] = [
   // Rescaled 2026-09-23 when the word table was cut to learner-level words
   // (113 from the N5 set): the last title is still reachable within むかし編.
-  { at: 10, word: '見習い', reading: 'みならい', ruby: '見習(みなら)い', en: 'apprentice' },
-  { at: 30, word: '一人前', reading: 'いちにんまえ', ruby: '一人前(いちにんまえ)', en: 'full-fledged' },
-  { at: 55, word: '名人', reading: 'めいじん', ruby: '名人(めいじん)', en: 'master' },
-  { at: 80, word: '先生', reading: 'せんせい', ruby: '先生(せんせい)', en: 'teacher' },
-  { at: 105, word: '生き字引', reading: 'いきじびき', ruby: '生(い)き字引(じびき)', en: 'walking dictionary' },
+  { at: 10, word: '見習い', reading: 'みならい', ruby: '見習(みなら)い', en: 'apprentice', gems: 50 },
+  { at: 30, word: '一人前', reading: 'いちにんまえ', ruby: '一人前(いちにんまえ)', en: 'full-fledged', gems: 100 },
+  { at: 55, word: '名人', reading: 'めいじん', ruby: '名人(めいじん)', en: 'master', gems: 150 },
+  { at: 80, word: '先生', reading: 'せんせい', ruby: '先生(せんせい)', en: 'teacher', gems: 200 },
+  { at: 105, word: '生き字引', reading: 'いきじびき', ruby: '生(い)き字引(じびき)', en: 'walking dictionary', gems: 300 },
 ];
 
 export const titleFor = (earnedCount: number): Title | null => {

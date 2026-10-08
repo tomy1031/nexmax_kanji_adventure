@@ -25,6 +25,7 @@ import { Feature, isFeatureUnlocked } from '../../data/unlocks';
 import { MULTI_COST, PULL_COST, STEP_UP } from '../../lib/gacha';
 import { isVersusConfigured } from '../../lib/versusConfig';
 import { useStill } from '../../hooks/useStill';
+import { TITLES, earnsTitle, titleFor } from '../../lib/forge/discovery';
 
 /**
  * ステージせんたく — 文字が 消えた 町の 入口 (08 §3.7).
@@ -438,6 +439,12 @@ export const MojiRouteMap = () => {
   const cleared = useGameStore((s) => s.clearedStages);
   const progress = useGameStore((s) => s.progress);
   const streak = useGameStore((s) => s.streak);
+  // 称号 (TitlesScreen): the one held now, and how many ◆ are waiting to be taken.
+  const foundWords = useGameStore((s) => s.foundWords);
+  const titleRewards = useGameStore((s) => s.titleRewards);
+  const titleEarned = useMemo(() => Object.values(foundWords).filter(earnsTitle).length, [foundWords]);
+  const title = titleFor(titleEarned);
+  const titleClaimable = TITLES.filter((t) => titleEarned >= t.at && !titleRewards.includes(t.word)).reduce((n, t) => n + t.gems, 0);
   const known = useKnownKana();
   const owned = useOwnedKanji();
   const [params] = useSearchParams();
@@ -903,17 +910,29 @@ export const MojiRouteMap = () => {
                       ['漢字(かんじ)マスター（★3）', `${masters}`],
                       ['クリアした 話(はなし)', `${episodesCleared} / ${allEpisodes.length}`],
                       ['毎日(まいにち) つづけた 日(ひ)', `${streak.count}`],
+                      ['称号(しょうごう)', title ? title.ruby : '—'],
                     ] as const
                   ).map(([label, value]) => (
                     <div key={label} className="contents">
                       <dt>
                         <RubyText showFurigana={showFurigana}>{label}</RubyText>
                       </dt>
-                      <dd className="text-right tabular-nums">{value}</dd>
+                      <dd className="text-right tabular-nums">
+                        <RubyText showFurigana={showFurigana}>{value}</RubyText>
+                      </dd>
                     </div>
                   ))}
                 </dl>
-                <button type="button" data-tap className="g-btn g-btn-primary mt-4 w-full" onClick={() => setRecord(false)}>
+                {/* 称号と その ◆ (TitlesScreen, 2026-10-08「成績から 行けるように」) */}
+                <button type="button" data-tap className="g-btn g-btn-accent relative mt-4 w-full" onClick={() => navigate('/titles')}>
+                  🏅 <RubyText showFurigana={showFurigana}>称号(しょうごう)と ほうび</RubyText>
+                  {titleClaimable > 0 && (
+                    <span className="absolute -top-2 -right-1 rounded-full border-2 border-white bg-[#e2453c] px-1.5 text-[11px] leading-[1.6] font-black text-white">
+                      <RubyText showFurigana={showFurigana}>{`◆ ${titleClaimable}`}</RubyText>
+                    </span>
+                  )}
+                </button>
+                <button type="button" data-tap className="g-btn g-btn-primary mt-2 w-full" onClick={() => setRecord(false)}>
                   <RubyText showFurigana={showFurigana}>とじる</RubyText>
                 </button>
               </motion.div>

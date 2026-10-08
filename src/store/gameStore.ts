@@ -12,9 +12,10 @@ import {
   isReviewDue,
 } from '../lib/level';
 import { DEFAULT_VERSUS_STATS, type VersusStats } from '../features/versus/types';
-import { FoundVia, HINT_COST, MAX_HINT, TRY_COST_2, TRY_COST_3, earnsTitle } from '../lib/forge/discovery';
+import { FoundVia, HINT_COST, MAX_HINT, TITLES, TRY_COST_2, TRY_COST_3, earnsTitle } from '../lib/forge/discovery';
 import { getGear, type GearSlot } from '../data/equipment';
-import { forgedGearId, gearFromId, type ForgedSlot } from '../lib/forge/gear';
+import { forgeTargetOf, forgedGearId, gearFromId, type ForgedSlot } from '../lib/forge/gear';
+import { getKanjiById } from '../lib/kanjiDb';
 import { ALL_KANJI } from '../data/kanji.generated';
 import { UNLOCKED_ON_MOJI } from '../data/unlocks';
 
@@ -156,6 +157,8 @@ export interface GameState {
   exp: number;
   /** Words discovered, and how. */
   foundWords: Record<string, FoundVia>;
+  /** 称号 whose ◆ has been taken, by title word (lib/forge/discovery.ts TITLES, TitlesScreen). */
+  titleRewards: string[];
   /** Hint tier opened per word. */
   hints: Record<string, number>;
   /** Wrong guesses per word — the answer tier needs a few. */
@@ -226,6 +229,8 @@ export interface GameActions {
   tryCost: (kanjiCount: number) => number;
   /** Record a discovery. Returns false if it was already known. */
   recordFound: (word: string, via: FoundVia) => boolean;
+  /** Take a 称号's ◆, once, when it is earned. The gems given, or null. */
+  claimTitle: (word: string) => number | null;
   /** Buy the next hint tier for a word. Returns the tier now open, or null. */
   buyHint: (word: string) => number | null;
   recordMiss: (word: string) => void;
@@ -278,6 +283,7 @@ const initialState: GameState = {
   sumi: 0,
   exp: 0,
   foundWords: {},
+  titleRewards: [],
   hints: {},
   misses: {},
   kana: {},
@@ -465,6 +471,8 @@ export const useGameStore = create<GameState & GameActions>()(
         // Every ingredient must actually be owned — the forge UI filters, but
         // the store is the thing that decides.
         if (!kanjiIds.length || !kanjiIds.every((id) => state.hasKanji(id))) return null;
+        // The kanji decide what they make (lib/forge/gear.ts forgeTargetOf): only a weapon recipe makes a weapon.
+        if (forgeTargetOf(kanjiIds.map((k) => getKanjiById(k)!)) !== 'weapon') return null;
         const id = kanjiIds.join('+');
         if (state.weapons.some((w) => w.id === id)) return null;
         const recipe: WeaponRecipe = { id, kanjiIds, craftedAt: Date.now() };
@@ -500,6 +508,7 @@ export const useGameStore = create<GameState & GameActions>()(
         const state = get();
         // As with a weapon, the store decides: every kanji owned, the recipe a real one, not made before.
         if (!kanjiIds.every((id) => state.hasKanji(id))) return null;
+        if (forgeTargetOf(kanjiIds.map((k) => getKanjiById(k)!)) !== slot) return null;
         const id = forgedGearId(slot, kanjiIds);
         if (state.gear.includes(id) || !gearFromId(id)) return null;
         set((s) => ({ gear: [...s.gear, id] }));
@@ -574,6 +583,14 @@ export const useGameStore = create<GameState & GameActions>()(
         if (get().foundWords[word]) return false;
         set((s) => ({ foundWords: { ...s.foundWords, [word]: via } }));
         return true;
+      },
+
+      claimTitle: (word) => {
+        const title = TITLES.find((t) => t.word === word);
+        const state = get();
+        if (!title || state.titleRewards.includes(word) || state.earnedFoundCount() < title.at) return null;
+        set((s) => ({ gems: s.gems + title.gems, titleRewards: [...s.titleRewards, word] }));
+        return title.gems;
       },
 
       buyHint: (word) => {

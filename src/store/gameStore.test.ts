@@ -1,5 +1,6 @@
 import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
 import { BOSS_REPEAT_EXP_PER_DAY, KANJI_EXP_PER_DAY } from '../lib/level';
+import { getKanjiByChar } from '../lib/kanjiDb';
 
 // The store persists to localStorage; vitest runs in node, so give it one.
 const memory = new Map<string, string>();
@@ -211,3 +212,44 @@ describe('ガチャチケット (docs/design/16 §3)', () => {
   });
 });
 
+
+describe('漢字やさん: the kanji decide what they make (docs/design/19 §2)', () => {
+  const own = (...chars: string[]) => {
+    const progress: Record<string, { reps: number; mistakes: number; streak: number; nextReview: number; intervalDays: number }> = {};
+    for (const c of chars) progress[getKanjiByChar(c)!.id] = { reps: 10, mistakes: 0, streak: 0, nextReview: 0, intervalDays: 0 };
+    useGameStore.setState({ progress });
+  };
+  const ids = (w: string) => [...w].map((c) => getKanjiByChar(c)!.id);
+
+  it('makes 火山 (7画) a weapon only, and 月日 (8画) a shield only', () => {
+    own('火', '山', '月', '日');
+    const s = useGameStore.getState();
+    expect(s.craftGear('shield', ids('火山'))).toBeNull();
+    expect(s.craftGear('body', ids('火山'))).toBeNull();
+    expect(s.craftWeapon(ids('火山'))?.id).toBe(ids('火山').join('+'));
+    expect(useGameStore.getState().craftWeapon(ids('月日'))).toBeNull();
+    expect(useGameStore.getState().craftGear('body', ids('月日'))).toBeNull();
+    expect(useGameStore.getState().craftGear('shield', ids('月日'))).toBe(`shield:${ids('月日').join('+')}`);
+  });
+});
+
+describe('称号の ◆ (TitlesScreen)', () => {
+  it('gives a title\'s gems once it is earned, and only once', () => {
+    const words = (n: number, via: 'aimed' | 'town') => Object.fromEntries(Array.from({ length: n }, (_, i) => [`w${via}${i}`, via]));
+    useGameStore.setState({ gems: 0, foundWords: { ...words(9, 'aimed'), ...words(5, 'town') } });
+    // Nine looked for, five handed over by the town: 見習い (10) is not earned yet.
+    expect(useGameStore.getState().claimTitle('見習い')).toBeNull();
+    useGameStore.setState((s) => ({ foundWords: { ...s.foundWords, last: 'learned' } }));
+    expect(useGameStore.getState().claimTitle('見習い')).toBe(50);
+    expect(useGameStore.getState().gems).toBe(50);
+    expect(useGameStore.getState().claimTitle('見習い')).toBeNull();
+    expect(useGameStore.getState().claimTitle('一人前')).toBeNull();
+    expect(useGameStore.getState().gems).toBe(50);
+  });
+
+  it('reads a save from before it with no ◆ taken', () => {
+    const merge = useGameStore.persist.getOptions().merge!;
+    const current = useGameStore.getState();
+    expect((merge({ gems: 5 }, current) as typeof current).titleRewards).toEqual([]);
+  });
+});
