@@ -43,8 +43,18 @@ describe('称号 (docs/design/19 §5, 2026-10-08「多種多様な 種類の 称
     }
   });
 
-  it('never names a かくし word: the list shows before a title is earned (一人前 was a title first)', () => {
-    for (const a of ACHIEVEMENTS) if (a.word !== '一人前') expect(a.word in HIDDEN_WEAPONS, a.word).toBe(false);
+  it('never names a かくし word, not even inside a title: the list shows before a title is earned', () => {
+    for (const a of ACHIEVEMENTS) for (const w of Object.keys(HIDDEN_WEAPONS)) expect(a.word.includes(w), `${a.word}: ${w}`).toBe(false);
+  });
+
+  it('is named with words a beginner can read (2026-10-08「難しい 言葉の 配慮」)', () => {
+    // Kanji the route teaches, or the few every screen shows with their readings.
+    const readable = new Set([...MOJI_EPISODES.flatMap((e) => e.kanji), ...'漢字王神']);
+    for (const a of ACHIEVEMENTS) {
+      const hard = [...a.word].filter((c) => /[一-龠々]/.test(c) && !readable.has(c));
+      expect(hard, a.word).toEqual([]);
+      expect(a.en, a.word).not.toBe('');
+    }
   });
 
   it('starts with nothing earned', () => {

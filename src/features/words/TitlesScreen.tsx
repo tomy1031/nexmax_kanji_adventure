@@ -80,6 +80,21 @@ export const TitlesScreen = () => {
           </RubyText>
         </p>
 
+        {/* The rank words every title shares (data/achievements.ts): learn these five and any title reads. */}
+        <div className="g-parchment px-3 py-2 text-center">
+          <p className="text-[11px] font-black" style={{ color: 'var(--ink-2)' }}>
+            <RubyText showFurigana={showFurigana}>称号(しょうごう)の ランク</RubyText>
+          </p>
+          <p className="text-[15px] leading-[2] font-black text-[#5a3410]">
+            <RubyText showFurigana={showFurigana}>たまご → 好(す)き → 名人(めいじん) → 先生(せんせい) → 王(おう)さま</RubyText>
+          </p>
+          {en && (
+            <p lang="en" className="text-[11px] font-bold" style={{ color: '#1b4f8f' }}>
+              beginner → lover → expert → teacher → king
+            </p>
+          )}
+        </div>
+
         {FAMILIES.map((f) => {
           const n = counts.get(f.id) ?? 0;
           const nextTier = f.tiers.find((x) => n < x.at);

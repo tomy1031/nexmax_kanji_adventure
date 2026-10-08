@@ -1,5 +1,6 @@
 import type { GameState } from '../store/gameStore';
 import { TITLES, earnsTitle } from '../lib/forge/discovery';
+import { stripRuby } from '../lib/ruby';
 import { MASTERY_REPS } from '../lib/mastery';
 import { levelOf, ownedCount } from '../lib/level';
 import { gearFromId, parseForgedGearId } from '../lib/forge/gear';
@@ -19,13 +20,19 @@ const CHAR_OF = new Map(ALL_KANJI.map((k) => [k.id, k.char]));
  * Fifteen families, each a thing the player does — find words, master
  * kanji, write, clear episodes and towns, win on ★3 and Hard, forge, find
  * かくし words, make charms, meet なかま, come back day after day, level up,
- * win versus — and in each a ladder of titles. A title is a real word (with
- * its furigana), earned when the family's count reaches it; its ◆ is taken
- * once (gameStore.claimTitle), from the popup that says it was earned
- * (AchievementToast) or from 称号 (TitlesScreen). No title is a かくし word:
- * the list is shown before it is earned.
+ * win versus — and in each a ladder of titles, earned when the family's
+ * count reaches it; its ◆ is taken once (gameStore.claimTitle), from the
+ * popup that says it was earned (AchievementToast) or from 称号
+ * (TitlesScreen). No title is a かくし word: the list shows before it is earned.
  *
- * ことば keeps the ladder ことば図鑑 always had (lib/forge/discovery.ts TITLES).
+ * Names a beginner can read (2026-10-08「称号名として 難しい 言葉の 配慮を」):
+ * the kind of thing (ことば, 漢字, 旅, 作り, たいせん …) and a rank from one
+ * short list every family shares — たまご (just started) → 好き → 名人
+ * (very good at it) → 先生 → 王さま — or a loanword the learner knows
+ * (ヒーロー, リーダー, チャンピオン, レジェンド). Their kanji are the route's
+ * own, or 漢字・王・神 with their readings (achievements.test.ts).
+ *
+ * ことば's ladder lives with ことば図鑑 (lib/forge/discovery.ts TITLES).
  */
 
 /** What a family's count is read from: the save. */
@@ -48,7 +55,7 @@ export type AchState = Pick<
 
 export interface Tier {
   at: number;
-  /** The title, a real word. */
+  /** The title as it reads, furigana taken out. */
   word: string;
   /** In furigana notation. */
   ruby: string;
@@ -101,11 +108,11 @@ export const FAMILIES: readonly Family[] = [
     unit: '字(じ)',
     measure: (s) => Object.values(s.progress).filter((p) => (p?.reps ?? 0) >= MASTERY_REPS[2]).length,
     tiers: [
-      t(5, '漢字(かんじ)好(ず)き', 'kanji lover', 30),
-      t(20, '字(じ)の 職人(しょくにん)', 'letter craftsman', 60),
-      t(50, '書道家(しょどうか)', 'calligrapher', 120),
-      t(100, '字(じ)の 達人(たつじん)', 'letter virtuoso', 200),
-      t(165, '漢字王(かんじおう)', 'kanji king', 300),
+      t(5, '漢字(かんじ)の たまご', 'kanji beginner', 30),
+      t(20, '漢字好(かんじず)き', 'kanji lover', 60),
+      t(50, '漢字名人(かんじめいじん)', 'kanji expert', 120),
+      t(100, '漢字(かんじ)の 先生(せんせい)', 'kanji teacher', 200),
+      t(165, '漢字(かんじ)の 王(おう)さま', 'kanji king', 300),
     ],
   },
   {
@@ -115,10 +122,10 @@ export const FAMILIES: readonly Family[] = [
     unit: '回(かい)',
     measure: (s) => s.writes,
     tiers: [
-      t(100, '練習生(れんしゅうせい)', 'trainee', 20),
-      t(500, '書(か)き手(て)', 'writer', 50),
-      t(1000, '筆(ふで)の 達人(たつじん)', 'master of the brush', 100),
-      t(3000, '書聖(しょせい)', 'saint of writing', 200),
+      t(100, '書(か)き好(ず)き', 'loves writing', 20),
+      t(500, '書(か)き名人(めいじん)', 'writing expert', 50),
+      t(1000, '書(か)きの 先生(せんせい)', 'writing teacher', 100),
+      t(3000, '書(か)きの 王(おう)さま', 'king of writing', 200),
     ],
   },
   {
@@ -128,8 +135,8 @@ export const FAMILIES: readonly Family[] = [
     unit: '字(じ)',
     measure: (s) => Object.values(s.kana).filter((n) => n >= KANA_REPS).length,
     tiers: [
-      t(10, 'はじめの 一歩(いっぽ)', 'first step', 20),
-      t(46, 'かな使(つか)い', 'kana user', 50),
+      t(10, 'かなの たまご', 'kana beginner', 20),
+      t(46, 'かな名人(めいじん)', 'kana expert', 50),
       t(92, 'かなマスター', 'kana master', 100),
     ],
   },
@@ -140,10 +147,10 @@ export const FAMILIES: readonly Family[] = [
     unit: '話(わ)',
     measure: (s) => s.clearedStages.filter((id) => EPISODE.test(id)).length,
     tiers: [
-      t(1, '旅人(たびびと)', 'traveler', 20),
-      t(5, '冒険家(ぼうけんか)', 'adventurer', 50),
-      t(15, '町(まち)の 味方(みかた)', 'friend of the towns', 100),
-      t(30, '英雄(えいゆう)', 'hero', 200),
+      t(1, 'はじめての 旅(たび)', 'first journey', 20),
+      t(5, '旅(たび)好(ず)き', 'loves journeys', 50),
+      t(15, '旅(たび)の 名人(めいじん)', 'journey expert', 100),
+      t(30, '旅(たび)の 王(おう)さま', 'king of journeys', 200),
     ],
   },
   {
@@ -153,10 +160,10 @@ export const FAMILIES: readonly Family[] = [
     unit: '町(まち)',
     measure: (s) => s.clearedStages.filter((id) => TOWN.test(id)).length,
     tiers: [
-      t(1, 'ナニワの 恩人(おんじん)', 'savior of Naniwa', 100),
-      t(2, 'ミナトの 恩人(おんじん)', 'savior of Minato', 120),
-      t(3, 'マンプクの 恩人(おんじん)', 'savior of Manpuku', 150),
-      t(4, 'ミヤコの 恩人(おんじん)', 'savior of Miyako', 200),
+      t(1, 'ナニワの ヒーロー', 'hero of Naniwa', 100),
+      t(2, 'ミナトの ヒーロー', 'hero of Minato', 120),
+      t(3, 'マンプクの ヒーロー', 'hero of Manpuku', 150),
+      t(4, 'ミヤコの ヒーロー', 'hero of Miyako', 200),
     ],
   },
   {
@@ -166,10 +173,10 @@ export const FAMILIES: readonly Family[] = [
     unit: '回(かい)',
     measure: (s) => s.perfectStages.length,
     tiers: [
-      t(1, '丁寧(ていねい)', 'careful', 30),
-      t(5, '正確(せいかく)', 'precise', 60),
-      t(15, '完璧主義(かんぺきしゅぎ)', 'perfectionist', 120),
-      t(30, '無敵(むてき)', 'flawless', 200),
+      t(1, 'かんぺきの たまご', 'perfect beginner', 30),
+      t(5, 'かんぺき名人(めいじん)', 'perfect expert', 60),
+      t(15, 'かんぺきの 先生(せんせい)', 'perfect teacher', 120),
+      t(30, 'かんぺきの 王(おう)さま', 'king of perfect', 200),
     ],
   },
   {
@@ -179,9 +186,9 @@ export const FAMILIES: readonly Family[] = [
     unit: '回(かい)',
     measure: (s) => s.hardStages.length,
     tiers: [
-      t(1, '勇者(ゆうしゃ)', 'brave one', 50),
-      t(5, '猛者(もさ)', 'tough fighter', 100),
-      t(15, '鬼退治(おにたいじ)', 'demon slayer', 200),
+      t(1, 'ハードの たまご', 'hard-mode beginner', 50),
+      t(5, 'ハード名人(めいじん)', 'hard-mode expert', 100),
+      t(15, 'ハードの 王(おう)さま', 'king of hard mode', 200),
     ],
   },
   {
@@ -191,10 +198,10 @@ export const FAMILIES: readonly Family[] = [
     unit: 'こ',
     measure: (s) => s.weapons.length + forgedParts(s.gear).length,
     tiers: [
-      t(1, '鍛冶見習(かじみなら)い', 'smith apprentice', 20),
-      t(10, '鍛冶屋(かじや)', 'blacksmith', 50),
-      t(30, '名工(めいこう)', 'master smith', 120),
-      t(60, '刀匠(とうしょう)', 'swordsmith', 200),
+      t(1, '作(つく)りの たまご', 'maker beginner', 20),
+      t(10, '作(つく)り名人(めいじん)', 'making expert', 50),
+      t(30, '作(つく)りの 先生(せんせい)', 'making teacher', 120),
+      t(60, '作(つく)りの 王(おう)さま', 'king of making', 200),
     ],
   },
   {
@@ -204,10 +211,10 @@ export const FAMILIES: readonly Family[] = [
     unit: 'こ',
     measure: (s) => hiddenFound(s),
     tiers: [
-      t(1, '探検家(たんけんか)', 'explorer', 50),
-      t(5, '発見王(はっけんおう)', 'great discoverer', 100),
-      t(15, '名探偵(めいたんてい)', 'great detective', 200),
-      t(Object.keys(HIDDEN_WEAPONS).length, '秘宝(ひほう)ハンター', 'treasure hunter', 300),
+      t(1, 'たからさがしの たまご', 'treasure-hunt beginner', 50),
+      t(5, 'たからさがし名人(めいじん)', 'treasure-hunt expert', 100),
+      t(15, 'たからさがしの 先生(せんせい)', 'treasure-hunt teacher', 200),
+      t(Object.keys(HIDDEN_WEAPONS).length, 'トレジャーハンター', 'treasure hunter', 300),
     ],
   },
   {
@@ -217,10 +224,10 @@ export const FAMILIES: readonly Family[] = [
     unit: 'こ',
     measure: (s) => s.gear.filter((id) => CHARMS.has(id)).length,
     tiers: [
-      t(3, 'おしゃれ', 'fashionable', 30),
+      t(3, 'おしゃれさん', 'fashionable', 30),
       t(10, 'コレクター', 'collector', 60),
-      t(25, '宝石商(ほうせきしょう)', 'jeweler', 120),
-      t(CHARMS.size, 'アクセサリ王(おう)', 'accessory king', 200),
+      t(25, 'アクセサリ名人(めいじん)', 'accessory expert', 120),
+      t(CHARMS.size, 'アクセサリの 王(おう)さま', 'accessory king', 200),
     ],
   },
   {
@@ -230,10 +237,10 @@ export const FAMILIES: readonly Family[] = [
     unit: '枚(まい)',
     measure: (s) => s.individuals.length,
     tiers: [
-      t(3, 'なかま思(おも)い', 'good friend', 30),
+      t(3, 'なかま好(ず)き', 'loves friends', 30),
       t(10, 'リーダー', 'leader', 60),
-      t(25, '大家族(だいかぞく)', 'big family', 120),
-      t(CARDS.length, '全員集合(ぜんいんしゅうごう)', 'everyone together', 250),
+      t(25, 'キャプテン', 'captain', 120),
+      t(CARDS.length, 'なかまの 王(おう)さま', 'king of friends', 250),
     ],
   },
   {
@@ -243,10 +250,10 @@ export const FAMILIES: readonly Family[] = [
     unit: '日(にち)',
     measure: (s) => s.streak.count,
     tiers: [
-      t(3, 'がんばり屋(や)', 'hard worker', 20),
-      t(7, '努力家(どりょくか)', 'diligent one', 50),
-      t(14, 'コツコツ名人(めいじん)', 'steady master', 100),
-      t(30, '継続王(けいぞくおう)', 'king of keeping on', 150),
+      t(3, 'がんばりやさん', 'hard worker', 20),
+      t(7, '毎日(まいにち)名人(めいじん)', 'every-day expert', 50),
+      t(14, '毎日(まいにち)の 先生(せんせい)', 'every-day teacher', 100),
+      t(30, '毎日(まいにち)の 王(おう)さま', 'king of every day', 150),
     ],
   },
   {
@@ -256,10 +263,10 @@ export const FAMILIES: readonly Family[] = [
     unit: 'Lv',
     measure: (s) => levelOf(s.exp, ownedCount(s.progress)),
     tiers: [
-      t(10, '一人立(ひとりだ)ち', 'on its own feet', 30),
-      t(20, '中堅(ちゅうけん)', 'seasoned', 60),
+      t(10, 'ルーキー', 'rookie', 30),
+      t(20, 'エース', 'ace', 60),
       t(35, 'ベテラン', 'veteran', 120),
-      t(50, '伝説(でんせつ)', 'legend', 200),
+      t(50, 'レジェンド', 'legend', 200),
     ],
   },
   {
@@ -269,8 +276,8 @@ export const FAMILIES: readonly Family[] = [
     unit: '回(かい)',
     measure: (s) => s.versus.wins,
     tiers: [
-      t(1, '挑戦者(ちょうせんしゃ)', 'challenger', 30),
-      t(10, '勝負師(しょうぶし)', 'gamesman', 80),
+      t(1, 'たいせんの たまご', 'versus beginner', 30),
+      t(10, 'たいせん名人(めいじん)', 'versus expert', 80),
       t(30, 'チャンピオン', 'champion', 150),
     ],
   },
@@ -308,11 +315,17 @@ export const reachedIds = (s: AchState): string[] => {
 };
 
 /**
- * Whether a title's ◆ has been taken. ことば's were kept by their word for a
- * day before the families came (2026-10-08): those count too.
+ * ことば's titles as they were named, and kept in the save, for a day before
+ * the families came and the names were made easy (2026-10-08): 見習い was
+ * what is now ことばの たまご, and so on.
  */
+const OLD_WORD_TITLE: Readonly<Record<number, string>> = Object.fromEntries(
+  ([[10, '見習(みなら)い'], [30, '一人前(いちにんまえ)'], [55, '名人(めいじん)'], [80, '先生(せんせい)'], [105, '生(い)き字引(じびき)']] as const).map(([at, ruby]) => [at, stripRuby(ruby)]),
+);
+
+/** Whether a title's ◆ has been taken — by its id, or by ことば's old name. */
 export const isTaken = (taken: readonly string[], a: Achievement): boolean =>
-  taken.includes(a.id) || (a.family.id === 'words' && taken.includes(a.word));
+  taken.includes(a.id) || (a.family.id === 'words' && (taken.includes(a.word) || taken.includes(OLD_WORD_TITLE[a.at] ?? '')));
 
 /** Earned and not yet taken. */
 export const claimable = (s: AchState, taken: readonly string[]): Achievement[] => {
