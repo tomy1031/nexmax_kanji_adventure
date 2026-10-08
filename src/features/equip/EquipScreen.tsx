@@ -8,14 +8,15 @@ import { assetPath } from '../../lib/assetPath';
 import { useGameStore } from '../../store/gameStore';
 import { ALL_KANJI } from '../../data/kanji.generated';
 import { GEAR, SLOT_LABEL, getGear, missingFor, type GearItem, type GearSlot } from '../../data/equipment';
-import { RARITY_LABEL } from '../../lib/forge/weapon';
+import { RARITY_LABEL, type Rarity } from '../../lib/forge/weapon';
+import { parseForgedGearId } from '../../lib/forge/gear';
 import { weaponArt, weaponFromRecipe, weaponWord } from '../../lib/forge/recipe';
 import { sortWeapons, useWeaponSort } from '../../lib/forge/weaponSort';
 import { WeaponSortBar, WeaponTags } from './WeaponSortBar';
 import { WeaponMount } from '../battle/WeaponMount';
 import { WeaponTrain } from './WeaponTrain';
 import { GearBehind, GearFront } from '../battle/GearOn';
-import { LAYOUT_TRAVEL, gearArt } from '../battle/gearLayout';
+import { LAYOUT_TRAVEL, gearArt, gearIsGold } from '../battle/gearLayout';
 import { statsFromGear } from '../../lib/battle';
 import { applyLevel, levelOf, ownedCount } from '../../lib/level';
 import { charRuby } from '../../lib/reading';
@@ -43,6 +44,8 @@ import { useCompoundsVersion } from '../../data/compounds';
  */
 
 type Slot = 'weapon' | GearSlot;
+/** What 漢字やさん makes for a slot, for its button. */
+const MAKE_LABEL: Record<Exclude<Slot, 'charm'>, string> = { weapon: '武器(ぶき)', shield: '盾(たて)', body: 'よろい' };
 const SLOTS: { slot: Slot; icon: string; pos: string }[] = [
   { slot: 'weapon', icon: 'GiBroadsword', pos: 'top-2 left-2' },
   { slot: 'shield', icon: 'GiRoundShield', pos: 'top-2 right-2' },
@@ -94,6 +97,17 @@ export const EquipScreen = () => {
   const worn = Object.values(equippedGear)
     .map((id) => getGear(id))
     .filter((g) => g != null);
+  /** Shields and body pieces made in 漢字やさん (lib/forge/gear.ts), strongest first. */
+  const forgedGear = useMemo(
+    () =>
+      gear
+        .filter((id) => parseForgedGearId(id) != null)
+        .map((id) => getGear(id))
+        .filter((g) => g != null)
+        .sort((a, b) => (b.defense ?? b.hp ?? 0) - (a.defense ?? a.hp ?? 0)),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [gear, wordsV],
+  );
   // What the fight will use: on the new route the level adds HP and がまん (lib/level.ts, BattleScene).
   const level = moji ? levelOf(exp, ownedCount(progress)) : 1;
   const stats = moji ? applyLevel(statsFromGear(worn), level) : statsFromGear(worn);
@@ -279,6 +293,48 @@ export const EquipScreen = () => {
               ))}
 
             {slot !== 'weapon' &&
+              forgedGear
+                .filter((g) => g.slot === slot)
+                .map((g) => {
+                  const on = equippedGear[g.slot] === g.id;
+                  const r = g.forged!.rarity as Rarity;
+                  return (
+                    <li key={g.id} className="g-parchment flex items-center gap-3 p-2.5" style={on ? { borderColor: '#2f8fe0' } : undefined}>
+                      <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-white/70" style={{ color: '#7a4a26' }}>
+                        {moji ? (
+                          <img
+                            src={assetPath(gearArt(g.id))}
+                            alt=""
+                            aria-hidden
+                            className="h-10 w-10 object-contain"
+                            style={gearIsGold(g.id) ? { filter: 'drop-shadow(0 0 3px #ffd36a)' } : undefined}
+                          />
+                        ) : (
+                          <GameIcon name={g.icon} size={30} />
+                        )}
+                      </span>
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate text-sm font-black">
+                          <RubyText showFurigana={showFurigana}>{g.name}</RubyText>
+                        </p>
+                        <p className="text-[11px]">
+                          <span style={{ color: RARITY_LABEL[r].color }}>{RARITY_LABEL[r].ja}</span>{' '}
+                          {g.slot === 'shield' ? `ぼうぎょ ＋${g.defense}` : `HP ＋${g.hp}`}
+                          {g.forged!.compound && (
+                            <span className="ml-1 font-bold" style={{ color: '#1b4f8f' }} lang="en">
+                              {g.forged!.compound.gloss}
+                            </span>
+                          )}
+                        </p>
+                      </div>
+                      <button type="button" className="g-btn g-btn-accent !min-h-[36px] !px-3 text-xs" onClick={() => equipGear(g.slot, on ? null : g.id)}>
+                        {on ? 'はずす' : 'そうびする'}
+                      </button>
+                    </li>
+                  );
+                })}
+
+            {slot !== 'weapon' &&
               GEAR.filter((g) => g.slot === slot)
                 .filter((g) => showAll || inView(g))
                 .map((g) => {
@@ -357,9 +413,14 @@ export const EquipScreen = () => {
                 })}
           </ul>
 
-          {slot === 'weapon' && forgeOpen && (
-            <button type="button" className="g-btn g-btn-primary mt-3 w-full" onClick={() => navigate(`/forge?back=${encodeURIComponent('/equip')}`)}>
-              🔨 <RubyText showFurigana={showFurigana}>{`漢字(かんじ)やさんで 作(つく)る（★3の 字(じ) ${masters}）`}</RubyText>
+          {slot !== 'charm' && forgeOpen && (
+            // 武器・たて・からだ are made in 漢字やさん, from the same kanji (docs/design/19 §2).
+            <button
+              type="button"
+              className="g-btn g-btn-primary mt-3 w-full"
+              onClick={() => navigate(`/forge?${slot === 'weapon' ? '' : `make=${slot}&`}back=${encodeURIComponent('/equip')}`)}
+            >
+              🔨 <RubyText showFurigana={showFurigana}>{`漢字(かんじ)やさんで ${MAKE_LABEL[slot]}を 作(つく)る（★3の 字(じ) ${masters}）`}</RubyText>
             </button>
           )}
 

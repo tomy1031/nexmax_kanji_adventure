@@ -1,3 +1,5 @@
+import { gearFromId, type ForgedPart } from '../lib/forge/gear';
+
 /**
  * そうび — shields, body armour and charms, each made of kanji.
  *
@@ -43,6 +45,11 @@ export interface GearItem {
   attackPct?: number;
   /** Game Icons name. */
   icon: string;
+  /**
+   * Made in 漢字やさん from two or three kanji (lib/forge/gear.ts), not taken
+   * from this table: what it is made of, its ★ and its element.
+   */
+  forged?: ForgedPart;
 }
 
 export const GEAR: GearItem[] = [
@@ -161,7 +168,29 @@ export const GEAR: GearItem[] = [
 ];
 
 const byId = new Map(GEAR.map((g) => [g.id, g]));
-export const getGear = (id: string | null | undefined): GearItem | undefined => (id ? byId.get(id) : undefined);
+
+/** A forged shield or body piece as the rest of そうび reads it. */
+const fromForged = (p: ForgedPart): GearItem => ({
+  id: p.id,
+  slot: p.slot,
+  name: p.name,
+  kanji: [...p.word],
+  stage: 'forge',
+  blurb: p.blurb,
+  defense: p.defense,
+  hp: p.hp,
+  icon: p.icon,
+  forged: p,
+});
+
+/** A table item, or a forged piece built again from its id (`shield:<kanji ids>`). */
+export const getGear = (id: string | null | undefined): GearItem | undefined => {
+  if (!id) return undefined;
+  const table = byId.get(id);
+  if (table) return table;
+  const forged = gearFromId(id);
+  return forged ? fromForged(forged) : undefined;
+};
 
 /** Characters the item still needs, given the characters owned. */
 export const missingFor = (item: GearItem, ownedChars: ReadonlySet<string>): string[] =>

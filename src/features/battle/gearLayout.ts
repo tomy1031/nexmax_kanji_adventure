@@ -1,8 +1,16 @@
 import type { GearSlot } from '../../data/equipment';
+import { forgedGearArt, gearFromId, isCape } from '../../lib/forge/gear';
 
 /** そうびの 絵 (scripts/art/manifest.mjs, gear) and where it sits on a Nexmax picture (GearOn.tsx). */
 
-export const gearArt = (id: string) => `img/gear/${id}.webp`;
+/** A table item has its own picture; a forged piece the one for its slot and element (lib/forge/gear.ts). */
+export const gearArt = (id: string) => {
+  const forged = gearFromId(id);
+  return forged ? forgedGearArt(forged.slot, forged.element) : `img/gear/${id}.webp`;
+};
+
+/** A forged piece at ★5 glows gold where it is worn (GearOn) and listed. */
+export const gearIsGold = (id: string | null | undefined): boolean => (id ? (gearFromId(id)?.rarity ?? 0) >= 5 : false);
 
 export type Worn = Partial<Record<GearSlot, string | null>>;
 
@@ -30,7 +38,10 @@ export interface GearLayout {
 /** The armour pieces drawn as a cape; the others are winged harnesses. */
 const CAPES = new Set(['body-tsukiyo']);
 
-export const bodyBox = (layout: GearLayout, id: string) => (CAPES.has(id) ? layout.cape : layout.wings);
+export const bodyBox = (layout: GearLayout, id: string) => {
+  const forged = gearFromId(id);
+  return (forged ? isCape(forged.slot, forged.element) : CAPES.has(id)) ? layout.cape : layout.wings;
+};
 
 /** The battle's Nexmax with the brush (img/battle/nexmax_brush.webp). */
 export const LAYOUT_BATTLE: GearLayout = {

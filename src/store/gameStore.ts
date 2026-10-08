@@ -14,6 +14,7 @@ import {
 import { DEFAULT_VERSUS_STATS, type VersusStats } from '../features/versus/types';
 import { FoundVia, HINT_COST, MAX_HINT, TRY_COST_2, TRY_COST_3 } from '../lib/forge/discovery';
 import { getGear, type GearSlot } from '../data/equipment';
+import { forgedGearId, gearFromId, type ForgedSlot } from '../lib/forge/gear';
 import { ALL_KANJI } from '../data/kanji.generated';
 import { UNLOCKED_ON_MOJI } from '../data/unlocks';
 
@@ -200,6 +201,8 @@ export interface GameActions {
   equipWeapon: (recipeId: string | null) => void;
   /** Make a piece of gear. False unless every character it needs is owned. */
   makeGear: (gearId: string) => boolean;
+  /** Forge a shield or a body piece from two or three owned kanji (lib/forge/gear.ts). Its id, or null. */
+  craftGear: (slot: ForgedSlot, kanjiIds: string[]) => string | null;
   equipGear: (slot: GearSlot, gearId: string | null) => void;
   claimDailyTask: (taskId: string, reward: number) => boolean;
   rollDailyIfNeeded: () => void;
@@ -491,6 +494,16 @@ export const useGameStore = create<GameState & GameActions>()(
             : { ...s.equippedGear, [item.slot]: gearId },
         }));
         return true;
+      },
+
+      craftGear: (slot, kanjiIds) => {
+        const state = get();
+        // As with a weapon, the store decides: every kanji owned, the recipe a real one, not made before.
+        if (!kanjiIds.every((id) => state.hasKanji(id))) return null;
+        const id = forgedGearId(slot, kanjiIds);
+        if (state.gear.includes(id) || !gearFromId(id)) return null;
+        set((s) => ({ gear: [...s.gear, id] }));
+        return id;
       },
 
       equipGear: (slot, gearId) => {

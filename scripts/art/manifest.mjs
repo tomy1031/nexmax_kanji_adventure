@@ -1016,6 +1016,46 @@ const GEAR_ART = [
 ];
 
 // ---------------------------------------------------------------------------
+// 合成で 作る たて・からだ（docs/design/19 §2）: 1つの わくと 属性に 1枚。★5 は 金の 光（GearOn）。
+// ---------------------------------------------------------------------------
+
+const forgedGear = (slot, el, what, keepWhite = false) => ({
+  id: `gearf_${slot}_${el}`,
+  group: 'gear',
+  prio: 'A',
+  out: `img/gear/forged/${slot}_${el}.webp`,
+  kind: 'prop',
+  bgmode: 'white',
+  refs: ['public/img/battle/nexmax_brush.webp', slot === 'shield' ? 'public/img/gear/shield-yama.webp' : 'public/img/gear/body-kin.webp'],
+  style: ['GEAR'],
+  diff: `The item: ${what}`,
+  used: `合成の ${slot === 'shield' ? 'たて' : 'からだ'}（${el.toUpperCase()}）。lib/forge/gear.ts forgedGearArt`,
+  note: '白い 背景を import.mjs が 切り抜く（prop）',
+  // 白い 波・鉄の 光りが 中に ある ものは、中の 白を 残す
+  ...(keepWhite ? { keepWhite: true } : {}),
+});
+
+const FORGED_GEAR_ART = [
+  forgedGear('shield', 'ka', "a round mecha shield with a bold orange-red flame emblem across its face (just a flame shape), warm red and orange plating, a sky-blue mecha rim and a small clip on its back edge."),
+  forgedGear('shield', 'sui', "a shield shaped like a big rounded scallop shell, deep blue and aqua with a white wave-crest pattern across it, a sky-blue mecha rim and a small clip on its back edge.", true),
+  forgedGear('shield', 'moku', "a round wooden shield of polished light-brown planks with two fresh green leaves sprouting from its top edge and a small leaf emblem in the middle, a sky-blue mecha rim."),
+  forgedGear('shield', 'kin', "a sturdy rectangular tower shield of shiny silver steel plates held with round rivets, a small brass cog emblem in its center and navy trim.", true),
+  forgedGear('shield', 'do', "a chunky stone shield made of one big rounded grey-brown boulder slab with a few cracks and patches of moss, held in a sky-blue mecha frame."),
+  forgedGear('shield', 'kou', "a round shield shaped like a shining sun: a golden-yellow face with short rounded sun rays all around its rim and a white center, a sky-blue mecha clip."),
+  forgedGear('shield', 'an', "a kite shield of deep indigo-purple with a silver crescent moon and two small stars on its face, a sky-blue mecha rim."),
+  forgedGear('body', 'ka', "a back unit of red and orange mecha armor with two small wings shaped like flames, joined by a back plate and two shoulder straps — seen from the front, as it would peek out from behind the robot."),
+  forgedGear('body', 'sui', "a flowing cape of ocean blue with a white wave pattern along its hem and an aqua lining, a round sky-blue clasp at the collar — spread open, seen from the front, as it would hang behind the robot.", true),
+  forgedGear('body', 'moku', "a back unit of green leafy branches with small pink blossoms woven onto a sky-blue mecha back plate, two leaf-shaped wings and two shoulder straps — seen from the front, as it would peek out from behind the robot."),
+  forgedGear('body', 'kin', "a back unit of polished silver steel armor with brass cogs and two short brass exhaust pipes, a back plate and two shoulder straps — seen from the front, as it would peek out from behind the robot."),
+  forgedGear('body', 'do', "a back unit of chunky brown stone armor plates shaped like two small rock wings, a back plate and two shoulder straps — seen from the front, as it would peek out from behind the robot."),
+  forgedGear('body', 'kou', "a back unit with two big white feathered wings with golden tips and a small golden sun disc at the center, two shoulder straps — seen from the front, as it would peek out from behind the robot."),
+  forgedGear('body', 'an', "a cute spooky cape of deep violet-black with a scalloped bat-wing hem, glowing purple trim and a round sky-blue clasp at the collar — spread open, seen from the front, as it would hang behind the robot."),
+  forgedGear('body', 'mu', "a mecha jetpack back unit: two round sky-blue rocket boosters side by side with white bands and navy nozzles, joined by a back plate and two shoulder straps — seen from the front, as it would peek out from behind the robot."),
+  // 無の たては、もとの 武器の 盾の 絵（2026-10-08 まで 無の 武器だった もの）
+  forgedGear('shield', 'mu', 'a rounded mecha kite shield with a small cannon-like emitter in its center.'),
+];
+
+// ---------------------------------------------------------------------------
 // ガチャ（docs/design/16）: 地図の 入口の 機械・ひく ときの 魔法陣・はじめての チケット。
 // ---------------------------------------------------------------------------
 const GACHA_ART = [
@@ -1086,7 +1126,7 @@ const GACHA_ART = [
     used: 'ガチャを ひく ときに カプセルから 出る お札（字を 書き順どおりに 書く）', note: '白い 背景を import.mjs が 切り抜く（prop）' },
 ];
 
-export const ASSETS = [...NEXMAX, ...GENDAI, ...MUKASHI_FOLK, ...ENEMIES, ...CREATURES, ...BG, ...NANIWA, ...PORT, ...FOOD, ...MIYAKO, ...NEXMAX_NANIWA, ...FOLK, ...PROLOGUE_ART, ...PROLOGUE_EATEN, ...MAPS, ...ICONS, ...CARDS, ...WEAPONS, ...GEAR_ART, ...GACHA_ART];
+export const ASSETS = [...NEXMAX, ...GENDAI, ...MUKASHI_FOLK, ...ENEMIES, ...CREATURES, ...BG, ...NANIWA, ...PORT, ...FOOD, ...MIYAKO, ...NEXMAX_NANIWA, ...FOLK, ...PROLOGUE_ART, ...PROLOGUE_EATEN, ...MAPS, ...ICONS, ...CARDS, ...WEAPONS, ...GEAR_ART, ...FORGED_GEAR_ART, ...GACHA_ART];
 
 export const GROUPS = {
   nexmax: 'ネクマックス（表情・ポーズ）',

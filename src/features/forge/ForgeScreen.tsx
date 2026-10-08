@@ -6,13 +6,16 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   GiAnvilImpact,
   GiBackpack,
+  GiBroadsword,
   GiCardRandom,
   GiFlame,
   GiHexagonalNut,
+  GiLeatherArmor,
   GiMetalBar,
   GiMoon,
   GiOpenBook,
   GiPadlock,
+  GiRoundShield,
   GiStonePile,
   GiSun,
   GiThreeLeaves,
@@ -22,14 +25,16 @@ import type { IconType } from 'react-icons';
 import { useGameStore } from '../../store/gameStore';
 import { ALL_KANJI } from '../../lib/kanjiDb';
 import { forgeWeapon, type Weapon } from '../../lib/forge/weapon';
-import { weaponFromRecipe } from '../../lib/forge/recipe';
+import { weaponArt, weaponFromRecipe } from '../../lib/forge/recipe';
+import { forgeGear, forgedGearArt, type ForgedPart, type ForgedSlot } from '../../lib/forge/gear';
+import { getGear, SLOT_LABEL } from '../../data/equipment';
+import type { Compound } from '../../types/forge';
 import { Element, ELEMENT_LABEL, elementOf } from '../../lib/forge/elements';
 import { charRuby, kanjiRuby } from '../../lib/reading';
 import { assetPath } from '../../lib/assetPath';
 import { RubyText } from '../../components/ui/Ruby';
 import { LogoText } from '../../components/ui/LogoText';
 import type { KanjiData } from '../../types/kanji';
-import { GameIcon } from '../../components/ui/GameIcon';
 import ForgeTutorial from './ForgeTutorial';
 import { remainingForChar, FoundVia, discoveryKind, KIND_LABEL } from '../../lib/forge/discovery';
 import { REPS_TO_OBTAIN } from '../../types/kanji';
@@ -115,8 +120,74 @@ const Star = ({ lit, x }: { lit: boolean; x: number }) => (
   </svg>
 );
 
-/** The weapon card: the frame picture, with what the kanji make laid into it. */
-const WeaponCard = ({ weapon, showFurigana }: { weapon: Weapon | null; showFurigana: boolean }) => {
+/**
+ * What the forge makes (docs/design/19 §2): a weapon, a shield or a body
+ * piece from the same kanji. The card and the result read this one shape.
+ */
+type Target = 'weapon' | ForgedSlot;
+
+interface Made {
+  target: Target;
+  id: string;
+  word: string;
+  name: string;
+  plainName: string;
+  compound: Compound | null;
+  element: Element;
+  rarity: number;
+  /** Its picture (public/). */
+  art: string;
+  /** こうげき, ぼうぎょ or HP. */
+  stat: number;
+  blurb: string;
+  hidden: boolean;
+}
+
+const madeOfWeapon = (w: Weapon): Made => ({
+  target: 'weapon',
+  id: w.id,
+  word: w.word,
+  name: w.name,
+  plainName: w.plainName,
+  compound: w.compound,
+  element: w.element,
+  rarity: w.rarity,
+  art: weaponArt(w.weaponClass, w.rarity),
+  stat: w.attack,
+  blurb: w.blurb,
+  hidden: Boolean(w.hidden),
+});
+
+const madeOfPart = (p: ForgedPart): Made => ({
+  target: p.slot,
+  id: p.id,
+  word: p.word,
+  name: p.name,
+  plainName: p.plainName,
+  compound: p.compound,
+  element: p.element,
+  rarity: p.rarity,
+  art: forgedGearArt(p.slot, p.element),
+  stat: p.defense ?? p.hp ?? 0,
+  blurb: p.blurb,
+  hidden: p.hidden,
+});
+
+/** The three things to make, as the tabs over the card show them. */
+const TARGETS: { id: Target; label: string; icon: IconType; stat: string }[] = [
+  { id: 'weapon', label: SLOT_LABEL.weapon, icon: GiBroadsword, stat: 'こうげき' },
+  { id: 'shield', label: SLOT_LABEL.shield, icon: GiRoundShield, stat: 'ぼうぎょ' },
+  { id: 'body', label: SLOT_LABEL.body, icon: GiLeatherArmor, stat: 'HP' },
+];
+const statLabel = (t: Target) => TARGETS.find((x) => x.id === t)!.stat;
+/** What is carried now, for the result's line. */
+const CARRIED_LABEL: Record<Target, string> = { weapon: '武器(ぶき)', shield: '盾(たて)', body: 'よろい' };
+
+/** A ★5 shield or body piece glows gold (a ★5 weapon has its own gold picture). */
+const goldGlow = (m: Made) => (m.target !== 'weapon' && m.rarity >= 5 ? { filter: 'drop-shadow(0 0 4px #ffe08a) drop-shadow(0 0 10px rgba(255,200,70,0.85))' } : undefined);
+
+/** The card: the frame picture, with what the kanji make laid into it. */
+const WeaponCard = ({ weapon, target, showFurigana }: { weapon: Made | null; target: Target; showFurigana: boolean }) => {
   const el = weapon ? ELEMENT_LABEL[weapon.element] : null;
   const ElIcon = weapon ? ELEMENT_ICON[weapon.element] : null;
   return (
@@ -131,9 +202,14 @@ const WeaponCard = ({ weapon, showFurigana }: { weapon: Weapon | null; showFurig
         }}
       >
         {weapon ? (
-          <span className="h-[72%] w-[72%] -rotate-12 text-[#fff8e2]">
-            <GameIcon name={weapon.icon} className="h-full w-full" />
-          </span>
+          <img
+            src={assetPath(weapon.art)}
+            alt=""
+            aria-hidden
+            draggable={false}
+            className={`h-[80%] w-[80%] object-contain select-none ${weapon.target === 'weapon' ? '-rotate-12' : ''}`}
+            style={goldGlow(weapon)}
+          />
         ) : (
           <span className="text-[26cqw] font-black text-white/25">？</span>
         )}
@@ -156,8 +232,8 @@ const WeaponCard = ({ weapon, showFurigana }: { weapon: Weapon | null; showFurig
 
       {/* こうげき */}
       <p className="absolute top-[66.2%] right-[14%] left-[25%] flex h-[4.6%] items-center justify-between leading-none">
-        <span className="text-[5.8cqw] font-bold text-[#e9cf9a]">こうげき</span>
-        <span className="text-[8cqw] font-black tabular-nums">{weapon ? weapon.attack : '—'}</span>
+        <span className="text-[5.8cqw] font-bold text-[#e9cf9a]">{statLabel(weapon?.target ?? target)}</span>
+        <span className="text-[8cqw] font-black tabular-nums">{weapon ? `${weapon.target === 'weapon' ? '' : '＋'}${weapon.stat}` : '—'}</span>
       </p>
 
       {/* とくせい: the element's icon in the circle the frame keeps empty for it */}
@@ -245,6 +321,10 @@ export const ForgeScreen = () => {
   const craftWeapon = useGameStore((s) => s.craftWeapon);
   const equipWeapon = useGameStore((s) => s.equipWeapon);
   const equippedId = useGameStore((s) => s.equippedWeapon);
+  const gear = useGameStore((s) => s.gear);
+  const craftGear = useGameStore((s) => s.craftGear);
+  const equipGear = useGameStore((s) => s.equipGear);
+  const equippedGear = useGameStore((s) => s.equippedGear);
   const sumi = useGameStore((s) => s.sumi);
   const spendSumi = useGameStore((s) => s.spendSumi);
   const tryCost = useGameStore((s) => s.tryCost);
@@ -255,7 +335,12 @@ export const ForgeScreen = () => {
   const still = useStill();
 
   const [slots, setSlots] = useState<KanjiData[]>([]);
-  const [made, setMade] = useState<Weapon | null>(null);
+  const [made, setMade] = useState<Made | null>(null);
+  /** What to make: a weapon, or a shield or body piece (`?make=shield` from もちもの). */
+  const [chosen, setChosen] = useState<Target>(() => {
+    const m = params.get('make');
+    return m === 'shield' || m === 'body' ? m : 'weapon';
+  });
   /** The new weapon went on: it beats the one carried (a try is not a swap, 2026-10-05). */
   const [madeEquipped, setMadeEquipped] = useState(false);
   /** Set when the craft just revealed a word for the first time. */
@@ -266,6 +351,8 @@ export const ForgeScreen = () => {
   const firstDone = useGameStore((s) => s.tutorials.firstWeapon);
   const markTutorialSeen = useGameStore((s) => s.markTutorialSeen);
   const firstMode = !firstDone && (params.get('first') === '1' || (weapons.length === 0 && cleared.includes(UNLOCKED_ON_MOJI.forge)));
+  // はじめての 武器 is a weapon, whatever was asked for.
+  const target: Target = firstMode ? 'weapon' : chosen;
   const firstKanji = FIRST_PAIR.map((c) => getKanjiByChar(c)!);
   const repsOf = (k: KanjiData) => progress[k.id]?.reps ?? 0;
   /** The next of the pair still short of ★3, while there is one. */
@@ -293,14 +380,22 @@ export const ForgeScreen = () => {
 
   // The forge's words beyond the core arrive just after start (data/compounds.ts): read again then.
   const wordsV = useCompoundsVersion();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  const preview = useMemo(() => (slots.length >= 2 ? forgeWeapon(slots) : null), [slots, wordsV]);
+  const preview = useMemo(() => {
+    if (slots.length < 2) return null;
+    if (target === 'weapon') {
+      const w = forgeWeapon(slots);
+      return w ? madeOfWeapon(w) : null;
+    }
+    const p = forgeGear(target, slots);
+    return p ? madeOfPart(p) : null;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [slots, target, wordsV]);
   /** A word already found costs nothing to remake. */
   const previewKnown = preview ? Boolean(foundWords[preview.word]) : false;
   // The first weapon is on the house.
   const cost = preview && !previewKnown && !firstMode ? tryCost(slots.length) : 0;
   const canAfford = sumi >= cost;
-  const alreadyMade = preview ? weapons.some((w) => w.id === preview.id) : false;
+  const alreadyMade = preview ? (preview.target === 'weapon' ? weapons.some((w) => w.id === preview.id) : gear.includes(preview.id)) : false;
   const canCraft = Boolean(preview) && !alreadyMade && canAfford;
 
   /** In the first weapon: the one tile to tap now (火, then 山), or null for つくる. */
@@ -328,8 +423,25 @@ export const ForgeScreen = () => {
     // whether it lands or not, which is what makes thinking first worthwhile.
     if (cost > 0 && !spendSumi(cost)) return;
 
-    const recipe = craftWeapon(slots.map((k) => k.id));
-    if (!recipe) return;
+    const ids = slots.map((k) => k.id);
+    let better: boolean;
+    if (preview.target === 'weapon') {
+      const recipe = craftWeapon(ids);
+      if (!recipe) return;
+      // Only a stronger weapon replaces the one carried: a try with a weak pair must not swap it out before a fight.
+      const carried = weapons.find((w) => w.id === equippedId);
+      better = !carried || (weaponFromRecipe(recipe)?.attack ?? 0) > (weaponFromRecipe(carried)?.attack ?? 0);
+      if (better) equipWeapon(recipe.id);
+    } else {
+      const slot = preview.target;
+      const id = craftGear(slot, ids);
+      if (!id) return;
+      // The same for a shield or a body piece: on only if it beats what is worn.
+      const worn = getGear(equippedGear[slot]);
+      const wornStat = (slot === 'shield' ? worn?.defense : worn?.hp) ?? 0;
+      better = !worn || preview.stat > wornStat;
+      if (better) equipGear(slot, id);
+    }
 
     if (preview.compound && !foundWords[preview.word]) {
       recordFound(preview.word, FoundVia.LUCKY);
@@ -341,10 +453,6 @@ export const ForgeScreen = () => {
 
     if (preview.hidden) sfx.fanfare();
     setMade(preview);
-    // Only a stronger weapon replaces the one carried: a try with a weak pair must not swap it out before a fight.
-    const carried = weapons.find((w) => w.id === equippedId);
-    const better = !carried || (weaponFromRecipe(recipe)?.attack ?? 0) > (weaponFromRecipe(carried)?.attack ?? 0);
-    if (better) equipWeapon(recipe.id);
     setMadeEquipped(better);
   };
 
@@ -501,9 +609,7 @@ export const ForgeScreen = () => {
                 <div className="min-w-0 flex-1">
                   <Slot label={preview ? preview.plainName : 'できる もの'}>
                     {preview ? (
-                      <span className="h-[80%] w-[80%]" style={{ color: ELEMENT_LABEL[preview.element].color }}>
-                        <GameIcon name={preview.icon} className="h-full w-full" />
-                      </span>
+                      <img src={assetPath(preview.art)} alt="" aria-hidden draggable={false} className="h-[92%] w-[92%] object-contain select-none" style={goldGlow(preview)} />
                     ) : (
                       <span className="text-[#3b2208]/30">？</span>
                     )}
@@ -514,7 +620,7 @@ export const ForgeScreen = () => {
               {/* 熟語かどうかを、はっきり 言う */}
               <p className="mt-[3%] text-center text-[11px] leading-[1.9] font-bold [word-break:keep-all]">
                 {!preview ? (
-                  <RubyText showFurigana={showFurigana}>漢字(かんじ)を 2〜3つ。じゅんばんで ちがう 武器(ぶき)に なります。</RubyText>
+                  <RubyText showFurigana={showFurigana}>漢字(かんじ)を 2〜3つ。じゅんばんで ちがう ものに なります。</RubyText>
                 ) : preview.compound ? (
                   <span className="text-[#ffd86a]">
                     <RubyText showFurigana={showFurigana}>本当(ほんとう)に ある 言葉(ことば)！</RubyText>{' '}
@@ -537,6 +643,38 @@ export const ForgeScreen = () => {
           </div>
 
           <div className="flex w-[48%] shrink-0 flex-col items-end gap-1.5">
+            {!firstMode && (
+              // 何を 作るか (docs/design/19 §2): the same kanji make a weapon, a shield or a body piece.
+              <div role="tablist" aria-label="作(つく)る もの" className="flex w-full gap-[3%]">
+                {TARGETS.map((t) => {
+                  const on = t.id === target;
+                  const Icon = t.icon;
+                  return (
+                    <button
+                      key={t.id}
+                      type="button"
+                      role="tab"
+                      data-tap
+                      aria-selected={on}
+                      onClick={() => {
+                        setChosen(t.id);
+                        setMade(null);
+                      }}
+                      className="flex min-h-[34px] flex-1 items-center justify-center gap-0.5 rounded-[10px] border-2 px-0.5 text-[11px] leading-tight font-black whitespace-nowrap"
+                      style={{
+                        background: on ? 'linear-gradient(180deg, #ffe7a3 0%, #e6b65a 100%)' : 'linear-gradient(180deg, #3f2715 0%, #26170b 100%)',
+                        borderColor: on ? '#fff3b0' : '#c8913e',
+                        color: on ? '#4a2a0c' : '#ffe9b8',
+                        boxShadow: on ? '0 0 10px rgba(255,210,90,0.7)' : undefined,
+                      }}
+                    >
+                      <Icon aria-hidden className="h-[14px] w-[14px] shrink-0" />
+                      <RubyText showFurigana={showFurigana}>{t.label}</RubyText>
+                    </button>
+                  );
+                })}
+              </div>
+            )}
             <div className="flex gap-1.5 text-[11px] font-black">
               <span className="rounded-full border border-[#c8913e]/80 bg-black/50 px-2 py-0.5 tabular-nums">
                 {owned.length} <RubyText showFurigana={showFurigana}>字(じ)</RubyText>
@@ -554,7 +692,7 @@ export const ForgeScreen = () => {
                 exit={{ opacity: 0 }}
                 transition={{ duration: 0.18 }}
               >
-                <WeaponCard weapon={preview} showFurigana={showFurigana} />
+                <WeaponCard weapon={preview} target={target} showFurigana={showFurigana} />
               </motion.div>
             </AnimatePresence>
           </div>
@@ -704,7 +842,7 @@ export const ForgeScreen = () => {
                 transition={{ type: 'spring', stiffness: 360, damping: 12 }}
                 style={{ textShadow: '0 0 18px #c43c8a, 0 0 6px #7a3cc4' }}
               >
-                🔑 <RubyText showFurigana={showFurigana}>かくし武器(ぶき)！</RubyText>
+                🔑 <RubyText showFurigana={showFurigana}>{made.target === 'weapon' ? 'かくし武器(ぶき)！' : 'かくし そうび！'}</RubyText>
               </motion.p>
             )}
             <p className="rounded-full border-2 border-[#ffd86a] bg-[#3a2414] px-4 text-sm leading-[2] font-black text-[#ffd86a]">
@@ -720,14 +858,16 @@ export const ForgeScreen = () => {
               transition={{ type: 'spring', stiffness: 280, damping: 18 }}
               className="w-[min(70vw,300px,34dvh)]"
             >
-              <WeaponCard weapon={made} showFurigana={showFurigana} />
+              <WeaponCard weapon={made} target={made.target} showFurigana={showFurigana} />
             </motion.div>
             <p className="max-w-[300px] text-center text-sm leading-[1.9] font-bold text-[#fff1cf]">
               <RubyText showFurigana={showFurigana}>{made.blurb}</RubyText>
             </p>
             <p className="text-xs text-white/70">
               <RubyText showFurigana={showFurigana}>
-                {madeEquipped ? 'そうびしました。タップで とじる' : 'いま もって いる 武器(ぶき)の ほうが 強(つよ)いので、そうびは そのまま。タップで とじる'}
+                {madeEquipped
+                  ? 'そうびしました。タップで とじる'
+                  : `いま もって いる ${CARRIED_LABEL[made.target]}の ほうが 強(つよ)いので、そうびは そのまま。タップで とじる`}
               </RubyText>
             </p>
           </motion.div>
