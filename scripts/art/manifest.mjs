@@ -1039,6 +1039,10 @@ const GACHA_ART = [
   { id: 'gacha_book_closed', group: 'gacha', prio: 'A', out: 'img/gacha/book_closed.webp', kind: 'prop', bgmode: 'white', refs: ['public/img/gacha/book.webp'], style: ['GACHA_PROP'],
     diff: 'The item: exactly the same big magical book and ornate polished brass lectern as in the reference image, from the same angle and at the same size, but the book is CLOSED: its thick deep navy leather cover with gold corner pieces lies shut on the lectern, a round golden clasp with a small blue gem on the front edge, a faint warm golden glow leaking from between the pages, a few sparkles. No ribbon, no bookmark, no letters, no symbols.',
     used: 'ひく 前の 本（ひもを 引くと ひらく）', note: '白い 背景を import.mjs が 切り抜く（prop）' },
+  // ひもの 先の 飾り（2026-10-08「紐を引っ張るところ、動きや作りがやや雑」）: つかんで 引く ところ。ひもは 画面で 描く。
+  { id: 'gacha_tassel', group: 'gacha', prio: 'A', out: 'img/gacha/tassel.webp', kind: 'prop', bgmode: 'white', refs: ['public/img/gacha/book_closed.webp'], style: ['GACHA_PROP'],
+    diff: 'The item: the pull charm at the end of the bookmark cord of the closed book in the reference image, hanging straight down, seen exactly straight from the front (NOT three-quarter), perfectly symmetrical left to right, about two and a half times taller than wide: at the very top a small polished brass ring (where a cord is tied), under it a round polished gold medallion with gear-like notches around its rim and a glowing blue gem in its centre, matching the clasp of the book, and under the medallion a full, soft silk tassel of crimson red threads with a gold-wrapped neck, the threads hanging straight down and ending evenly. A few small sparkles close around it. No cord above the ring, no letters, no symbols.',
+    used: 'ガチャを ひく ときの ひもの 先（つかんで 引く ところ）', note: '白い 背景を import.mjs が 切り抜く（prop）。ひもは 画面で 描く' },
   ...[
     [3, 'silver', 'pale silver and soft steel-blue pearl enamel with polished silver filigree'],
     [4, 'gold', 'rich glossy gold enamel with deep navy accents and polished gold filigree'],
