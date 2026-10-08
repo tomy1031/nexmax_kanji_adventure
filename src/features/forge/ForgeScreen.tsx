@@ -140,8 +140,11 @@ const WeaponCard = ({ weapon, showFurigana }: { weapon: Weapon | null; showFurig
       </div>
       <img src={art('card_frame')} alt="" aria-hidden draggable={false} className="absolute inset-0 h-full w-full select-none" />
 
-      {/* 名前 */}
-      <p className="absolute top-[50.2%] right-[15%] left-[15%] flex h-[7.2%] items-center justify-center gap-[3%] text-[7.6cqw] leading-none font-black whitespace-nowrap">
+      {/* 名前: a long one (一人前の ロケットパンチ) is set smaller, so it stays on the frame's plate */}
+      <p
+        className="absolute top-[50.2%] right-[15%] left-[15%] flex h-[7.2%] items-center justify-center gap-[3%] leading-none font-black whitespace-nowrap"
+        style={{ fontSize: `${Math.min(7.6, 64 / ((weapon?.plainName.length ?? 3) + 2.1))}cqw` }}
+      >
         {ElIcon && <ElIcon aria-hidden className="h-[1.1em] w-[1.1em] shrink-0" style={{ color: el!.color }} />}
         {weapon ? <RubyText showFurigana={showFurigana}>{weapon.name}</RubyText> : <span className="text-white/40">？？？</span>}
       </p>

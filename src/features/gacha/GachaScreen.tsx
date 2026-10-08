@@ -44,7 +44,7 @@ import { assetPath } from '../../lib/assetPath';
 import { DAILY_TOTAL } from '../../data/dailyTasks';
 import { SKILL_INFO, SKILL_OF } from '../../lib/companionSkill';
 import { useBgm } from '../../lib/bgm';
-import { CLASS_LABEL, CLASS_OF_ELEMENT } from '../../lib/forge/weapon';
+import { CLASS_OF_ELEMENT, classRuby } from '../../lib/forge/weapon';
 import { ELEMENT_LABEL } from '../../lib/forge/elements';
 import { getKanjiByChar } from '../../lib/kanjiDb';
 import { MOJI_OWN_REPS } from '../../lib/mastery';
@@ -113,7 +113,7 @@ export const GachaScreen = () => {
   };
   const boost: Boost | undefined = bannerId === 'weekday' ? weekdayBoost(day) : bannerId === 'kanji' ? kanjiBoost(written) : undefined;
   const boosted = boost ? CARDS.filter((c) => met(c) && boost(c)) : [];
-  const dayClass = CLASS_LABEL[CLASS_OF_ELEMENT[WEEKDAY_ELEMENT[day]]];
+  const dayClass = classRuby(CLASS_OF_ELEMENT[WEEKDAY_ELEMENT[day]]);
   // One free pull a day, on any gacha.
   const freeDay = useGameStore((s) => s.freePullDay);
   const spendFree = useGameStore((s) => s.useFreePull);
@@ -248,7 +248,7 @@ export const GachaScreen = () => {
         : bannerId === 'stepup'
           ? `ステップ ${stepUp + 1}：${stepText(stepUp)}`
         : bannerId === 'weekday'
-          ? `${dayClass.ja}(${dayClass.reading})が とくいな なかま ↑`
+          ? `${dayClass}が とくいな なかま ↑`
           : bannerId === 'kanji'
             ? boosted.length > 0
               ? `書(か)いた 字(じ)の なかま ↑（${boosted.length}人(にん)）`
@@ -340,7 +340,7 @@ export const GachaScreen = () => {
           // Tomorrow's friends: a reason to come back.
           <p className="g-outline-text mt-1 text-xs font-black text-white/90">
             <RubyText showFurigana={showFurigana}>
-              {`あしたは ${WEEKDAY_KANJI[(day + 1) % 7]}よう日(び)：${CLASS_LABEL[CLASS_OF_ELEMENT[WEEKDAY_ELEMENT[(day + 1) % 7]]].ja}(${CLASS_LABEL[CLASS_OF_ELEMENT[WEEKDAY_ELEMENT[(day + 1) % 7]]].reading})の なかま`}
+              {`あしたは ${WEEKDAY_KANJI[(day + 1) % 7]}よう日(び)：${classRuby(CLASS_OF_ELEMENT[WEEKDAY_ELEMENT[(day + 1) % 7]])}の なかま`}
             </RubyText>
           </p>
         )}
@@ -535,7 +535,7 @@ export const GachaScreen = () => {
                 )}
                 {bannerId === 'weekday' && (
                   <li>
-                    <RubyText showFurigana={showFurigana}>{`まいにち かわります。きょうは ${dayClass.ja}(${dayClass.reading})が とくいな なかまが、★ごとに 半分(はんぶん) 出(で)ます`}</RubyText>
+                    <RubyText showFurigana={showFurigana}>{`まいにち かわります。きょうは ${dayClass}が とくいな なかまが、★ごとに 半分(はんぶん) 出(で)ます`}</RubyText>
                   </li>
                 )}
                 {bannerId === 'stepup' && (
