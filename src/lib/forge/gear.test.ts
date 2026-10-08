@@ -6,7 +6,7 @@ import { getGear } from '../../data/equipment';
 import { getKanjiByChar } from '../kanjiDb';
 import { statsFromGear } from '../battle';
 import { Element } from './elements';
-import { forgeGear, forgedGearArt, forgedGearId, gearFromId, parseForgedGearId, type ForgedSlot } from './gear';
+import { TARGET_BY_REMAINDER, forgeGear, forgeTargetOf, forgedGearArt, forgedGearId, gearFromId, parseForgedGearId, strokeTotal, totalsFor, type ForgedSlot } from './gear';
 
 const k = (c: string) => getKanjiByChar(c)!;
 const make = (slot: ForgedSlot, word: string) => forgeGear(slot, [...word].map(k))!;
@@ -108,5 +108,35 @@ describe('たて・からだの つよさ — against each episode\'s own oppone
   it('never lets a non-word shield block more than a sliver', () => {
     const not = make('shield', '山火');
     expect(not.defense).toBeLessThanOrEqual(3);
+  });
+});
+
+describe('何が できるか — the kanji decide, by their stroke total (2026-10-08)', () => {
+  const target = (w: string) => forgeTargetOf([...w].map(k));
+
+  it('makes 1・4・7 … strokes a weapon, 2・5・8 … a shield, 3・6・9 … a body piece', () => {
+    expect(target('火山')).toBe('weapon'); // 4 + 3 = 7: はじめての 武器 stays a weapon
+    expect(target('山火')).toBe('weapon'); // order does not change the sum
+    expect(target('月日')).toBe('shield'); // 4 + 4 = 8
+    expect(target('山川')).toBe('body'); // 3 + 3 = 6
+    expect(target('火')).toBe('weapon'); // one kanji: 0話's 太刀
+    expect(totalsFor('weapon')).toEqual([1, 4, 7]);
+    expect(totalsFor('shield')).toEqual([2, 5, 8]);
+    expect(totalsFor('body')).toEqual([3, 6, 9]);
+    for (const w of ['日本', '学生', '電車', '三日月']) expect(target(w)).toBe(TARGET_BY_REMAINDER[strokeTotal([...w].map(k)) % 3]);
+  });
+
+  it('gives every episode from 漢字やさん on real words of all three kinds', () => {
+    // 漢字やさん opens after 1章 2話.
+    EPISODES.slice(1).forEach((e, i) => {
+      const have = new Set(EPISODES.slice(0, i + 2).flatMap((x) => x.kanji));
+      const kinds = new Set(
+        getCompounds()
+          // Core and common words (tiers 0–1): the forge's own table, not the newspaper's long tail.
+          .filter((w) => w.word.length <= 3 && (w.tier ?? 0) <= 1 && [...w.word].every((c) => have.has(c)))
+          .map((w) => target(w.word)),
+      );
+      expect([...kinds].sort(), e.id).toEqual(['body', 'shield', 'weapon']);
+    });
   });
 });

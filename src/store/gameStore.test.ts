@@ -1,5 +1,6 @@
 import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
 import { BOSS_REPEAT_EXP_PER_DAY, KANJI_EXP_PER_DAY } from '../lib/level';
+import { getKanjiByChar } from '../lib/kanjiDb';
 
 // The store persists to localStorage; vitest runs in node, so give it one.
 const memory = new Map<string, string>();
@@ -208,6 +209,27 @@ describe('ガチャチケット (docs/design/16 §3)', () => {
     expect(st().gachaTickets).toBe(0);
     expect(st().useGachaTicket()).toBe(false);
     expect(st().gachaTickets).toBe(0);
+  });
+});
+
+
+describe('漢字やさん: the kanji decide what they make (docs/design/19 §2)', () => {
+  const own = (...chars: string[]) => {
+    const progress: Record<string, { reps: number; mistakes: number; streak: number; nextReview: number; intervalDays: number }> = {};
+    for (const c of chars) progress[getKanjiByChar(c)!.id] = { reps: 10, mistakes: 0, streak: 0, nextReview: 0, intervalDays: 0 };
+    useGameStore.setState({ progress });
+  };
+  const ids = (w: string) => [...w].map((c) => getKanjiByChar(c)!.id);
+
+  it('makes 火山 (7画) a weapon only, and 月日 (8画) a shield only', () => {
+    own('火', '山', '月', '日');
+    const s = useGameStore.getState();
+    expect(s.craftGear('shield', ids('火山'))).toBeNull();
+    expect(s.craftGear('body', ids('火山'))).toBeNull();
+    expect(s.craftWeapon(ids('火山'))?.id).toBe(ids('火山').join('+'));
+    expect(useGameStore.getState().craftWeapon(ids('月日'))).toBeNull();
+    expect(useGameStore.getState().craftGear('body', ids('月日'))).toBeNull();
+    expect(useGameStore.getState().craftGear('shield', ids('月日'))).toBe(`shield:${ids('月日').join('+')}`);
   });
 });
 

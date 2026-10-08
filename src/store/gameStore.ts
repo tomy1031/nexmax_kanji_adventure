@@ -14,7 +14,8 @@ import {
 import { DEFAULT_VERSUS_STATS, type VersusStats } from '../features/versus/types';
 import { FoundVia, HINT_COST, MAX_HINT, TRY_COST_2, TRY_COST_3, earnsTitle } from '../lib/forge/discovery';
 import { getGear, type GearSlot } from '../data/equipment';
-import { forgedGearId, gearFromId, type ForgedSlot } from '../lib/forge/gear';
+import { forgeTargetOf, forgedGearId, gearFromId, type ForgedSlot } from '../lib/forge/gear';
+import { getKanjiById } from '../lib/kanjiDb';
 import { ALL_KANJI } from '../data/kanji.generated';
 import { UNLOCKED_ON_MOJI } from '../data/unlocks';
 
@@ -465,6 +466,8 @@ export const useGameStore = create<GameState & GameActions>()(
         // Every ingredient must actually be owned — the forge UI filters, but
         // the store is the thing that decides.
         if (!kanjiIds.length || !kanjiIds.every((id) => state.hasKanji(id))) return null;
+        // The kanji decide what they make (lib/forge/gear.ts forgeTargetOf): only a weapon recipe makes a weapon.
+        if (forgeTargetOf(kanjiIds.map((k) => getKanjiById(k)!)) !== 'weapon') return null;
         const id = kanjiIds.join('+');
         if (state.weapons.some((w) => w.id === id)) return null;
         const recipe: WeaponRecipe = { id, kanjiIds, craftedAt: Date.now() };
@@ -500,6 +503,7 @@ export const useGameStore = create<GameState & GameActions>()(
         const state = get();
         // As with a weapon, the store decides: every kanji owned, the recipe a real one, not made before.
         if (!kanjiIds.every((id) => state.hasKanji(id))) return null;
+        if (forgeTargetOf(kanjiIds.map((k) => getKanjiById(k)!)) !== slot) return null;
         const id = forgedGearId(slot, kanjiIds);
         if (state.gear.includes(id) || !gearFromId(id)) return null;
         set((s) => ({ gear: [...s.gear, id] }));
