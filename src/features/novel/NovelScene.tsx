@@ -17,6 +17,7 @@ import { useKnownKana } from '../kana/useKnownKana';
 import { useOwnedKanji } from '../moji/useOwnedKanji';
 import { useBgm, type BgmTrack } from '../../lib/bgm';
 import { useStill } from '../../hooks/useStill';
+import { START_TRAIL, canStepBack, currentLine, stepBack, stepTo, type LineTrail } from './lineTrail';
 
 /**
  * The novel scene, set in a moving picture book.
@@ -96,7 +97,9 @@ export const NovelScene = ({ script, cast, onFinish, chapter, renderText, speech
   const owned = useOwnedKanji();
   useBgm(bgm);
   const showFurigana = useGameStore((s) => s.settings.furigana);
-  const [index, setIndex] = useState(0);
+  /** The lines come through so far; the last is on screen, and ◀ もどる steps back along it. */
+  const [trail, setTrail] = useState<LineTrail>(START_TRAIL);
+  const index = currentLine(trail);
   const [showLog, setShowLog] = useState(false);
   const [auto, setAuto] = useState(false);
   const [seen, setSeen] = useState<number[]>([0]);
@@ -222,11 +225,23 @@ export const NovelScene = ({ script, cast, onFinish, chapter, renderText, speech
         onFinish();
         return;
       }
-      setIndex(nextIndex);
+      setTrail((t) => stepTo(t, nextIndex));
       setSeen((s) => (s.includes(nextIndex) ? s : [...s, nextIndex]));
     },
     [script.lines.length, onFinish, toolsHint, markSeen],
   );
+
+  /**
+   * ◀ もどる: the line before, shown whole at once (it was read already).
+   * オート stops, or it would turn the page again before the line is reread.
+   */
+  const back = useCallback(() => {
+    if (!canStepBack(trail)) return;
+    const prev = stepBack(trail);
+    setShown(currentLine(prev));
+    setAuto(false);
+    setTrail(prev);
+  }, [trail]);
 
   const advance = useCallback(() => {
     if (!line) return;
@@ -252,17 +267,20 @@ export const NovelScene = ({ script, cast, onFinish, chapter, renderText, speech
     goTo(target === -1 ? index + 1 : target);
   };
 
-  // Space and Enter advance, for anyone on a keyboard.
+  // Space and Enter advance, and ← goes back, for anyone on a keyboard.
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.key === ' ' || e.key === 'Enter') {
         e.preventDefault();
         tap();
+      } else if (e.key === 'ArrowLeft' && !showLog) {
+        e.preventDefault();
+        back();
       }
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [tap]);
+  }, [tap, back, showLog]);
 
   // オート: turn the page after a reading pause. Choices always wait.
   useEffect(() => {
@@ -412,162 +430,182 @@ export const NovelScene = ({ script, cast, onFinish, chapter, renderText, speech
           render={(t) => (plain ? plain(t) : <RubyText showFurigana={showFurigana}>{t}</RubyText>)}
         />
 
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={index}
-            initial={{ opacity: 0.6, y: 4 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.22 }}
-            className={`g-novel-box min-h-[23dvh] px-5 pt-5 pb-3 ${night ? 'g-novel-night' : ''}`}
-            onClick={tap}
-          >
-            <TypeReveal
-              revealKey={index}
-              full={still || shown === index}
-              onDone={() => setShown(index)}
-              className="text-[16px] leading-[2.15] font-bold whitespace-pre-line md:text-[22px]"
+        <div className="relative">
+          {/* ◀ もどる: a tab on the box's top edge, across from the name plate — read the line before again. */}
+          <AnimatePresence>
+            {canStepBack(trail) && (
+              <motion.button
+                key="back"
+                type="button"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className={`${topButton} absolute -top-[42px] right-2 z-10`}
+                aria-label="まえの セリフに もどる"
+                onClick={back}
+              >
+                <span aria-hidden>◀</span>もどる
+              </motion.button>
+            )}
+          </AnimatePresence>
+
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={index}
+              initial={{ opacity: 0.6, y: 4 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.22 }}
+              className={`g-novel-box min-h-[23dvh] px-5 pt-5 pb-3 ${night ? 'g-novel-night' : ''}`}
+              onClick={tap}
             >
-              {renderText ? renderText(line.text) : <RubyText showFurigana={showFurigana}>{line.text}</RubyText>}
-            </TypeReveal>
-
-            {/* The Japanese of an English line, once the line has appeared. */}
-            {line.ja && (
-              <p
-                className={`mt-0.5 text-[14px] leading-[2.2] font-bold transition-opacity duration-300 md:text-[18px] ${shown === index ? 'opacity-100' : 'opacity-0'}`}
-                style={{ color: tone.ja }}
-                lang="ja"
+              <TypeReveal
+                revealKey={index}
+                full={still || shown === index}
+                onDone={() => setShown(index)}
+                className="text-[16px] leading-[2.15] font-bold whitespace-pre-line md:text-[22px]"
               >
-                {plain ? plain(line.ja) : <RubyText showFurigana={showFurigana}>{line.ja}</RubyText>}
-              </p>
-            )}
+                {renderText ? renderText(line.text) : <RubyText showFurigana={showFurigana}>{line.text}</RubyText>}
+              </TypeReveal>
 
-            {enFor === index && line.en && (
-              <p className="mt-1 text-[13px] leading-snug font-bold md:text-[16px]" style={{ color: tone.en }} lang="en">
-                {line.en}
-              </p>
-            )}
+              {/* The Japanese of an English line, once the line has appeared. */}
+              {line.ja && (
+                <p
+                  className={`mt-0.5 text-[14px] leading-[2.2] font-bold transition-opacity duration-300 md:text-[18px] ${shown === index ? 'opacity-100' : 'opacity-0'}`}
+                  style={{ color: tone.ja }}
+                  lang="ja"
+                >
+                  {plain ? plain(line.ja) : <RubyText showFurigana={showFurigana}>{line.ja}</RubyText>}
+                </p>
+              )}
 
-            {wordsOpen && (
-              <div className="mt-1 flex flex-wrap gap-1.5" onClick={(e) => e.stopPropagation()}>
-                {lineWords(line.text).map(({ word, gloss }) => (
-                  <span
-                    key={word}
-                    className={`rounded-lg border px-2 text-[13px] leading-[2] font-bold ${night ? 'border-[#c9a052]/70 bg-white/10 text-[#fff3dc]' : 'border-[#caa468] bg-white/85 text-[#3a2814] [&_rt]:text-[#8a6a44]'}`}
-                  >
-                    <RubyText showFurigana>{word}</RubyText>
-                    <span lang="en" className="ml-1.5 font-extrabold" style={{ color: tone.en }}>
-                      {gloss}
+              {enFor === index && line.en && (
+                <p className="mt-1 text-[13px] leading-snug font-bold md:text-[16px]" style={{ color: tone.en }} lang="en">
+                  {line.en}
+                </p>
+              )}
+
+              {wordsOpen && (
+                <div className="mt-1 flex flex-wrap gap-1.5" onClick={(e) => e.stopPropagation()}>
+                  {lineWords(line.text).map(({ word, gloss }) => (
+                    <span
+                      key={word}
+                      className={`rounded-lg border px-2 text-[13px] leading-[2] font-bold ${night ? 'border-[#c9a052]/70 bg-white/10 text-[#fff3dc]' : 'border-[#caa468] bg-white/85 text-[#3a2814] [&_rt]:text-[#8a6a44]'}`}
+                    >
+                      <RubyText showFurigana>{word}</RubyText>
+                      <span lang="en" className="ml-1.5 font-extrabold" style={{ color: tone.en }}>
+                        {gloss}
+                      </span>
                     </span>
-                  </span>
-                ))}
-              </div>
-            )}
-
-            {line.choices?.length ? (
-              <div className="mt-3 flex flex-col gap-2">
-                {line.choices.map((c) => (
-                  <button
-                    key={c.next}
-                    type="button"
-                    className="g-btn g-btn-accent w-full !min-h-[52px] text-sm leading-snug"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      choose(c.next);
-                    }}
-                  >
-                    <RubyText showFurigana={showFurigana}>{c.label}</RubyText>
-                  </button>
-                ))}
-              </div>
-            ) : (
-              <div className="mt-1 flex items-center justify-end gap-1 text-xs font-bold" style={{ color: tone.foot }}>
-                <div className="mr-auto flex min-w-0 flex-wrap gap-1.5">
-                  {canSpeak() && (speechFor ? speechFor(line.text) : line.text) && (
-                    <button
-                      type="button"
-                      aria-label="よみあげ"
-                      className={tone.pill}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        speak((speechFor ? speechFor(line.text) : line.text) ?? '');
-                      }}
-                    >
-                      🔊 よみあげ
-                    </button>
-                  )}
-                  {canSpeak() && (
-                    // Every line read aloud as it comes: the story followed by ear.
-                    <button
-                      type="button"
-                      aria-pressed={autoVoice}
-                      aria-label="じどうで よみあげ"
-                      className={tone.pill}
-                      style={autoVoice ? { background: '#f2c45a', color: '#2a1a0c' } : undefined}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        // On: the line is said at once (the effect above); off: it stops.
-                        if (autoVoice) stopSpeaking();
-                        setAutoVoice(!autoVoice);
-                      }}
-                    >
-                      {autoVoice ? '🔊 じどう ON' : '🔈 じどう'}
-                    </button>
-                  )}
-                  {line.en && (
-                    <button
-                      type="button"
-                      aria-pressed={enFor === index}
-                      className={tone.pill}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setEnFor(enFor === index ? null : index);
-                      }}
-                    >
-                      EN
-                    </button>
-                  )}
-                  {lineWords(line.text).length > 0 && (
-                    <button
-                      type="button"
-                      aria-pressed={wordsOpen}
-                      className={tone.pill}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setWordsToggled(wordsToggled === index ? null : index);
-                      }}
-                    >
-                      ？ ことば
-                    </button>
-                  )}
+                  ))}
                 </div>
-                {/* The page-turn mark appears once the line has finished appearing. */}
-                <span className={`flex shrink-0 items-center gap-1 whitespace-nowrap transition-opacity duration-200 ${shown === index ? 'opacity-100' : 'opacity-0'}`}>
-                  タップで つづく
-                  <motion.span
-                    aria-hidden
-                    animate={{ y: [0, 3, 0] }}
-                    transition={{ repeat: Infinity, duration: 1.2 }}
-                    className="text-base"
-                  >
-                    ▼
-                  </motion.span>
-                </span>
-              </div>
-            )}
+              )}
 
-            {toolsHint && (
-              <motion.p
-                lang="en"
-                className="mt-2 rounded-xl border-2 border-dashed border-[#c9a052] px-3 py-1.5 text-[12px] leading-snug font-bold text-[#ffe7b8]"
-                initial={{ opacity: 0, y: 6 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.6 }}
-              >
-                👆 <b>🔊</b> listen · <b>EN</b> English · <b>？ ことば</b> word meanings
-              </motion.p>
-            )}
-          </motion.div>
-        </AnimatePresence>
+              {line.choices?.length ? (
+                <div className="mt-3 flex flex-col gap-2">
+                  {line.choices.map((c) => (
+                    <button
+                      key={c.next}
+                      type="button"
+                      className="g-btn g-btn-accent w-full !min-h-[52px] text-sm leading-snug"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        choose(c.next);
+                      }}
+                    >
+                      <RubyText showFurigana={showFurigana}>{c.label}</RubyText>
+                    </button>
+                  ))}
+                </div>
+              ) : (
+                <div className="mt-1 flex items-center justify-end gap-1 text-xs font-bold" style={{ color: tone.foot }}>
+                  <div className="mr-auto flex min-w-0 flex-wrap gap-1.5">
+                    {canSpeak() && (speechFor ? speechFor(line.text) : line.text) && (
+                      <button
+                        type="button"
+                        aria-label="よみあげ"
+                        className={tone.pill}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          speak((speechFor ? speechFor(line.text) : line.text) ?? '');
+                        }}
+                      >
+                        🔊 よみあげ
+                      </button>
+                    )}
+                    {canSpeak() && (
+                      // Every line read aloud as it comes: the story followed by ear.
+                      <button
+                        type="button"
+                        aria-pressed={autoVoice}
+                        aria-label="じどうで よみあげ"
+                        className={tone.pill}
+                        style={autoVoice ? { background: '#f2c45a', color: '#2a1a0c' } : undefined}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          // On: the line is said at once (the effect above); off: it stops.
+                          if (autoVoice) stopSpeaking();
+                          setAutoVoice(!autoVoice);
+                        }}
+                      >
+                        {autoVoice ? '🔊 じどう ON' : '🔈 じどう'}
+                      </button>
+                    )}
+                    {line.en && (
+                      <button
+                        type="button"
+                        aria-pressed={enFor === index}
+                        className={tone.pill}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setEnFor(enFor === index ? null : index);
+                        }}
+                      >
+                        EN
+                      </button>
+                    )}
+                    {lineWords(line.text).length > 0 && (
+                      <button
+                        type="button"
+                        aria-pressed={wordsOpen}
+                        className={tone.pill}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setWordsToggled(wordsToggled === index ? null : index);
+                        }}
+                      >
+                        ？ ことば
+                      </button>
+                    )}
+                  </div>
+                  {/* The page-turn mark appears once the line has finished appearing. */}
+                  <span className={`flex shrink-0 items-center gap-1 whitespace-nowrap transition-opacity duration-200 ${shown === index ? 'opacity-100' : 'opacity-0'}`}>
+                    タップで つづく
+                    <motion.span
+                      aria-hidden
+                      animate={{ y: [0, 3, 0] }}
+                      transition={{ repeat: Infinity, duration: 1.2 }}
+                      className="text-base"
+                    >
+                      ▼
+                    </motion.span>
+                  </span>
+                </div>
+              )}
+
+              {toolsHint && (
+                <motion.p
+                  lang="en"
+                  className="mt-2 rounded-xl border-2 border-dashed border-[#c9a052] px-3 py-1.5 text-[12px] leading-snug font-bold text-[#ffe7b8]"
+                  initial={{ opacity: 0, y: 6 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.6 }}
+                >
+                  👆 <b>🔊</b> listen · <b>EN</b> English · <b>？ ことば</b> word meanings
+                </motion.p>
+              )}
+            </motion.div>
+          </AnimatePresence>
+        </div>
       </div>
 
       {/* ログ ------------------------------------------------------------ */}
