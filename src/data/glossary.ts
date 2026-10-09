@@ -348,6 +348,23 @@ export const KANA_WORDS: Readonly<Record<string, string>> = {
   どっち: 'which way',
   おおぐち: 'big mouth',
   みやこ: 'capital',
+  // 2026-10-09「いしだん すべる など、レベルに対して難しい言葉が多い」: words the story keeps
+  // although they come after the chapter's lessons — there is no easier way to say them.
+  かいだん: 'stairs',
+  みち: 'road, way',
+  はらぺこ: 'starving',
+  だめ: 'no! / not allowed',
+  だいじょうぶ: 'all right, OK',
+  つくります: 'make',
+  うみ: 'sea',
+  あかるい: 'bright',
+  はれました: 'cleared up',
+  におい: 'smell',
+  こわい: 'scary, scared',
+  うれしい: 'glad, happy',
+  ずっと: 'always, forever',
+  まけません: "won't lose",
+  こえ: 'voice',
 };
 
 /**
