@@ -67,9 +67,10 @@ export default Readings;
  * furigana. Okurigana is never set in the character's place (2026-09-24:
  * 「漢字は 漢字、添え物として 読みがななどが あるのが 大切」).
  */
-export const KanjiWord = ({ kanji, showFurigana = true }: { kanji: KanjiData; showFurigana?: boolean }) => (
+export const KanjiWord = ({ kanji, showFurigana = true, reading }: { kanji: KanjiData; showFurigana?: boolean; reading?: string }) => (
   <span className="whitespace-nowrap">
-    <RubyText showFurigana={showFurigana}>{kanjiRuby(kanji)}</RubyText>
+    {/* `reading`: the one this place teaches it with (文字が 消えた 町: moji/taughtReading.ts). */}
+    <RubyText showFurigana={showFurigana}>{reading ? `${kanji.char}(${reading})` : kanjiRuby(kanji)}</RubyText>
   </span>
 );
 
@@ -79,8 +80,8 @@ export const KanjiWord = ({ kanji, showFurigana = true }: { kanji: KanjiData; sh
  * 会□ with しゃ above the box. The learner reads the word and writes the
  * missing character; the reading above the box says which one.
  */
-export const FillIn = ({ kanji, showFurigana = true }: { kanji: KanjiData; showFurigana?: boolean }) => {
-  const word = exampleWord(kanji);
+export const FillIn = ({ kanji, showFurigana = true, word: given }: { kanji: KanjiData; showFurigana?: boolean; word?: string | null }) => {
+  const word = given ?? exampleWord(kanji);
   if (!word) return null;
   return (
     <span className="inline-flex items-end whitespace-nowrap">

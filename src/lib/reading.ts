@@ -97,6 +97,10 @@ export const exampleWord = (k: Readable): string | null => {
   return use?.length ? use[0][3] : null;
 };
 
+/** The most basic word that reads the kanji as `stem` (書, か → 書(か)く), else exampleWord's. */
+export const exampleWordWith = (k: Readable, stem: string): string | null =>
+  READING_USE[k.char]?.find((u) => kataToHira(kunForm(u[0]).stem) === stem)?.[3] ?? exampleWord(k);
+
 /** A single character with its reading above it, looked up by the character. */
 export const charRuby = (char: string): string => {
   const k = getKanjiByChar(char);

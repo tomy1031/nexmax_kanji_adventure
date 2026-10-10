@@ -6,7 +6,8 @@ import { RubyText } from '../../components/ui/Ruby';
 import { FillIn } from '../../components/ui/Readings';
 import { assetPath } from '../../lib/assetPath';
 import { SCENES } from '../picturebook/scenes';
-import { exampleWord, kanjiRuby, kunForm, primaryForm } from '../../lib/reading';
+import { exampleWordWith, kunForm } from '../../lib/reading';
+import { taughtForm } from '../moji/taughtReading';
 import { readAloud } from '../../lib/readTurn';
 import { parseRuby } from '../../lib/ruby';
 import { speak } from '../../lib/speech';
@@ -71,15 +72,16 @@ const MINCHO = { fontFamily: 'var(--font-mincho)' } as const;
 const meaningSize = (text: string) => (text.length <= 16 ? 40 : text.length <= 24 ? 33 : 28);
 
 /**
- * The reading the blank in the fill-in word takes, else the kanji's usual one —
- * with the okurigana in brackets when it is the kun word's: 小 → ちい(さい), so
- * よみ says ちいさい, not a bare ちい (ReadingText shows the okurigana fainter).
+ * The reading the battle asks for: the one this episode taught (moji/taughtReading.ts —
+ * 書 is か(く) in 2章7話, not しょ), as the blank in its word takes it, with the okurigana
+ * in brackets when it is the kun word's: 小 → ちい(さい), so よみ says ちいさい, not a bare
+ * ちい (ReadingText shows the okurigana fainter).
  */
 const readingFor = (k: KanjiData): string => {
-  const word = exampleWord(k);
+  const { stem, okuri } = taughtForm(k);
+  const word = exampleWordWith(k, stem);
   const inWord = word ? parseRuby(word).find((s) => s.text === k.char)?.reading : undefined;
-  const reading = inWord ?? /\(([^)]*)\)/.exec(kanjiRuby(k))?.[1] ?? '';
-  const { stem, okuri } = primaryForm(k);
+  const reading = inWord ?? stem;
   return okuri && reading === stem ? `${stem}(${okuri})` : reading;
 };
 
@@ -422,7 +424,8 @@ export const NaniwaBattleView = ({
 
   const reading = readingFor(target);
   const meaning = target.meanings.slice(0, 2).join(' / ');
-  const hasWord = exampleWord(target) != null;
+  const fillWord = exampleWordWith(target, taughtForm(target).stem);
+  const hasWord = fillWord != null;
 
   return (
     <div className="relative h-dvh overflow-hidden bg-[#140c06] text-white">
@@ -663,7 +666,7 @@ export const NaniwaBattleView = ({
                 className="absolute flex items-end justify-center leading-[1.7] font-bold whitespace-nowrap"
                 style={{ left: pct(400 / 672), width: pct(250 / 672), top: pct(10 / 165), height: pct(78 / 165), fontSize: cq(42) }}
               >
-                <FillIn kanji={target} showFurigana={showFurigana} />
+                <FillIn kanji={target} showFurigana={showFurigana} word={fillWord} />
               </p>
             )}
             {/* The meaning in English: in the rounded sans and a blue of its own, big enough to read at a glance (2026-10-04「単語の 意味の 視認性が 悪い」). */}

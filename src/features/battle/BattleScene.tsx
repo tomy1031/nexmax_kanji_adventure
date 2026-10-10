@@ -46,6 +46,7 @@ import LightFlow, { type Flow } from './LightFlow';
 import NaniwaBattleView from './NaniwaBattleView';
 import { useBgm } from '../../lib/bgm';
 import { isReadTurn, readAloud, readDamage, readQuestion } from '../../lib/readTurn';
+import { taughtForm, taughtRuby } from '../moji/taughtReading';
 import { nextStarGoal } from '../../data/starPerks';
 import { EXP_BOSS_FIRST, EXP_BOSS_REPEAT, EXP_READ, applyLevel, levelInfo, levelOf, ownedCount } from '../../lib/level';
 import { useCompoundsVersion } from '../../data/compounds';
@@ -614,7 +615,7 @@ export const BattleScene = ({
       const blow = strikeSealed(bossHp, result.damage, sealFloor(stage.boss.hp, sealIds.length, sealsLeft));
       if (nextBroken !== broken) {
         // The kanji comes back out of the opponent when the light lands, flies to its talisman, and it opens.
-        const ruby = target ? kanjiRuby(target) : '';
+        const ruby = target ? taughtRuby(target) : '';
         const n = turn;
         atImpact(() => {
           setBroken(nextBroken);
@@ -702,7 +703,8 @@ export const BattleScene = ({
         // The next turn may be a reading one: the opponent throws a kanji.
         if (isReadTurn(turn + 1, writesPerReadFor(difficulty))) {
           if (!fightSeedRef.current) fightSeedRef.current = Math.floor(Math.random() * 100000) + 1;
-          const q = readQuestion(kanjiPool, repsNow, lastThrownRef.current, fightSeedRef.current + turn + 1);
+          // The readings this episode taught (書 か(く), not しょ): what the learner has met.
+          const q = readQuestion(kanjiPool, repsNow, lastThrownRef.current, fightSeedRef.current + turn + 1, undefined, taughtForm);
           if (q) {
             lastThrownRef.current = q.kanji.id;
             setReadPicked(null);
@@ -892,7 +894,7 @@ export const BattleScene = ({
                         // Furigana notation (日(にち)), as every kanji on screen.
                         chars: [...new Set(growth.writes)].flatMap((id) => {
                           const k = getKanjiById(id);
-                          return k ? [kanjiRuby(k)] : [];
+                          return k ? [mastery ? taughtRuby(k) : kanjiRuby(k)] : [];
                         }),
                         total: growth.writes.length,
                       },

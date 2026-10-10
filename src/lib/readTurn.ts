@@ -1,7 +1,7 @@
 import type { KanjiData } from '../types/kanji';
 import { ALL_KANJI } from '../data/kanji.generated';
 import { MOJI_OWN_REPS } from './mastery';
-import { kataToHira, kunForm, primaryForm, usedReadings } from './reading';
+import { kataToHira, kunForm, primaryForm, usedReadings, type KunForm } from './reading';
 
 /**
  * 読む ターン (docs/design/08 §6.4): between the writes, the opponent throws a
@@ -43,11 +43,17 @@ const shuffle = <T>(items: readonly T[], seed: number): T[] => {
   return out;
 };
 
-/** The reading the player has to pick for a thrown kanji, okurigana in brackets: 山 → やま, 小 → ちい(さい). */
-export const readAnswer = (k: KanjiData): string => {
-  const { stem, okuri } = primaryForm(k);
+/** Which reading of a kanji is asked: the usual one, or (on the new route) the one its episode taught. */
+export type FormOf = (k: KanjiData) => KunForm;
+
+/** The reading to pick for a kanji, read as `formOf` says, okurigana in brackets: 小 → ちい(さい). */
+export const readAnswerAs = (k: KanjiData, formOf: FormOf): string => {
+  const { stem, okuri } = formOf(k);
   return okuri ? `${stem}(${okuri})` : stem;
 };
+
+/** The reading the player has to pick for a thrown kanji, okurigana in brackets: 山 → やま, 小 → ちい(さい). */
+export const readAnswer = (k: KanjiData): string => readAnswerAs(k, primaryForm);
 
 /** A choice as it is said: ちい(さい) → ちいさい. */
 export const readAloud = (choice: string): string => {
@@ -66,13 +72,14 @@ export const readChoices = (
   pool: readonly KanjiData[],
   fallback: readonly KanjiData[],
   seed: number,
+  formOf: FormOf = primaryForm,
 ): string[] => {
-  const answer = readAnswer(thrown);
+  const answer = readAnswerAs(thrown, formOf);
   const taken = stemsOf(thrown);
   const wrong: string[] = [];
   for (const k of [...shuffle(pool, seed), ...shuffle(fallback, seed + 2)]) {
     if (k.id === thrown.id || wrong.length === 3) continue;
-    const r = readAnswer(k);
+    const r = readAnswerAs(k, formOf);
     if (!r || taken.has(kunForm(r).stem) || wrong.includes(r)) continue;
     wrong.push(r);
   }
@@ -108,10 +115,11 @@ export const readQuestion = (
   lastId: string | null,
   seed: number,
   fallback: readonly KanjiData[] = N5_KANJI,
+  formOf: FormOf = primaryForm,
 ): { kanji: KanjiData; choices: string[]; answer: string } | null => {
   const kanji = pickThrown(pool, repsOf, lastId, seed);
   if (!kanji) return null;
-  return { kanji, choices: readChoices(kanji, pool, fallback, seed), answer: readAnswer(kanji) };
+  return { kanji, choices: readChoices(kanji, pool, fallback, seed, formOf), answer: readAnswerAs(kanji, formOf) };
 };
 
 /**

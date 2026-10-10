@@ -9,6 +9,7 @@ import { useCompactHeight } from '../../hooks/useCompactHeight';
 import { StarBurst } from '../../components/ui/StarBurst';
 import { useGameStore } from '../../store/gameStore';
 import { kanjiRuby } from '../../lib/reading';
+import { taughtForm, taughtRuby } from '../moji/taughtReading';
 import { REPS_TO_OBTAIN, type KanjiData } from '../../types/kanji';
 import { MASTERY_REPS, repsToNextStar, starsOf } from '../../lib/mastery';
 import RockSlash from './RockSlash';
@@ -159,7 +160,9 @@ export const KanjiDrill = ({ kanji, onObtained, onExit, onDone, nextLabel = 'つ
   const [rockNo, setRockNo] = useState(0);
   const pendingObtained = useRef(false);
 
-  const ruby = kanjiRuby(kanji);
+  // On 文字が 消えた 町 (look sign): the reading the episode teaches it with (書 か, not しょ).
+  const taught = sign ? taughtForm(kanji).stem : undefined;
+  const ruby = sign ? taughtRuby(kanji) : kanjiRuby(kanji);
 
   const handleMistake = useCallback(() => setStrokeMistakes((m) => m + 1), []);
 
@@ -245,7 +248,7 @@ export const KanjiDrill = ({ kanji, onObtained, onExit, onDone, nextLabel = 'つ
         <div className="flex items-end justify-between gap-2">
           <div className={`g-parchment flex min-w-0 flex-1 items-center gap-3 px-4 ${compact ? 'py-1' : 'py-2.5'}`}>
             <span className={`leading-[1.5] font-black ${compact ? 'text-[36px]' : 'text-[44px]'}`}>
-              <KanjiWord kanji={kanji} showFurigana={showFurigana} />
+              <KanjiWord kanji={kanji} reading={taught} showFurigana={showFurigana} />
             </span>
             <div className="min-w-0 text-sm leading-relaxed">
               <Readings kanji={kanji} size="sm" />
@@ -263,7 +266,7 @@ export const KanjiDrill = ({ kanji, onObtained, onExit, onDone, nextLabel = 'つ
                 </span>{' '}
                 {goal != null && stars < 3 ? <RubyText showFurigana={showFurigana}>{`あと ${repsToNextStar(reps)}`}</RubyText> : null}
               </span>
-              <SignStreet small street={street} glyph={<KanjiWord kanji={kanji} showFurigana={false} />} label={`${street.size}まいの うち ${street.lit}まい ひかった`} />
+              <SignStreet small street={street} glyph={<KanjiWord kanji={kanji} reading={taught} showFurigana={false} />} label={`${street.size}まいの うち ${street.lit}まい ひかった`} />
             </div>
           ) : (
             // No bubble: the box under the sign already says what to do, and
@@ -421,7 +424,7 @@ export const KanjiDrill = ({ kanji, onObtained, onExit, onDone, nextLabel = 'つ
             </div>
             <SignStreet
               street={street}
-              glyph={<KanjiWord kanji={kanji} showFurigana={showFurigana} />}
+              glyph={<KanjiWord kanji={kanji} reading={taught} showFurigana={showFurigana} />}
               label={`${street.size}まいの うち ${street.lit}まい ひかった`}
             />
           </div>
@@ -479,7 +482,7 @@ export const KanjiDrill = ({ kanji, onObtained, onExit, onDone, nextLabel = 'つ
                         ★{tier + 1}
                       </span>
                     )}
-                    {got ? <KanjiWord kanji={kanji} showFurigana={showFurigana} /> : <span className="mb-1 text-xs">♛</span>}
+                    {got ? <KanjiWord kanji={kanji} reading={taught} showFurigana={showFurigana} /> : <span className="mb-1 text-xs">♛</span>}
                   </motion.div>
                 );
               })}
@@ -546,7 +549,7 @@ export const KanjiDrill = ({ kanji, onObtained, onExit, onDone, nextLabel = 'つ
                   boxShadow: '0 0 30px rgba(255,210,90,0.9)',
                 }}
               >
-                <KanjiWord kanji={kanji} />
+                <KanjiWord kanji={kanji} reading={taught} />
               </motion.div>
               <p className="g-title mt-4 text-lg">
                 <RubyText showFurigana={showFurigana}>{`「${ruby}」が 町(まち)に 戻(もど)った！`}</RubyText>
@@ -614,7 +617,7 @@ export const KanjiDrill = ({ kanji, onObtained, onExit, onDone, nextLabel = 'つ
                   boxShadow: '0 0 30px rgba(255,210,90,0.9)',
                 }}
               >
-                <KanjiWord kanji={kanji} />
+                <KanjiWord kanji={kanji} reading={taught} />
               </motion.div>
               <p className="g-title mt-4 text-lg">
                 <RubyText showFurigana={showFurigana}>
