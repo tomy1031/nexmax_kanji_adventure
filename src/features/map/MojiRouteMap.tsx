@@ -10,6 +10,8 @@ import { useKnownKana } from '../kana/useKnownKana';
 import { MOJI_EPISODES, episodesOf } from '../../data/mojiEpisodes';
 import KanjiBackText from '../moji/KanjiBackText';
 import { useOwnedKanji } from '../moji/useOwnedKanji';
+import { useNexmaxClass } from '../moji/useNexmaxClass';
+import { ClassUpNotice } from '../moji/NexmaxClass';
 import { getKanjiByChar } from '../../lib/kanjiDb';
 import { kanjiRuby } from '../../lib/reading';
 import { MASTERY_REPS, starsOf } from '../../lib/mastery';
@@ -452,6 +454,8 @@ export const MojiRouteMap = () => {
   // Back from a replay (?at=): the sheet opens on the episode just played, with no NEW.
   const at = params.get('at');
   const still = useStill();
+  // クラス ★4 (docs/design/21): he sets off in his class-up form.
+  const nexmaxClass = useNexmaxClass();
   // This screen is "home": つづきから, もどる and the end of every episode come back here.
   useEffect(() => setLastArc('moji'), [setLastArc]);
 
@@ -496,8 +500,8 @@ export const MojiRouteMap = () => {
   const next = nextUpWithFinale(cleared, startPath);
   // The episode the つづき bubble points at: fetch its pictures while the player looks at the map.
   useEffect(() => {
-    if (next) preloadImages(episodeArt(next));
-  }, [next]);
+    if (next) preloadImages(episodeArt(next, { star4: nexmaxClass >= 4 }));
+  }, [next, nexmaxClass]);
   const nextGroup: GroupId = next ? (groupOf(next) ?? 'n5') : 'n5';
   const nextKana = next ? getKanaEpisode(next) : undefined;
   const nextMoji = next ? getMojiEpisode(next) : undefined;
@@ -575,7 +579,7 @@ export const MojiRouteMap = () => {
             <RubyText showFurigana={showFurigana}>新(あたら)しい 世界(せかい)へ！</RubyText>
           </p>
           <motion.img
-            src={art('nexmax_travel')}
+            src={art(nexmaxClass >= 4 ? 'nexmax_travel_star4' : 'nexmax_travel')}
             alt=""
             aria-hidden
             className="absolute"
@@ -905,6 +909,7 @@ export const MojiRouteMap = () => {
                 <dl className="mt-2 grid grid-cols-[1fr_auto] gap-x-4 gap-y-1.5 text-sm font-bold">
                   {(
                     [
+                      ['ネクマックスの クラス', `★${nexmaxClass}`],
                       ['書(か)いた かな', `${known.size} / ${kanaTotal}`],
                       ['手(て)に 入(い)れた 漢字(かんじ)（★1）', `${owned.size}`],
                       ['漢字(かんじ)マスター（★3）', `${masters}`],
@@ -939,6 +944,8 @@ export const MojiRouteMap = () => {
             </motion.div>
           )}
         </AnimatePresence>
+        {/* クラス ★4 (docs/design/21): told once, here if not already after 5章's boss. */}
+        <ClassUpNotice showFurigana={showFurigana} />
       </div>
     </div>
   );

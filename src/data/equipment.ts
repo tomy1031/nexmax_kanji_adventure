@@ -19,11 +19,21 @@ export const GearSlot = {
 } as const;
 export type GearSlot = (typeof GearSlot)[keyof typeof GearSlot];
 
-export const SLOT_LABEL: Record<GearSlot | 'weapon', string> = {
+/**
+ * Where a piece is worn. A second accessory slot opens at クラス ★4
+ * (lib/nexmaxClass.ts, docs/design/21): it takes the same pieces as `charm`.
+ */
+export type WearSlot = GearSlot | 'charm2';
+
+/** The kind of piece a slot takes. */
+export const itemSlotOf = (s: WearSlot): GearSlot => (s === 'charm2' ? 'charm' : s);
+
+export const SLOT_LABEL: Record<WearSlot | 'weapon', string> = {
   weapon: '武器(ぶき)',
   shield: '盾(たて)',
   body: 'からだ',
   charm: 'アクセサリ',
+  charm2: 'アクセサリ 2',
 };
 
 export interface GearItem {
