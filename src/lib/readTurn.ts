@@ -1,7 +1,7 @@
 import type { KanjiData } from '../types/kanji';
 import { ALL_KANJI } from '../data/kanji.generated';
 import { MOJI_OWN_REPS } from './mastery';
-import { kataToHira, kunForm, primaryStem, usedReadings } from './reading';
+import { kataToHira, kunForm, primaryForm, usedReadings } from './reading';
 
 /**
  * 読む ターン (docs/design/08 §6.4): between the writes, the opponent throws a
@@ -10,7 +10,9 @@ import { kataToHira, kunForm, primaryStem, usedReadings } from './reading';
  * they can already read it. New-route fights only.
  *
  * The answer is the reading the game shows above the kanji everywhere
- * (kanjiRuby's furigana), so the quiz asks for what the learner has seen.
+ * (kanjiRuby's furigana), so the quiz asks for what the learner has seen —
+ * with its okurigana, as the word is known: 小 is ちい(さい), said ちいさい,
+ * never a bare ちい (2026-10-10「これも こたえられない」).
  */
 
 /** Writes between two reading turns. */
@@ -41,8 +43,17 @@ const shuffle = <T>(items: readonly T[], seed: number): T[] => {
   return out;
 };
 
-/** The reading the player has to pick for a thrown kanji. */
-export const readAnswer = (k: KanjiData): string => primaryStem(k);
+/** The reading the player has to pick for a thrown kanji, okurigana in brackets: 山 → やま, 小 → ちい(さい). */
+export const readAnswer = (k: KanjiData): string => {
+  const { stem, okuri } = primaryForm(k);
+  return okuri ? `${stem}(${okuri})` : stem;
+};
+
+/** A choice as it is said: ちい(さい) → ちいさい. */
+export const readAloud = (choice: string): string => {
+  const { stem, okuri } = kunForm(choice);
+  return stem + okuri;
+};
 
 /**
  * Four readings for a thrown kanji, shuffled: its answer and three others,
@@ -62,7 +73,7 @@ export const readChoices = (
   for (const k of [...shuffle(pool, seed), ...shuffle(fallback, seed + 2)]) {
     if (k.id === thrown.id || wrong.length === 3) continue;
     const r = readAnswer(k);
-    if (!r || taken.has(r) || wrong.includes(r)) continue;
+    if (!r || taken.has(kunForm(r).stem) || wrong.includes(r)) continue;
     wrong.push(r);
   }
   return shuffle([answer, ...wrong], seed + 1);

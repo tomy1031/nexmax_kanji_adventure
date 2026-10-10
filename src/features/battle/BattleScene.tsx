@@ -45,7 +45,7 @@ import { FLOW_MS, IMPACT_MS, WIN_DELAY_MASTERY_MS, lightOf } from '../../lib/lig
 import LightFlow, { type Flow } from './LightFlow';
 import NaniwaBattleView from './NaniwaBattleView';
 import { useBgm } from '../../lib/bgm';
-import { isReadTurn, readDamage, readQuestion } from '../../lib/readTurn';
+import { isReadTurn, readAloud, readDamage, readQuestion } from '../../lib/readTurn';
 import { nextStarGoal } from '../../data/starPerks';
 import { EXP_BOSS_FIRST, EXP_BOSS_REPEAT, EXP_READ, applyLevel, levelInfo, levelOf, ownedCount } from '../../lib/level';
 import { useCompoundsVersion } from '../../data/compounds';
@@ -746,7 +746,7 @@ export const BattleScene = ({
         if (isComboBreak(combo, 0)) sfx.comboBreak();
         setTotalMistakes((n) => n + 1);
         setCombo(0);
-        say(`「${readQ.answer}」と よむ`);
+        say(`「${readAloud(readQ.answer)}」と よむ`);
         addSlip();
         return;
       }

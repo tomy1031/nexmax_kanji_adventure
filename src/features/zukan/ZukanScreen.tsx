@@ -11,7 +11,7 @@ import { isForgeOpen } from '../../data/mojiFlow';
 import { Feature, isFeatureUnlocked } from '../../data/unlocks';
 import { useKnownKana } from '../kana/useKnownKana';
 import { getKanjiByChar } from '../../lib/kanjiDb';
-import { kanjiRuby } from '../../lib/reading';
+import { primaryForm } from '../../lib/reading';
 import { starsOf } from '../../lib/mastery';
 import { canSpeak, speak } from '../../lib/speech';
 import type { KanjiData } from '../../types/kanji';
@@ -169,7 +169,8 @@ export const ZukanScreen = () => {
                         ) : (
                           // Not written yet: only its sound, as in the story.
                           <span className="text-[11px] font-bold" style={{ color: 'rgba(59,34,8,0.5)' }}>
-                            {/\(([^)]*)\)/.exec(kanjiRuby(k))?.[1] ?? '？'}
+                            {primaryForm(k).stem || '？'}
+                            <span style={{ opacity: 0.6 }}>{primaryForm(k).okuri}</span>
                           </span>
                         )}
                         <Stars n={stars} />

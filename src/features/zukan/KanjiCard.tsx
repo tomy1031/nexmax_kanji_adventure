@@ -5,7 +5,7 @@ import { RubyText } from '../../components/ui/Ruby';
 import { KanjiWord, Readings } from '../../components/ui/Readings';
 import { useGameStore } from '../../store/gameStore';
 import type { KanjiData } from '../../types/kanji';
-import { kanjiRuby, kunWords, onReadings } from '../../lib/reading';
+import { kunWords, onReadings, primaryForm } from '../../lib/reading';
 import { repsToNextStar, starsOf } from '../../lib/mastery';
 import { canSpeak, speak } from '../../lib/speech';
 import { preloadCharData } from '../../lib/strokeLoader';
@@ -85,7 +85,9 @@ export const KanjiCard = ({
   const words = cardWords(kanji.char, owned, 3, found);
   const ep = episodeOfKanji(kanji.char);
   const open = ep ? isEpisodeOpen(ep, cleared) : false;
-  const sound = /\(([^)]*)\)/.exec(kanjiRuby(kanji))?.[1] ?? kanji.char;
+  // Its sound as the word is said: ちいさい for 小, the okurigana fainter (never a bare ちい).
+  const { stem, okuri } = primaryForm(kanji);
+  const sound = stem + okuri;
 
   const write = () => {
     if (!ep) return;
@@ -117,7 +119,10 @@ export const KanjiCard = ({
               </span>
             ) : (
               // Not written yet: only its sound, as in the story.
-              <span className="kanji-lost flex h-[83px] items-center text-2xl font-black">{sound}</span>
+              <span className="kanji-lost flex h-[83px] items-center text-2xl font-black">
+                {stem}
+                <span style={{ opacity: 0.6 }}>{okuri}</span>
+              </span>
             )}
             <span aria-label={`★${stars}`} className="text-base leading-none tracking-tight" style={{ color: '#e8a317' }}>
               {'★'.repeat(stars)}
