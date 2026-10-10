@@ -90,6 +90,20 @@ export const MOJI_FINALES: MojiFinale[] = [
     bg: 'miyako_tower_top',
     boss: { name: '大(おお)モジクイ', img: 'img/battle/mojikui_boss.webp', trait: { icon: '👑', ja: 'じぶんが おうさま', en: 'self-made king' }, hp: 176, attack: 72, element: Element.AN, icon: 'GiShadowFollower' },
   },
+  {
+    // 5章「モジクイの 王」の 終わり（docs/design/20）: 初級I の さいご。しろの いちばん 上の 王の 部屋。
+    id: 'moji-5-boss',
+    chapter: 'moji-5',
+    title: 'まとめの ボス',
+    asks: 10,
+    patience: 2,
+    // The end of the first book: a little more than a chapter's end.
+    reward: 150,
+    // The King's room (10話 ends at its door).
+    bg: 'shizuka_throne',
+    // Ten of the chapter's fifty-five kanji, a little longer than 4章's, and the hardest blow so far.
+    boss: { name: 'モジクイの 王(おう)', img: 'img/battle/mojikui_king.webp', trait: { icon: '🌑', ja: 'ひとりぼっち', en: 'all alone' }, hp: 192, attack: 86, element: Element.AN, icon: 'GiShadowFollower' },
+  },
 ];
 
 export const getMojiFinale = (id: string): MojiFinale | undefined => MOJI_FINALES.find((f) => f.id === id);

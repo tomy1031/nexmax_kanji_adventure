@@ -19,11 +19,21 @@ export const GearSlot = {
 } as const;
 export type GearSlot = (typeof GearSlot)[keyof typeof GearSlot];
 
-export const SLOT_LABEL: Record<GearSlot | 'weapon', string> = {
+/**
+ * Where a piece is worn. A second accessory slot opens at クラス ★4
+ * (lib/nexmaxClass.ts, docs/design/21): it takes the same pieces as `charm`.
+ */
+export type WearSlot = GearSlot | 'charm2';
+
+/** The kind of piece a slot takes. */
+export const itemSlotOf = (s: WearSlot): GearSlot => (s === 'charm2' ? 'charm' : s);
+
+export const SLOT_LABEL: Record<WearSlot | 'weapon', string> = {
   weapon: '武器(ぶき)',
   shield: '盾(たて)',
   body: 'からだ',
   charm: 'アクセサリ',
+  charm2: 'アクセサリ 2',
 };
 
 export interface GearItem {
@@ -520,6 +530,119 @@ export const GEAR: GearItem[] = [
     patience: 1,
     attackPct: 20,
     icon: 'GiFeather',
+  },
+  // 5章 シズカタウン（docs/design/20）: 4章より 少し 強い。
+  {
+    id: 'charm-nebou',
+    slot: 'charm',
+    name: '寝(ね)る ときの ぼうし',
+    kanji: ['寝'],
+    stage: 'moji-5-1',
+    blurb: 'よく 寝(ね)て、あしたも 書(か)きます。',
+    hp: 20,
+    patience: 2,
+    icon: 'GiNightSleep',
+  },
+  {
+    id: 'charm-kanji',
+    slot: 'charm',
+    name: '漢字(かんじ)の ふで',
+    kanji: ['漢', '字'],
+    stage: 'moji-5-2',
+    blurb: '漢字(かんじ)を 書(か)く ふで。',
+    attackPct: 32,
+    icon: 'GiPaintBrush',
+  },
+  {
+    id: 'charm-gin',
+    slot: 'charm',
+    name: '銀(ぎん)の かぎ',
+    kanji: ['銀'],
+    stage: 'moji-5-3',
+    blurb: '銀(ぎん)で 作(つく)った かぎ。',
+    defense: 7,
+    hp: 15,
+    patience: 1,
+    icon: 'GiSkeletonKey',
+  },
+  {
+    id: 'charm-orgel',
+    slot: 'charm',
+    name: '音楽(おんがく)の オルゴール',
+    kanji: ['音', '楽'],
+    stage: 'moji-5-4',
+    blurb: '音楽(おんがく)が ながれる 小(ちい)さい はこ。',
+    patience: 1,
+    attackPct: 23,
+    icon: 'GiMusicalNotes',
+  },
+  {
+    id: 'charm-fuyu',
+    slot: 'charm',
+    name: '冬(ふゆ)の マフラー',
+    kanji: ['冬'],
+    stage: 'moji-5-5',
+    blurb: '冬(ふゆ)でも あたたかい マフラー。',
+    defense: 4,
+    hp: 40,
+    patience: 1,
+    icon: 'GiWinterHat',
+  },
+  {
+    id: 'charm-clover',
+    slot: 'charm',
+    name: '運(うん)の いい クローバー',
+    kanji: ['運'],
+    stage: 'moji-5-6',
+    blurb: 'いい ことが ある 四(よ)つばの クローバー。',
+    patience: 2,
+    attackPct: 12,
+    icon: 'GiClover',
+  },
+  {
+    id: 'charm-kazoku',
+    slot: 'charm',
+    name: '家族(かぞく)の ブレスレット',
+    kanji: ['家', '族'],
+    stage: 'moji-5-7',
+    blurb: '家族(かぞく) みんなの ブレスレット。',
+    hp: 60,
+    attackPct: 10,
+    icon: 'GiHearts',
+  },
+  {
+    id: 'charm-kai',
+    slot: 'charm',
+    name: '海(うみ)の かいがら',
+    kanji: ['海'],
+    stage: 'moji-5-8',
+    blurb: '海(うみ)の 音(おと)が する かいがら。',
+    defense: 8,
+    hp: 20,
+    patience: 1,
+    icon: 'GiScallop',
+  },
+  {
+    id: 'charm-mado',
+    slot: 'charm',
+    name: '窓(まど)の ステンドグラス',
+    kanji: ['窓'],
+    stage: 'moji-5-9',
+    blurb: '月(つき)の あかりが 入(はい)る 窓(まど)の ガラス。',
+    patience: 1,
+    attackPct: 25,
+    icon: 'GiWindow',
+  },
+  {
+    id: 'charm-uta',
+    slot: 'charm',
+    name: '歌(うた)の ハープ',
+    kanji: ['歌'],
+    stage: 'moji-5-10',
+    blurb: '歌(うた)と いっしょに ひく ハープ。',
+    patience: 1,
+    attackPct: 26,
+    icon: 'GiLyre',
   },
 ];
 

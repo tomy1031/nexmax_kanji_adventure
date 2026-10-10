@@ -3,6 +3,7 @@ import { MOJI1_FINALE } from './scripts/moji1';
 import { MOJI2_FINALE } from './scripts/moji2';
 import { MOJI3_FINALE } from './scripts/moji3';
 import { MOJI4_FINALE } from './scripts/moji4';
+import { MOJI5_FINALE } from './scripts/moji5';
 
 /**
  * まとめの ボス — its story, by finale id (data/mojiFinale.ts). Written with
@@ -15,4 +16,5 @@ export const MOJI_FINALE_SCRIPTS: Partial<Record<string, FinaleScript>> = {
   'moji-2-boss': MOJI2_FINALE,
   'moji-3-boss': MOJI3_FINALE,
   'moji-4-boss': MOJI4_FINALE,
+  'moji-5-boss': MOJI5_FINALE,
 };

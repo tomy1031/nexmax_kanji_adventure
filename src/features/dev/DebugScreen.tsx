@@ -199,6 +199,7 @@ const StoryTab = () => {
     intro: 'むかし編 0話',
     gacha: 'はじめての ガチャ',
     firstWeapon: 'はじめての 武器',
+    classUp: '★4 クラスアップ',
   };
   return (
     <>

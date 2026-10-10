@@ -37,6 +37,9 @@ const OVERRIDES = {
   'img/chara/naniwa/folk_vendor_happy.webp': [0.54, 0.26, 0.4],
   'img/chara/naniwa/folk_vendor_trouble.webp': [0.53, 0.23, 0.38],
   'img/chara/naniwa/folk_keeper_trouble.webp': [0.52, 0.3, 0.38],
+  // 5章: 高い 帽子・ぼうしの つば・めがね
+  'img/chara/naniwa/folk_mayor_happy.webp': [0.5, 0.3, 0.45],
+  'img/chara/naniwa/folk_ekichou_happy.webp': [0.43, 0.26, 0.45],
   // 3章: 高い コック帽・はちまき・白い ひげで 顔の 見つけ方が ずれる 人
   'img/chara/naniwa/folk_chef_happy.webp': [0.5, 0.3, 0.38],
   'img/chara/naniwa/folk_chef_trouble.webp': [0.5, 0.27, 0.36],
@@ -83,6 +86,17 @@ const OVERRIDES = {
   'img/battle/mojikui_map.webp': [0.5, 0.33, 0.4],
   'img/battle/mojikui_mouth.webp': [0.48, 0.45, 0.6],
   'img/battle/mojikui_telescope.webp': [0.33, 0.3, 0.32],
+  // 5章（docs/design/20）
+  'img/battle/mojikui_pillow.webp': [0.42, 0.33, 0.4],
+  'img/battle/mojikui_stamp.webp': [0.37, 0.4, 0.38],
+  'img/battle/mojikui_key.webp': [0.3, 0.36, 0.4],
+  'img/battle/mojikui_earplug.webp': [0.38, 0.28, 0.4],
+  'img/battle/mojikui_snowman.webp': [0.4, 0.27, 0.36],
+  'img/battle/mojikui_sneeze.webp': [0.3, 0.3, 0.42],
+  'img/battle/mojikui_album.webp': [0.36, 0.26, 0.38],
+  'img/battle/mojikui_wave.webp': [0.3, 0.32, 0.4],
+  'img/battle/mojikui_curtain.webp': [0.54, 0.28, 0.42],
+  'img/battle/mojikui_king.webp': [0.45, 0.27, 0.34],
   // カード（docs/design/18 §3）: a held lantern, cup, books, brush or lens reads as the face.
   'img/chara/cards/ENFP-4.webp': [0.5, 0.31, 0.62],
   'img/chara/cards/ENFP-5.webp': [0.56, 0.47, 0.5],

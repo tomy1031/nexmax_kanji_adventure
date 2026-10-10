@@ -11,6 +11,7 @@ import { basePatience, computeDamage, statsFromGear, type PlayerStats } from './
 import { MASTERY_REPS, masteryMultiplier, starsOf } from './mastery';
 import { applyLevel, levelOf, ownedCount } from './level';
 import { WRITES_PER_READ } from './readTurn';
+import { classOf, wornAt } from './nexmaxClass';
 
 /**
  * 難易度 (docs/design/09 §4): an episode's fight in Normal — the story's,
@@ -54,6 +55,11 @@ export interface LoadoutSave {
   equippedWeapon: string | null;
   activeIndividual: string | null;
   equippedGear: Readonly<Record<string, string | null>>;
+  /**
+   * The clears, for the クラス (lib/nexmaxClass.ts): the second accessory
+   * counts from ★4. Without them, it is not counted.
+   */
+  clearedStages?: readonly string[];
   exp: number;
   progress: Readonly<Record<string, { reps?: number } | undefined>>;
 }
@@ -72,7 +78,7 @@ export const loadoutFromSave = (save: LoadoutSave): Loadout => {
   const weapon = recipe ? weaponFromRecipe(recipe) : null;
   const individual = save.activeIndividual ? (getIndividual(save.activeIndividual) ?? null) : null;
   const gear = statsFromGear(
-    Object.values(save.equippedGear)
+    Object.values(wornAt(save.equippedGear, classOf(save.clearedStages ?? [])))
       .map((id) => getGear(id))
       .filter((g) => g != null),
   );

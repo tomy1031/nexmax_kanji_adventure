@@ -5,6 +5,7 @@ import {
   hardBossAttack,
   hardBossHp,
   hardFight,
+  hardFinaleFight,
   hardPatience,
   hardPool,
   isHardOpen,
@@ -15,6 +16,8 @@ import {
   type LoadoutSave,
 } from './difficulty';
 import { MOJI_EPISODES, getMojiEpisode } from '../data/mojiEpisodes';
+import { MOJI_FINALES } from '../data/mojiFinale';
+import { GEAR } from '../data/equipment';
 import { INDIVIDUALS } from '../data/individuals';
 import { getKanjiByChar } from './kanjiDb';
 import { counterDamage, statsFromGear, strikeDamage } from './battle';
@@ -194,5 +197,41 @@ describe('Hard: what it reads off the save', () => {
     expect(f.pool).toHaveLength(5);
     expect(f.writesPerRead).toBe(1);
     expect(hardFight(ep('moji-1-4'), save({ progress })).patience).toBe(2);
+  });
+});
+
+describe('Hard with クラス ★4: two accessories (docs/design/21)', () => {
+  const charms = GEAR.filter((g) => g.slot === 'charm' && g.stage.startsWith('moji-'));
+  /** The two that add the most HP and defence: what could stretch a fight past three strikes. */
+  const [a, b] = [...charms].sort((x, y) => (y.hp ?? 0) + 5 * (y.defense ?? 0) - ((x.hp ?? 0) + 5 * (x.defense ?? 0)));
+  const save = (o: Partial<LoadoutSave> = {}): LoadoutSave => ({
+    weapons: [],
+    equippedWeapon: null,
+    activeIndividual: null,
+    equippedGear: { shield: 'shield-shiho', body: 'body-kin', charm: a.id, charm2: b.id },
+    exp: 180,
+    progress: {},
+    ...o,
+  });
+
+  it('counts the second accessory only at ★4', () => {
+    const before = loadoutFromSave(save({ clearedStages: [] })).stats;
+    const after = loadoutFromSave(save({ clearedStages: ['moji-5-boss'] })).stats;
+    expect(before).toEqual(loadoutFromSave(save({ equippedGear: { shield: 'shield-shiho', body: 'body-kin', charm: a.id, charm2: null } })).stats);
+    expect(after.maxHp).toBe(before.maxHp + (b.hp ?? 0));
+    expect(after.defense).toBe(before.defense + (b.defense ?? 0));
+  });
+
+  it('still ends in three strikes, in every episode and every まとめの ボス', () => {
+    const s = save({ clearedStages: ['moji-5-boss'] });
+    const l = loadoutFromSave(s);
+    const fights = [
+      ...MOJI_EPISODES.map((e) => ({ id: e.id, f: hardFight(e, s), element: e.boss.element })),
+      ...MOJI_FINALES.map((f) => ({ id: f.id, f: hardFinaleFight(f, s), element: f.boss.element })),
+    ];
+    for (const { id, f, element } of fights) {
+      const strike = strikeDamage(counterDamage(f.boss.attack, l.individual, element), l.stats.defense);
+      expect(Math.ceil(l.stats.maxHp / strike), id).toBeLessThanOrEqual(3);
+    }
   });
 });

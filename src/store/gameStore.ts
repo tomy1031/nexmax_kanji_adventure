@@ -14,7 +14,8 @@ import {
 import { DEFAULT_VERSUS_STATS, type VersusStats } from '../features/versus/types';
 import { FoundVia, HINT_COST, MAX_HINT, TRY_COST_2, TRY_COST_3, earnsTitle } from '../lib/forge/discovery';
 import { getAchievement, isTaken } from '../data/achievements';
-import { getGear, type GearSlot } from '../data/equipment';
+import { getGear, itemSlotOf, type WearSlot } from '../data/equipment';
+import { charmSlots, classOf } from '../lib/nexmaxClass';
 import { forgeTargetOf, forgedGearId, gearFromId, type ForgedSlot } from '../lib/forge/gear';
 import { getKanjiById } from '../lib/kanjiDb';
 import { ALL_KANJI } from '../data/kanji.generated';
@@ -106,8 +107,8 @@ export interface GameState {
   equippedWeapon: string | null;
   /** Shields, armour and charms made (data/equipment.ts ids). */
   gear: string[];
-  /** What is worn in the three non-weapon slots. */
-  equippedGear: Record<GearSlot, string | null>;
+  /** What is worn in the non-weapon slots; `charm2` opens at クラス ★4 (lib/nexmaxClass.ts). */
+  equippedGear: Record<WearSlot, string | null>;
   /** Nexmax Gems — the gacha currency. */
   gems: number;
   /** Pity counter since the last top-rarity pull. */
@@ -138,7 +139,8 @@ export interface GameState {
   autoVoice: boolean;
   /** One-off explainers the player has already been shown. */
   /** intro: むかし編の 0話. prologue: 文字が 消えた 町の プロローグ (08 §10.2). stars: じゅんびの ★の ひみつ. */
-  tutorials: { forge: boolean; intro: boolean; prologue: boolean; stars: boolean; tools: boolean; gacha: boolean; firstWeapon: boolean };
+  /** classUp: the 「★4 クラスアップ！」 card (docs/design/21), once. */
+  tutorials: { forge: boolean; intro: boolean; prologue: boolean; stars: boolean; tools: boolean; gacha: boolean; firstWeapon: boolean; classUp: boolean };
   /** The world last played in — where つづきから, ストーリー and もどる lead back to. */
   lastArc: 'mukashi' | 'gendai' | 'moji';
   /**
@@ -214,7 +216,8 @@ export interface GameActions {
   makeGear: (gearId: string) => boolean;
   /** Forge a shield or a body piece from two or three owned kanji (lib/forge/gear.ts). Its id, or null. */
   craftGear: (slot: ForgedSlot, kanjiIds: string[]) => string | null;
-  equipGear: (slot: GearSlot, gearId: string | null) => void;
+  /** Wear a piece made, or take it off (null). The second accessory slot only from クラス ★4. */
+  equipGear: (slot: WearSlot, gearId: string | null) => void;
   claimDailyTask: (taskId: string, reward: number) => boolean;
   rollDailyIfNeeded: () => void;
   bumpPity: () => void;
@@ -272,7 +275,7 @@ const initialState: GameState = {
   weapons: [],
   equippedWeapon: null,
   gear: [],
-  equippedGear: { shield: null, body: null, charm: null },
+  equippedGear: { shield: null, body: null, charm: null, charm2: null },
   gems: 0,
   pityCount: 0,
   gachaTickets: 0,
@@ -285,7 +288,7 @@ const initialState: GameState = {
   settings: { furigana: true, muted: false, reducedMotion: false, bgmOff: false, english: true },
   fullMotion: false,
   autoVoice: false,
-  tutorials: { forge: false, intro: false, prologue: false, stars: false, tools: false, gacha: false, firstWeapon: false },
+  tutorials: { forge: false, intro: false, prologue: false, stars: false, tools: false, gacha: false, firstWeapon: false, classUp: false },
   // A new player starts on the new route (08 §10.2).
   lastArc: 'moji',
   startPath: null,
@@ -508,13 +511,15 @@ export const useGameStore = create<GameState & GameActions>()(
           return k ? state.hasKanji(k.id) : false;
         });
         if (!owned) return false;
-        set((s) => ({
-          gear: [...s.gear, gearId],
-          // A new piece goes straight on when the slot is empty.
-          equippedGear: s.equippedGear[item.slot]
-            ? s.equippedGear
-            : { ...s.equippedGear, [item.slot]: gearId },
-        }));
+        set((s) => {
+          // A new piece goes straight on when its slot is empty — a charm into the second slot at ★4.
+          const free = !s.equippedGear[item.slot]
+            ? item.slot
+            : item.slot === 'charm' && charmSlots(classOf(s.clearedStages)) >= 2 && !s.equippedGear.charm2
+              ? 'charm2'
+              : null;
+          return { gear: [...s.gear, gearId], equippedGear: free ? { ...s.equippedGear, [free]: gearId } : s.equippedGear };
+        });
         return true;
       },
 
@@ -530,8 +535,14 @@ export const useGameStore = create<GameState & GameActions>()(
       },
 
       equipGear: (slot, gearId) => {
-        if (gearId && (!get().gear.includes(gearId) || getGear(gearId)?.slot !== slot)) return;
-        set((s) => ({ equippedGear: { ...s.equippedGear, [slot]: gearId } }));
+        const state = get();
+        if (gearId && (!state.gear.includes(gearId) || getGear(gearId)?.slot !== itemSlotOf(slot))) return;
+        if (gearId && slot === 'charm2' && charmSlots(classOf(state.clearedStages)) < 2) return;
+        // One piece, one slot: worn in the other accessory slot, it comes off there.
+        const other: WearSlot | null = slot === 'charm' ? 'charm2' : slot === 'charm2' ? 'charm' : null;
+        set((s) => ({
+          equippedGear: { ...s.equippedGear, [slot]: gearId, ...(other && gearId && s.equippedGear[other] === gearId ? { [other]: null } : {}) },
+        }));
       },
 
       claimDailyTask: (taskId, reward) => {
