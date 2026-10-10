@@ -253,3 +253,52 @@ describe('称号の ◆ (TitlesScreen)', () => {
     expect((merge({ gems: 5 }, current) as typeof current).titleRewards).toEqual([]);
   });
 });
+
+describe('クラス ★4: アクセサリが 2つ (docs/design/21)', () => {
+  const st = () => useGameStore.getState();
+  /** 月・山・三 owned, and their three charms made (月の ペンダント, 山の すず, 三つ星の バッジ). */
+  const makeCharms = () => {
+    const progress: Record<string, { reps: number; mistakes: number; streak: number; nextReview: number; intervalDays: number }> = {};
+    for (const c of '月山三') progress[getKanjiByChar(c)!.id] = { reps: 10, mistakes: 0, streak: 0, nextReview: 0, intervalDays: 0 };
+    useGameStore.setState({ progress });
+    for (const id of ['charm-tsuki', 'charm-yama', 'charm-mitsuboshi']) expect(st().makeGear(id), id).toBe(true);
+  };
+
+  it('keeps the second slot shut below ★4: a new charm does not go on, nor can one be put there', () => {
+    makeCharms();
+    expect(st().equippedGear.charm).toBe('charm-tsuki');
+    expect(st().equippedGear.charm2).toBeNull();
+    st().equipGear('charm2', 'charm-yama');
+    expect(st().equippedGear.charm2).toBeNull();
+  });
+
+  it('opens it at ★4: a second charm goes on, the same one is never worn twice, and only charms fit', () => {
+    st().clearStage('moji-5-boss');
+    makeCharms();
+    // Made with the first slot taken: straight into the second.
+    expect(st().equippedGear).toMatchObject({ charm: 'charm-tsuki', charm2: 'charm-yama' });
+    // One piece, one slot: put on in the other, it comes off where it was.
+    st().equipGear('charm2', 'charm-tsuki');
+    expect(st().equippedGear).toMatchObject({ charm: null, charm2: 'charm-tsuki' });
+    st().equipGear('charm', 'charm-mitsuboshi');
+    expect(st().equippedGear).toMatchObject({ charm: 'charm-mitsuboshi', charm2: 'charm-tsuki' });
+    st().equipGear('charm2', null);
+    expect(st().equippedGear.charm2).toBeNull();
+    // Not a shield, not a piece not made.
+    useGameStore.setState({ gear: [...st().gear, 'shield-oo'] });
+    st().equipGear('charm2', 'shield-oo');
+    st().equipGear('charm2', 'charm-hachi');
+    expect(st().equippedGear.charm2).toBeNull();
+  });
+
+  it('loads a save from before it with the second slot empty, and the class-up card not yet seen', () => {
+    const merge = useGameStore.persist.getOptions().merge!;
+    const current = useGameStore.getState();
+    // A save written before the class: no charm2, no classUp.
+    const { classUp: _none, ...tutorials } = current.tutorials;
+    void _none;
+    const old = merge({ equippedGear: { shield: null, body: 'body-kin', charm: 'charm-tsuki' } as never, tutorials: tutorials as never }, current) as typeof current;
+    expect(old.equippedGear).toEqual({ shield: null, body: 'body-kin', charm: 'charm-tsuki', charm2: null });
+    expect(old.tutorials.classUp).toBe(false);
+  });
+});

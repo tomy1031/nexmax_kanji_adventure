@@ -149,6 +149,15 @@ brown leather satchel on a strap across his body. Cute, about 2 heads tall. Kid-
 The navy chest mark must always be visible and unobstructed — never covered by the arms, the strap or the bag.
 Never: realistic rendering, extra fingers, readable letters, angry or scary face.`,
 
+  // ★4 の ネクマックス（docs/design/21）: 地図・たたかいの 絵を、同じ ポーズの まま ★4 の 姿に する。
+  NEXMAX_STAR4_SAME: `Character: redraw exactly the picture in the FIRST reference image — the same small robot, the same pose,
+the same props, the same camera angle, the same framing and proportions, the same glossy anime game rendering with a
+clean dark outline. Only dress him in his ★4 class-up outfit, taken from the SECOND reference image: a short navy cape
+with gold trim clipped at his shoulders and flowing behind him (it never covers the chest), gold-and-white armour trims
+on his shoulders, elbows and boots, a small golden star-shaped crest on top of his helmet between the ear pods, and the
+chest mark glowing a warm gold. Everything else stays as in the first reference. Kid-friendly. No readable letters.
+The chest mark must always be visible and unobstructed.`,
+
   // ナニワタウンの 町の 人: public/img/chara/types の ロボットを そのまま、表情と しぐさだけ 変える。
   FOLK_PAINTED: `Character: exactly the robot in the reference image — the same body shape, colors, antenna,
 accessories and outfit, the same glossy 3D-like Japanese anime game rendering with soft shading. Only the pose and
@@ -698,6 +707,31 @@ const NEXMAX_NANIWA = [
   nxPainted('crank', 'turning a big crank with all his strength: his whole body faces to the LEFT in a three-quarter view, both mitten hands stretched out to the left at chest height, held close together as if gripping one round knob there (his hands are empty — nothing drawn in them), leaning his weight into the turn with one boot braced behind him, eyes squeezed into happy curved lines of effort, mouth open in a cheerful shout. The chest mark stays visible.', 'ガチャを ひく ときの「ガチャ開始」（機械の ハンドルを 回す）'),
   // 5章の おわり（docs/design/20、08 §7.3）: ★4 に クラスアップした 姿。同じ ロボットに 飾りが ふえる。
   nxPainted('star4', 'CLASS-UP! the same robot, now upgraded to his ★4 form: a short navy cape with gold trim clipped at his shoulders and flowing behind him (it never covers the chest), gold-and-white armour trims on his shoulders, elbows and boots, a small golden star-shaped crest on top of his helmet between the ear pods, his satchel still on its strap; standing proud and happy with one fist raised to the sky, a bright confident smile, the chest mark glowing warm gold with soft light rays, tiny golden sparkles swirling around him (no readable letters).', '5章 まとめの ボスの あと（★4 クラスアップ）'),
+  // ★4 に なった あと（docs/design/21）: 地図・もちもの・たたかいの 絵も ★4 の 姿に。もとの 絵と 同じ ポーズ・同じ 枠
+  // （matchFrame: import.mjs が もとの 絵の 枠に 合わせて 置く ので、そうびの 位置 gearLayout.ts が そのまま 使える）。
+  ...[
+    ['nexmax_travel_star4', 'img/stageselect/nexmax_travel_star4.webp', 'public/img/stageselect/nexmax_travel.webp',
+      'Pose: exactly as in the first reference — walking to the right with his travel backpack full of tickets and maps, the steampunk goggles pushed up on his helmet, one fist swinging forward, a happy smile. The star crest sits on the helmet just behind the goggles; the cape flows back over the backpack.',
+      'ステージせんたく（地図）・もちもの の ★4（nexmax_travel の かわり）'],
+    ['nexmax_brush_star4', 'img/battle/nexmax_brush_star4.webp', 'public/img/battle/nexmax_brush.webp',
+      'Pose: exactly as in the first reference — a dynamic battle stance swinging the huge calligraphy brush up and over his head, the glowing blue ink swirling around him in the same big arc, the same splashes. The cape flutters behind him with the swing.',
+      'たたかいの ★4（nexmax_brush の かわり）'],
+  ].map(([id, out, base, diff, used]) => ({
+    id,
+    group: 'nexmax_naniwa',
+    prio: 'A',
+    out,
+    kind: 'chara',
+    bgmode: 'white',
+    refs: [base, 'public/img/chara/naniwa/nexmax_star4.webp'],
+    style: ['NEXMAX_STAR4_SAME', 'CHARA_OUT'],
+    diff,
+    used,
+    matchFrame: base,
+    // インクの 渦と 体の あいだに 閉じこめられた 白い 背景も 消す（顔の 画面・筆の 毛は 陰が ある ので のこる）
+    ...(id === 'nexmax_brush_star4' ? { flatWhite: true } : {}),
+    note: '1枚目と 同じ ポーズ。import.mjs が 白い 背景を 切り抜き、1枚目の 絵の 大きさと 位置に 合わせる（matchFrame）',
+  })),
 ];
 
 // ---------------------------------------------------------------------------

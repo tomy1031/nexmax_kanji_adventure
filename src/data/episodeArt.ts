@@ -7,8 +7,8 @@ import { getMojiEpisode } from './mojiEpisodes';
 import { getMojiFinale } from './mojiFinale';
 import { MOJI_FINALE_SCRIPTS } from './mojiFinaleScripts';
 
-/** The battle screen's frame (features/battle/NaniwaBattleView.tsx); its sky is the episode's own scene. */
-const BATTLE_UI = ['frame_top', 'frame_bottom', 'nexmax_brush', 'btn_back'].map((n) => `img/battle/${n}.webp`);
+/** The battle screen's frame (features/battle/NaniwaBattleView.tsx); its sky is the episode's own scene. Nexmax at クラス ★4 in his class-up picture (docs/design/21). */
+const battleUi = (star4: boolean) => ['frame_top', 'frame_bottom', star4 ? 'nexmax_brush_star4' : 'nexmax_brush', 'btn_back'].map((n) => `img/battle/${n}.webp`);
 
 /** Every painted scene and portrait a script shows. */
 const scriptArt = (scripts: NovelScript[], cast: CastMember[]): string[] => {
@@ -32,7 +32,8 @@ const scriptArt = (scripts: NovelScript[], cast: CastMember[]): string[] => {
  * player is still choosing, so the story opens on a finished picture instead
  * of one that pops in a moment later on a slow line.
  */
-export const episodeArt = (id: string): string[] => {
+export const episodeArt = (id: string, { star4 = false }: { star4?: boolean } = {}): string[] => {
+  const battle = battleUi(star4);
   const kana = KANA_SCRIPTS[id];
   if (kana) return [...new Set(scriptArt([kana.intro, kana.outro], KANA_CAST))];
   const finale = getMojiFinale(id);
@@ -44,7 +45,7 @@ export const episodeArt = (id: string): string[] => {
         ...(story ? scriptArt([story.intro, story.outro], [...MOJI_CAST]) : []),
         ...(scene ? [scene] : []),
         ...(finale.boss.img ? [finale.boss.img] : []),
-        ...BATTLE_UI,
+        ...battle,
       ]),
     ];
   }
@@ -52,5 +53,5 @@ export const episodeArt = (id: string): string[] => {
   if (!moji) return [];
   const ep = getMojiEpisode(id);
   const scripts = [moji.intro, moji.encounter, moji.outro, ...(id === MOJI1_PRELUDE.stageId ? [MOJI1_PRELUDE] : [])];
-  return [...new Set([...scriptArt(scripts, [...MOJI_CAST]), ...(ep?.boss.img ? [ep.boss.img] : []), ...BATTLE_UI])];
+  return [...new Set([...scriptArt(scripts, [...MOJI_CAST]), ...(ep?.boss.img ? [ep.boss.img] : []), ...battle])];
 };

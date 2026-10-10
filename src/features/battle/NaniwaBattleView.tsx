@@ -304,6 +304,8 @@ export interface NaniwaBattleViewProps {
   /** そうび worn (shield, armour, charm ids); `guard` changes when a strike lands on the shield. */
   worn?: Worn;
   guard?: number;
+  /** クラス ★4 (lib/nexmaxClass.ts): Nexmax in his class-up picture, the same pose (docs/design/21). */
+  star4?: boolean;
   still: boolean;
   heroCtl: LegacyAnimationControls;
   enemyCtl: LegacyAnimationControls;
@@ -357,6 +359,7 @@ export const NaniwaBattleView = ({
   fire,
   worn = {},
   guard,
+  star4 = false,
   still,
   heroCtl,
   enemyCtl,
@@ -574,7 +577,7 @@ export const NaniwaBattleView = ({
           {/* ネクマックス — stands on the deck, over the frame */}
           <motion.div className="absolute" style={onBottom(55, 374, 379, 505)} animate={heroCtl}>
             <GearBehind worn={worn} layout={LAYOUT_BATTLE} still={still} />
-            <img src={art('nexmax_brush')} alt="" aria-hidden draggable={false} className="relative h-full w-full select-none" />
+            <img src={art(star4 ? 'nexmax_brush_star4' : 'nexmax_brush')} alt="" aria-hidden draggable={false} className="relative h-full w-full select-none" />
             <GearFront worn={worn} layout={LAYOUT_BATTLE} still={still} guard={guard} />
             {/* the chest: where the light goes in */}
             <div ref={heroRef} aria-hidden className="absolute h-px w-px" style={{ left: '60%', top: '62%' }} />
