@@ -5,6 +5,7 @@ import { MOJI1_PRELUDE, MOJI1_SCRIPTS } from './scripts/moji1';
 import { MOJI2_SCRIPTS } from './scripts/moji2';
 import { MOJI3_SCRIPTS } from './scripts/moji3';
 import { MOJI4_SCRIPTS } from './scripts/moji4';
+import { MOJI5_SCRIPTS } from './scripts/moji5';
 import { KANA_SCRIPTS } from './scripts/kana';
 import { MOJI_EPISODES } from './mojiEpisodes';
 import { MOJI_FINALES } from './mojiFinale';
@@ -50,7 +51,7 @@ describe('companions speak 1冊目 Japanese', () => {
 });
 
 describe('the story says why a word cannot be read', () => {
-  const scripts = [MOJI1_SCRIPTS, MOJI2_SCRIPTS, MOJI3_SCRIPTS, MOJI4_SCRIPTS].flatMap((m) =>
+  const scripts = [MOJI1_SCRIPTS, MOJI2_SCRIPTS, MOJI3_SCRIPTS, MOJI4_SCRIPTS, MOJI5_SCRIPTS].flatMap((m) =>
     Object.values(m).flatMap((s) => [s.intro, s.encounter, s.outro]),
   );
 
@@ -98,6 +99,10 @@ const SAID_EASIER: Record<string, number> = {
 const WITH_ENGLISH: Record<string, number> = {
   こわい: 99, におい: 99, うれしい: 99, あかるい: 16, はれました: 99, つくります: 15, うみ: 12, ずっと: 12,
   まけません: 21, こえ: 99, はらぺこ: 99, だめ: 99, だいじょうぶ: 17,
+  // 5章（docs/design/20）
+  しろ: 99, まくら: 99, はんこ: 99, みみせん: 99, ゆきだるま: 99, くしゃみ: 99, アルバム: 99, なみ: 99, カーテン: 99,
+  にんぎょう: 99, ホール: 99, がくふ: 99, チェロ: 99, うるさい: 99, ぐあい: 99, かんごし: 99, かいがら: 99,
+  はずかしい: 99, かなしく: 99, むね: 99, スマホ: 99,
   ひかります: 99, にげました: 99, もどりました: 99, たたかいます: 99, かんばん: 99, かげ: 99, ふだ: 99,
 };
 
@@ -113,7 +118,7 @@ const wordsFrom = (list: Record<string, number>, text: string): string[] =>
 
 describe('the story fits the lessons of its chapter (2026-10-09)', () => {
   const lastLesson = new Map(MOJI_CHAPTERS.map((c) => [c.id, c.lessons.to]));
-  const byChapter: [string, NovelScript[]][] = MOJI_CHAPTERS.filter((c) => lastLesson.get(c.id)! <= 20).map((c) => [
+  const byChapter: [string, NovelScript[]][] = MOJI_CHAPTERS.filter((c) => lastLesson.get(c.id)! <= 25).map((c) => [
     c.id,
     [
       ...MOJI_EPISODES.filter((e) => e.chapter === c.id).flatMap((e) => [MOJI_SCRIPTS[e.id].intro, MOJI_SCRIPTS[e.id].encounter, MOJI_SCRIPTS[e.id].outro]),
@@ -123,12 +128,13 @@ describe('the story fits the lessons of its chapter (2026-10-09)', () => {
   ]);
   const lines = byChapter.flatMap(([chapter, scripts]) => scripts.flatMap((s) => s.lines.map((l) => ({ where: s.stageId, cap: lastLesson.get(chapter)!, text: l.text }))));
 
-  it('covers every chapter written so far, 1章 to 4章', () => {
+  it('covers every chapter written so far, 1章 to 5章', () => {
     expect(byChapter.map(([id, scripts]) => [id, scripts.length > 0])).toEqual([
       ['moji-1', true],
       ['moji-2', true],
       ['moji-3', true],
       ['moji-4', true],
+      ['moji-5', true],
     ]);
   });
 

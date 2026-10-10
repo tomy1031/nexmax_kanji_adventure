@@ -47,6 +47,7 @@ describe('アクセサリ (2026-10-08「アクセサリはもっと数を増や�
     expect(chapterAvg('moji-2')).toBeGreaterThan(chapterAvg('moji-1'));
     expect(chapterAvg('moji-3')).toBeGreaterThan(chapterAvg('moji-2'));
     expect(chapterAvg('moji-4')).toBeGreaterThan(chapterAvg('moji-3'));
+    expect(chapterAvg('moji-5')).toBeGreaterThan(chapterAvg('moji-4'));
     for (const g of MOJI_CHARMS) {
       expect(points(g), g.id).toBeGreaterThan(0);
       expect(points(g), g.id).toBeLessThanOrEqual(45);
