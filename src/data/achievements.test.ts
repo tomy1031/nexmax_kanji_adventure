@@ -72,6 +72,10 @@ describe('称号 (docs/design/19 §5, 2026-10-08「多種多様な 種類の 称
     expect(top('level')).toBeLessThanOrEqual(levelCap(route.length));
   });
 
+  it('gives every chapter\'s closing boss its own town title', () => {
+    expect(FAMILIES.find((f) => f.id === 'towns')!.tiers.map((x) => x.at)).toEqual([...MOJI_FINALES.keys()].map((i) => i + 1));
+  });
+
   it('counts each family from the save, and a title once its count is reached', () => {
     const s: AchState = {
       ...fresh,

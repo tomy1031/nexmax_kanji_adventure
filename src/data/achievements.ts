@@ -164,6 +164,8 @@ export const FAMILIES: readonly Family[] = [
       t(2, 'ミナトの ヒーロー', 'hero of Minato', 120),
       t(3, 'マンプクの ヒーロー', 'hero of Manpuku', 150),
       t(4, 'ミヤコの ヒーロー', 'hero of Miyako', 200),
+      // 5章: the king's castle in the world without letters; the letters come back for everyone.
+      t(5, '字(じ)の ヒーロー', 'hero of letters', 250),
     ],
   },
   {
