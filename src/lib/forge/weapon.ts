@@ -115,7 +115,7 @@ const MU_KINDS: [WeaponClass, string[]][] = [
     ['one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten', 'hundred', 'thousand',
      'million', 'half', 'every', 'each', 'all', 'many', 'much', 'few', 'several', 'both', 'what', 'times',
      'double', 'twice', 'first', 'second', 'now', 'present', 'daytime', 'nightfall', 'weekday', 'early', 'late',
-     'past', 'future', 'today', 'tomorrow', 'yesterday', 'always', 'age', 'period', 'era'],
+     'past', 'future', 'today', 'tomorrow', 'yesterday', 'always', 'age', 'period', 'era', 'degrees', 'autumn'],
   ],
   [
     WeaponClass.DRILL,
@@ -123,7 +123,8 @@ const MU_KINDS: [WeaponClass, string[]][] = [
      'sit', 'rest', 'wait', 'meet', 'send', 'lend', 'borrow', 'give', 'receive', 'take', 'carry', 'hold', 'put',
      'push', 'pull', 'throw', 'catch', 'use', 'travel', 'move', 'ride', 'fly', 'wake', 'rouse', 'rise', 'raise',
      'revolve', 'turn', 'change', 'begin', 'start', 'follow', 'visit', 'talk', 'speak', 'tell', 'hear', 'listen',
-     'copy', 'reflect', 'attend', 'doing', 'do', 'exertion', 'practice', 'answer', 'ask', 'open', 'shut', 'wear'],
+     'copy', 'reflect', 'attend', 'doing', 'do', 'exertion', 'practice', 'answer', 'ask', 'open', 'shut', 'wear',
+     'descend', 'closed', 'don'],
   ],
   [
     WeaponClass.CANNON,

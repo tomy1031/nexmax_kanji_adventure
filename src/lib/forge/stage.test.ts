@@ -20,7 +20,7 @@ describe('武器の 段 — weapons grow with the route', () => {
   it('puts each 1章 kanji at its episode, and later kanji after them', () => {
     EPISODES.forEach((e, i) => e.kanji.forEach((c) => expect(stageOfKanji(c), c).toBe(i + 1)));
     expect(stageOfKanji('週')).toBe(10);
-    expect(stageOfKanji('天')).toBeGreaterThan(EPISODES.length); // 2章 and on
+    expect(stageOfKanji('試')).toBeGreaterThan(EPISODES.length); // past the written chapters (6章)
     expect(stageOfWord([...'日本'])).toBe(stageOfKanji('本'));
   });
 

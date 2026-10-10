@@ -8,8 +8,8 @@ describe('ずかんの 字カード', () => {
   });
 
   it('has no episode for a kanji whose episode is not written yet', () => {
-    // 4章（ユニット13〜15）までは 話が ある。降 は 5章（ユニット16）。
-    expect(episodeOfKanji('降')).toBeUndefined();
+    // 5章（ユニット16〜20）までは 話が ある。試 は 6章（ユニット24）。
+    expect(episodeOfKanji('試')).toBeUndefined();
   });
 
   it('shows real words with the kanji, at most three', () => {
