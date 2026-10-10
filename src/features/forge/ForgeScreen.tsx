@@ -31,6 +31,7 @@ import { getGear, SLOT_LABEL } from '../../data/equipment';
 import type { Compound } from '../../types/forge';
 import { Element, ELEMENT_LABEL, elementOf } from '../../lib/forge/elements';
 import { charRuby, kanjiRuby } from '../../lib/reading';
+import { slotReadings } from '../../lib/wordReading';
 import { assetPath } from '../../lib/assetPath';
 import { RubyText } from '../../components/ui/Ruby';
 import { LogoText } from '../../components/ui/LogoText';
@@ -96,9 +97,6 @@ const TABS: { id: Tab; label: string; icon?: IconType; color?: string; elements?
   { id: 'sky', label: '光(ひかり)・空(そら)', icon: GiSun, color: '#ffd45e', elements: [Element.KOU] },
   { id: 'other', label: 'その他(た)', icon: GiCardRandom, color: '#d9c7a4', elements: [Element.AN, Element.MU] },
 ];
-
-/** 木(き) → き */
-const readingOf = (k: KanjiData) => /\(([^)]*)\)/.exec(kanjiRuby(k))?.[1] ?? '';
 
 // Card frame geometry, in % of the card (measured from card_frame.webp).
 const STAR_X = [35.6, 42.8, 50, 57.2, 64.4];
@@ -391,6 +389,8 @@ export const ForgeScreen = () => {
     return p ? madeOfPart(p) : null;
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [slots, target, wordsV]);
+  /** Over each slot, its reading — in the word, when the slots make one (友・人 → ゆう・じん under 友人). */
+  const slotReading = useMemo(() => slotReadings(slots.map((k) => k.char), preview?.compound), [slots, preview]);
   /** A word already found costs nothing to remake. */
   const previewKnown = preview ? Boolean(foundWords[preview.word]) : false;
   // The first weapon is on the house.
@@ -597,7 +597,7 @@ export const ForgeScreen = () => {
                       <Slot
                         label={k ? `${k.char} を はずす` : `${i + 1}つめ`}
                         onClick={k ? () => toggle(k) : undefined}
-                        reading={k && showFurigana ? readingOf(k) : undefined}
+                        reading={k && showFurigana ? slotReading[i] : undefined}
                       >
                         {k ? k.char : <span className="text-[#3b2208]/30">{optional ? '＋' : '？'}</span>}
                       </Slot>

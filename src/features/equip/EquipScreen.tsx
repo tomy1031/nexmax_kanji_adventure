@@ -19,7 +19,7 @@ import { GearBehind, GearFront } from '../battle/GearOn';
 import { LAYOUT_TRAVEL, gearArt, gearIsGold } from '../battle/gearLayout';
 import { statsFromGear } from '../../lib/battle';
 import { applyLevel, levelOf, ownedCount } from '../../lib/level';
-import { charRuby } from '../../lib/reading';
+import { charRubyIn } from '../../lib/wordReading';
 import { REPS_TO_OBTAIN } from '../../types/kanji';
 import { Feature, isFeatureUnlocked } from '../../data/unlocks';
 import { isEpisodeOpen, isForgeOpen, mastersOf } from '../../data/mojiFlow';
@@ -410,7 +410,7 @@ export const EquipScreen = () => {
                                         : { background: 'linear-gradient(160deg,#fffbe8,#ffe7a3)', borderColor: '#f2b53a' }
                                     }
                                   >
-                                    <RubyText showFurigana={showFurigana}>{charRuby(c)}</RubyText>
+                                    <RubyText showFurigana={showFurigana}>{charRubyIn(g.name, c)}</RubyText>
                                   </span>
                                 ))}
                               </div>

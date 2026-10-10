@@ -1,6 +1,9 @@
 import type { Compound } from '../../types/forge';
 import { compoundsVersion, getCompounds } from '../../data/compounds';
 import { isHiddenWeapon } from '../../data/hiddenWeapons';
+import { getKanjiByChar } from '../kanjiDb';
+import { kataToHira, kunForm, primaryStem, usedReadings } from '../reading';
+import { splitWord } from '../wordReading';
 
 /**
  * Turning the compound table into a treasure hunt.
@@ -174,6 +177,25 @@ export const answerChoices = (card: WordCard, owned: ReadonlySet<string>): strin
   });
   const seed = seedOf(card.compound.word);
   return pickSeeded([right, ...pickSeeded(wrong.sort(), 3, seed)], 4, seed >>> 3);
+};
+
+/**
+ * A choice on a ？ card, with the reading it would have in the ？'s place
+ * (2026-10-10「言葉図鑑の選択肢の読みと答えの読みが合わない」): the right
+ * kanji with its reading in this word — 親？ しんゆう → 友(ゆう), not 友(とも) —
+ * and the others with a reading of the same kind (音 beside 音), so that the
+ * kind of reading does not point at the answer. A word read as a whole (大人
+ * おとな) has no reading per kanji: its choices are shown bare.
+ */
+export const answerRuby = (card: WordCard, choice: string): string => {
+  const pieces = splitWord(card.compound.word, card.compound.reading);
+  if (!pieces) return choice;
+  const right = pieces[card.hiddenIndex];
+  if (choice === [...card.compound.word][card.hiddenIndex]) return `${choice}(${right.piece})`;
+  const k = getKanjiByChar(choice);
+  if (!k) return choice;
+  const same = usedReadings(k).find((r) => /^[ァ-ヶ]/.test(r) === right.on);
+  return `${choice}(${same ? kataToHira(kunForm(same).stem) : primaryStem(k)})`;
 };
 
 /**

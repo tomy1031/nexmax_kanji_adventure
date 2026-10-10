@@ -298,12 +298,13 @@ export const ICON_POOL: Record<WeaponClass, string[]> = {
 // Naming
 // ---------------------------------------------------------------------------
 
-/** The reading a kanji lends to a made-up name: kun first, stripped of okurigana. */
-export const nameReading = (k: KanjiData): string => {
-  const kun = k.kun[0]?.replace(/\(.*\)/, '');
-  if (kun) return kun;
-  return k.on[0] ?? '';
-};
+/**
+ * The reading a kanji lends to a made-up name: the one shown over it
+ * everywhere, 漢字やさん's slots too (2026-10-10, the reading of a choice and of
+ * the result agree) — 社 is しゃ, not the table's first kun やしろ, and 員 is
+ * いん, never katakana.
+ */
+export const nameReading = (k: KanjiData): string => primaryStem(k);
 
 // ---------------------------------------------------------------------------
 // The forge itself
