@@ -372,6 +372,7 @@ export const KANA_WORDS: Readonly<Record<string, string>> = {
   はずかしい: 'embarrassed, shy',
   かなしく: 'sad',
   さびしかった: 'was lonely',
+  さびしかったでしょう: 'must have been lonely',
   ほし: 'star',
   むね: 'chest',
   スマホ: 'smartphone',
