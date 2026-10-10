@@ -1,5 +1,9 @@
 import { beforeAll, describe, expect, it } from 'vitest';
-import { loadMoreCompounds } from './compounds';
+import { getCompounds, loadMoreCompounds } from './compounds';
+import { MOJI_SCRIPTS } from './mojiScripts';
+import { MOJI_FINALE_SCRIPTS } from './mojiFinaleScripts';
+import { MOJI1_PRELUDE } from './scripts/moji1';
+import { parseRuby } from '../lib/ruby';
 import { HIDDEN_WEAPONS } from './hiddenWeapons';
 import { MOJI_EPISODES } from './mojiEpisodes';
 import { storyWordsUpTo, wordsInText } from './storyWords';
@@ -34,5 +38,33 @@ describe('町の ことば (docs/design/19 §4 D)', () => {
     for (const e of MOJI_EPISODES) {
       for (const w of storyWordsUpTo(e.id, ownedAfter(e.id))) expect(w.word in HIDDEN_WEAPONS, `${e.id} ${w.word}`).toBe(false);
     }
+  });
+});
+
+describe('the story reads a word as ことば図鑑 does (2026-10-10)', () => {
+  it('gives a whole word written a kanji at a time the reading of the word: 切(きっ)手(て), not 切(き)手(て)', () => {
+    const table = new Map(getCompounds().map((c) => [c.word, c.reading]));
+    const scripts = [MOJI1_PRELUDE, ...Object.values(MOJI_SCRIPTS).flatMap((s) => [s.intro, s.encounter, s.outro]), ...Object.values(MOJI_FINALE_SCRIPTS).flatMap((f) => (f ? [f.intro, f.outro] : []))];
+    const bad: string[] = [];
+    for (const s of scripts)
+      for (const l of s.lines)
+        for (const t of [l.text, l.glyph ?? '']) {
+          const segs = parseRuby(t);
+          // Runs of kanji with readings, nothing between them: 切(きっ)手(て).
+          for (let i = 0; i < segs.length; ) {
+            if (!segs[i].reading) {
+              i++;
+              continue;
+            }
+            let j = i;
+            while (j < segs.length && segs[j].reading) j++;
+            const run = segs.slice(i, j);
+            const word = run.map((x) => x.text).join('');
+            const said = run.map((x) => x.reading).join('');
+            if (run.length > 1 && table.has(word) && table.get(word) !== said) bad.push(`${s.stageId}: ${word} ${said} / ${table.get(word)}`);
+            i = j;
+          }
+        }
+    expect(bad).toEqual([]);
   });
 });
