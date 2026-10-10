@@ -19,6 +19,7 @@ import MojiEpisodeScreen from './features/moji/MojiEpisodeScreen';
 import EquipScreen from './features/equip/EquipScreen';
 import ZukanScreen from './features/zukan/ZukanScreen';
 import { UpdateWatcher } from './components/UpdateWatcher';
+import { AchievementToast } from './components/AchievementToast';
 
 /**
  * Screens outside 文字が 消えた 町 — the older arcs (closing), versus, the word
@@ -174,6 +175,7 @@ const App = () => {
   return (
     <HashRouter>
       <UpdateWatcher />
+      <AchievementToast />
       <ArcTheme />
       <RotateHint />
       <ScreenDoors>

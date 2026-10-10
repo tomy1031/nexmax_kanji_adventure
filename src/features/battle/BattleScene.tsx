@@ -53,6 +53,7 @@ import { EXP_BOSS_FIRST, EXP_BOSS_REPEAT, EXP_READ, applyLevel, levelInfo, level
 import { useCompoundsVersion } from '../../data/compounds';
 import { askFrom, sealFloor, strikeSealed } from '../../lib/seals';
 import { useStill } from '../../hooks/useStill';
+import { useQuiet } from '../../store/uiStore';
 
 /** How long a fight tip stays up. */
 const TIP_MS = 4200;
@@ -327,6 +328,8 @@ export const BattleScene = ({
   // Set at the first reading turn, so where the answer sits differs fight to fight.
   const fightSeedRef = useRef(0);
   const [outcome, setOutcome] = useState<Outcome>(null);
+  // 称号 earned mid-fight wait for the result (AchievementToast).
+  useQuiet(outcome == null);
   /** わざ: the gauge, what a used one still holds for the coming writes, the cut-in and the companion's bubble. */
   const [gauge, setGauge] = useState(() => star5GaugeStart(star5, gaugeFull));
   /** Strikes the shield took — the worn shield kicks with each (GearFront). */
