@@ -31,7 +31,7 @@ export const GearBehind = ({ worn, layout, still }: { worn: Worn; layout: GearLa
     />
   ) : null;
 
-/** The shield and the charm, in front of Nexmax. Render them after his picture. `guard` changes when a strike is taken. */
+/** The shield and the charms, in front of Nexmax. Render them after his picture. `guard` changes when a strike is taken. */
 export const GearFront = ({ worn, layout, still, guard }: { worn: Worn; layout: GearLayout; still: boolean; guard?: number }) => (
   <>
     {worn.shield && (
@@ -58,6 +58,19 @@ export const GearFront = ({ worn, layout, still, guard }: { worn: Worn; layout: 
         style={box(layout.charm)}
         animate={still ? undefined : { y: ['0%', '-10%', '0%'], rotate: [-6, 6, -6] }}
         transition={{ duration: 2.2, repeat: Infinity, ease: 'easeInOut' }}
+      />
+    )}
+    {/* クラス ★4: the second accessory floats out of step with the first. */}
+    {worn.charm2 && (
+      <motion.img
+        src={assetPath(gearArt(worn.charm2))}
+        alt=""
+        aria-hidden
+        draggable={false}
+        className="pointer-events-none absolute object-contain select-none"
+        style={box(layout.charm2)}
+        animate={still ? undefined : { y: ['0%', '-10%', '0%'], rotate: [6, -6, 6] }}
+        transition={{ duration: 2.2, repeat: Infinity, ease: 'easeInOut', delay: 1.1 }}
       />
     )}
   </>

@@ -7,7 +7,9 @@
  * By kind (see manifest.mjs):
  *   chara   white background removed (flood fill from the edges, so white
  *           inside the character — NexMax's face-screen — stays), trimmed,
- *           fit in 768x1152, WebP with alpha
+ *           fit in 768x1152, WebP with alpha. With `matchFrame` (the same
+ *           pose redrawn) it is laid on that picture's canvas instead, in its
+ *           figure's box; `flatWhite` also clears flat white shut inside it
  *   enemy   the same, fit in 512x512
  *   prop    a thing on its own (a weapon): the same cut-out, trimmed, fit inside 512x512
  *           (white shut inside it is cleared too, unless the entry says keepWhite)
@@ -95,12 +97,53 @@ const clearEnclosedWhite = (data, w, h, minArea) => {
   }
 };
 
-const cutOut = async (file, { enclosed = false, minArea = 2500 } = {}) => {
+/**
+ * The background shut inside a character — the white between ★4 Nexmax's
+ * ink swirl and his body (nexmax_brush_star4) — told from his own white by
+ * how flat it is: a big patch that is mostly pure white. The face-screen,
+ * the brush's bristles and the ink's highlights are shaded, so they stay.
+ */
+const clearFlatWhite = (data, w, h, { minArea = 2000, flat = 0.6, T = 236 } = {}) => {
+  const near = (i) => data[i * 4 + 3] > 0 && data[i * 4] >= T && data[i * 4 + 1] >= T && data[i * 4 + 2] >= T;
+  const pure = (i) => data[i * 4] >= 253 && data[i * 4 + 1] >= 253 && data[i * 4 + 2] >= 253;
+  const seen = new Uint8Array(w * h);
+  const cleared = new Uint8Array(w * h);
+  for (let start = 0; start < w * h; start++) {
+    if (seen[start] || !near(start)) continue;
+    const region = [];
+    const stack = [start];
+    seen[start] = 1;
+    while (stack.length) {
+      const i = stack.pop();
+      region.push(i);
+      const x = i % w;
+      for (const j of [x > 0 ? i - 1 : -1, x < w - 1 ? i + 1 : -1, i - w, i + w]) {
+        if (j >= 0 && j < w * h && !seen[j] && near(j)) {
+          seen[j] = 1;
+          stack.push(j);
+        }
+      }
+    }
+    if (region.length >= minArea && region.filter(pure).length >= flat * region.length) for (const i of region) cleared[i] = 1;
+  }
+  // As floodClear: the cleared patch goes, and the pixels on its rim are softened.
+  for (let i = 0; i < w * h; i++) {
+    if (cleared[i]) data[i * 4 + 3] = 0;
+    else {
+      const x = i % w;
+      const rim = (x > 0 && cleared[i - 1]) || (x < w - 1 && cleared[i + 1]) || (i >= w && cleared[i - w]) || (i < w * (h - 1) && cleared[i + w]);
+      if (rim) data[i * 4 + 3] = Math.min(data[i * 4 + 3], 150);
+    }
+  }
+};
+
+const cutOut = async (file, { enclosed = false, minArea = 2500, flatWhite = false } = {}) => {
   const { data, info, transparent } = await load(file, 1024, 1536);
   if (!transparent) {
     const T = 236;
     floodClear(data, info.width, info.height, (i) => data[i * 4 + 3] < 16 || (data[i * 4] >= T && data[i * 4 + 1] >= T && data[i * 4 + 2] >= T));
     if (enclosed) clearEnclosedWhite(data, info.width, info.height, minArea);
+    if (flatWhite) clearFlatWhite(data, info.width, info.height);
   }
   return sharp(data, { raw: { width: info.width, height: info.height, channels: 4 } }).trim({ threshold: 1 });
 };
@@ -123,6 +166,40 @@ const greenKey = async (file) => {
   return sharp(data, { raw: { width: info.width, height: info.height, channels: 4 } });
 };
 
+/** The box (left, top, width, height) of a picture's visible pixels. */
+const alphaBox = async (file) => {
+  const { data, info } = await sharp(file).ensureAlpha().raw().toBuffer({ resolveWithObject: true });
+  let [x0, y0, x1, y1] = [info.width, info.height, -1, -1];
+  for (let y = 0; y < info.height; y++) {
+    for (let x = 0; x < info.width; x++) {
+      if (data[(y * info.width + x) * 4 + 3] < 16) continue;
+      x0 = Math.min(x0, x);
+      y0 = Math.min(y0, y);
+      x1 = Math.max(x1, x);
+      y1 = Math.max(y1, y);
+    }
+  }
+  return { left: x0, top: y0, width: x1 - x0 + 1, height: y1 - y0 + 1, W: info.width, H: info.height };
+};
+
+/**
+ * matchFrame: the same pose redrawn (★4, docs/design/21) laid on the original
+ * picture's canvas, its figure in the original's box — as tall, centred, on
+ * the same feet — so whatever the game lays over the original (gearLayout.ts)
+ * sits on the new one too.
+ */
+const onFrameOf = async (cut, frameFile) => {
+  const box = await alphaBox(frameFile);
+  const fit = await sharp(await cut.png().toBuffer())
+    .resize(box.width, box.height, { fit: 'inside' })
+    .png()
+    .toBuffer();
+  const { width: w, height: h } = await sharp(fit).metadata();
+  return sharp({ create: { width: box.W, height: box.H, channels: 4, background: { r: 0, g: 0, b: 0, alpha: 0 } } }).composite([
+    { input: fit, left: Math.round(box.left + (box.width - w) / 2), top: box.top + box.height - h },
+  ]);
+};
+
 const done = [];
 const skipped = [];
 const mapsTouched = new Set();
@@ -136,7 +213,10 @@ for (const a of ASSETS) {
   }
   const out = `public/${a.out}`;
   ensureDir(out);
-  if (a.kind === 'chara') {
+  if (a.kind === 'chara' && a.matchFrame) {
+    const img = await cutOut(raw, { flatWhite: a.flatWhite });
+    await (await onFrameOf(img, a.matchFrame)).webp({ quality: 88, alphaQuality: 90 }).toFile(out);
+  } else if (a.kind === 'chara') {
     const img = await cutOut(raw, a.group === 'enemy' ? { enclosed: true, minArea: 300 } : {});
     await (await img.png().toBuffer().then((b) => sharp(b)))
       .resize(768, 1152, { fit: 'inside', withoutEnlargement: true })

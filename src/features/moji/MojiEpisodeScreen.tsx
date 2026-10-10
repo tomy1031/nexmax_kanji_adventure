@@ -39,6 +39,8 @@ import StarSecrets from './StarSecrets';
 import { TipCard } from './TipCard';
 import { nextReadyTip, type TipId } from '../../data/fightRules';
 import NexmaxLevelPlate from './NexmaxLevel';
+import { ClassUpNotice } from './NexmaxClass';
+import { useNexmaxClass } from './useNexmaxClass';
 import { useOwnedKanji } from './useOwnedKanji';
 import { faceStyle } from '../../lib/faceCrop';
 
@@ -134,6 +136,8 @@ const ReadyScreen = ({
   const showFurigana = useGameStore((s) => s.settings.furigana);
   const english = useGameStore((s) => s.settings.english);
   const progress = useGameStore((s) => s.progress);
+  // クラス ★4 (docs/design/21): he faces the opponent in his class-up form.
+  const nexmaxClass = useNexmaxClass();
   const repsOf = (k: KanjiData) => progress[k.id]?.reps ?? 0;
   const total = kanji.reduce((n, k) => n + starsOf(repsOf(k)), 0);
   const weakest = Math.min(...kanji.map((k) => starsOf(repsOf(k))));
@@ -355,7 +359,7 @@ const ReadyScreen = ({
         {ep.boss.img && (
           <div aria-hidden className="relative mt-1 flex flex-1 items-end justify-center gap-1 [@media(max-height:699px)]:hidden">
             <motion.img
-              src={assetPath('img/chara/naniwa/nexmax_determined.webp')}
+              src={assetPath(nexmaxClass >= 4 ? 'img/chara/naniwa/nexmax_star4.webp' : 'img/chara/naniwa/nexmax_determined.webp')}
               alt=""
               className="h-[min(210px,22dvh)] w-auto object-contain"
               style={{ filter: 'drop-shadow(0 8px 10px rgba(10,6,30,0.45))' }}
@@ -438,8 +442,8 @@ const EpisodePlayer = ({ id }: { id: string }) => {
   const equippedGear = useGameStore((s) => s.equippedGear);
   const exp = useGameStore((s) => s.exp);
   const hardNow = useMemo(
-    () => (hard ? hardFight(ep, { weapons, equippedWeapon, activeIndividual, equippedGear, exp, progress }) : undefined),
-    [hard, ep, weapons, equippedWeapon, activeIndividual, equippedGear, exp, progress],
+    () => (hard ? hardFight(ep, { weapons, equippedWeapon, activeIndividual, equippedGear, clearedStages: cleared, exp, progress }) : undefined),
+    [hard, ep, weapons, equippedWeapon, activeIndividual, equippedGear, cleared, exp, progress],
   );
   // …and fixed as the fight starts: writing mid-fight must not move it.
   const [fight, setFight] = useState<HardFight | null>(null);
@@ -651,8 +655,8 @@ const FinalePlayer = ({ id }: { id: string }) => {
   const equippedGear = useGameStore((s) => s.equippedGear);
   const exp = useGameStore((s) => s.exp);
   const hardNow = useMemo(
-    () => (hard ? hardFinaleFight(f, { weapons, equippedWeapon, activeIndividual, equippedGear, exp, progress }) : undefined),
-    [hard, f, weapons, equippedWeapon, activeIndividual, equippedGear, exp, progress],
+    () => (hard ? hardFinaleFight(f, { weapons, equippedWeapon, activeIndividual, equippedGear, clearedStages: cleared, exp, progress }) : undefined),
+    [hard, f, weapons, equippedWeapon, activeIndividual, equippedGear, cleared, exp, progress],
   );
   // What the fight asks, fixed as it starts: writing mid-fight must not move it.
   const [fight, setFight] = useState<HardFight | null>(null);
@@ -759,12 +763,16 @@ const FinalePlayer = ({ id }: { id: string }) => {
         ) : null;
       case 'end':
         return (
-          <ToBeContinued
-            scene={f.bg}
-            onPractice={(target) => navigate(`/moji/${target}?at=ready`)}
-            onForge={() => navigate(`/forge?back=${encodeURIComponent('/map/moji')}`)}
-            onStages={leave}
-          />
+          <>
+            <ToBeContinued
+              scene={f.bg}
+              onPractice={(target) => navigate(`/moji/${target}?at=ready`)}
+              onForge={() => navigate(`/forge?back=${encodeURIComponent('/map/moji')}`)}
+              onStages={leave}
+            />
+            {/* 5章's boss made him ★4 in the story: what that changes, once (docs/design/21). */}
+            <ClassUpNotice showFurigana={showFurigana} />
+          </>
         );
     }
   })();

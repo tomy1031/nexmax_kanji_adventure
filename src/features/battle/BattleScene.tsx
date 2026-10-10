@@ -44,6 +44,8 @@ import { MASTERY_REPS, comboMultiplier, masteryMultiplier, pickWeakest, starsOf,
 import { FLOW_MS, IMPACT_MS, WIN_DELAY_MASTERY_MS, lightOf } from '../../lib/lightFlow';
 import LightFlow, { type Flow } from './LightFlow';
 import NaniwaBattleView from './NaniwaBattleView';
+import { classOf, wornAt } from '../../lib/nexmaxClass';
+import type { Worn } from './gearLayout';
 import { useBgm } from '../../lib/bgm';
 import { isReadTurn, readAloud, readDamage, readQuestion } from '../../lib/readTurn';
 import { taughtForm, taughtRuby } from '../moji/taughtReading';
@@ -223,22 +225,23 @@ export const BattleScene = ({
   // ★5 だけの ちから (docs/design/18 §2): where the companion's わざ works.
   const star5 = mastery && !tutorial ? star5PowerOf(activeIndividualId)?.effect : undefined;
 
-  // Worn gear: shield, armour, charm. The tutorial fight is gear-less. The
+  // Worn gear: shield, armour, charm (two from クラス ★4). The tutorial fight is gear-less. The
   // level adds HP and patience on the new route, and a ★5 (空・時) may too.
   // The forge's words beyond the core arrive just after start (data/compounds.ts): read again then.
   const wordsV = useCompoundsVersion();
+  // クラス (lib/nexmaxClass.ts) as it stood when the fight began: the win that makes ★4 shows it in the story after.
+  const nexmaxClass = classOf(clearsAtStart);
+  const worn = useMemo<Worn>(() => (tutorial ? {} : wornAt(equippedGear, nexmaxClass)), [tutorial, equippedGear, nexmaxClass]);
   const stats = useMemo(() => {
     const gear = statsFromGear(
-      tutorial
-        ? []
-        : Object.values(equippedGear)
-            .map((id) => getGear(id))
-            .filter((g) => g != null),
+      Object.values(worn)
+        .map((id) => getGear(id))
+        .filter((g) => g != null),
     );
     return withStar5Stats(mastery ? applyLevel(gear, level) : gear, star5);
     // A forged shield or body piece is built from its kanji (lib/forge/gear.ts): it changes when the words arrive.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [equippedGear, tutorial, mastery, level, star5, wordsV]);
+  }, [worn, mastery, level, star5, wordsV]);
   const easy = mastery && difficulty === 'easy';
   const patience = basePatienceValue + stats.patience + (easy ? EASY_PATIENCE_ADD : 0);
 
@@ -990,7 +993,8 @@ export const BattleScene = ({
           spark={spark}
           companion={companionView}
           cut={cut}
-          worn={tutorial ? {} : equippedGear}
+          worn={worn}
+          star4={!tutorial && nexmaxClass >= 4}
           guard={guardNo}
           mount={weapon ? { cls: weapon.weaponClass, element: weapon.element, rarity: weapon.rarity, level: weapon.level ?? 0, word: weaponWord(weapon) } : null}
           fire={flow?.n}

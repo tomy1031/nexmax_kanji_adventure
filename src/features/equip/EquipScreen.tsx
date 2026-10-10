@@ -7,7 +7,7 @@ import { BottomTabs, LogoTitle, TopBar } from '../../components/ui/Chrome';
 import { assetPath } from '../../lib/assetPath';
 import { useGameStore } from '../../store/gameStore';
 import { ALL_KANJI } from '../../data/kanji.generated';
-import { GEAR, SLOT_LABEL, getGear, missingFor, type GearItem, type GearSlot } from '../../data/equipment';
+import { GEAR, SLOT_LABEL, getGear, itemSlotOf, missingFor, type GearItem, type GearSlot, type WearSlot } from '../../data/equipment';
 import { RARITY_LABEL, type Rarity } from '../../lib/forge/weapon';
 import { parseForgedGearId } from '../../lib/forge/gear';
 import { weaponArt, weaponFromRecipe, weaponWord } from '../../lib/forge/recipe';
@@ -19,6 +19,7 @@ import { GearBehind, GearFront } from '../battle/GearOn';
 import { LAYOUT_TRAVEL, gearArt, gearIsGold } from '../battle/gearLayout';
 import { statsFromGear } from '../../lib/battle';
 import { applyLevel, levelOf, ownedCount } from '../../lib/level';
+import { charmSlots, classOf, wornAt } from '../../lib/nexmaxClass';
 import { charRubyIn } from '../../lib/wordReading';
 import { REPS_TO_OBTAIN } from '../../types/kanji';
 import { Feature, isFeatureUnlocked } from '../../data/unlocks';
@@ -33,7 +34,8 @@ import { useCompoundsVersion } from '../../data/compounds';
  * そうび (public/img/design/ネクマックスのそうび画面.png).
  *
  * Four slots around Nexmax — 武器・盾・からだ・アクセサリ — and what they add
- * up to. Tap a slot to list what fits it. A shield, armour or charm that is
+ * up to; from クラス ★4 a second アクセサリ (docs/design/21), on the right
+ * under the first. Tap a slot to list what fits it. A shield, armour or charm that is
  * not made yet shows the characters it is made of: gold for the ones owned,
  * dashed for the ones still to learn. That list is the game's promise in one
  * picture: learn a character, wear something new.
@@ -44,7 +46,7 @@ import { useCompoundsVersion } from '../../data/compounds';
  * story has opened it. Its menu is the map's own, so no old tab bar.
  */
 
-type Slot = 'weapon' | GearSlot;
+type Slot = 'weapon' | WearSlot;
 
 /** What a piece adds, in one short line: 🛡 ＋3 ・ ❤ ＋20 ・ ✋ ＋1 ・ ⚔ ＋10%. */
 const effectText = (g: GearItem): string =>
@@ -57,12 +59,18 @@ const effectText = (g: GearItem): string =>
     .filter(Boolean)
     .join(' ・ ');
 /** What 漢字やさん makes for a slot, for its button. */
-const MAKE_LABEL: Record<Exclude<Slot, 'charm'>, string> = { weapon: '武器(ぶき)', shield: '盾(たて)', body: 'よろい' };
-const SLOTS: { slot: Slot; icon: string; pos: string }[] = [
+const MAKE_LABEL: Record<Exclude<Slot, 'charm' | 'charm2'>, string> = { weapon: '武器(ぶき)', shield: '盾(たて)', body: 'よろい' };
+/** The slots around Nexmax: the corners, and at ★4 the accessories two down the right (the frame grows to fit). */
+const slotsFor = (charms: number): { slot: Slot; icon: string; pos: string }[] => [
   { slot: 'weapon', icon: 'GiBroadsword', pos: 'top-2 left-2' },
   { slot: 'shield', icon: 'GiRoundShield', pos: 'top-2 right-2' },
   { slot: 'body', icon: 'GiLeatherArmor', pos: 'bottom-2 left-2' },
-  { slot: 'charm', icon: 'GiEyeTarget', pos: 'bottom-2 right-2' },
+  ...(charms >= 2
+    ? [
+        { slot: 'charm' as const, icon: 'GiEyeTarget', pos: 'top-[104px] right-2' },
+        { slot: 'charm2' as const, icon: 'GiStarMedal', pos: 'bottom-2 right-2' },
+      ]
+    : [{ slot: 'charm' as const, icon: 'GiEyeTarget', pos: 'bottom-2 right-2' }]),
 ];
 
 export const EquipScreen = () => {
@@ -79,6 +87,10 @@ export const EquipScreen = () => {
   const cleared = useGameStore((s) => s.clearedStages);
   const moji = useGameStore((s) => s.lastArc) === 'moji';
   const exp = useGameStore((s) => s.exp);
+  // クラス ★4 (lib/nexmaxClass.ts): the class-up picture and a second accessory.
+  const nexmaxClass = classOf(cleared);
+  const charms = charmSlots(nexmaxClass);
+  const wearing = wornAt(equippedGear, nexmaxClass);
   const forgeOpen = isForgeOpen(cleared);
   const masters = mastersOf(progress);
 
@@ -108,7 +120,7 @@ export const EquipScreen = () => {
   const sortedWeapons = useMemo(() => sortWeapons(forged, weaponSort, new Map(weapons.map((r) => [r.id, r.craftedAt]))), [forged, weaponSort, weapons]);
 
   const weapon = forged.find((w) => w.id === equippedWeapon) ?? null;
-  const worn = Object.values(equippedGear)
+  const worn = Object.values(wearing)
     .map((id) => getGear(id))
     .filter((g) => g != null);
   /** Shields and body pieces made in 漢字やさん (lib/forge/gear.ts), strongest first. */
@@ -148,7 +160,9 @@ export const EquipScreen = () => {
     return { list: showLater ? sorted : sorted.filter((g) => !far.includes(g)), later: far.length };
   };
 
-  const slotItem = (s: Slot) => (s === 'weapon' ? (weapon ? { name: weapon.name, icon: weapon.icon } : null) : getGear(equippedGear[s]));
+  const slotItem = (s: Slot) => (s === 'weapon' ? (weapon ? { name: weapon.name, icon: weapon.icon } : null) : getGear(wearing[s]));
+  /** The other accessory slot, where a charm may already be worn (one piece, one slot). */
+  const otherCharm = (s: Slot): WearSlot | null => (charms < 2 ? null : s === 'charm' ? 'charm2' : s === 'charm2' ? 'charm' : null);
 
   const make = (g: GearItem) => {
     if (makeGear(g.id)) {
@@ -168,7 +182,7 @@ export const EquipScreen = () => {
           </LogoTitle>
 
           {/* ネクマックスと 4つの わく ----------------------------------- */}
-          <div className="relative mx-auto mt-2 h-[230px] w-full max-w-sm [container-type:inline-size]">
+          <div className={`relative mx-auto mt-2 ${charms >= 2 ? 'h-[300px]' : 'h-[230px]'} w-full max-w-sm [container-type:inline-size]`}>
             {/* 新ルート: the weapon mounted on his back, as in the fight (11 §6) */}
             {moji && weapon && (
               <div className="absolute bottom-[78px] left-[calc(50%-122px)] h-[130px] w-[130px]">
@@ -187,9 +201,14 @@ export const EquipScreen = () => {
                 animate={{ y: [0, -5, 0] }}
                 transition={{ duration: 2.6, repeat: Infinity }}
               >
-                <GearBehind worn={equippedGear} layout={LAYOUT_TRAVEL} still={false} />
-                <img src={assetPath('img/stageselect/nexmax_travel.webp')} alt="" aria-hidden className="relative h-full w-full" />
-                <GearFront worn={equippedGear} layout={LAYOUT_TRAVEL} still={false} />
+                <GearBehind worn={wearing} layout={LAYOUT_TRAVEL} still={false} />
+                <img
+                  src={assetPath(nexmaxClass >= 4 ? 'img/stageselect/nexmax_travel_star4.webp' : 'img/stageselect/nexmax_travel.webp')}
+                  alt=""
+                  aria-hidden
+                  className="relative h-full w-full"
+                />
+                <GearFront worn={wearing} layout={LAYOUT_TRAVEL} still={false} />
               </motion.div>
             ) : (
               <motion.img
@@ -202,7 +221,7 @@ export const EquipScreen = () => {
                 transition={{ duration: 2.6, repeat: Infinity }}
               />
             )}
-            {SLOTS.map(({ slot: s, icon, pos }) => {
+            {slotsFor(charms).map(({ slot: s, icon, pos }) => {
               const item = slotItem(s);
               const on = s === slot;
               return (
@@ -221,14 +240,18 @@ export const EquipScreen = () => {
                 >
                   {moji && s === 'weapon' && weapon ? (
                     <img src={assetPath(weaponArt(weapon.weaponClass, weapon.rarity))} alt="" aria-hidden className="h-[42px] w-[42px] object-contain" />
-                  ) : moji && s !== 'weapon' && equippedGear[s] ? (
-                    <img src={assetPath(gearArt(equippedGear[s]!))} alt="" aria-hidden className="h-[42px] w-[42px] object-contain" />
+                  ) : moji && s !== 'weapon' && wearing[s] ? (
+                    <img src={assetPath(gearArt(wearing[s]!))} alt="" aria-hidden className="h-[42px] w-[42px] object-contain" />
                   ) : (
                     <span style={{ color: item ? '#7a4a26' : 'rgba(27,79,138,0.35)' }}>
                       <GameIcon name={item?.icon ?? icon} size={34} />
                     </span>
                   )}
                   <RubyText showFurigana={showFurigana}>{SLOT_LABEL[s]}</RubyText>
+                  {/* ★4's new slot, while it is still empty. */}
+                  {s === 'charm2' && !wearing.charm2 && (
+                    <span className="absolute -top-2 -right-1 rounded-full bg-[#e2453c] px-1.5 text-[10px] leading-[1.7] font-black text-white shadow">NEW</span>
+                  )}
                 </button>
               );
             })}
@@ -236,7 +259,11 @@ export const EquipScreen = () => {
 
           {/* ステータス ---------------------------------------------------- */}
           <div className="g-parchment grid grid-cols-2 gap-x-4 px-4 py-2 text-sm font-black">
-            {moji && <span className="col-span-2 text-xs" style={{ color: 'var(--ink-2)' }}>⭐ Lv {level}</span>}
+            {moji && (
+              <span className="col-span-2 text-xs" style={{ color: 'var(--ink-2)' }}>
+                ⭐ Lv {level} ・ <RubyText showFurigana={showFurigana}>{`クラス ★${nexmaxClass}`}</RubyText>
+              </span>
+            )}
             <span>❤ HP {stats.maxHp}</span>
             <span>
               ⚔ <RubyText showFurigana={showFurigana}>こうげき</RubyText> {weapon?.attack ?? 5}
@@ -326,9 +353,9 @@ export const EquipScreen = () => {
 
             {slot !== 'weapon' &&
               forgedGear
-                .filter((g) => g.slot === slot)
+                .filter((g) => g.slot === itemSlotOf(slot))
                 .map((g) => {
-                  const on = equippedGear[g.slot] === g.id;
+                  const on = equippedGear[slot] === g.id;
                   const r = g.forged!.rarity as Rarity;
                   return (
                     <li key={g.id} className="g-parchment flex items-center gap-3 p-2.5" style={on ? { borderColor: '#2f8fe0' } : undefined}>
@@ -359,7 +386,7 @@ export const EquipScreen = () => {
                           )}
                         </p>
                       </div>
-                      <button type="button" className="g-btn g-btn-accent !min-h-[36px] !px-3 text-xs" onClick={() => equipGear(g.slot, on ? null : g.id)}>
+                      <button type="button" className="g-btn g-btn-accent !min-h-[36px] !px-3 text-xs" onClick={() => equipGear(slot, on ? null : g.id)}>
                         {on ? 'はずす' : 'そうびする'}
                       </button>
                     </li>
@@ -367,9 +394,12 @@ export const EquipScreen = () => {
                 })}
 
             {slot !== 'weapon' &&
-              tableFor(slot).list.map((g) => {
+              tableFor(itemSlotOf(slot)).list.map((g) => {
                   const made = gear.includes(g.id);
-                  const on = equippedGear[g.slot] === g.id;
+                  const on = equippedGear[slot] === g.id;
+                  // Worn in the other accessory slot: wearing it here moves it.
+                  const other = otherCharm(slot);
+                  const elsewhere = other != null && equippedGear[other] === g.id;
                   const missing = missingFor(g, owned);
                   const visible = inView(g);
                   return (
@@ -388,6 +418,11 @@ export const EquipScreen = () => {
                       <div className="min-w-0 flex-1">
                         <p className="text-sm font-black">
                           {visible ? <RubyText showFurigana={showFurigana}>{g.name}</RubyText> : '？？？'}
+                          {elsewhere && (
+                            <span className="ml-1 rounded-full bg-[#2f8fe0]/15 px-1.5 text-[10px] whitespace-nowrap" style={{ color: '#1b4f8a' }}>
+                              <RubyText showFurigana={showFurigana}>{`${SLOT_LABEL[other]}で つけて います`}</RubyText>
+                            </span>
+                          )}
                         </p>
                         {visible ? (
                           <>
@@ -427,7 +462,7 @@ export const EquipScreen = () => {
                           <button
                             type="button"
                             className="g-btn g-btn-accent !min-h-[36px] !px-3 text-xs"
-                            onClick={() => equipGear(g.slot, on ? null : g.id)}
+                            onClick={() => equipGear(slot, on ? null : g.id)}
                           >
                             {on ? 'はずす' : 'そうびする'}
                           </button>
@@ -444,7 +479,7 @@ export const EquipScreen = () => {
                     </li>
                   );
                 })}
-            {slot !== 'weapon' && moji && tableFor(slot).later > 0 && (
+            {slot !== 'weapon' && moji && tableFor(itemSlotOf(slot)).later > 0 && (
               <li>
                 <button
                   type="button"
@@ -452,14 +487,14 @@ export const EquipScreen = () => {
                   onClick={() => setShowLater((v) => !v)}
                 >
                   <RubyText showFurigana={showFurigana}>
-                    {showLater ? '▲ 先(さき)の 話(わ)の ぶんを しまう' : `▼ 先(さき)の 話(わ)で 作(つく)る もの（${tableFor(slot).later}）`}
+                    {showLater ? '▲ 先(さき)の 話(わ)の ぶんを しまう' : `▼ 先(さき)の 話(わ)で 作(つく)る もの（${tableFor(itemSlotOf(slot)).later}）`}
                   </RubyText>
                 </button>
               </li>
             )}
           </ul>
 
-          {slot !== 'charm' && forgeOpen && (
+          {slot !== 'charm' && slot !== 'charm2' && forgeOpen && (
             // 武器・たて・からだ are made in 漢字やさん, from the same kanji (docs/design/19 §2).
             <button
               type="button"

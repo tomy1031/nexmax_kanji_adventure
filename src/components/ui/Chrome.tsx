@@ -6,6 +6,7 @@ import { RubyText } from './Ruby';
 import { LogoText } from './LogoText';
 import { assetPath } from '../../lib/assetPath';
 import { useGameStore } from '../../store/gameStore';
+import { classOf } from '../../lib/nexmaxClass';
 import { Feature, isFeatureUnlocked, UNLOCKED_BY } from '../../data/unlocks';
 import { GiBackpack, GiCog, GiOpenBook, GiPadlock, GiTreasureMap } from 'react-icons/gi';
 import type { IconType } from 'react-icons';
@@ -90,7 +91,11 @@ export const NexmaxSays = ({
 }) => {
   const showFurigana = useGameStore((s) => s.settings.furigana);
   const naniwa = useGameStore((s) => s.lastArc === 'moji');
-  const src = naniwa ? `img/chara/naniwa/nexmax_${NANIWA_POSE[pose]}.webp` : `img/chara/cut/${pose}.webp`;
+  // クラス ★4 (lib/nexmaxClass.ts, docs/design/21): his cheer is the class-up picture, fist to the sky.
+  const star4 = useGameStore((s) => classOf(s.clearedStages) >= 4);
+  const src = naniwa
+    ? `img/chara/naniwa/nexmax_${pose === 'cheer' && star4 ? 'star4' : NANIWA_POSE[pose]}.webp`
+    : `img/chara/cut/${pose}.webp`;
   return (
     <div className={`flex shrink-0 items-end gap-1 ${flip ? 'flex-row-reverse' : ''}`}>
       {text && (
