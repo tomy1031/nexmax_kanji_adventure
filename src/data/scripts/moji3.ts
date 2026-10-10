@@ -62,7 +62,7 @@ export const MOJI3_SCRIPTS: Record<string, EpisodeScript> = {
         { speaker: 'nexmax', sprite: 'nexmax:think', glyph: '👾 🍜', text: '大(おお)モジクイは、この まちに います。', en: 'The Great Mojikui is somewhere in this town.' },
         { speaker: 'nexmax', sprite: 'nexmax:smile', glyph: '✉️ 👧', text: 'ソラに 手(て)紙(がみ)を 送(おく)りましょう。', en: "First, let's send Sora a letter." },
         { glyph: '🏤 🪧❓', text: 'でも、ゆうびんきょくの ふだの 字(じ)が ありません。', en: 'But the post office signs have lost their letters.' },
-        { speaker: 'clerk', sprite: 'clerk:trouble', text: 'この にもつは どこへ 送(おく)りますか？ 切(き)手(て)は どれですか？ わかりません……😰', en: "Where does this parcel go? Which ones are the stamps? I can't tell…" },
+        { speaker: 'clerk', sprite: 'clerk:trouble', text: 'この にもつは どこへ 送(おく)りますか？ 切(きっ)手(て)は どれですか？ わかりません……😰', en: "Where does this parcel go? Which ones are the stamps? I can't tell…" },
         { glyph: '☂️ 🪧❓', text: 'みせの まえの かさの ふだも ありません。かさを 貸(か)しますか？ 借(か)りますか？', en: 'The umbrella sign under the eaves is gone too. Lend one? Borrow one?' },
         { text: '送(おく)ります、切(き)ります、貸(か)します、借(か)ります……かんじが ありませんから、わかりません。', en: 'okurimasu, kirimasu, kashimasu, karimasu… no kanji, so nobody understands.' },
         { glyph: '📮 👀', text: '……モグモグ。ポストの 中(なか)で、かげが 手(て)紙(がみ)を 食(た)べて います。', en: 'Munch, munch. In the postbox, a shadow is eating the letters.' },
@@ -83,7 +83,7 @@ export const MOJI3_SCRIPTS: Record<string, EpisodeScript> = {
       lines: [
         { bg: 'food_post', fx: ['rain', 'darkclouds'], sprite: 'mojikui_post:normal', glyph: '🍲 💨', text: 'モジクイは りょうりの きょうしつへ にげました。', en: 'The Mojikui fled to the cooking school.' },
         { fx: ['rain', 'spring'], sprite: 'none', glyph: '送(おく) 切(き) 貸(か) 借(か)', text: 'ふだが もどりました！', en: 'The signs came back!' },
-        { speaker: 'nexmax', sprite: 'nexmax:smile', glyph: '✉️ 🏷️🏷️🏷️', text: '80円(えん)の 切(き)手(て)を 3まい ください。', en: 'Three 80-yen stamps, please.' },
+        { speaker: 'nexmax', sprite: 'nexmax:smile', glyph: '✉️ 🏷️🏷️🏷️', text: '80円(えん)の 切(きっ)手(て)を 3まい ください。', en: 'Three 80-yen stamps, please.' },
         { speaker: 'clerk', sprite: 'clerk:happy', glyph: '💴 240', text: 'はい、240円(えん)です。手(て)紙(がみ)は ミナトタウンへ 送(おく)りますね。', en: "Sure, that's 240 yen. I'll send the letter to Minato Town." },
         { speaker: 'clerk', sprite: 'clerk:happy', glyph: '☂️ ☂️', text: 'あめですから、かさを 2本(ほん) 貸(か)します。どうぞ。', en: "It's raining, so I'll lend you two umbrellas. Here." },
         { speaker: 'nexmax', sprite: 'nexmax:smile', glyph: '☂️ 🤖', text: 'かさを 借(か)ります。ありがとう ございます！', en: "We'll borrow them. Thank you!" },
@@ -183,7 +183,7 @@ export const MOJI3_SCRIPTS: Record<string, EpisodeScript> = {
     encounter: {
       stageId: 'moji-3-4',
       lines: [
-        { bg: 'food_arcade', fx: ['rain'], glyph: '止(と) 雨(あめ) 入(にゅう) 出(で)', text: 'おみせの みちの ふだが ひかります。💡', en: 'The arcade signs light up.' },
+        { bg: 'food_arcade', fx: ['rain'], glyph: '止(と) 雨(あめ) 入(いり) 出(で)', text: 'おみせの みちの ふだが ひかります。💡', en: 'The arcade signs light up.' },
         { fx: ['rain', 'darkclouds'], speaker: 'mojikui_umbrella', sprite: 'mojikui_umbrella:normal', text: '入(はい)って ください？ いいえ、出(で)ます！ 止(と)まって ください？ いいえ、行(い)きます！ 😈', en: 'Come in? No — out! Stop? No — go!' },
         { speaker: 'nexmax', sprite: 'nexmax:determined', text: 'かさの モジクイです！ ぜんぶ はんたいです！', en: 'The umbrella Mojikui! It does everything backwards!' },
         FIGHT,
