@@ -779,6 +779,20 @@ export const PHOTO_SCENES: Record<string, SceneDef> = {
   // 4章 8話 まとめの ボス: タワーの 上と、明かりが 戻った 町。
   miyako_tower_top: photoScene('img/miyako/miyako_tower_top.webp'),
   miyako_lights_back: photoScene('img/miyako/miyako_lights_back.webp'),
+  // 5章 シズカタウン（docs/design/20）: 字の ない せかいの 町。えき・ひろば・みち・ホール・こうえん・病院・家・海・しろ。
+  shizuka_station: photoScene('img/shizuka/shizuka_station.webp', boardRows([...'降思寝終言'])),
+  shizuka_square: photoScene('img/shizuka/shizuka_square.webp', boardRows([...'知動同漢字方'])),
+  shizuka_street: photoScene('img/shizuka/shizuka_street.webp', boardRows([...'図館銀町住'])),
+  shizuka_hall: photoScene('img/shizuka/shizuka_hall.webp', boardRows([...'度服着音楽持'])),
+  shizuka_park: photoScene('img/shizuka/shizuka_park.webp', boardRows([...'春夏秋冬道堂'])),
+  shizuka_hospital: photoScene('img/shizuka/shizuka_hospital.webp', boardRows([...'建病院体運乗'])),
+  shizuka_house: photoScene('img/shizuka/shizuka_house.webp', boardRows([...'家内族兄弟'])),
+  shizuka_sea: photoScene('img/shizuka/shizuka_sea.webp', boardRows([...'奥姉妹海計'])),
+  shizuka_castle: photoScene('img/shizuka/shizuka_castle.webp', boardRows([...'部屋室窓開閉'])),
+  shizuka_castle_top: photoScene('img/shizuka/shizuka_castle_top.webp', boardRows([...'歌意味天考'])),
+  // 5章 11話 まとめの ボス: 王の 部屋と、字の ない せかいの はじめての 朝。
+  shizuka_throne: photoScene('img/shizuka/shizuka_throne.webp'),
+  shizuka_dawn: photoScene('img/shizuka/shizuka_dawn.webp'),
 };
 
 export const SCENES: Record<string, SceneDef> = {

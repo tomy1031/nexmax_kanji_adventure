@@ -5,6 +5,7 @@ import { MOJI1_CAST, MOJI1_SCRIPTS } from './scripts/moji1';
 import { MOJI2_CAST, MOJI2_SCRIPTS } from './scripts/moji2';
 import { MOJI3_CAST, MOJI3_FINALE, MOJI3_SCRIPTS } from './scripts/moji3';
 import { MOJI4_CAST, MOJI4_FINALE, MOJI4_SCRIPTS } from './scripts/moji4';
+import { MOJI5_CAST, MOJI5_FINALE, MOJI5_SCRIPTS } from './scripts/moji5';
 import { MOJI_FINALES } from './mojiFinale';
 import { getKanjiByChar } from '../lib/kanjiDb';
 import { unreadKanji } from '../lib/ruby';
@@ -270,6 +271,80 @@ describe('4章 scripts (docs/design/15)', () => {
   it('names the town with 京 from the start, so it reads みやこ until 5話 brings 京 back', () => {
     expect(MOJI4_SCRIPTS['moji-4-1'].intro.lines.some((l) => l.text.includes('京(みやこ)タウン'))).toBe(true);
     expect(getMojiEpisode('moji-4-5')?.kanji).toContain('京');
+  });
+});
+
+describe('5章 scripts (docs/design/20)', () => {
+  const scripts = [...Object.values(MOJI5_SCRIPTS).flatMap((s) => [s.intro, s.encounter, s.outro]), MOJI5_FINALE.intro, MOJI5_FINALE.outro];
+  const cast = new Map(MOJI5_CAST.map((c) => [c.id, c.sprites]));
+
+  it('exist for every 5章 episode, each opening on a scene', () => {
+    expect(Object.keys(MOJI5_SCRIPTS).sort()).toEqual(episodesOf('moji-5').map((e) => e.id).sort());
+    for (const s of scripts) expect(s.lines[0].bg, s.stageId).toBeTruthy();
+  });
+
+  it('give every kanji a reading, keep English behind EN, and use pictures', () => {
+    const bad: string[] = [];
+    for (const s of scripts) {
+      for (const l of s.lines) {
+        for (const t of [l.text, l.glyph ?? '', ...(l.choices ?? []).map((c) => c.label)]) for (const c of unreadKanji(t)) bad.push(`${s.stageId}: ${c} in "${t}"`);
+        if (/[A-Za-z]/.test(l.text)) bad.push(`${s.stageId}: English on screen "${l.text}"`);
+        if (!l.en) bad.push(`${s.stageId}: no English behind EN "${l.text}"`);
+      }
+      if (!s.lines.some((l) => /\p{Extended_Pictographic}/u.test(l.text + (l.glyph ?? '')))) bad.push(`${s.stageId}: no pictures`);
+    }
+    for (const c of MOJI5_CAST) for (const k of unreadKanji(c.name)) bad.push(`${c.id}: ${k}`);
+    expect(bad).toEqual([]);
+  });
+
+  it('use real scenes, effects, speakers and sprites — Sora, Hana and the Great Mojikui as before', () => {
+    const bad: string[] = [];
+    for (const s of scripts) {
+      let scene = '';
+      for (const l of s.lines) {
+        if (l.bg) scene = l.bg;
+        if (!SCENES[scene]) bad.push(`${s.stageId}: scene ${scene}`);
+        for (const fx of l.fx ?? []) if (!fxNamesOf(scene).includes(fx)) bad.push(`${s.stageId}: fx ${fx}`);
+        if (l.speaker && !cast.has(l.speaker)) bad.push(`${s.stageId}: speaker ${l.speaker}`);
+        if (l.sprite && l.sprite !== 'none') {
+          const [who, expr] = l.sprite.split(':');
+          if (!cast.get(who)?.[expr ?? 'normal']) bad.push(`${s.stageId}: sprite ${l.sprite}`);
+        }
+      }
+    }
+    expect(bad).toEqual([]);
+    expect(cast.get('sora')).toBe(MOJI2_CAST.find((c) => c.id === 'sora')?.sprites);
+    expect(cast.get('hana')).toBe(MOJI3_CAST.find((c) => c.id === 'hana')?.sprites);
+    expect(cast.get('mojikui_boss')).toBe(MOJI1_CAST.find((c) => c.id === 'mojikui_boss')?.sprites);
+  });
+
+  it('stays within lesson 25 (docs/constraints.md 2026-10-04)', () => {
+    // 21〜25課 open と 思います, 名詞修飾, とき, the と-conditional, くれます and たら・ても; the passive and potential
+    // (られ), ば, なら, the volitional (行こう), かもしれません and 〜ていく are later lessons. 〜なければ (17課) is in.
+    const PAST_LEVEL = /(られ|えば|けば|(?<!なけ)れば|なら、|かもしれ|ていきます|ていく|みたい|(こう|ろう|よう|ぼう)[！!。])/;
+    const bad = scripts.flatMap((s) =>
+      s.lines.flatMap((l) => [l.text, ...(l.choices ?? []).map((c) => c.label)]).filter((t) => PAST_LEVEL.test(t.replace(/\([^)]*\)/g, ''))).map((t) => `${s.stageId}: ${t}`),
+    );
+    expect(bad).toEqual([]);
+  });
+
+  it('lets the player answer the King — the button is what they say — and both answers lead back to the fight', () => {
+    const lines = MOJI5_FINALE.intro.lines;
+    const asked = lines.find((l) => l.choices?.length);
+    expect(asked?.choices).toHaveLength(2);
+    for (const c of asked!.choices!) {
+      const i = lines.findIndex((l) => l.label === c.next);
+      expect(i, c.next).toBeGreaterThan(lines.indexOf(asked!));
+      expect(lines[i].speaker, c.next).toBe('mojikui_king');
+    }
+    // The first answer jumps over the second to where they meet.
+    const first = lines.find((l) => l.label === asked!.choices![0].next)!;
+    expect(lines.some((l) => l.label === first.goto)).toBe(true);
+  });
+
+  it('ends 初級I with Nexmax at ★4 (08 §7.3), in his new picture', () => {
+    expect(MOJI5_FINALE.outro.lines.some((l) => l.sprite === 'nexmax:star4')).toBe(true);
+    expect(cast.get('nexmax')?.star4).toMatch(/nexmax_star4\.webp$/);
   });
 });
 

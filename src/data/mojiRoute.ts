@@ -67,7 +67,7 @@ export const MOJI_CHAPTERS: MojiChapter[] = (
     { order: 2, level: 'N5', lessons: { from: 6, to: 10 }, units: [6, 7, 8, 9, 10], town: { name: 'ミナト タウン', en: 'MINATO TOWN' }, title: '市場(いちば)の ともだち', summary: 'にぎやかな 市場(いちば)で、はじめての ともだちに 会(あ)う。' },
     { order: 3, level: 'N5', lessons: { from: 11, to: 15 }, units: [11, 12], town: { name: 'マンプク タウン', en: 'MANPUKU TOWN' }, title: 'メニューが わかりません', summary: 'レストランと 店(みせ)。メニューの 字(じ)が ありません。' },
     { order: 4, level: 'N5', lessons: { from: 16, to: 20 }, units: [13, 14, 15], town: { name: 'ミヤコ タウン', en: 'MIYAKO TOWN' }, title: '町(まち)を 回(まわ)る', summary: 'ともだちと 町(まち)を 回(まわ)って、字(じ)を 取(と)り戻(もど)す。' },
-    { order: 5, level: 'N5', lessons: { from: 21, to: 25 }, units: [16, 17, 18, 19, 20], title: 'モジクイの 王(おう)', summary: '「もし 字(じ)が なかったら…」。ネクマックスが ★4へ。' },
+    { order: 5, level: 'N5', lessons: { from: 21, to: 25 }, units: [16, 17, 18, 19, 20], town: { name: 'シズカ タウン', en: 'SHIZUKA TOWN' }, title: 'モジクイの 王(おう)', summary: '「もし 字(じ)が なかったら…」。ネクマックスが ★4へ。' },
     { order: 6, level: 'N4', lessons: { from: 26, to: 30 }, units: [24, 25, 26, 27, 28, 29, 30], title: 'ネットに 逃(に)げた モジクイ', summary: 'IT会社(かいしゃ)で インターン。モジクイが ネットに 逃(に)げる。' },
     { order: 7, level: 'N4', lessons: { from: 31, to: 35 }, units: [31, 32, 33, 34, 35], title: '消(き)えた「止(と)まれ」', summary: '道(みち)の「止(と)まれ」が 消(き)えて、町(まち)が あぶない。' },
     { order: 8, level: 'N4', lessons: { from: 36, to: 40 }, units: [36, 37, 38, 39, 40], title: '食(た)べられた 字(じ)', summary: 'モジクイに 字(じ)を 食(た)べられた。なかまと 取(と)り戻(もど)しに 行(い)く。' },

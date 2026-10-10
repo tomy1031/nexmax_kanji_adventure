@@ -119,6 +119,14 @@ mouth that show the personality below at a glance, like a memorable mascot chara
 its eyes, glow and details (not amber unless stated). Mischievous and "cute-spooky", never gory, nothing that would
 scare a young child. Facing LEFT in three-quarter view.`,
 
+  // 5章: 王が 小さく なった あとの 絵。前の 絵（大きい 王）と 同じ 者で、大きさ・ポーズ・表情だけ 変える。
+  CREATURE_SAME: `Output: 1024x1536 portrait PNG, one creature, full body, centered with a wide margin on every
+side, plain pure white (#FFFFFF) background, no ground, no shadow on the ground, no text, no logo.
+Style: exactly the creature in the reference image — the same glossy inky black-violet body with soft purple
+highlights, the same crown, the same eye shape and eye colour, the same accent colours, the same polished Japanese anime
+game rendering. Only its size, pose and expression change, as described below. Cute and touching, never gory, nothing
+that would scare a young child. Facing LEFT in three-quarter view.`,
+
   FG_LAYER: `Output: 1024x1536 portrait PNG with a FULLY TRANSPARENT background (alpha).
 Draw ONLY the foreground framing elements described below, hugging the bottom edge and the left and right edges,
 leaving the middle and the whole upper half completely empty and transparent.
@@ -522,6 +530,30 @@ const CREATURES = [
   mojikui('mojikui_map', 'a giggling liar who always points the wrong way.', 'a body made of a big folded city map flapping like a paper cape, several thin arms each pointing a different way.', 'shifty eyes glancing sideways, a long wooden fibber nose, a sneaky giggle half hidden behind one hand.', 'map yellow and compass red.', 'a spinning compass, blank direction boards.', '4章 5話の あいて（ちずの モジクイ）'),
   mojikui('mojikui_mouth', 'a nonstop chatterbox who talks and eats at the same time.', 'a round body that is almost ALL mouth, with two tiny legs and tiny arms.', 'an enormous mouth filling the whole body, wide open mid-chatter with a long tongue and rounded white teeth (not sharp), two tiny eyes on top, blank speech-bubble shapes flying out.', 'hot pink and warm orange.', 'skewers of oden and a paper lantern, chopsticks.', '4章 6話の あいて（おおぐちの モジクイ）'),
   mojikui('mojikui_telescope', 'a nosy busybody who peeps at everyone\'s secrets.', 'a tall thin body like a brass telescope on a tripod, the eyepiece end as its head.', 'ONE giant magnified eye seen through the telescope lens, a pursed curious "ooh" mouth below it, wiggling eyebrows.', 'brass gold and starry violet.', 'a blank calendar page, a magnifying glass, little blank gossip notes.', '4章 7話の あいて（ぼうえんきょうの モジクイ）'),
+  // 5章（docs/design/20）
+  mojikui('mojikui_pillow', 'a drowsy sleepyhead who wants the whole town to sleep forever.', 'a big soft fluffy pillow-shaped ink body curled up like a cat, little stubby arms hugging a smaller pillow, a floppy striped nightcap with a pom-pom.', 'heavy half-closed sleepy eyes, a HUGE sleepy yawn with a tiny tongue, a round snot bubble from its nose.', 'soft lavender and moonlight yellow.', 'a crescent-moon night-light, little floating sleep bubbles (no letters), a blank station clock face used as a blanket.', '5章 1話の あいて（まくらの モジクイ）'),
+  mojikui('mojikui_stamp', 'a copycat who stamps the same black mark on everything so that everything looks the same.', 'a short sturdy body shaped like a big wooden rubber stamp (a hanko): the round handle is its head, the flat square stamp face is its feet, two short arms.', 'two identical round button eyes that look exactly alike, a smug copycat grin, puffed-out cheeks.', 'vermilion red and black ink.', 'a red ink pad in one tendril, a trail of identical solid black square stamp marks on blank signs behind it.', '5章 2話の あいて（はんこの モジクイ）'),
+  mojikui('mojikui_key', 'a stingy miser who locks everything up for itself.', 'a body shaped like a huge old iron padlock with a curved shackle on top like a hood, a big jangling ring of keys at its belt, tiny legs.', 'narrow greedy eyes peeking out over a keyhole-shaped mouth set in a tight sly smirk, one eyebrow raised.', 'antique silver and rust orange.', 'hugging a stack of blank books and a small silver money bag to its chest.', '5章 3話の あいて（かぎの モジクイ）'),
+  mojikui('mojikui_earplug', 'a grumpy fusspot who hates every sound and will not listen to anyone.', 'a squishy round body like a soft foam earplug, two big fluffy earmuff puffs on the sides of its head.', 'eyes squeezed tightly shut, a pouting mouth going "shh!" with one tendril finger raised to its lips, a puff of annoyed steam above its head.', 'pastel orange and violet.', 'a snapped violin bow, crumpled blank sheet music, a small cymbal held still against its body.', '5章 4話の あいて（みみせんの モジクイ）'),
+  mojikui('mojikui_snowman', 'a cold-hearted snowman who wants it to be winter forever.', 'a snowman of two balls of blue-white snow swirled through with black-violet ink, twig arms, a little upturned bucket for a hat.', 'icy pale-blue eyes with a frosty glare, a smug frozen smirk, a carrot nose, frost-pink cheeks.', 'icy blue and white.', 'a swirl of snowflakes, an icicle wand, frozen blank round signs shaped like a cherry blossom, a sun and a maple leaf.', '5章 5話の あいて（ゆきだるまの モジクイ）'),
+  mojikui('mojikui_sneeze', 'a sniffly troublemaker who spreads colds with its sneezes.', 'a round puffy cloud-like ink body wrapped in a long striped scarf, a hot-water bottle under one arm.', 'watery red-rimmed eyes squeezed half shut, a big red runny nose, the mouth wide open mid-sneeze with little ink droplets spraying out.', 'fever pink and mint green.', 'a tissue box with tissues flying out, a thermometer, small medicine bottles with blank labels.', '5章 6話の あいて（くしゃみの モジクイ）'),
+  mojikui('mojikui_album', 'a forgetful dreamer who makes people forget each other\'s names and faces.', 'a body made of a big open photo album, its thick pages flapping like wings, little photo corners on its edges.', 'vacant dreamy spiral eyes, a goofy forgetful open-mouthed smile, a curl of ink above its head like a question mark (no letters).', 'sepia brown and dusty pink.', 'blank faded photographs floating around it, an empty picture frame.', '5章 7話の あいて（アルバムの モジクイ）'),
+  mojikui('mojikui_wave', 'a moody creature whose temper rises and falls like the tide.', 'a curling ocean-wave body with a white foam crest like a wild hairdo, splashing as it moves.', 'one eye scowling and the other laughing (moody), a big splashy grin with a small fish leaping out of its mouth.', 'deep sea teal and foam white.', 'a stopped pocket watch and loose clock hands tumbling in its foam, a few seashells.', '5章 8話の あいて（なみの モジクイ）'),
+  mojikui('mojikui_curtain', 'shy and bashful, hides behind curtains and keeps every window shut.', 'a tall body made of heavy draped velvet curtain gathered at the waist with a golden tasselled rope.', 'peeking out between the curtain folds: big shy teary eyes, blushing pink cheeks, a tiny embarrassed wobbly mouth, one hand covering half its face.', 'deep wine red and gold.', 'a closed window frame behind it, a blackboard eraser.', '5章 9話の あいて（カーテンの モジクイ）'),
+  // 5章 まとめの ボス（docs/design/20 §2）: 大きく 重い 王。じつは 字が わからなかった 小さい モジクイ。
+  mojikui('mojikui_king', 'the KING of all Mojikui: grand, cold and gloomy on the outside, secretly very lonely inside.', 'ENORMOUS and towering, clearly bigger and more royal than any other Mojikui: a vast robe of starry night-black ink flowing like a long cape, wide royal sleeves, seated on a tall throne made of piled blank books, blank signboards and blank calendars.', 'a big round head under a tall crown of folded blank paper pages and gold, two large pale golden eyes that look stern but faintly sad, a small closed mouth (no teeth), a few tiny glints of a tear hidden at the corners of its eyes.', 'midnight black-violet, starlight gold and pale moon silver.', 'a sceptre topped with a crescent moon, a stream of tiny golden letter-motes being swallowed into its robe.', '5章 11話 まとめの ボス「モジクイの 王」（お話・たたかい）'),
+  {
+    ...mojikui('mojikui_king_small', 'the same King of the Mojikui after the battle, shrunk back into what it really was: a SMALL, lonely little Mojikui the size of a cat.', 'a tiny round soft ink body sitting on the floor hugging its knees, the SAME paper-and-gold crown from the reference now far too big for it and sliding down over one eye, the starry robe now just a little cape.', 'the same pale golden eyes, big, teary and gentle, a small wobbly sad mouth, looking up shyly.', 'midnight black-violet, starlight gold and pale moon silver.', 'one tear on its cheek; nothing else.', '5章 まとめの ボスの あと（小さく なった 王・かなしい）'),
+    refs: ['art-src/mojikui_king.png'],
+    style: ['CREATURE_SAME'],
+    note: 'mojikui_king の あとに 作る（それを 参照）。白い 背景を import.mjs が 切り抜く',
+  },
+  {
+    ...mojikui('mojikui_king_happy', 'the same small King of the Mojikui, overjoyed: it has just written its very first letter.', 'the same tiny round soft ink body as the reference, standing up on tiptoe, the same oversized paper-and-gold crown pushed up out of its eyes, the little starry cape fluttering.', 'the same pale golden eyes curved into happy crescents with tears of joy, a wide open beaming smile, rosy cheeks.', 'midnight black-violet, starlight gold and pale moon silver.', 'holding up high, in both tendrils, a sheet of cream paper with a few bold black brush strokes on it (abstract strokes — NOT a readable character), a calligraphy brush tucked under one arm, little golden sparkles.', '5章 まとめの ボスの あと（はじめての 字を 書いた 王）'),
+    refs: ['art-src/mojikui_king_small.png'],
+    style: ['CREATURE_SAME'],
+    note: 'mojikui_king_small の あとに 作る（それを 参照）。白い 背景を import.mjs が 切り抜く',
+  },
 ];
 
 const NANIWA = [
@@ -599,6 +631,28 @@ const MIYAKO = [
   miyako('miyako_lights_back', 'the huge capital city at night after the letters return, seen from high up: every street, station, window and sign glowing warmly, the lattice tower lit up in gold, trams and subway lights; but far away on the horizon, a strange dark storm of violet clouds is gathering under the moon. Hopeful but with a hint of mystery. No people.', '4章 クリア（町の 明かりが 戻る・遠くに 王の 影）'),
 ];
 
+/** 5章 シズカタウン（docs/design/20）: 夜の 電車で 行く「字の ない せかい」の 町。王が 字を 食べて、しずかで 色が うすい。 */
+const shizuka = (id, desc, used) => ({
+  ...naniwa(id, `${desc} The town is SHIZUKA TOWN in the world without letters, reached by a night train through the starry sky: a small old town of tall narrow houses with steep roofs, cobbled lanes and arched stone bridges over quiet canals, iron street lamps that are mostly OUT, every colour faded to cool grey-violet and blue under a pale moon, and on a hill in the middle a big dark castle with many closed windows. Everything is very still and silent. Leave the upper part of the picture fairly open (sky, ceiling or plain wall) for hanging signs.`, used),
+  group: 'bg_shizuka',
+  out: `img/shizuka/${id}.webp`,
+});
+
+const SHIZUKA = [
+  shizuka('shizuka_station', 'a small old station platform at night in steady rain: a dark-violet steam train has just stopped with its doors open, puddles on the platform, an iron canopy, a wooden bench, unlit lamps, a station clock with a BLANK face, a BLANK station-name board and a BLANK timetable board; beyond the tracks the quiet town and the castle on the hill, faint in the rain. No people.', '5章 1話「あめの えき」（雨の えき・みんな 寝て いる）'),
+  shizuka('shizuka_square', 'the town square at night: a big mechanical clock tower with a little stage of carved wooden puppet dolls below its BLANK clock face, the dolls frozen mid-dance; a dry fountain, benches, and a notice board and shop signs all covered with identical solid black square stamp marks; unlit lamps. No people.', '5章 2話「かんじを しって いますか」（町の ひろば・からくり時計）'),
+  shizuka('shizuka_street', 'the main street at night: on the left a big old library with a domed roof and tall wooden doors, on the right a silver-grey bank with stone columns and a round steel vault door; both doors are shut with HUGE iron padlocks and chains; tall narrow houses with BLANK name plates beside their doors; unlit street lamps. No people.', '5章 3話「わたしが すんで いる 町」（図書館と 銀行の みち）'),
+  shizuka('shizuka_hall', 'inside a small old concert hall: a wooden stage with empty chairs and instruments left on them (a cello, violins, a trumpet, a drum), music stands holding BLANK sheet music, a rack of grey stage costumes at the side, a big pipe organ behind, dim and silent. No people.', '5章 4話「あかい ふくを きて いる ひと」（音楽の ホール）'),
+  shizuka('shizuka_park', 'a wide town park deep in snow at night: four big trees in a row that should show the four seasons, all bare and frozen white; a winding stone path through the snow toward a small canteen building with a dark chimney at the far end; a frozen fountain; four BLANK boards on posts in front of the trees. Cold and still. No people.', '5章 5話「まっすぐ いくと」（四つの きせつの こうえん・ずっと 冬）'),
+  shizuka('shizuka_hospital', 'the waiting room of a small old hospital at night: wooden benches, a reception window, shelves of medicine bottles and boxes with BLANK labels, an old brass-gated elevator with its doors shut, a white folding screen, a window showing the snowy night, dim lamps. No people.', '5章 6話「ぐあいが わるい とき」（病院）'),
+  shizuka('shizuka_house', 'the living room of a small cozy house at night: a low table with an open photo album whose pages are BLANK, an empty picture frame on the wall, two small beds against the wall, a toy train on the rug, a letter in a BLANK envelope on the table, a round window with the moon, one dim lamp. No people.', '5章 7話「にいさんが くれた もの」（きょうだいの 家）'),
+  shizuka('shizuka_sea', 'a small harbour by the sea at night: a little old clock shop with a tall clock tower whose big clock face is BLANK and stopped, waves breaking on a stone pier, small boats, seashells on the sand; across the dark bay the big castle on its hill with all its windows dark. No people.', '5章 8話「とけいを なおして もらいました」（海の 時計の 店）'),
+  shizuka('shizuka_castle', 'inside the big dark castle: a long corridor lined with many tall doors to rooms, one door open onto an empty classroom with small wooden desks and a BLANK blackboard, tall windows covered by heavy dark curtains, black-violet ink mist along the floor, a few candles. Mysterious but kid-friendly. No people.', '5章 9話「まどを あけたら」（しろの 中・部屋と 教室）'),
+  shizuka('shizuka_castle_top', 'the top hall of the castle under a huge glass dome that shows a stormy, cloud-covered night sky; a grand staircase leading up to a big closed royal door; a stand holding a large open song book whose pages are BLANK; black-violet ink mist. Mysterious but kid-friendly. No people.', '5章 10話「もし じが なかったら」（しろの いちばん 上）'),
+  shizuka('shizuka_throne', 'the round throne room of the King of the Mojikui at the very top of the castle: a tall empty throne made of piled BLANK books, BLANK signboards and BLANK calendars; black-violet ink mist swirling; thousands of tiny golden letter-motes trapped in floating ink bubbles; tall closed windows; a crescent moon through a crack in the ceiling. Spooky but kid-friendly. No people.', '5章 11話 まとめの ボス（王の 部屋）'),
+  shizuka('shizuka_dawn', 'the same small town at its very first DAWN: the sun rising over the sea, warm golden-pink light washing over the steep roofs, the canals and the castle on the hill, every castle window now open and glowing, lamps and signs lit, colour coming back everywhere, a few birds in the sky. Hopeful and joyful. No people.', '5章 クリア（字の ない せかいに はじめての 朝・ネクマックス ★4）'),
+];
+
 const PORT = [
   port('port_market', 'the early-morning fish market on the pier of the harbor town: rows of stalls with fish on ice, crates of fruit and vegetables, a big brass hanging weighing scale, a white ferry and fishing boats moored behind, gulls, lanterns still lit in the fog; every price card and stall sign BLANK. No people.', '2章 1話「たかい？ やすい？」（霧の 港の 朝市）'),
   port('port_clothes', 'inside a small clothing shop next to the harbor market: racks of shirts, dresses, scarves and hats all faded to dull grey as if their colours were drained, a tall mirror, bolts of grey cloth on shelves, brass lamps, an open door onto the foggy street; small BLANK tags hang on the clothes. No people.', '2章 2話「いろの ない ふく」（色が 消えた ふく屋）'),
@@ -642,6 +696,8 @@ const NEXMAX_NANIWA = [
   nxPainted('hello', 'greeting: waving one hand high above his head, the other hand at his side, a bright friendly smile.', 'あいさつ'),
   // ガチャを 回す（docs/design/17 §2）: 機械の 右の ハンドルの 玉に 手を 重ねて 置く ので、手の 中は 空っぽ。
   nxPainted('crank', 'turning a big crank with all his strength: his whole body faces to the LEFT in a three-quarter view, both mitten hands stretched out to the left at chest height, held close together as if gripping one round knob there (his hands are empty — nothing drawn in them), leaning his weight into the turn with one boot braced behind him, eyes squeezed into happy curved lines of effort, mouth open in a cheerful shout. The chest mark stays visible.', 'ガチャを ひく ときの「ガチャ開始」（機械の ハンドルを 回す）'),
+  // 5章の おわり（docs/design/20、08 §7.3）: ★4 に クラスアップした 姿。同じ ロボットに 飾りが ふえる。
+  nxPainted('star4', 'CLASS-UP! the same robot, now upgraded to his ★4 form: a short navy cape with gold trim clipped at his shoulders and flowing behind him (it never covers the chest), gold-and-white armour trims on his shoulders, elbows and boots, a small golden star-shaped crest on top of his helmet between the ear pods, his satchel still on its strap; standing proud and happy with one fist raised to the sky, a bright confident smile, the chest mark glowing warm gold with soft light rays, tiny golden sparkles swirling around him (no readable letters).', '5章 まとめの ボスの あと（★4 クラスアップ）'),
 ];
 
 // ---------------------------------------------------------------------------
@@ -706,6 +762,17 @@ const PEOPLE = {
   konbini: { ref: 'ENFP', who: 'an energetic convenience-store clerk about twenty: spiky orange hair, a green-and-white striped store vest over a white shirt, a blank name badge, a big friendly grin' },
   conductor: { ref: 'ISTJ', who: 'a dependable subway conductor in his forties: a navy cap with a silver badge, a navy uniform with silver piping, a neat moustache, white gloves, a whistle on a chain' },
   yatai: { ref: 'ESTJ', who: 'a warm night-stall cook in his sixties who runs an oden cart: a towel headband, a dark-blue happi coat over a white undershirt, a thick grey beard, a ladle' },
+  // 5章 シズカタウン（docs/design/20）
+  ekichou: { ref: 'INTJ', who: 'an old station master in his sixties at a small quiet station: a tall navy peaked cap with a silver badge, a long navy coat with silver buttons, a bushy white moustache, round spectacles, a silver whistle and a brass lantern' },
+  boy: { ref: 'challenge', who: 'a curious little boy about eight years old: messy black hair with a cowlick, big round eyes, a yellow knitted jumper with a red star patch, brown shorts, a red scarf, a small slate board under his arm' },
+  mayor: { ref: 'ENFJ', who: 'the kindly town mayor in his fifties: a round friendly face, a neat grey side parting, a big grey moustache, a dark-green three-piece suit with a gold watch chain, a red sash across his chest, a tall black top hat' },
+  musician: { ref: 'heart_f', who: 'a gentle cellist in her twenties: long wavy chestnut hair with a red ribbon, a long red concert dress, a bow in her hand and a big cello beside her' },
+  gardener: { ref: 'leader', who: 'a cheerful old gardener in his seventies: a wide straw hat, a white beard, a green work jacket with many pockets, brown boots, pruning shears in his hand, a small watering can' },
+  nurse: { ref: 'idea_f', who: 'a kind young nurse in her twenties: short brown hair, a pale-pink nurse cap and a pale-pink nurse uniform, a white cardigan, a small clipboard (blank) and a thermometer in her pocket' },
+  ani: { ref: 'INFP', who: 'a gentle older brother about thirteen years old: neat black hair, kind eyes, a navy school-style jacket over a white shirt, grey trousers, a book under his arm' },
+  otouto: { ref: 'idea', who: 'a lively little brother about six years old: spiky black hair, round rosy cheeks, a sky-blue hoodie with bear ears on the hood, red shorts, a toy train in his hand' },
+  ane: { ref: 'ENTP_f', who: 'a young clock-maker of eighteen who runs a little clock shop by the sea: dark-teal hair in a long braid, brass magnifying goggles pushed up on her head, a white blouse with rolled sleeves, a brown leather work apron full of tiny tools, a small brass pocket watch on a chain' },
+  imouto: { ref: 'challenge_f', who: 'a brave little girl about nine years old, the clock-maker\'s younger sister: dark-teal hair in two short pigtails tied with white ribbons, a pale-yellow dress with a sailor collar, a small brass pocket watch on a chain like her sister\'s, a pencil behind her ear' },
   cook: { ref: 'ENTJ_f', who: 'a warm eatery cook in her fifties: a white bandana over grey-streaked hair, a white cook\'s coat with rolled sleeves and a red apron, a wooden ladle' },
   yamada: { ref: 'ESFJ_f', who: 'Yamada-san, a gentle woman in her forties who lives in the town: short wavy brown hair with a pink cherry-blossom hairpin, a sky-blue cardigan over a white blouse, a navy pleated skirt, a small pink rosette pinned on the cardigan' },
 };
@@ -811,6 +878,27 @@ const FOLK = [
   human('conductor', 'trouble', 'happy', 'troubled: looking at his pocket watch, then down the dark tunnel, a frown, a sweat drop.', '4章 4話 地下鉄の しゃしょう（電車が 来ない）'),
   human('yatai', 'happy', 'happy', 'happy: holding up a skewer of oden and a steaming bowl, a big hearty laugh, steam swirls.', '4章 6話 屋台の 人（おでん）'),
   human('yatai', 'trouble', 'happy', 'troubled: holding a blank wooden stall sign, scratching his head under the towel, puzzled, a sweat drop.', '4章 6話 屋台の 人（料理の 札が ない）'),
+  // 5章 シズカタウン（docs/design/20）
+  human('ekichou', 'happy', 'happy', 'wide awake and happy: blowing his silver whistle with one hand raised, eyes curved in a big smile, little sparkles.', '5章 1話 えきちょうさん（おきた）'),
+  human('ekichou', 'sleep', 'happy', 'fast asleep standing up: leaning on his lantern, eyes closed, head drooping, mouth open, a round sleep bubble from his nose.', '5章 1話 えきちょうさん（立った まま 寝て いる）'),
+  human('boy', 'happy', 'happy', 'overjoyed and amazed: holding up his slate board (blank) with both hands, eyes sparkling, a big open smile.', '5章 2話 男の子（はじめて 字を 見た）'),
+  human('boy', 'trouble', 'happy', 'puzzled: tilting his head, one finger on his chin, looking at his blank slate, a question in his eyes, a sweat drop.', '5章 2話 男の子（字を 知らない）'),
+  human('mayor', 'happy', 'happy', 'happy: lifting his top hat in greeting with one hand, the other hand on his round belly, a big hearty smile, sparkles.', '5章 3話 町長さん（家が わかった）'),
+  human('mayor', 'trouble', 'happy', 'troubled: looking left and right in confusion, holding his top hat in both hands, eyebrows up, a sweat drop.', '5章 3話 町長さん（じぶんの 家が わからない）'),
+  human('musician', 'happy', 'happy', 'happy: playing the cello with her eyes closed in joy, a gentle smile, small musical note shapes floating around (no letters).', '5章 4話 音楽の 人（音楽が もどった）'),
+  human('musician', 'trouble', 'happy', 'troubled: holding up a blank sheet of music in one hand and her bow in the other, a worried frown, a sweat drop.', '5章 4話 音楽の 人（がくふが 読めない）'),
+  human('gardener', 'happy', 'happy', 'happy: holding up a branch with fresh pink blossoms, a big warm laugh, a few petals floating.', '5章 5話 にわの おじいさん（春が 来た）'),
+  human('gardener', 'trouble', 'happy', 'troubled and cold: shivering, hugging himself, snow on his straw hat, a sad frown, his breath white.', '5章 5話 にわの おじいさん（ずっと 冬）'),
+  human('nurse', 'happy', 'happy', 'happy: holding up a small medicine bottle with a kind smile and a wink, one hand on her hip, sparkles.', '5章 6話 かんごしさん（くすりが わかった）'),
+  human('nurse', 'trouble', 'happy', 'troubled: holding two blank medicine bottles, looking from one to the other in confusion, a sweat drop.', '5章 6話 かんごしさん（くすりの 字が ない）'),
+  human('ani', 'happy', 'happy', 'happy and moved: opening his arms wide as if about to hug someone, a warm smile with happy tears.', '5章 7話 兄（弟を 思い出した）'),
+  human('ani', 'trouble', 'happy', 'troubled: holding his head with one hand, a lost confused look, a sweat drop.', '5章 7話 兄（弟が わからない）'),
+  human('otouto', 'happy', 'happy', 'overjoyed: jumping up with both arms raised, a huge open-mouthed smile, tears of joy.', '5章 7話 弟（兄を 思い出した）'),
+  human('otouto', 'trouble', 'happy', 'troubled: hugging his toy train, eyes teary, a wobbly frown.', '5章 7話 弟（兄が わからない）'),
+  human('ane', 'happy', 'happy', 'happy: holding up her ticking brass pocket watch toward the viewer, a bright smile, little sparkles.', '5章 8話 姉（時計が 動いた）'),
+  human('ane', 'trouble', 'happy', 'troubled and worried: holding a small seashell to her chest, looking out over her shoulder toward the distance, a sad frown.', '5章 8話 姉（妹が しろへ 行った）'),
+  human('imouto', 'happy', 'happy', 'happy: holding a small pink seashell up next to her cheek, a big grin, little sparkles.', '5章 9話 妹（姉の かいがら）'),
+  human('imouto', 'trouble', 'happy', 'troubled: sitting on the floor hugging her knees in the dark, looking up hopefully, a teardrop.', '5章 9話 妹（しろの 教室に いた）'),
 ];
 
 // ---------------------------------------------------------------------------
@@ -1049,6 +1137,17 @@ const GEAR_ART = [
   gear('charm-miyako', "a small round red paper lantern (chochin) charm with black top and bottom rims and a gold tassel, nothing written on it."),
   gear('charm-yoru', "a hanging ornament of three small golden stars and a little crescent moon on thin strings, like a mobile, from a sky-blue ring."),
   gear('charm-ashi', "a winged anklet charm: a sky-blue band with two little white feathered wings on its sides."),
+  // 5章 シズカタウン（docs/design/20）
+  gear('charm-nebou', "a soft striped nightcap (navy and pale-yellow stripes) with a fluffy white pom-pom at its tip and a tiny golden crescent-moon pin, drawn as a small charm."),
+  gear('charm-kanji', "a Japanese calligraphy brush charm: a bamboo-handled brush with a soft black-tipped head, a red tassel cord and a small sky-blue cap."),
+  gear('charm-gin', "an ornate antique silver key with a round flower-shaped bow and a long shank, on a sky-blue ring."),
+  gear('charm-orgel', "a small wooden music box with its lid open, a tiny brass comb and cylinder inside, a little twirling star figure on top, a few musical note shapes floating above (just note shapes)."),
+  gear('charm-fuyu', "a cosy knitted winter scarf in red and white with a snowflake pattern and fringed ends, loosely looped as if worn."),
+  gear('charm-clover', "a four-leaf clover set in clear resin with a thin gold rim, hanging from a sky-blue ring.", true),
+  gear('charm-kazoku', "a braided bracelet of four coloured cords (sky blue, pink, yellow and green) with four small round beads, shown as a loop."),
+  gear('charm-kai', "a pearly pink-and-white scallop seashell pendant with a tiny pearl at its hinge, on a sky-blue cord.", true),
+  gear('charm-mado', "a small round stained-glass pendant like a little window: colourful glass pieces (blue, yellow, red and green) in a thin black-and-gold frame, with light shining through.", true),
+  gear('charm-uta', "a small golden lyre (a hand harp) charm with silver strings and a little sky-blue gem at its top."),
 ];
 
 // ---------------------------------------------------------------------------
@@ -1162,7 +1261,7 @@ const GACHA_ART = [
     used: 'ガチャを ひく ときに カプセルから 出る お札（字を 書き順どおりに 書く）', note: '白い 背景を import.mjs が 切り抜く（prop）' },
 ];
 
-export const ASSETS = [...NEXMAX, ...GENDAI, ...MUKASHI_FOLK, ...ENEMIES, ...CREATURES, ...BG, ...NANIWA, ...PORT, ...FOOD, ...MIYAKO, ...NEXMAX_NANIWA, ...FOLK, ...PROLOGUE_ART, ...PROLOGUE_EATEN, ...MAPS, ...ICONS, ...CARDS, ...WEAPONS, ...GEAR_ART, ...FORGED_GEAR_ART, ...GACHA_ART];
+export const ASSETS = [...NEXMAX, ...GENDAI, ...MUKASHI_FOLK, ...ENEMIES, ...CREATURES, ...BG, ...NANIWA, ...PORT, ...FOOD, ...MIYAKO, ...SHIZUKA, ...NEXMAX_NANIWA, ...FOLK, ...PROLOGUE_ART, ...PROLOGUE_EATEN, ...MAPS, ...ICONS, ...CARDS, ...WEAPONS, ...GEAR_ART, ...FORGED_GEAR_ART, ...GACHA_ART];
 
 export const GROUPS = {
   nexmax: 'ネクマックス（表情・ポーズ）',
@@ -1176,6 +1275,7 @@ export const GROUPS = {
   bg_port: '背景 — 2章 ミナトタウン（海の むこうの 港町）',
   bg_food: '背景 — 3章 マンプクタウン（雨の たべものの 町）',
   bg_miyako: '背景 — 4章 京(みやこ)タウン（電車で 行く 大きい 町）',
+  bg_shizuka: '背景 — 5章 シズカタウン（字の ない せかいの 町）',
   nexmax_naniwa: 'ナニワタウンの ネクマックス（新ルートの 立ち絵）',
   folk_naniwa: '町の 人の 表情（困る・よろこぶ）',
   companion_cards: 'なかまの カード ★4・★5',

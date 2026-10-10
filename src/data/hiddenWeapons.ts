@@ -44,6 +44,17 @@ export const HIDDEN_WEAPONS: Readonly<Record<string, string>> = {
   南南西: 'moji-4-5',
   真夜中: 'moji-4-6',
   五目: 'moji-4-7',
+  // 5章 シズカタウン（docs/design/20）: すぐ 作る 言葉（一言・漢字・図書館・音楽・食堂・病院・家族・時計・部屋・意味）でなく
+  寝言: 'moji-5-1',
+  英知: 'moji-5-2',
+  白銀: 'moji-5-3',
+  五十音: 'moji-5-4',
+  青春: 'moji-5-5',
+  運動会: 'moji-5-6',
+  水族館: 'moji-5-7',
+  北海道: 'moji-5-8',
+  八百屋: 'moji-5-9',
+  天使: 'moji-5-10',
 };
 
 export const isHiddenWeapon = (word: string): boolean => word in HIDDEN_WEAPONS;

@@ -16,6 +16,8 @@ export const NANIWA_NEXMAX: CastMember = {
     determined: 'img/chara/naniwa/nexmax_determined.webp',
     hello: 'img/chara/naniwa/nexmax_hello.webp',
     guide: 'img/chara/naniwa/nexmax_guide.webp',
+    // ★4 に クラスアップした 姿（5章の おわり、docs/design/20）。
+    star4: 'img/chara/naniwa/nexmax_star4.webp',
   },
 };
 
