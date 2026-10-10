@@ -6,6 +6,7 @@ import { signPageX, signPageY } from '../picturebook/hasSign';
 import { RubyText } from '../../components/ui/Ruby';
 import { getKanjiByChar } from '../../lib/kanjiDb';
 import { charRuby } from '../../lib/reading';
+import { signRuby } from '../picturebook/signReading';
 import { useGameStore } from '../../store/gameStore';
 import { playJingle } from '../../lib/bgm';
 
@@ -57,6 +58,8 @@ export const TownBackdrop = ({ scene, letters, pulse }: { scene: string; letters
 export const TownShot = ({ scene, char, onDone }: { scene: string; char: string; onDone: () => void }) => {
   const furigana = useGameStore((s) => s.settings.furigana);
   const reduced = useGameStore((s) => s.settings.reducedMotion);
+  // The sign says the letter as the story reads it there (the calendar's 水 is すい).
+  const sign = SCENES[scene]?.signs?.spots.find((s) => s.char === char);
   // The camera moves in on the sign (transform only): where it sits on screen,
   // with the picture's object-cover.
   const [origin] = useState(() => {
@@ -113,7 +116,7 @@ export const TownShot = ({ scene, char, onDone }: { scene: string; char: string;
         animate={{ opacity: held ? 0 : 1, y: held ? 10 : 0 }}
         transition={{ duration: 0.4 }}
       >
-        <RubyText showFurigana={furigana}>{charRuby(char)}</RubyText> 💡
+        <RubyText showFurigana={furigana}>{sign ? signRuby(sign) : charRuby(char)}</RubyText> 💡
       </motion.span>
     </motion.button>
   );

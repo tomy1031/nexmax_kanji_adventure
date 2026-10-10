@@ -15,11 +15,14 @@ import {
   TRY_COST_2,
   TITLES,
   answerChoices,
+  answerRuby,
   readingChoices,
   earnsTitle,
   FoundVia,
 } from './discovery';
 import { MUKASHI_STAGES } from '../../data/stages';
+import { MOJI_EPISODES } from '../../data/mojiEpisodes';
+import { readingsInWord } from '../wordReading';
 
 const N5 = new Set(
   '一二三人日大小上下四五六七八九十口目山川木土水火天入出虫中体気白見来行月夕円千万百名先年時分午今半毎間右左前後北南東西外高学校書読話語聞本電雨車国金食休長生父母友男女子何',
@@ -207,5 +210,42 @@ describe('titles (docs/design/19 §4)', () => {
     expect(earnsTitle(FoundVia.LEARNED)).toBe(true);
     expect(earnsTitle(FoundVia.TOLD)).toBe(false);
     expect(earnsTitle(FoundVia.TOWN)).toBe(false);
+  });
+});
+
+describe('the readings over a ？ card’s choices (2026-10-10「選択肢の読みと答えの読みが合わない」)', () => {
+  const card = (word: string, hiddenIndex: number) => {
+    const compound = compoundFor(word)!;
+    return { compound, hiddenIndex, masked: [...word].map((c, i) => (i === hiddenIndex ? '？' : c)).join('') };
+  };
+
+  it('reads the right kanji as it is read in the word: 親友 しんゆう → 友(ゆう), not 友(とも)', () => {
+    expect(answerRuby(card('親友', 1), '友')).toBe('友(ゆう)');
+    expect(answerRuby(card('手紙', 1), '紙')).toBe('紙(がみ)');
+  });
+
+  it('reads the others with a reading of the same kind, so the kind does not give it away', () => {
+    expect(answerRuby(card('親友', 1), '山')).toBe('山(さん)');
+    expect(answerRuby(card('手紙', 0), '山')).toBe('山(やま)');
+    // No kun a learner meets: its usual reading.
+    expect(answerRuby(card('手紙', 0), '本')).toBe('本(ほん)');
+  });
+
+  it('leaves the choices of a word read as a whole bare: 大人 is おとな, not 大(だい)', () => {
+    expect(answerRuby(card('大人', 0), '大')).toBe('大');
+    expect(answerRuby(card('大人', 0), '友')).toBe('友');
+  });
+
+  it('never shows the right choice with a reading the word does not have, on the whole route', () => {
+    const route = new Set(MOJI_EPISODES.flatMap((e) => e.kanji));
+    const bad: string[] = [];
+    for (const c of wordsFor(route)) {
+      const cd = cardFor(c);
+      const right = [...c.word][cd.hiddenIndex];
+      const parts = readingsInWord(c.word, c.reading);
+      const want = parts ? `${right}(${parts[cd.hiddenIndex]})` : right;
+      if (answerRuby(cd, right) !== want || (parts && parts.join('') !== c.reading)) bad.push(`${cd.masked} ${c.reading}: ${answerRuby(cd, right)}`);
+    }
+    expect(bad).toEqual([]);
   });
 });

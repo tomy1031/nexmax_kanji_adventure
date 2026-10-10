@@ -6,7 +6,9 @@ import { RubyText } from '../../components/ui/Ruby';
 import { FillIn } from '../../components/ui/Readings';
 import { assetPath } from '../../lib/assetPath';
 import { SCENES } from '../picturebook/scenes';
-import { exampleWord, kanjiRuby } from '../../lib/reading';
+import { exampleWordWith, kunForm } from '../../lib/reading';
+import { taughtForm } from '../moji/taughtReading';
+import { readAloud } from '../../lib/readTurn';
 import { parseRuby } from '../../lib/ruby';
 import { speak } from '../../lib/speech';
 import type { Stars } from '../../lib/mastery';
@@ -69,11 +71,18 @@ const MINCHO = { fontFamily: 'var(--font-mincho)' } as const;
 /** The meaning's size (design px): as big as fits on its line — a short word large, a long pair smaller. */
 const meaningSize = (text: string) => (text.length <= 16 ? 40 : text.length <= 24 ? 33 : 28);
 
-/** The reading the blank in the fill-in word takes, else the kanji's usual one. */
+/**
+ * The reading the battle asks for: the one this episode taught (moji/taughtReading.ts —
+ * 書 is か(く) in 2章7話, not しょ), as the blank in its word takes it, with the okurigana
+ * in brackets when it is the kun word's: 小 → ちい(さい), so よみ says ちいさい, not a bare
+ * ちい (ReadingText shows the okurigana fainter).
+ */
 const readingFor = (k: KanjiData): string => {
-  const word = exampleWord(k);
+  const { stem, okuri } = taughtForm(k);
+  const word = exampleWordWith(k, stem);
   const inWord = word ? parseRuby(word).find((s) => s.text === k.char)?.reading : undefined;
-  return inWord ?? /\(([^)]*)\)/.exec(kanjiRuby(k))?.[1] ?? '';
+  const reading = inWord ?? stem;
+  return okuri && reading === stem ? `${stem}(${okuri})` : reading;
 };
 
 /** A bar baked full into the frame: the part already lost is covered from the right. */
@@ -188,6 +197,17 @@ const TONE = {
   dim: { background: 'rgba(255,255,255,0.35)', borderColor: 'rgba(184,134,63,0.4)', color: 'rgba(36,24,13,0.4)' },
 } as const;
 
+/** A reading with its okurigana, the okurigana fainter: ちい(さい) → ちい さい — the part the kanji covers stands out. */
+const ReadingText = ({ reading }: { reading: string }) => {
+  const { stem, okuri } = kunForm(reading);
+  return (
+    <>
+      {stem}
+      {okuri && <span style={{ opacity: 0.45 }}>{okuri}</span>}
+    </>
+  );
+};
+
 /**
  * 読む ターン (08 §6.4): the opponent throws a kanji; it lands on the panel
  * and four readings wait under it. The reading stays hidden until one is
@@ -199,6 +219,7 @@ const TONE = {
 const ReadPanel = ({ read, showFurigana, still, enter }: { read: ReadTurnView; showFurigana: boolean; still: boolean; enter: number }) => {
   const [landed, setLanded] = useState(still);
   const wrong = read.picked != null && read.picked !== read.answer;
+  const answer = kunForm(read.answer);
   const chip = 'rounded-full border-[0.35cqw] border-[#b8863f] px-[3cqw] font-black';
   return (
     <div
@@ -216,7 +237,8 @@ const ReadPanel = ({ read, showFurigana, still, enter }: { read: ReadTurnView; s
         transition={{ type: 'spring', stiffness: 260, damping: 18, delay: still ? 0 : enter }}
         onAnimationComplete={() => setLanded(true)}
       >
-        <RubyText showFurigana={showFurigana && read.picked != null}>{`${read.kanji.char}(${read.answer})`}</RubyText>
+        {/* Once picked: the reading over it and its okurigana after it, 小(ちい)さい. */}
+        <RubyText showFurigana={showFurigana && read.picked != null}>{`${read.kanji.char}(${answer.stem})${read.picked != null ? answer.okuri : ''}`}</RubyText>
       </motion.p>
       <div
         className="grid w-[86%] grid-cols-2 gap-[2.4cqw] transition-opacity duration-200"
@@ -235,15 +257,15 @@ const ReadPanel = ({ read, showFurigana, still, enter }: { read: ReadTurnView; s
               className="rounded-[1.6cqw] border-[0.4cqw] font-extrabold"
               style={{ minHeight: cq(100), fontSize: cq(46), ...TONE[tone] }}
             >
-              {c}
+              <ReadingText reading={c} />
             </motion.button>
           );
         })}
       </div>
       {wrong && (
         <div className="flex gap-[2.4cqw]">
-          <button type="button" data-tap onClick={() => speak(read.answer)} className={chip} style={{ fontSize: cq(30), lineHeight: 2, background: '#fffaf0' }}>
-            🔊 {read.answer}
+          <button type="button" data-tap onClick={() => speak(readAloud(read.answer))} className={chip} style={{ fontSize: cq(30), lineHeight: 2, background: '#fffaf0' }}>
+            🔊 <ReadingText reading={read.answer} />
           </button>
           <button type="button" data-tap onClick={read.onNext} className={chip} style={{ fontSize: cq(30), lineHeight: 2, background: '#f2c45a' }}>
             つぎへ ▶
@@ -405,7 +427,8 @@ export const NaniwaBattleView = ({
 
   const reading = readingFor(target);
   const meaning = target.meanings.slice(0, 2).join(' / ');
-  const hasWord = exampleWord(target) != null;
+  const fillWord = exampleWordWith(target, taughtForm(target).stem);
+  const hasWord = fillWord != null;
 
   return (
     <div className="relative h-dvh overflow-hidden bg-[#140c06] text-white">
@@ -638,7 +661,7 @@ export const NaniwaBattleView = ({
                 よみ：
               </span>
               <span className="font-extrabold text-[#140c06]" style={{ fontSize: cq(52) }}>
-                {reading}
+                <ReadingText reading={reading} />
               </span>
             </p>
             {hasWord && (
@@ -646,7 +669,7 @@ export const NaniwaBattleView = ({
                 className="absolute flex items-end justify-center leading-[1.7] font-bold whitespace-nowrap"
                 style={{ left: pct(400 / 672), width: pct(250 / 672), top: pct(10 / 165), height: pct(78 / 165), fontSize: cq(42) }}
               >
-                <FillIn kanji={target} showFurigana={showFurigana} />
+                <FillIn kanji={target} showFurigana={showFurigana} word={fillWord} />
               </p>
             )}
             {/* The meaning in English: in the rounded sans and a blue of its own, big enough to read at a glance (2026-10-04「単語の 意味の 視認性が 悪い」). */}
@@ -671,7 +694,7 @@ export const NaniwaBattleView = ({
             data-tap
             aria-label="よみあげ"
             whileTap={{ scale: 0.92 }}
-            onClick={() => speak(reading)}
+            onClick={() => speak(readAloud(reading))}
             className="absolute flex items-center justify-center rounded-[22%] border-[0.35cqw] border-[#c9973f]"
             style={{ ...onBottom(843, 945, 84, 80), background: 'linear-gradient(180deg, #2c1d10 0%, #120a04 100%)' }}
           >

@@ -632,6 +632,7 @@ const meadow: SceneDef = {
  * Boards hung across the upper part of a painting, one per letter, in up to
  * two even rows inside the central 80% — for the scenes whose painting has no
  * empty sign of its own (かな編). Placed above where the characters stand.
+ * Letters may come with the reading the story gives them there: '四(よん)' (signReading.ts).
  */
 const boardRows = (chars: string | readonly string[], image: readonly [number, number] = [800, 1440], top = 260): SceneSignSet => {
   const list = [...chars];
@@ -643,11 +644,13 @@ const boardRows = (chars: string | readonly string[], image: readonly [number, n
   return {
     image,
     style: 'hang',
-    spots: list.map((char, i) => {
+    spots: list.map((item, i) => {
       const r = Math.floor(i / per);
       const n = Math.min(per, list.length - r * per);
       const x = image[0] / 2 - (n * step) / 2 + (i % per) * step + (step - w) / 2;
-      return { char, x: Math.round(x), y: top + r * (h + 34), w, h };
+      // '四(よん)': the letter, read as the story reads it here (signReading.ts).
+      const m = /^(.)\((.+)\)$/u.exec(item);
+      return { char: m ? m[1] : item, ...(m ? { reading: m[2] } : {}), x: Math.round(x), y: top + r * (h + 34), w, h };
     }),
   };
 };
@@ -688,32 +691,32 @@ export const PHOTO_SCENES: Record<string, SceneDef> = {
   naniwa_train: photoScene('img/naniwa/naniwa_train.webp', boardRows('マミムメモヤユヨ')),
   naniwa_last_car: photoScene('img/naniwa/naniwa_last_car.webp', boardRows('ラリルレロワヲン')),
   // 1章 3〜5話: ロープウェーの 時刻表・工場の ロボットの 番号・市場の 値札。
-  naniwa_ropeway: photoScene('img/naniwa/naniwa_ropeway.webp', boardRows([...'一二三四五'])),
-  naniwa_factory: photoScene('img/naniwa/naniwa_factory.webp', boardRows([...'六七八九十'])),
+  naniwa_ropeway: photoScene('img/naniwa/naniwa_ropeway.webp', boardRows(['一(いち)', '二(に)', '三(さん)', '四(よん)', '五(ご)'])),
+  naniwa_factory: photoScene('img/naniwa/naniwa_factory.webp', boardRows(['六(ろく)', '七(なな)', '八(はち)', '九(きゅう)', '十(じゅう)'])),
   naniwa_market: photoScene('img/naniwa/naniwa_market.webp', boardRows([...'百千万円'], [800, 1440], 330)),
   // 1章 6〜11話（10 §2）: 学校の 名札・病院の 札と 本・時計台の 文字盤・店の 札・バスの 行き先・駅の 名前。
-  naniwa_school: photoScene('img/naniwa/naniwa_school.webp', boardRows([...'学生先会社員'])),
+  naniwa_school: photoScene('img/naniwa/naniwa_school.webp', boardRows(['学(がく)', '生(せい)', '先(せん)', '会(かい)', '社(しゃ)', '員(いん)'])),
   // Below the clinic's own hanging sign, in front of the bookshelf.
-  naniwa_clinic: photoScene('img/naniwa/naniwa_clinic.webp', boardRows([...'医者本中国人'], [800, 1440], 400)),
+  naniwa_clinic: photoScene('img/naniwa/naniwa_clinic.webp', boardRows(['医(い)', '者(しゃ)', '本(ほん)', '中(ちゅう)', '国(ごく)', '人(じん)'], [800, 1440], 400)),
   // In the sky left of the tower, so the eaten clock face stays in sight.
   naniwa_clocktower: photoScene('img/naniwa/naniwa_clocktower.webp', {
     image: [800, 1440],
     style: 'hang',
     spots: [
       ...[...'今朝昼晩'].map((char, i) => ({ char, x: 70 + i * 100, y: 270, w: 76, h: 87 })),
-      ...[...'時分半'].map((char, i) => ({ char, x: 120 + i * 100, y: 391, w: 76, h: 87 })),
+      ...[...'時分半'].map((char, i) => ({ char, ...(char === '分' ? { reading: 'ふん' } : {}), x: 120 + i * 100, y: 391, w: 76, h: 87 })),
     ],
   }),
-  naniwa_shopstreet: photoScene('img/naniwa/naniwa_shopstreet.webp', boardRows([...'午前後休毎何'])),
-  naniwa_bus_stop: photoScene('img/naniwa/naniwa_bus_stop.webp', boardRows([...'行来校週去年'])),
+  naniwa_shopstreet: photoScene('img/naniwa/naniwa_shopstreet.webp', boardRows(['午(ご)', '前(ぜん)', '後(ご)', '休(やす)', '毎(まい)', '何(なん)'])),
+  naniwa_bus_stop: photoScene('img/naniwa/naniwa_bus_stop.webp', boardRows(['行(い)', '来(く)', '校(こう)', '週(しゅう)', '去(きょ)', '年(ねん)'])),
   // Below the platform's hanging sign, above the tunnel mouth.
-  naniwa_station_deep: photoScene('img/naniwa/naniwa_station_deep.webp', boardRows([...'駅電車自転'], [800, 1440], 400)),
+  naniwa_station_deep: photoScene('img/naniwa/naniwa_station_deep.webp', boardRows(['駅(えき)', '電(でん)', '車(しゃ)', '自(じ)', '転(てん)'], [800, 1440], 400)),
   // 1章 12話 まとめの ボス: モジクイの 巣（駅の 奥の トンネル）と、灯りが ぜんぶ 戻った 町。
   naniwa_nest: photoScene('img/naniwa/naniwa_nest.webp'),
   naniwa_lights_back: photoScene('img/naniwa/naniwa_lights_back.webp'),
   // 1章: ナニワタウン
   naniwa_town: photoScene('img/title/bg.webp'),
-  // 1章1話: the station calendar's seven empty panels, 日 月 火 水 木 金 土 (measured on the picture).
+  // 1章1話: the station calendar's seven empty panels, 日 月 火 水 木 金 土 (measured on the picture), read as weekdays.
   naniwa_town_station: photoScene('img/naniwa/naniwa_town_station.webp', {
     image: [800, 1440],
     style: 'panel',
@@ -721,8 +724,8 @@ export const PHOTO_SCENES: Record<string, SceneDef> = {
       { char: '日', x: 215, y: 455, w: 80, h: 72 },
       { char: '月', x: 306, y: 455, w: 78, h: 72 },
       { char: '火', x: 394, y: 455, w: 74, h: 72 },
-      { char: '水', x: 478, y: 455, w: 74, h: 72 },
-      { char: '木', x: 562, y: 455, w: 74, h: 72 },
+      { char: '水', reading: 'すい', x: 478, y: 455, w: 74, h: 72 },
+      { char: '木', reading: 'もく', x: 562, y: 455, w: 74, h: 72 },
       { char: '金', x: 647, y: 455, w: 87, h: 72 },
       { char: '土', x: 745, y: 455, w: 55, h: 72 },
     ],
@@ -742,34 +745,34 @@ export const PHOTO_SCENES: Record<string, SceneDef> = {
   }),
   naniwa_kanjiyasan: photoScene('img/kanjiyasan/bg_tall.webp'),
   // 2章 ミナトタウン 1〜5話（docs/design/12）: 朝市の 値札・ふくの 色・石だんの 札・食堂の メニュー・小道の 道しるべ。
-  port_market: photoScene('img/port/port_market.webp', boardRows([...'高安大小新'])),
+  port_market: photoScene('img/port/port_market.webp', boardRows(['高(たか)', '安(やす)', '大(おお)', '小(ちい)', '新(あたら)'])),
   port_clothes: photoScene('img/port/port_clothes.webp', boardRows([...'古青白赤黒'])),
-  port_stairs: photoScene('img/port/port_stairs.webp', boardRows([...'上下父母子手'])),
-  port_foodhall: photoScene('img/port/port_foodhall.webp', boardRows([...'好主肉魚食飲物'])),
-  port_alley: photoScene('img/port/port_alley.webp', boardRows([...'近間右左'])),
+  port_stairs: photoScene('img/port/port_stairs.webp', boardRows(['上(うえ)', '下(した)', '父(ちち)', '母(はは)', '子(こ)', '手(て)'])),
+  port_foodhall: photoScene('img/port/port_foodhall.webp', boardRows(['好(す)', '主(しゅ)', '肉(にく)', '魚(さかな)', '食(た)', '飲(の)', '物(もの)'])),
+  port_alley: photoScene('img/port/port_alley.webp', boardRows(['近(ちか)', '間(あいだ)', '右(みぎ)', '左(ひだり)'])),
   // 2章 6〜10話: 公園の 札・図書館の 本・ソラの 日記・写真屋と お茶屋・映画館の ポスター。
   port_park: photoScene('img/port/port_park.webp', boardRows([...'外男女犬'])),
-  port_library: photoScene('img/port/port_library.webp', boardRows([...'書聞読見話'])),
-  port_seaside: photoScene('img/port/port_seaside.webp', boardRows([...'買起帰友達'])),
+  port_library: photoScene('img/port/port_library.webp', boardRows(['書(か)', '聞(き)', '読(よ)', '見(み)', '話(はな)'])),
+  port_seaside: photoScene('img/port/port_seaside.webp', boardRows(['買(か)', '起(お)', '帰(かえ)', '友(とも)', '達(だち)'])),
   port_photo: photoScene('img/port/port_photo.webp', boardRows([...'茶酒写真紙'])),
   port_cinema: photoScene('img/port/port_cinema.webp', boardRows([...'映画店英語'])),
   // 2章 11話 まとめの ボス: 霧の 灯台と、霧が 晴れた 町。
   port_lighthouse: photoScene('img/port/port_lighthouse.webp'),
   port_lights_back: photoScene('img/port/port_lights_back.webp'),
   // 3章 マンプクタウン（docs/design/14）: ゆうびんきょく・りょうりきょうしつ・ならぶ 店と 花や・しょうてんがい・だいどころ。
-  food_post: photoScene('img/food/food_post.webp', boardRows([...'送切貸借'])),
+  food_post: photoScene('img/food/food_post.webp', boardRows(['送(おく)', '切(き)', '貸(か)', '借(か)'])),
   food_school: photoScene('img/food/food_school.webp', boardRows([...'旅教習勉強'])),
   food_line: photoScene('img/food/food_line.webp', boardRows([...'花歩待立'])),
-  food_arcade: photoScene('img/food/food_arcade.webp', boardRows([...'止雨入出'])),
-  food_kitchen: photoScene('img/food/food_kitchen.webp', boardRows([...'売使作'])),
+  food_arcade: photoScene('img/food/food_arcade.webp', boardRows(['止(と)', '雨(あめ)', '入(いり)', '出(で)'])),
+  food_kitchen: photoScene('img/food/food_kitchen.webp', boardRows(['売(う)', '使(つか)', '作(つく)'])),
   // 3章 6話 まとめの ボス: 料理大会の 会場と、雨が やんだ 町。
   food_contest: photoScene('img/food/food_contest.webp'),
   food_lights_back: photoScene('img/food/food_lights_back.webp'),
   // 4章 京(みやこ)タウン（docs/design/15）: 暗い 駅・エスカレーター・コンビニ・地下鉄・駅前の ひろば・屋台・タワーの 中。
-  miyako_station: photoScene('img/miyako/miyako_station.webp', boardRows([...'明暗広多少'])),
+  miyako_station: photoScene('img/miyako/miyako_station.webp', boardRows(['明(あか)', '暗(くら)', '広(ひろ)', '多(おお)', '少(すく)'])),
   miyako_escalator: photoScene('img/miyako/miyako_escalator.webp', boardRows([...'長短悪重軽早'])),
-  miyako_konbini: photoScene('img/miyako/miyako_konbini.webp', boardRows([...'便利元気親'])),
-  miyako_subway: photoScene('img/miyako/miyako_subway.webp', boardRows([...'有名地鉄仕事'])),
+  miyako_konbini: photoScene('img/miyako/miyako_konbini.webp', boardRows(['便(べん)', '利(り)', '元(げん)', '気(き)', '親(おや)'])),
+  miyako_subway: photoScene('img/miyako/miyako_subway.webp', boardRows(['有(ゆう)', '名(めい)', '地(ち)', '鉄(てつ)', '仕(し)', '事(ごと)'])),
   miyako_exit: photoScene('img/miyako/miyako_exit.webp', boardRows([...'東西南北京'])),
   miyako_yatai: photoScene('img/miyako/miyako_yatai.webp', boardRows([...'夜料理口'])),
   miyako_tower: photoScene('img/miyako/miyako_tower.webp', boardRows([...'目足曜'])),
@@ -777,15 +780,15 @@ export const PHOTO_SCENES: Record<string, SceneDef> = {
   miyako_tower_top: photoScene('img/miyako/miyako_tower_top.webp'),
   miyako_lights_back: photoScene('img/miyako/miyako_lights_back.webp'),
   // 5章 シズカタウン（docs/design/20）: 字の ない せかいの 町。えき・ひろば・みち・ホール・こうえん・病院・家・海・しろ。
-  shizuka_station: photoScene('img/shizuka/shizuka_station.webp', boardRows([...'降思寝終言'])),
-  shizuka_square: photoScene('img/shizuka/shizuka_square.webp', boardRows([...'知動同漢字方'])),
+  shizuka_station: photoScene('img/shizuka/shizuka_station.webp', boardRows(['降(ふ)', '思(おも)', '寝(ね)', '終(お)', '言(い)'])),
+  shizuka_square: photoScene('img/shizuka/shizuka_square.webp', boardRows(['知(し)', '動(うご)', '同(おな)', '漢(かん)', '字(じ)', '方(かた)'])),
   shizuka_street: photoScene('img/shizuka/shizuka_street.webp', boardRows([...'図館銀町住'])),
-  shizuka_hall: photoScene('img/shizuka/shizuka_hall.webp', boardRows([...'度服着音楽持'])),
+  shizuka_hall: photoScene('img/shizuka/shizuka_hall.webp', boardRows(['度(ど)', '服(ふく)', '着(き)', '音(おと)', '楽(たの)', '持(も)'])),
   shizuka_park: photoScene('img/shizuka/shizuka_park.webp', boardRows([...'春夏秋冬道堂'])),
   shizuka_hospital: photoScene('img/shizuka/shizuka_hospital.webp', boardRows([...'建病院体運乗'])),
   shizuka_house: photoScene('img/shizuka/shizuka_house.webp', boardRows([...'家内族兄弟'])),
   shizuka_sea: photoScene('img/shizuka/shizuka_sea.webp', boardRows([...'奥姉妹海計'])),
-  shizuka_castle: photoScene('img/shizuka/shizuka_castle.webp', boardRows([...'部屋室窓開閉'])),
+  shizuka_castle: photoScene('img/shizuka/shizuka_castle.webp', boardRows(['部(ぶ)', '屋(や)', '室(しつ)', '窓(まど)', '開(あ)', '閉(し)'])),
   shizuka_castle_top: photoScene('img/shizuka/shizuka_castle_top.webp', boardRows([...'歌意味天考'])),
   // 5章 11話 まとめの ボス: 王の 部屋と、字の ない せかいの はじめての 朝。
   shizuka_throne: photoScene('img/shizuka/shizuka_throne.webp'),

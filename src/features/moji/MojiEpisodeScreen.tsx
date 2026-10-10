@@ -8,6 +8,7 @@ import BattleScene from '../battle/BattleScene';
 import PictureBook from '../picturebook/PictureBook';
 import { RubyText } from '../../components/ui/Ruby';
 import { KanjiWord } from '../../components/ui/Readings';
+import { taughtForm } from './taughtReading';
 import { NexmaxSays, TopBar } from '../../components/ui/Chrome';
 import { GameIcon } from '../../components/ui/GameIcon';
 import { getKanjiByChar } from '../../lib/kanjiDb';
@@ -318,7 +319,7 @@ const ReadyScreen = ({
                     </span>
                   )}
                   <span className="text-[34px] leading-[1.5] font-black">
-                    <KanjiWord kanji={k} showFurigana={showFurigana} />
+                    <KanjiWord kanji={k} showFurigana={showFurigana} reading={taughtForm(k).stem} />
                   </span>
                   <span className="min-w-0 flex-1">
                     <StarRow reps={reps} />

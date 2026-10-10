@@ -65,7 +65,7 @@ export const MOJI_CHAPTERS: MojiChapter[] = (
   [
     { order: 1, level: 'N5', lessons: { from: 1, to: 5 }, units: [1, 2, 3, 4, 5], town: { name: 'ナニワ タウン', en: 'NANIWA TOWN' }, title: '字(じ)の ない 町(まち)', summary: '電車(でんしゃ)で ナニワタウンへ。駅(えき)の 看板(かんばん)も 時計(とけい)も、字(じ)が ありません。' },
     { order: 2, level: 'N5', lessons: { from: 6, to: 10 }, units: [6, 7, 8, 9, 10], town: { name: 'ミナト タウン', en: 'MINATO TOWN' }, title: '市場(いちば)の ともだち', summary: 'にぎやかな 市場(いちば)で、はじめての ともだちに 会(あ)う。' },
-    { order: 3, level: 'N5', lessons: { from: 11, to: 15 }, units: [11, 12], town: { name: 'マンプク タウン', en: 'MANPUKU TOWN' }, title: '読(よ)めない メニュー', summary: 'レストランと 店(みせ)。メニューの 字(じ)が 消(き)えて いる。' },
+    { order: 3, level: 'N5', lessons: { from: 11, to: 15 }, units: [11, 12], town: { name: 'マンプク タウン', en: 'MANPUKU TOWN' }, title: 'メニューが わかりません', summary: 'レストランと 店(みせ)。メニューの 字(じ)が ありません。' },
     { order: 4, level: 'N5', lessons: { from: 16, to: 20 }, units: [13, 14, 15], town: { name: 'ミヤコ タウン', en: 'MIYAKO TOWN' }, title: '町(まち)を 回(まわ)る', summary: 'ともだちと 町(まち)を 回(まわ)って、字(じ)を 取(と)り戻(もど)す。' },
     { order: 5, level: 'N5', lessons: { from: 21, to: 25 }, units: [16, 17, 18, 19, 20], town: { name: 'シズカ タウン', en: 'SHIZUKA TOWN' }, title: 'モジクイの 王(おう)', summary: '「もし 字(じ)が なかったら…」。ネクマックスが ★4へ。' },
     { order: 6, level: 'N4', lessons: { from: 26, to: 30 }, units: [24, 25, 26, 27, 28, 29, 30], title: 'ネットに 逃(に)げた モジクイ', summary: 'IT会社(かいしゃ)で インターン。モジクイが ネットに 逃(に)げる。' },

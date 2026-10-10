@@ -19,6 +19,7 @@ import {
   MISSES_BEFORE_ANSWER,
   ANSWER_COST,
   answerChoices,
+  answerRuby,
   FoundVia,
   type WordCard,
 } from '../../lib/forge/discovery';
@@ -330,7 +331,7 @@ export const WordBook = () => {
                                     className="g-btn g-btn-ghost !min-h-[52px] !px-0 text-2xl leading-[1.6] font-black disabled:opacity-35"
                                     style={out ? { textDecoration: 'line-through' } : undefined}
                                   >
-                                    <RubyText showFurigana={showFurigana}>{charRuby(c)}</RubyText>
+                                    <RubyText showFurigana={showFurigana}>{answerRuby(open, c)}</RubyText>
                                   </button>
                                 );
                               })}
