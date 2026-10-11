@@ -321,12 +321,20 @@ export interface Title {
 /** Earned on words found by guessing. Words opened with the answer do not count. */
 export const TITLES: Title[] = [
   // Rescaled 2026-09-23 when the word table was cut to learner-level words
-  // (113 from the N5 set): the last title is still reachable within むかし編.
-  { at: 10, word: '見習い', reading: 'みならい', ruby: '見習(みなら)い', en: 'apprentice', gems: 50 },
-  { at: 30, word: '一人前', reading: 'いちにんまえ', ruby: '一人前(いちにんまえ)', en: 'full-fledged', gems: 100 },
-  { at: 55, word: '名人', reading: 'めいじん', ruby: '名人(めいじん)', en: 'master', gems: 150 },
-  { at: 80, word: '先生', reading: 'せんせい', ruby: '先生(せんせい)', en: 'teacher', gems: 200 },
-  { at: 105, word: '生き字引', reading: 'いきじびき', ruby: '生(い)き字引(じびき)', en: 'walking dictionary', gems: 300 },
+  // (113 from the N5 set): むかし編 reaches the fifth (ことばマスター).
+  // Renamed 2026-10-08「称号名として 難しい 言葉の 配慮を」: every title is ことば + a rank word
+  // a beginner knows — たまご → 好き → 名人 → 先生 → マスター → 王さま → 大王 → 神さま
+  // (data/achievements.ts uses the same ranks for every kind of title).
+  { at: 10, word: 'ことばの たまご', reading: 'ことばのたまご', ruby: 'ことばの たまご', en: 'word beginner', gems: 50 },
+  { at: 30, word: 'ことば好き', reading: 'ことばずき', ruby: 'ことば好(ず)き', en: 'word lover', gems: 100 },
+  { at: 55, word: 'ことば名人', reading: 'ことばめいじん', ruby: 'ことば名人(めいじん)', en: 'word expert', gems: 150 },
+  { at: 80, word: 'ことばの 先生', reading: 'ことばのせんせい', ruby: 'ことばの 先生(せんせい)', en: 'word teacher', gems: 200 },
+  { at: 105, word: 'ことばマスター', reading: 'ことばますたー', ruby: 'ことばマスター', en: 'word master', gems: 300 },
+  // 2026-10-08「称号の 段も 足して」: the route holds hundreds of words to find now
+  // (漢字やさん, ことば図鑑's ？ cards, 字カード), so the ladder goes on past 105.
+  { at: 150, word: 'ことばの 王さま', reading: 'ことばのおうさま', ruby: 'ことばの 王(おう)さま', en: 'word king', gems: 200 },
+  { at: 220, word: 'ことば大王', reading: 'ことばだいおう', ruby: 'ことば大王(だいおう)', en: 'great word king', gems: 250 },
+  { at: 320, word: 'ことばの 神さま', reading: 'ことばのかみさま', ruby: 'ことばの 神(かみ)さま', en: 'god of words', gems: 300 },
 ];
 
 export const titleFor = (earnedCount: number): Title | null => {

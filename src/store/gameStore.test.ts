@@ -233,24 +233,45 @@ describe('漢字やさん: the kanji decide what they make (docs/design/19 §2)'
   });
 });
 
-describe('称号の ◆ (TitlesScreen)', () => {
+describe('称号の ◆ (TitlesScreen, data/achievements.ts)', () => {
   it('gives a title\'s gems once it is earned, and only once', () => {
     const words = (n: number, via: 'aimed' | 'town') => Object.fromEntries(Array.from({ length: n }, (_, i) => [`w${via}${i}`, via]));
     useGameStore.setState({ gems: 0, foundWords: { ...words(9, 'aimed'), ...words(5, 'town') } });
     // Nine looked for, five handed over by the town: 見習い (10) is not earned yet.
-    expect(useGameStore.getState().claimTitle('見習い')).toBeNull();
+    expect(useGameStore.getState().claimTitle('words-10')).toBeNull();
     useGameStore.setState((s) => ({ foundWords: { ...s.foundWords, last: 'learned' } }));
-    expect(useGameStore.getState().claimTitle('見習い')).toBe(50);
+    expect(useGameStore.getState().claimTitle('words-10')).toBe(50);
     expect(useGameStore.getState().gems).toBe(50);
-    expect(useGameStore.getState().claimTitle('見習い')).toBeNull();
-    expect(useGameStore.getState().claimTitle('一人前')).toBeNull();
-    expect(useGameStore.getState().gems).toBe(50);
+    expect(useGameStore.getState().claimTitle('words-10')).toBeNull();
+    expect(useGameStore.getState().claimTitle('words-30')).toBeNull();
+    expect(useGameStore.getState().claimTitle('nope-1')).toBeNull();
+    // Another kind: an episode cleared.
+    useGameStore.setState({ clearedStages: ['moji-1-1'] });
+    expect(useGameStore.getState().claimTitle('episodes-1')).toBe(20);
+    expect(useGameStore.getState().gems).toBe(70);
   });
 
-  it('reads a save from before it with no ◆ taken', () => {
+  it('counts every write — kanji, review, kana — past the ten a kanji keeps', () => {
+    const id = getKanjiByChar('火')!.id;
+    for (let i = 0; i < 12; i++) useGameStore.getState().recordRep(id, 0);
+    useGameStore.getState().recordKanaRep('あ');
+    expect(useGameStore.getState().progress[id].reps).toBe(10);
+    expect(useGameStore.getState().writes).toBe(13);
+  });
+
+  it('reads a save from before it: nothing taken, nothing announced yet, the writes it can see', () => {
     const merge = useGameStore.persist.getOptions().merge!;
     const current = useGameStore.getState();
-    expect((merge({ gems: 5 }, current) as typeof current).titleRewards).toEqual([]);
+    const old = merge({ gems: 5, progress: { a: { reps: 10, mistakes: 0, streak: 0, nextReview: 0, intervalDays: 0 } }, kana: { あ: 3 } }, current) as typeof current;
+    expect(old.titleRewards).toEqual([]);
+    expect(old.titlesSeen).toBeNull();
+    expect(old.writes).toBe(13);
+  });
+
+  it('remembers what was announced, once each', () => {
+    useGameStore.getState().markTitlesSeen(['episodes-1']);
+    useGameStore.getState().markTitlesSeen(['episodes-1', 'towns-1']);
+    expect(useGameStore.getState().titlesSeen).toEqual(['episodes-1', 'towns-1']);
   });
 });
 

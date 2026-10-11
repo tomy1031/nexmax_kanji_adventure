@@ -118,8 +118,9 @@ describe('titles', () => {
   it('only awards a title once its threshold is passed', () => {
     expect(titleFor(0)).toBeNull();
     expect(titleFor(9)).toBeNull();
-    expect(titleFor(10)?.word).toBe('見習い');
-    expect(titleFor(60)?.word).toBe('名人');
+    // Names made easy 2026-10-08 (見習い → ことばの たまご, 名人 → ことば名人).
+    expect(titleFor(10)?.word).toBe('ことばの たまご');
+    expect(titleFor(60)?.word).toBe('ことば名人');
   });
 
   it('points at the next one to aim for', () => {
@@ -128,8 +129,12 @@ describe('titles', () => {
     expect(nextTitle(999)).toBeNull();
   });
 
-  it('is reachable: the N5 set alone can carry a learner to the last title', () => {
-    expect(wordsFor(N5).length).toBeGreaterThanOrEqual(TITLES[TITLES.length - 1].at);
+  it('is reachable: the N5 set alone can carry a learner through むかし編\'s ladder (the fifth title, at 105)', () => {
+    // 2026-10-08「称号の 段も 足して」: three more come after it, for the new route's
+    // hundreds of words (data/achievements.test.ts checks those against the route).
+    const mukashiLast = TITLES.find((t) => t.at === 105)!;
+    expect(wordsFor(N5).length).toBeGreaterThanOrEqual(mukashiLast.at);
+    expect(TITLES[TITLES.length - 1].at).toBeGreaterThan(mukashiLast.at);
   });
 });
 
