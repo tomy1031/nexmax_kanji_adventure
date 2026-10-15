@@ -16,6 +16,7 @@ import { useQuiet } from '../../store/uiStore';
 import { RubyText } from '../../components/ui/Ruby';
 import type { KanjiData } from '../../types/kanji';
 import KanaText from './KanaText';
+import type { KanaWeapon } from '../../data/kanaWeapons';
 import { useKnownKana } from './useKnownKana';
 
 /**
@@ -41,8 +42,8 @@ interface Props {
   script: KanaScript;
   /** The place behind (a scene id). */
   field: string;
-  /** Damage times the kana weapon (1 without one). */
-  weapon?: number;
+  /** The kana weapon carried (かなの かじや): its power times every blow, its picture beside Nexmax. */
+  weapon?: KanaWeapon | null;
   onWin: () => void;
   onFlee: () => void;
 }
@@ -139,7 +140,7 @@ const WordPanel = ({ word, pos, written, solved, still }: { word: KanaWord; pos:
   );
 };
 
-export const KanaBattle = ({ fight, script, field, weapon = 1, onWin, onFlee }: Props) => {
+export const KanaBattle = ({ fight, script, field, weapon = null, onWin, onFlee }: Props) => {
   useBgm('boss');
   useQuiet();
   const still = useStill();
@@ -177,6 +178,8 @@ export const KanaBattle = ({ fight, script, field, weapon = 1, onWin, onFlee }: 
   const [freed, setFreed] = useState<{ n: number; ruby: string } | null>(null);
   const [end, setEnd] = useState<'won' | 'lost' | null>(null);
   const [tip, setTip] = useState<{ n: number; icons: string; text: string } | null>(null);
+  /** Each finished word swings the kana weapon. */
+  const [swing, setSwing] = useState(0);
   const timers = useRef<ReturnType<typeof setTimeout>[]>([]);
   const later = useCallback((fn: () => void, ms: number) => timers.current.push(setTimeout(fn, ms)), []);
   useEffect(() => {
@@ -269,7 +272,8 @@ export const KanaBattle = ({ fight, script, field, weapon = 1, onWin, onFlee }: 
       // The word is whole: its picture, its sound — and the blow.
       setSolved(true);
       speak(word.kana);
-      const damage = wordDamage(all, weapon);
+      const damage = wordDamage(all, weapon?.power ?? 1);
+      setSwing((n) => n + 1);
       const floor = sealFloor(foe.hp, fight.seals.length, fight.seals.filter((s) => !open.has(s)).length);
       const struck = strikeSealed(foeHpRef.current, damage, floor);
       sfx.beam();
@@ -370,6 +374,22 @@ export const KanaBattle = ({ fight, script, field, weapon = 1, onWin, onFlee }: 
         onFlee={onFlee}
         seals={seals}
         freed={freed}
+        overlay={
+          weapon ? (
+            // かなの ぶき: carried beside Nexmax, swung at each finished word.
+            <motion.div
+              key={swing}
+              className="pointer-events-none absolute z-20 flex flex-col items-center"
+              style={{ left: '1%', top: '36%', width: '14%' }}
+              initial={false}
+              animate={swing && !still ? { x: ['0%', '220%', '0%'], y: ['0%', '-160%', '0%'], rotate: [0, 300, 360], scale: [1, 1.3, 1] } : undefined}
+              transition={{ duration: 0.7, ease: 'easeInOut' }}
+            >
+              <img src={assetPath(weapon.img)} alt="" aria-hidden className="w-full object-contain drop-shadow-[0_0_10px_rgba(255,211,106,0.85)]" />
+              <span className="-mt-1 rounded-full bg-black/70 px-1.5 text-[10px] font-black text-[#ffd36a]">×{weapon.power.toFixed(2)}</span>
+            </motion.div>
+          ) : undefined
+        }
       />
       {/* The end: a win runs on into the story; a loss offers another go. */}
       <AnimatePresence>
