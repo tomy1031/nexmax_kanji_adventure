@@ -17,7 +17,6 @@ import { getGear } from '../../data/equipment';
 import { PLAYER_MAX_HP, statsFromGear } from '../../lib/battle';
 import { classOf, wornAt } from '../../lib/nexmaxClass';
 import { levelOf, ownedCount } from '../../lib/level';
-import { SCENES } from '../picturebook/scenes';
 import { useOwnedKanji } from '../moji/useOwnedKanji';
 import { useCompactHeight } from '../../hooks/useCompactHeight';
 import { networkManager, MatchCancelledError } from './NetworkManager';
@@ -29,6 +28,8 @@ import { CPU_LEVELS, cpuTurn, type CpuLevel } from './cpu';
 import { SELF_HIT, SLIPS_TO_SELF_HIT, VS_MAX_HP, writeDamage } from './rules';
 import { DEFAULT_RULES, NO_POWER, appliedPower, cleanPower, cleanRules, guarded, powerFrom, roundFor, type RoomRules } from './roomRules';
 import { RoomRulesEditor, RulesCard } from './RulesSheet';
+import { ARENA_ART, ArenaBackdrop, Confetti, RankMedal, Spotlight, VsSplash } from './VersusFx';
+import { LogoText } from '../../components/ui/LogoText';
 import { SKILL_INFO, SKILL_OF, type SkillKind } from '../../lib/companionSkill';
 import { throughWard, versusSkill } from './versusSkill';
 import { useCompoundsVersion } from '../../data/compounds';
@@ -52,7 +53,6 @@ const NEXMAX_ART = 'img/chara/naniwa/nexmax_normal.webp';
 const NEXMAX_2P_ART = 'img/versus/nexmax_2p.webp';
 /** …and in the fight, swinging the brush (facing left, where a モジクイ would stand). */
 const NEXMAX_2P_BRUSH_ART = 'img/versus/nexmax_2p_brush.webp';
-const BACKDROP = SCENES.naniwa_lights_back?.photo ?? 'img/title/bg.webp';
 /** How long a room waits for the friend who has its あいことば. */
 const FRIEND_WAIT_MS = 5 * 60 * 1000;
 const newCode = () => String(1000 + Math.floor(Math.random() * 9000));
@@ -111,16 +111,6 @@ const Avatar = ({ src, mirrored = false, size }: { src: string; mirrored?: boole
   />
 );
 
-const RankBadge = ({ rating, showFurigana }: { rating: number; showFurigana: boolean }) => {
-  const rank = rankFor(rating);
-  return (
-    <span className="g-pill-night inline-flex items-center gap-1.5 px-3 py-1 text-sm font-black tabular-nums">
-      <span aria-hidden className="inline-block h-2.5 w-2.5 rounded-full" style={{ background: rank.color }} />
-      <RubyText showFurigana={showFurigana}>{rank.label}</RubyText>
-      <span>{rating}</span>
-    </span>
-  );
-};
 
 export const VersusScreen = () => {
   const navigate = useNavigate();
@@ -169,7 +159,8 @@ export const VersusScreen = () => {
   const [stampIn, setStampIn] = useState<{ n: number; stamp: number } | null>(null);
   const [won, setWon] = useState(false);
   const [delta, setDelta] = useState(0);
-  const [count, setCount] = useState(3);
+  /** The VS countdown: 4 = not yet, 3・2・1, then 0 = 書け！ */
+  const [count, setCount] = useState(4);
   /** Playing the CPU (no relay, no rating), not a person. */
   const [cpu, setCpu] = useState(false);
   /** How strong the CPU is (CPU_LEVELS), and the sheet that picks it. */
@@ -422,7 +413,7 @@ export const VersusScreen = () => {
     setError(null);
     setPhase('searching');
     setSeconds(0);
-    setCount(3);
+    setCount(4);
     settled.current = false;
     roundRef.current = null;
     hitNo.current = 0;
@@ -530,7 +521,7 @@ export const VersusScreen = () => {
     const picked = roundFor(DEFAULT_RULES, meRef.current.known, meRef.current.known);
     void preloadCharData(picked);
     setRound(picked);
-    setCount(3);
+    setCount(4);
     setPhase('matched');
   };
 
@@ -590,17 +581,19 @@ export const VersusScreen = () => {
   // VS: the two face each other, then 3・2・1.
   useEffect(() => {
     if (phase !== 'matched') return;
-    preloadImages([artOf(them, true, rules.companion), BACKDROP]);
-    sfx.clang();
-    const ticks = [1300, 2100, 2900].map((ms, i) =>
+    preloadImages([artOf(them, true, rules.companion), ARENA_ART]);
+    // VS lands (0.5 s) with a clang; then 3・2・1・書け！ (VersusFx VsSplash).
+    const clang = setTimeout(() => sfx.clang(), still ? 0 : 520);
+    const ticks = [1300, 2000, 2700, 3400].map((ms, i) =>
       setTimeout(() => {
-        setCount(2 - i);
-        if (i < 2) sfx.tap();
+        setCount(3 - i);
+        if (i < 3) sfx.tap();
         else sfx.slash(0.8);
       }, ms),
     );
-    const go = setTimeout(() => setPhase('fighting'), still ? 1200 : 3500);
+    const go = setTimeout(() => setPhase('fighting'), still ? 1200 : 4000);
     return () => {
+      clearTimeout(clang);
       ticks.forEach(clearTimeout);
       clearTimeout(go);
     };
@@ -653,11 +646,8 @@ export const VersusScreen = () => {
 
   return (
     <div className="relative isolate flex min-h-dvh flex-col overflow-hidden text-[#f4f1ff]">
-      {/* The town with every light back on — where the fights are held. */}
-      <div aria-hidden className="pointer-events-none fixed inset-0 -z-10 bg-[#120f2b]">
-        <img src={assetPath(BACKDROP)} alt="" className="h-full w-full object-cover" />
-        <div className="absolute inset-0" style={{ background: 'linear-gradient(180deg, rgba(14,11,40,0.55) 0%, rgba(18,14,46,0.35) 40%, rgba(10,8,28,0.88) 100%)' }} />
-      </div>
+      {/* The arena above the town, two searchlights sweeping. */}
+      <ArenaBackdrop still={still} />
 
       <header className="sticky top-0 z-20 flex items-center justify-between gap-2 px-4 pt-[max(12px,env(safe-area-inset-top))] pb-2">
         <button
@@ -671,13 +661,15 @@ export const VersusScreen = () => {
           <span aria-hidden>◀</span>
           <RubyText showFurigana={showFurigana}>もどる</RubyText>
         </button>
-        <h1 className="text-center text-xl leading-tight font-black tracking-widest" style={{ textShadow: '0 2px 10px rgba(0,0,0,0.7)' }}>
-          <RubyText showFurigana={showFurigana}>たいせん</RubyText>
-          <span lang="en" className="block text-[10px] font-bold tracking-normal opacity-80">
-            Versus
+        <h1 className="text-center leading-none" style={{ fontSize: 28 }}>
+          <LogoText showFurigana={showFurigana} shine={!still}>
+            たいせん
+          </LogoText>
+          <span lang="en" className="mt-2 block text-[10px] font-black tracking-[0.3em] text-[#ffe7b8]" style={{ textShadow: '0 1px 4px #000' }}>
+            VERSUS
           </span>
         </h1>
-        <RankBadge rating={versus.rating} showFurigana={showFurigana} />
+        <RankMedal rating={versus.rating} size={30} showFurigana={showFurigana} />
       </header>
 
       <main className="mx-auto flex w-full max-w-md flex-1 flex-col items-center justify-end gap-3 px-4 pb-[max(20px,env(safe-area-inset-bottom))]">
@@ -701,15 +693,35 @@ export const VersusScreen = () => {
                 🎉 <RubyText showFurigana={showFurigana}>{`ランクアップ！ ${rankUp}`}</RubyText>
               </motion.p>
             )}
-            <p
-              className="text-4xl font-black tracking-widest"
-              style={{ color: error ? '#d9d2f5' : won ? '#ffd36a' : '#9fb3d9', textShadow: '0 3px 0 rgba(0,0,0,0.45)' }}
-            >
-              <RubyText showFurigana={showFurigana}>{error ?? (won ? '勝(か)ち！' : '負(ま)け')}</RubyText>
-            </p>
-            <div className="flex items-end gap-6">
-              <Avatar src={myArt} size={88} />
-              <Avatar src={theirArt} mirrored size={88} />
+            {error ? (
+              <p className="text-2xl font-black text-[#d9d2f5]">
+                <RubyText showFurigana={showFurigana}>{error}</RubyText>
+              </p>
+            ) : (
+              <motion.p
+                className="leading-none"
+                style={{ fontSize: 52 }}
+                initial={still ? false : { scale: 2.2, rotate: -8, opacity: 0 }}
+                animate={{ scale: 1, rotate: -4, opacity: 1 }}
+                transition={{ type: 'spring', stiffness: 320, damping: 14 }}
+              >
+                <LogoText showFurigana={showFurigana} tone={won ? 'gold' : 'blue'} shine={won && !still}>
+                  {won ? '勝(か)ち！' : '負(ま)け…'}
+                </LogoText>
+              </motion.p>
+            )}
+            {/* The winner in the light, the other a step back in the shade. */}
+            <div className="flex items-end gap-5">
+              <motion.div animate={!error && won && !still ? { y: [0, -8, 0] } : undefined} transition={{ repeat: Infinity, duration: 1.2 }} style={{ filter: !error && !won ? 'grayscale(0.7) brightness(0.7)' : undefined }}>
+                <Spotlight color={!error && won ? '#ffd36a' : '#5fb2ff'}>
+                  <Avatar src={myArt} size={!error && won ? 112 : 80} />
+                </Spotlight>
+              </motion.div>
+              <div style={{ filter: !error && won ? 'grayscale(0.7) brightness(0.7)' : undefined }}>
+                <Spotlight color={!error && !won ? '#ff7a5c' : '#5a4a7a'}>
+                  <Avatar src={theirArt} mirrored size={!error && !won ? 112 : 80} />
+                </Spotlight>
+              </div>
             </div>
             {walkover && (
               <p className="text-sm font-bold opacity-90">
@@ -727,7 +739,16 @@ export const VersusScreen = () => {
               </p>
             )}
             {!error && !cpu && !room && (
-              <p className="g-pill-night px-4 py-1.5 text-base font-black tabular-nums" style={{ color: rank.color }}>
+              <p className="g-pill-night flex items-center gap-1.5 py-1 pr-4 pl-1.5 text-base font-black tabular-nums" style={{ color: rank.color }}>
+                <motion.img
+                  src={assetPath(rank.medal)}
+                  alt=""
+                  aria-hidden
+                  className="h-9 w-9 object-contain"
+                  initial={rankUp && !still ? { scale: 0.2, rotate: -180 } : false}
+                  animate={{ scale: 1, rotate: 0 }}
+                  transition={{ delay: 0.6, type: 'spring', stiffness: 260, damping: 12 }}
+                />
                 <RubyText showFurigana={showFurigana}>{`レート ${versus.rating}`}</RubyText>
                 <span className="ml-2" style={{ color: delta >= 0 ? '#9be37a' : '#ff9a8a' }}>
                   {delta >= 0 ? '+' : ''}
@@ -807,7 +828,9 @@ export const VersusScreen = () => {
                 </>
               )}
               <motion.div animate={phase === 'searching' && !still ? { y: [0, -6, 0] } : undefined} transition={{ repeat: Infinity, duration: 1.6 }}>
-                <Avatar src={myArt} size={compact ? 104 : 170} />
+                <Spotlight color="#5fb2ff">
+                  <Avatar src={myArt} size={compact ? 104 : 170} />
+                </Spotlight>
               </motion.div>
             </div>
 
@@ -1143,62 +1166,20 @@ export const VersusScreen = () => {
         )}
       </AnimatePresence>
 
-      {/* VS — the two なかま face each other, then 3・2・1. */}
+      {/* VS — both fighters slam in, VS crashes between them, then 3・2・1・書け！ (VersusFx). */}
       <AnimatePresence>
         {phase === 'matched' && (
-          <motion.div
-            key="vs"
-            className="fixed inset-0 z-40 flex flex-col items-center justify-center overflow-hidden"
-            style={{ background: 'linear-gradient(115deg, #1d3f8f 0%, #1a2a66 49.6%, #f2c45a 49.8%, #f2c45a 50.4%, #6b1630 50.6%, #3a0d22 100%)' }}
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-          >
-            <div className="flex w-full max-w-md items-end justify-between px-3">
-              <motion.div className="flex flex-col items-center" initial={still ? false : { x: -160, opacity: 0 }} animate={{ x: 0, opacity: 1 }} transition={{ type: 'spring', stiffness: 220, damping: 20 }}>
-                <Avatar src={myArt} size={128} />
-                <span className="mt-1 text-sm font-black">
-                  <RubyText showFurigana={showFurigana}>じぶん</RubyText>
-                </span>
-                <RankBadge rating={versus.rating} showFurigana={showFurigana} />
-              </motion.div>
-              <motion.div className="flex flex-col items-center" initial={still ? false : { x: 160, opacity: 0 }} animate={{ x: 0, opacity: 1 }} transition={{ type: 'spring', stiffness: 220, damping: 20, delay: 0.1 }}>
-                <Avatar src={theirArt} mirrored size={128} />
-                <span className="mt-1 text-sm font-black">
-                  <RubyText showFurigana={showFurigana}>{`あいて・${theirName}`}</RubyText>
-                </span>
-                <RankBadge rating={them?.rating ?? 1000} showFurigana={showFurigana} />
-              </motion.div>
-            </div>
-            {room && (
-              <div className="absolute top-[max(14px,env(safe-area-inset-top))] w-full max-w-md px-4">
-                <RulesCard rules={rules} showFurigana={showFurigana} compact />
-              </div>
-            )}
-            <motion.p
-              className="absolute top-[34%] text-7xl font-black italic"
-              style={{ color: '#ffd36a', textShadow: '0 4px 0 #8a4b12, 0 0 24px rgba(255,190,80,0.7)' }}
-              initial={still ? false : { scale: 3, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              transition={{ delay: 0.35, type: 'spring', stiffness: 300, damping: 14 }}
-            >
-              VS
-            </motion.p>
-            <AnimatePresence mode="wait">
-              <motion.p
-                key={count}
-                className="absolute bottom-[16%] text-6xl font-black tabular-nums"
-                style={{ textShadow: '0 3px 0 rgba(0,0,0,0.5)' }}
-                initial={{ scale: 1.8, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                exit={{ scale: 0.6, opacity: 0 }}
-              >
-                {count > 0 ? count : <RubyText showFurigana={showFurigana}>書(か)け！</RubyText>}
-              </motion.p>
-            </AnimatePresence>
-          </motion.div>
+          <VsSplash
+            me={{ art: myArt, name: rules.companion ? (activeIndividual ? (getIndividual(activeIndividual)?.shortName ?? 'じぶん') : 'ネクマックス') : 'ネクマックス', rating: versus.rating }}
+            them={{ art: theirArt, name: theirName, rating: them?.rating ?? 1000, mirrored: true }}
+            count={count}
+            still={still}
+            showFurigana={showFurigana}
+            top={room ? <RulesCard rules={rules} showFurigana={showFurigana} compact /> : undefined}
+          />
         )}
       </AnimatePresence>
+      {phase === 'over' && won && !error && <Confetti still={still} />}
     </div>
   );
 };
