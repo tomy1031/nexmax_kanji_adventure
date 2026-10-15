@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState, type CSSProperties, type ReactNod
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
 import { RubyText } from '../../components/ui/Ruby';
-import { todayKey, useGameStore } from '../../store/gameStore';
+import { useGameStore } from '../../store/gameStore';
 import { MOJI_CHAPTERS, isChapterReady, townOf } from '../../data/mojiRoute';
 import { KANA_EPISODES, isKanaEpisodeUnlocked, type KanaEpisode } from '../../data/kana';
 import KanaText from '../kana/KanaText';
@@ -25,8 +25,10 @@ import { useBgm } from '../../lib/bgm';
 import { preloadImages } from '../../lib/preload';
 import { episodeArt } from '../../data/episodeArt';
 import { Feature, isFeatureUnlocked } from '../../data/unlocks';
-import { MULTI_COST, PULL_COST, STEP_UP } from '../../lib/gacha';
-import { isVersusConfigured } from '../../lib/versusConfig';
+import { HubBar } from '../../components/ui/HubBar';
+import { markSeen, readSeen } from '../../lib/featureSeen';
+import { DAILY_TASKS } from '../../data/dailyTasks';
+import { useNexmaxLevel } from '../moji/useNexmaxLevel';
 import { useStill } from '../../hooks/useStill';
 import { ACHIEVEMENTS, claimable, reachedIds } from '../../data/achievements';
 
@@ -68,15 +70,19 @@ const OUTLINE = '0 0 2px #1a0d04, 0 0 2px #1a0d04, 0 1px 3px #1a0d04, 0 0 8px rg
 type GroupId = 'hiragana' | 'katakana' | 'n5' | 'n4' | 'n3';
 
 /** Card art (1536 × 1024 canvas): where it stands, and the centres of its three stars (canvas pixels). */
-const CARDS: { id: GroupId; img: string; x: number; y: number; stars?: { cx: number[]; cy: number; size: number }; locked?: boolean }[] = [
-  { id: 'hiragana', img: 'card_hiragana', x: 47, y: 787, stars: { cx: [578, 745, 915], cy: 840, size: 150 } },
-  { id: 'katakana', img: 'card_katakana', x: 486, y: 792, stars: { cx: [610, 760, 905], cy: 865, size: 135 } },
-  { id: 'n5', img: 'card_n5', x: 279, y: 1039, stars: { cx: [610, 762, 915], cy: 840, size: 135 } },
-  { id: 'n4', img: 'card_n4', x: 15, y: 1225, locked: true },
-  { id: 'n3', img: 'card_n3', x: 498, y: 1242, locked: true },
+/**
+ * docs/design/23 §3.3: N5 (the story now) biggest in the middle, N4・N3 small
+ * at its sides, the two kana cards above — and the 「▶ つぎの 話」 plate under
+ * them, over the bar.
+ */
+const CARDS: { id: GroupId; img: string; x: number; y: number; w: number; stars?: { cx: number[]; cy: number; size: number }; locked?: boolean }[] = [
+  { id: 'hiragana', img: 'card_hiragana', x: 40, y: 800, w: 300, stars: { cx: [578, 745, 915], cy: 840, size: 150 } },
+  { id: 'katakana', img: 'card_katakana', x: 601, y: 800, w: 300, stars: { cx: [610, 760, 905], cy: 865, size: 135 } },
+  { id: 'n5', img: 'card_n5', x: 258, y: 995, w: 425, stars: { cx: [610, 762, 915], cy: 840, size: 135 } },
+  { id: 'n4', img: 'card_n4', x: 20, y: 1112, w: 230, locked: true },
+  { id: 'n3', img: 'card_n3', x: 691, y: 1112, w: 230, locked: true },
 ];
-const CARD_W = 407;
-const CARD_H = (CARD_W * 1024) / 1536;
+const cardH = (w: number) => (w * 1024) / 1536;
 
 const HIRAGANA_EPS = KANA_EPISODES.filter((e) => e.script === 'hiragana');
 const KATAKANA_EPS = KANA_EPISODES.filter((e) => e.script === 'katakana');
@@ -108,27 +114,112 @@ const GreyStar = ({ style }: { style: CSSProperties }) => {
   );
 };
 
-/** The departures board the example has on the right. */
-const DeparturesBoard = ({ showFurigana }: { showFurigana: boolean }) => (
-  <div
-    aria-hidden
-    className="absolute flex flex-col rounded-[1cqw] border-[0.5cqw] border-[#b8863f] bg-[#0f1430]/95 px-[1.6cqw] py-[1.2cqw] text-[#f4f1ff]"
-    style={{ ...fromTop(790, 112, 190, 300), boxShadow: '0 0 0 0.3cqw #3a250f, 0 1cqw 3cqw rgba(0,0,0,0.6)' }}
-  >
-    <p className="flex items-center gap-[1cqw] border-b border-white/25 pb-[0.4cqw] leading-[1.6] font-bold" style={{ fontSize: cq(20) }}>
-      <span className="text-[#7fb2ff]">✈</span>
-      <RubyText showFurigana={showFurigana}>行(い)き先(さき)</RubyText>
-    </p>
-    {['東京(とうきょう)', '札幌(さっぽろ)', '福岡(ふくおか)', 'ソウル', '台北(たいぺい)', 'シンガポール'].map((city) => (
-      <p key={city} className="flex flex-1 items-center gap-[1.2cqw] leading-[1.6] whitespace-nowrap" style={{ fontSize: cq(18) }}>
-        <span className="flex aspect-square items-center justify-center rounded-[0.4cqw] bg-[#1f4fb8] leading-none text-white" style={{ width: cq(28), fontSize: cq(16) }}>
-          ✈
+/** たび用の 小さい アイコン: the bar's and the top corners' pictures (Codex, docs/design/23). */
+const nav = (name: string) => assetPath(`img/nav/${name}.webp`);
+/** What each daily task shows on the board: a picture, no words (too small to read there). */
+const DAILY_ICON: Record<string, string> = { 'write-10': '✍️', 'write-30': '✍️', 'obtain-1': '🆕', 'stage-1': '📖', 'review-5': '🔁' };
+
+/**
+ * まいにちの 掲示板 (docs/design/23 §3.3): the airport's departures board, now
+ * today's tasks — a picture and ○ or ✓ for each, the days in a row, and a red
+ * 「◆ うけとる」 when one is done but not taken. Locked (and saying when it
+ * opens) before 1章 3話.
+ */
+const DailyBoard = ({ cleared, showFurigana, onOpen, onLocked }: { cleared: readonly string[]; showFurigana: boolean; onOpen: () => void; onLocked: () => void }) => {
+  const daily = useGameStore((s) => s.daily);
+  const streak = useGameStore((s) => s.streak);
+  const open = isFeatureUnlocked(Feature.DAILY, cleared);
+  const [seen] = useState(readSeen);
+  const fresh = open && !seen.includes(Feature.DAILY);
+  const toTake = DAILY_TASKS.some((t) => t.progress(daily) >= t.goal && !daily.claimed.includes(t.id));
+  return (
+    <button
+      type="button"
+      data-tap
+      aria-label={open ? 'まいにち' : 'まいにち（まだ）'}
+      onClick={() => {
+        if (!open) return onLocked();
+        markSeen(Feature.DAILY);
+        onOpen();
+      }}
+      className="absolute flex flex-col rounded-[1cqw] border-[0.5cqw] border-[#b8863f] bg-[#0f1430]/95 px-[1.6cqw] py-[1.2cqw] text-left text-[#f4f1ff]"
+      style={{ ...fromTop(712, 140, 217, 330), boxShadow: fresh ? '0 0 0 0.5cqw #ffd36a, 0 0 3cqw rgba(255,211,106,0.8)' : '0 0 0 0.3cqw #3a250f, 0 1cqw 3cqw rgba(0,0,0,0.6)' }}
+    >
+      <p className="flex items-center justify-between gap-[1cqw] border-b border-white/25 pb-[0.4cqw] leading-[1.6] font-black" style={{ fontSize: cq(22) }}>
+        <span>
+          📅 <RubyText showFurigana={showFurigana}>まいにち</RubyText>
         </span>
-        <RubyText showFurigana={showFurigana}>{city}</RubyText>
+        {open && streak.count > 0 && <span style={{ fontSize: cq(18) }}>🔥{streak.count}</span>}
       </p>
-    ))}
-  </div>
-);
+      {open ? (
+        DAILY_TASKS.map((t) => {
+          const done = t.progress(daily) >= t.goal;
+          return (
+            <p key={t.id} className="flex flex-1 items-center justify-between leading-none" style={{ fontSize: cq(26) }}>
+              <span aria-hidden>{DAILY_ICON[t.id] ?? '⭐'}</span>
+              <span className="font-black" style={{ color: done ? '#9be37a' : 'rgba(255,255,255,0.45)' }}>
+                {done ? '✓' : '○'}
+              </span>
+            </p>
+          );
+        })
+      ) : (
+        <span className="flex flex-1 items-center justify-center">
+          <img src={nav('lock')} alt="" aria-hidden style={{ width: cq(70) }} />
+        </span>
+      )}
+      {toTake && (
+        <span className="absolute -bottom-[2cqw] left-1/2 -translate-x-1/2 rounded-[1cqw] bg-[#e2453c] px-[1.2cqw] leading-[1.6] font-black whitespace-nowrap text-white" style={{ fontSize: cq(18) }}>
+          ◆ <RubyText showFurigana={showFurigana}>うけとる</RubyText>
+        </span>
+      )}
+      {fresh && (
+        <span className="absolute -top-[1.6cqw] -right-[1.6cqw] rounded bg-[#e2453c] px-[1cqw] font-black text-white" style={{ fontSize: cq(15) }}>
+          NEW
+        </span>
+      )}
+    </button>
+  );
+};
+
+/**
+ * ネクマックスの 札 (docs/design/23 §3.3): his face, his level and class at the
+ * top left; a tap opens せいせき. A red ◆ when titles wait to be taken. The
+ * gems under it.
+ */
+const PlayerPlate = ({ star4, claimableGems, onOpen }: { star4: boolean; claimableGems: number; onOpen: () => void }) => {
+  const lv = useNexmaxLevel();
+  const gems = useGameStore((s) => s.gems);
+  const tickets = useGameStore((s) => s.gachaTickets);
+  return (
+    <>
+      <button type="button" data-tap aria-label="せいせき" onClick={onOpen} className="absolute" style={fromTop(12, 14, 252, 86)}>
+        <img src={nav('plate')} alt="" aria-hidden className="absolute inset-0 h-full w-full object-fill" />
+        <span className="absolute overflow-hidden rounded-full" style={{ left: '4.6%', top: '13%', width: '28%', aspectRatio: '1' }}>
+          <img src={assetPath(star4 ? 'img/chara/naniwa/nexmax_star4.webp' : 'img/chara/naniwa/nexmax_normal.webp')} alt="" aria-hidden className="absolute max-w-none" style={{ width: '170%', left: '-35%', top: '-8%' }} />
+        </span>
+        <span className="absolute flex flex-col justify-center leading-[1.15] font-black text-[#fff1cf]" style={{ left: '38%', top: '14%', bottom: '14%', textShadow: '0 1px 2px #000' }}>
+          <span style={{ fontSize: cq(26) }}>Lv {lv.level}</span>
+          <span className="text-[#ffd36a]" style={{ fontSize: cq(20) }}>
+            クラス ★{star4 ? 4 : 3}
+          </span>
+        </span>
+        {claimableGems > 0 && (
+          <span className="absolute -top-[1.2cqw] -right-[1.2cqw] rounded-full border-[0.3cqw] border-white bg-[#e2453c] px-[1cqw] leading-[1.5] font-black text-white" style={{ fontSize: cq(18) }}>
+            ◆{claimableGems}
+          </span>
+        )}
+      </button>
+      <p
+        className="absolute flex items-center gap-[2cqw] rounded-full border-[0.3cqw] border-[#c9a052] bg-[#1b1640]/85 px-[2cqw] leading-none font-black text-[#ffe7b8] tabular-nums"
+        style={{ ...fromTop(12, 110, 252, 50), fontSize: cq(24) }}
+      >
+        <span>◆ {gems}</span>
+        {tickets > 0 && <span>🎫 {tickets}</span>}
+      </p>
+    </>
+  );
+};
 
 /** The way-out sign the example has on the left: to the town of the next episode (mojiRoute.ts townOf). */
 const TownSign = ({ town }: { town: { name: string; en: string } }) => (
@@ -156,168 +247,6 @@ const TownSign = ({ town }: { town: { name: string; en: string } }) => (
     </div>
   </div>
 );
-
-/**
- * Ways into what the story has opened (1章 3話 まいにち, 4話 なかま): small
- * brass tags under the town sign, shown once open (unlocks.ts). Picture and
- * a word of English, so a player who cannot read yet still knows what it is.
- */
-const SEEN_KEY = 'nexmax-features-opened';
-const readSeen = (): string[] => {
-  try {
-    return JSON.parse(localStorage.getItem(SEEN_KEY) ?? '[]') as string[];
-  } catch {
-    return [];
-  }
-};
-const markSeen = (feature: string) => {
-  try {
-    localStorage.setItem(SEEN_KEY, JSON.stringify([...new Set([...readSeen(), feature])]));
-  } catch {
-    // Private mode or blocked storage: the NEW mark simply stays.
-  }
-};
-
-const FeatureTags = ({ cleared, showFurigana, onOpen }: { cleared: readonly string[]; showFurigana: boolean; onOpen: (path: string) => void }) => {
-  // A tag just opened by the story wears NEW and glows until it is first tapped.
-  const [seen] = useState(readSeen);
-  const tags = [
-    { feature: Feature.DAILY, icon: '📅', label: 'まいにち', en: 'Daily', path: '/daily' },
-    // The gacha has its own machine on the right (GachaMachine, docs/design/16 §4).
-    // Only where the relay is configured: a tag that always says つながりません is a broken promise.
-    ...(isVersusConfigured ? [{ feature: Feature.VERSUS, icon: '⚔️', label: 'たいせん', en: 'Versus', path: '/versus' }] : []),
-  ].filter((t) => isFeatureUnlocked(t.feature, cleared));
-  return (
-    <>
-      {tags.map((t, i) => (
-        <motion.button
-          key={t.feature}
-          type="button"
-          data-tap
-          onClick={() => {
-            markSeen(t.feature);
-            onOpen(t.path);
-          }}
-          whileTap={{ scale: 0.95 }}
-          initial={{ opacity: 0, x: -8 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ delay: 0.6 + i * 0.1 }}
-          className="absolute flex items-center gap-[1.6cqw] rounded-[1.6cqw] border-[0.4cqw] border-[#c9a052] bg-[#1b1640]/90 text-left text-[#ffe7b8]"
-          style={{ ...fromTop(26, 480 + i * 92, 196, 78), padding: `0 ${cq(14)}`, boxShadow: '0 1cqw 2.4cqw rgba(0,0,0,0.5)' }}
-        >
-          {!seen.includes(t.feature) && (
-            <>
-              <motion.span
-                aria-hidden
-                className="pointer-events-none absolute -inset-[0.6cqw] rounded-[2cqw] border-[0.5cqw] border-[#ffd36a]"
-                style={{ willChange: 'opacity' }}
-                animate={{ opacity: [0.2, 1, 0.2] }}
-                transition={{ duration: 1.6, repeat: Infinity }}
-              />
-              <span className="absolute -top-[1.6cqw] -right-[1.6cqw] rounded bg-[#e2453c] px-[1cqw] font-black text-white" style={{ fontSize: cq(15) }}>
-                NEW
-              </span>
-            </>
-          )}
-          <span aria-hidden style={{ fontSize: cq(36) }}>
-            {t.icon}
-          </span>
-          <span className="flex flex-col leading-[1.2]">
-            <span className="font-black whitespace-nowrap" style={{ fontSize: cq(24) }}>
-              <RubyText showFurigana={showFurigana}>{t.label}</RubyText>
-            </span>
-            <span lang="en" className="font-bold opacity-75" style={{ fontSize: cq(15) }}>
-              {t.en}
-            </span>
-          </span>
-        </motion.button>
-      ))}
-    </>
-  );
-};
-
-/**
- * The way into the gacha (docs/design/16 §4): a big glowing thing under
- * まいにち, not a small tag — and a red tag when a pull can be
- * made now. NEW and a ring until it is first tapped, as the other features.
- * It is the book of words the cards come out of (docs/design/18 §3: no capsule
- * machine, 2026-10-06「カードなのにカプセルなのも必然性がない」).
- */
-const GachaMachine = ({ showFurigana, still, onOpen }: { showFurigana: boolean; still: boolean; onOpen: () => void }) => {
-  const gems = useGameStore((s) => s.gems);
-  const tickets = useGameStore((s) => s.gachaTickets);
-  // The free pull of the day (lib/gacha.ts): the reason to drop by today.
-  const freeToday = useGameStore((s) => s.freePullDay) !== todayKey();
-  // ステップアップ's last step is a ★5 for certain: worth saying when it can be pulled.
-  const stepUp = useGameStore((s) => s.stepUp ?? 0) % STEP_UP.length;
-  const [seen] = useState(readSeen);
-  const fresh = !seen.includes(Feature.GACHA);
-  // 「できます」reads plainer than ひける (2026-10-05).
-  const can =
-    tickets > 0
-      ? `チケット ${tickets}まい！`
-      : freeToday
-        ? '🎁 きょう むりょう！'
-        : STEP_UP[stepUp].five && gems >= MULTI_COST
-          ? '🪜 ★5 かくてい！'
-        : gems >= MULTI_COST
-          ? '10回(かい) できます！'
-          : gems >= PULL_COST
-            ? '1回(かい) できます！'
-            : null;
-  const glow = fresh || can != null;
-  return (
-    <motion.button
-      type="button"
-      data-tap
-      aria-label={`ガチャ${can ? `（${can.replace(/\(.*?\)/g, '')}）` : ''}`}
-      onClick={() => {
-        markSeen(Feature.GACHA);
-        onOpen();
-      }}
-      whileTap={{ scale: 0.94 }}
-      initial={{ opacity: 0, scale: 0.8 }}
-      animate={{ opacity: 1, scale: 1 }}
-      transition={{ delay: 0.7, type: 'spring', stiffness: 260, damping: 18 }}
-      className="absolute"
-      style={fromTop(6, 566, 228, 236)}
-    >
-      {glow && (
-        <motion.span
-          aria-hidden
-          className="pointer-events-none absolute inset-[6%] rounded-full"
-          style={{ background: 'radial-gradient(circle, rgba(255,214,110,0.75), rgba(255,140,200,0.35) 45%, transparent 70%)', willChange: 'opacity, transform' }}
-          animate={still ? undefined : { opacity: [0.45, 1, 0.45], scale: [0.92, 1.06, 0.92] }}
-          transition={{ duration: 1.8, repeat: Infinity }}
-        />
-      )}
-      <motion.img
-        src={assetPath('img/gacha/book.webp')}
-        alt=""
-        aria-hidden
-        draggable={false}
-        className="relative block h-auto w-full select-none"
-        style={{ filter: 'drop-shadow(0 1.2cqw 2cqw rgba(0,0,0,0.55))', willChange: 'transform' }}
-        animate={still ? undefined : { rotate: [-2, 2, -2] }}
-        transition={{ duration: 2.4, repeat: Infinity, ease: 'easeInOut' }}
-      />
-      <span
-        className="absolute left-1/2 -translate-x-1/2 rounded-full border-[0.4cqw] border-[#ffd36a] px-[2.4cqw] font-black whitespace-nowrap text-[#fff1cf]"
-        style={{ bottom: cq(-6), fontSize: cq(26), background: 'linear-gradient(180deg,#d0567a,#8a2a5a)', boxShadow: '0 0.8cqw 1.6cqw rgba(0,0,0,0.5)' }}
-      >
-        ガチャ
-      </span>
-      {(fresh || can) && (
-        <span
-          className="absolute -top-[1cqw] -right-[1cqw] rounded-[1cqw] bg-[#e2453c] px-[1.2cqw] leading-[1.6] font-black whitespace-nowrap text-white"
-          style={{ fontSize: cq(17), boxShadow: '0 0.6cqw 1.2cqw rgba(0,0,0,0.4)' }}
-        >
-          {can ? <RubyText showFurigana={showFurigana}>{can}</RubyText> : 'NEW'}
-        </span>
-      )}
-    </motion.button>
-  );
-};
 
 /** One episode of 0章 on a sheet. */
 /**
@@ -539,6 +468,7 @@ export const MojiRouteMap = () => {
   }, [next, nexmaxClass]);
   const nextGroup: GroupId = next ? (groupOf(next) ?? 'n5') : 'n5';
   const nextKana = next ? getKanaEpisode(next) : undefined;
+  const nextKanaBoss = next ? KANA_BOSSES.find((b) => b.id === next) : undefined;
   const nextMoji = next ? getMojiEpisode(next) : undefined;
   const nextFinale = next ? getMojiFinale(next) : undefined;
   // 1章 has eleven episodes, more than a phone's sheet shows: it opens on the
@@ -562,14 +492,6 @@ export const MojiRouteMap = () => {
     if (to) navigate(to);
     else setSheet('n5');
   };
-
-  const MENU: { label: string; cx: number; w: number; onClick: () => void }[] = [
-    { label: 'ステージせんたく', cx: 14.2, w: 22, onClick: () => setSheet(null) },
-    { label: 'もちもの', cx: 33.6, w: 16, onClick: () => navigate('/equip') },
-    { label: 'ずかん', cx: 50, w: 16, onClick: () => navigate('/zukan') },
-    { label: 'せいせき', cx: 68.4, w: 16, onClick: () => setRecord(true) },
-    { label: 'せってい', cx: 86.4, w: 16, onClick: () => navigate('/settings') },
-  ];
 
   const sheetTitle: Record<GroupId, ReactNode> = {
     hiragana: <KanaText known={known}>ひらがな</KanaText>,
@@ -600,14 +522,19 @@ export const MojiRouteMap = () => {
 
         {/* 上: 看板・案内・ネクマックス ------------------------------------------ */}
         <div className="absolute inset-x-0 top-[env(safe-area-inset-top)]">
-          <DeparturesBoard showFurigana={showFurigana} />
+          <DailyBoard cleared={cleared} showFurigana={showFurigana} onOpen={() => navigate('/daily')} onLocked={() => setLocked('1章(しょう) 3話(わ)の あとで ひらきます')} />
+          <PlayerPlate star4={nexmaxClass >= 4} claimableGems={titleClaimable} onOpen={() => setRecord(true)} />
+          {/* ⚙ せってい: rarely tapped, so a corner, not a place on the bar */}
+          <motion.button type="button" data-tap aria-label="せってい" whileTap={{ scale: 0.92 }} onClick={() => navigate('/settings')} className="absolute" style={fromTop(817, 12, 112, 112)}>
+            <img src={nav('gear')} alt="" aria-hidden className="h-full w-full object-contain drop-shadow-[0_0.6cqw_1cqw_rgba(0,0,0,0.55)]" />
+          </motion.button>
           <TownSign town={townOf(nextMoji?.chapter ?? nextFinale?.chapter ?? (nextKana ? MOJI_CHAPTERS[0].id : null))} />
-          <h1 className="absolute" style={fromTop(160, 2, 620)}>
+          <h1 className="absolute" style={fromTop(274, 6, 430)}>
             <img src={art('sign')} alt="ステージせんたく　はじまりの空港" className="block h-auto w-full" />
           </h1>
           <p
             className="absolute text-center leading-[1.75] font-extrabold text-white"
-            style={{ ...fromTop(336, 296, 330), ...MINCHO, fontSize: cq(26), textShadow: OUTLINE }}
+            style={{ ...fromTop(336, 232, 330), ...MINCHO, fontSize: cq(26), textShadow: OUTLINE }}
           >
             <RubyText showFurigana={showFurigana}>ことばの翼(つばさ)で、</RubyText>
             <br />
@@ -622,53 +549,6 @@ export const MojiRouteMap = () => {
             animate={still ? undefined : { y: ['0%', '-1.5%', '0%'] }}
             transition={{ duration: 1.4, repeat: Infinity, ease: 'easeInOut' }}
           />
-          {!sheet && <FeatureTags cleared={cleared} showFurigana={showFurigana} onOpen={(path) => navigate(path)} />}
-          {!sheet && isFeatureUnlocked(Feature.GACHA, cleared) && <GachaMachine showFurigana={showFurigana} still={still} onOpen={() => navigate('/gacha')} />}
-          {/* つづき — Nexmax says where we go next; a tap plays it (08 §3.8) */}
-          {!sheet && (
-            <motion.button
-              type="button"
-              data-tap
-              onClick={playNext}
-              whileTap={{ scale: 0.96 }}
-              initial={{ opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.5 }}
-              className="absolute flex items-center gap-[1.6cqw] rounded-[2cqw] border-[0.4cqw] border-[#d4a04a] bg-[#fffaf0]/95 text-left text-[#2a1a0c]"
-              style={{ ...fromTop(500, 548, 400), padding: `${cq(12)} ${cq(18)}`, boxShadow: '0 1cqw 3cqw rgba(0,0,0,0.45)' }}
-            >
-              <span aria-hidden className="absolute top-[38%] -left-[3.4%] h-0 w-0 border-y-[1.6cqw] border-r-[2.4cqw] border-y-transparent border-r-[#d4a04a]" />
-              <span className="min-w-0 flex-1 leading-[1.6]">
-                <span className="block font-black whitespace-nowrap" style={{ fontSize: cq(20), color: '#b0741a' }}>
-                  <RubyText showFurigana={showFurigana}>
-                    {nextKana
-                      ? `つぎの 話(はなし) ・ かな ${nextKana.order}`
-                      : nextMoji
-                        ? `つぎの 話(はなし) ・ ${MOJI_CHAPTERS.find((c) => c.id === nextMoji.chapter)?.order ?? 1}章(しょう) ${nextMoji.order}話(わ)`
-                        : nextFinale
-                          ? `つぎの 話(はなし) ・ ${MOJI_CHAPTERS.find((c) => c.id === nextFinale.chapter)?.order ?? 1}章(しょう) ${finaleNumber(nextFinale)}話(わ)`
-                          : 'つづきは じゅんび中(ちゅう)'}
-                  </RubyText>
-                </span>
-                <span className="block truncate font-black" style={{ fontSize: cq(28) }}>
-                  {nextKana ? (
-                    <KanaText known={known} mode="mask">
-                      {nextKana.title}
-                    </KanaText>
-                  ) : nextMoji ? (
-                    <KanjiBackText owned={owned}>{nextMoji.title}</KanjiBackText>
-                  ) : nextFinale ? (
-                    <RubyText showFurigana={showFurigana}>{`👾 ${nextFinale.title}`}</RubyText>
-                  ) : (
-                    <RubyText showFurigana={showFurigana}>★を ふやしましょう</RubyText>
-                  )}
-                </span>
-              </span>
-              <span aria-hidden className="shrink-0 font-black text-[#e2453c]" style={{ fontSize: cq(34) }}>
-                ▶
-              </span>
-            </motion.button>
-          )}
         </div>
 
         {/* 下: 地図・カード・メニュー --------------------------------------------- */}
@@ -686,7 +566,7 @@ export const MojiRouteMap = () => {
                 whileTap={{ scale: 0.96 }}
                 onClick={() => (c.locked ? setLocked('じゅんびちゅう') : setSheet(c.id))}
                 className="absolute"
-                style={fromBottom(c.x, c.y, CARD_W, CARD_H)}
+                style={fromBottom(c.x, c.y, c.w, cardH(c.w))}
               >
                 {next && !still && (
                   <motion.span
@@ -707,23 +587,62 @@ export const MojiRouteMap = () => {
             );
           })}
 
-          {/* メニュー */}
-          <div className="absolute" style={{ ...fromBottom(26, 1484, 890), aspectRatio: '1300 / 272' }}>
-            <img src={art('menu')} alt="" aria-hidden draggable={false} className="absolute inset-0 h-full w-full select-none" />
-            {MENU.map((m) => (
-              <button
-                key={m.label}
-                type="button"
-                data-tap
-                aria-label={m.label}
-                aria-current={m.label === 'ステージせんたく' ? 'page' : undefined}
-                onClick={m.onClick}
-                className="absolute top-0 h-full -translate-x-1/2"
-                style={{ left: `${m.cx}%`, width: `${m.w}%` }}
-              >
-              </button>
-            ))}
-          </div>
+          {/* ▶ つぎの 話 — the main thing to do, under the thumb, over the bar (docs/design/23 §3.3) */}
+          {!sheet && (
+            <motion.button
+              type="button"
+              data-tap
+              onClick={playNext}
+              whileTap={{ scale: 0.97 }}
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.4 }}
+              className="absolute flex items-center text-left text-white"
+              style={{ ...fromBottom(111, 1280, 720, 156) }}
+            >
+              {fresh && !still && (
+                <motion.span
+                  aria-hidden
+                  className="pointer-events-none absolute -inset-[1cqw] rounded-[3cqw]"
+                  style={{ background: 'radial-gradient(ellipse closest-side, rgba(255,214,110,0.7), transparent)' }}
+                  animate={{ opacity: [0.2, 0.9, 0.2] }}
+                  transition={{ duration: 1.8, repeat: Infinity }}
+                />
+              )}
+              <img src={nav('go_plate')} alt="" aria-hidden className="absolute inset-0 h-full w-full object-fill" />
+              <span className="relative min-w-0 flex-1 leading-[1.5]" style={{ paddingLeft: cq(150), paddingRight: cq(70) }}>
+                <span className="block font-black whitespace-nowrap text-[#ffe7b8]" style={{ fontSize: cq(20), textShadow: '0 1px 2px #000' }}>
+                  <RubyText showFurigana={showFurigana}>
+                    {nextKana
+                      ? `つぎの 話(はなし) ・ かな ${nextKana.order}`
+                      : nextKanaBoss
+                        ? `つぎの 話(はなし) ・ 👑 ${nextKanaBoss.script === 'hiragana' ? 'ひらがな' : 'カタカナ'}`
+                        : nextMoji
+                          ? `つぎの 話(はなし) ・ ${MOJI_CHAPTERS.find((c) => c.id === nextMoji.chapter)?.order ?? 1}章(しょう) ${nextMoji.order}話(わ)`
+                          : nextFinale
+                            ? `つぎの 話(はなし) ・ ${MOJI_CHAPTERS.find((c) => c.id === nextFinale.chapter)?.order ?? 1}章(しょう) ${finaleNumber(nextFinale)}話(わ)`
+                            : 'つづきは じゅんび中(ちゅう)'}
+                  </RubyText>
+                </span>
+                <span className="block truncate font-black" style={{ fontSize: cq(30), textShadow: '0 2px 3px #000' }}>
+                  {nextKana ? (
+                    <KanaText known={known}>{nextKana.title}</KanaText>
+                  ) : nextKanaBoss ? (
+                    <KanaText known={known}>{nextKanaBoss.title}</KanaText>
+                  ) : nextMoji ? (
+                    <KanjiBackText owned={owned}>{nextMoji.title}</KanjiBackText>
+                  ) : nextFinale ? (
+                    <RubyText showFurigana={showFurigana}>{`👾 ${nextFinale.title}`}</RubyText>
+                  ) : (
+                    <RubyText showFurigana={showFurigana}>★を ふやしましょう</RubyText>
+                  )}
+                </span>
+              </span>
+              <span aria-hidden className="absolute font-black text-[#ff6a5a]" style={{ right: cq(34), fontSize: cq(44), textShadow: '0 2px 3px #000' }}>
+                ▶
+              </span>
+            </motion.button>
+          )}
 
           {/* 話の 一覧 — over the map */}
           <AnimatePresence>
@@ -1010,6 +929,8 @@ export const MojiRouteMap = () => {
         {/* クラス ★4 (docs/design/21): told once, here if not already after 5章's boss. */}
         <ClassUpNotice showFurigana={showFurigana} />
       </div>
+      {/* 下の バー (docs/design/23 §3.2): ステージ here closes the sheet. */}
+      <HubBar onStage={() => setSheet(null)} />
     </div>
   );
 };
