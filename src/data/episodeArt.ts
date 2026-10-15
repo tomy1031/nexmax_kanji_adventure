@@ -2,6 +2,8 @@ import type { CastMember, NovelScript } from '../types/novel';
 import { SCENES } from '../features/picturebook/scenes';
 import { KANA_SCRIPTS, kanaCast } from './scripts/kana';
 import { getKanaEpisode } from './kana';
+import { KANA_FOES, KANA_HERO, getKanaBoss } from './kanaBattle';
+import { KANA_BOSS_SCRIPTS, KANA_ENCOUNTERS } from './scripts/kanaFights';
 import { MOJI1_PRELUDE } from './scripts/moji1';
 import { MOJI_CAST, MOJI_SCRIPTS } from './mojiScripts';
 import { getMojiEpisode } from './mojiEpisodes';
@@ -36,7 +38,18 @@ const scriptArt = (scripts: NovelScript[], cast: CastMember[]): string[] => {
 export const episodeArt = (id: string, { star4 = false }: { star4?: boolean } = {}): string[] => {
   const battle = battleUi(star4);
   const kana = KANA_SCRIPTS[id];
-  if (kana) return [...new Set(scriptArt([kana.intro, kana.outro], kanaCast(getKanaEpisode(id)?.script ?? 'hiragana')))];
+  if (kana) {
+    // 0章: the story, the meeting and the fight (docs/design/22 §4).
+    const script = getKanaEpisode(id)?.script ?? 'hiragana';
+    const meeting = KANA_ENCOUNTERS[id];
+    return [...new Set([...scriptArt([kana.intro, ...(meeting ? [meeting] : []), kana.outro], kanaCast(script)), KANA_HERO[script].img, ...(KANA_FOES[id] ? [KANA_FOES[id].img] : []), ...battle])];
+  }
+  const kanaBoss = getKanaBoss(id);
+  if (kanaBoss) {
+    const story = KANA_BOSS_SCRIPTS[id];
+    const scene = SCENES[kanaBoss.bg]?.photo;
+    return [...new Set([...(story ? scriptArt([story.intro, story.outro], kanaCast(kanaBoss.script)) : []), ...(scene ? [scene] : []), KANA_HERO[kanaBoss.script].img, kanaBoss.foe.img, ...battle])];
+  }
   const finale = getMojiFinale(id);
   if (finale) {
     const story = MOJI_FINALE_SCRIPTS[id];
