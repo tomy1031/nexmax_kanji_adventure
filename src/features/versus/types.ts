@@ -1,4 +1,5 @@
 /** Wire format for versus battles. Ported from kanji_go. */
+import type { RoomRules, VersusPower } from './roomRules';
 
 export const BattleEventType = {
   /** Who is playing: shown on the VS screen, and what the round is chosen from. */
@@ -45,6 +46,8 @@ export interface BattleEvent {
     warded?: number;
     /** With SKILL: which わざ, the card that used it, and its ward (taken off the receiver's next hit). */
     skill?: { kind: string; card: string | null; ward?: number };
+    /** The room's rules (roomRules.ts), with the host's PROFILE and HANDSHAKE. Older versions leave it out. */
+    rules?: RoomRules;
   };
 }
 
@@ -57,6 +60,8 @@ export interface VersusProfile {
   losses: number;
   /** The kanji they have (★1), for choosing a fair round. */
   known: string[];
+  /** Their weapon, guard and HP before the room's rules (roomRules.ts); none from older versions. */
+  power?: VersusPower;
 }
 
 /**

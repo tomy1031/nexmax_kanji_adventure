@@ -158,6 +158,14 @@ on his shoulders, elbows and boots, a small golden star-shaped crest on top of h
 chest mark glowing a warm gold. Everything else stays as in the first reference. Kid-friendly. No readable letters.
 The chest mark must always be visible and unobstructed.`,
 
+  // たいせんの 2P（2026-10-15）: なかま なしの へやで、あいての ネクマックスを 色ちがいに する。
+  NEXMAX_2P_SAME: `Character: redraw exactly the picture in the reference image — the same small robot, the same pose, the same
+props, the same camera angle, framing and proportions, the same glossy anime game rendering with a clean dark outline.
+Only change his colours to his rival "player 2" palette: every part that is light sky-blue becomes a warm coral red
+(#F07A63) with soft shading (#D65A46), the dark navy joints and boot soles become a deep plum (#4A2340), and the
+chest mark stays clearly visible in navy. The face-screen stays white, the eyes stay black. Anything that glows blue
+(ink, light) glows warm orange-gold instead. Kid-friendly. No readable letters. The chest mark is never covered.`,
+
   // ナニワタウンの 町の 人: public/img/chara/types の ロボットを そのまま、表情と しぐさだけ 変える。
   FOLK_PAINTED: `Character: exactly the robot in the reference image — the same body shape, colors, antenna,
 accessories and outfit, the same glossy 3D-like Japanese anime game rendering with soft shading. Only the pose and
@@ -735,6 +743,67 @@ const NEXMAX_NANIWA = [
 ];
 
 // ---------------------------------------------------------------------------
+// たいせん（2026-10-15「対戦画面のUIをもう少しテイストに合わせて、かつスマブラのように盛り上がる感じで。
+// Codexで画像を作ってもいいです」）: ぶたいの 背景・2P の ネクマックス・ランクの メダル。
+// ---------------------------------------------------------------------------
+
+const VERSUS_ART = [
+  {
+    id: 'nexmax_2p',
+    group: 'versus',
+    prio: 'A',
+    out: 'img/versus/nexmax_2p.webp',
+    kind: 'chara',
+    bgmode: 'white',
+    refs: ['public/img/chara/naniwa/nexmax_normal.webp'],
+    style: ['NEXMAX_2P_SAME', 'CHARA_OUT'],
+    diff: 'Pose: exactly as in the reference — standing relaxed and friendly, a gentle smile.',
+    used: 'たいせん: なかま なしの へやの あいて（ロビー・VS・けっか）',
+    matchFrame: 'public/img/chara/naniwa/nexmax_normal.webp',
+    note: '色だけ ちがう ネクマックス（2P）',
+  },
+  {
+    id: 'nexmax_2p_brush',
+    group: 'versus',
+    prio: 'A',
+    out: 'img/versus/nexmax_2p_brush.webp',
+    kind: 'chara',
+    bgmode: 'white',
+    refs: ['public/img/battle/nexmax_brush.webp'],
+    style: ['NEXMAX_2P_SAME', 'CHARA_OUT'],
+    diff: 'Pose: exactly as in the reference — the dynamic battle stance swinging the huge calligraphy brush, the ink swirling around him (in warm orange-gold).',
+    used: 'たいせん: なかま なしの へやの あいて（たたかいの 右がわ。左右を 反転して 使う）',
+    matchFrame: 'public/img/battle/nexmax_brush.webp',
+    flatWhite: true,
+    flop: true,
+    note: 'import.mjs が 左右を 反転する（flop。あいては 右に 立って 左を 向く）',
+  },
+  {
+    ...naniwa('vs_arena', 'a festival battle stage on a big round brass rooftop arena high above Naniwa Town at night: a round raised stage floor with a glowing brass ring around its edge, two huge searchlights crossing in the sky from left and right (one cool blue, one warm red-orange), strings of amber paper lanterns all around, steam pipes and big gears at the sides, BLANK cloth banners and BLANK flags fluttering, bright fireworks bursting in the deep indigo sky, the glittering town far below. Exciting, festive, the moment before a big match. No people.', 'たいせんの ぶたい（ロビー・VS・たたかいの 背景）'),
+    group: 'versus',
+    out: 'img/versus/vs_arena.webp',
+  },
+  ...[
+    ['stone', 'a rough grey stone medal with a chipped edge, a simple engraved calligraphy brush crossing a star in the middle'],
+    ['bronze', 'a polished bronze medal with a warm copper shine, a raised calligraphy brush crossing a star in the middle, a small laurel around the rim'],
+    ['silver', 'a gleaming silver medal with a cool blue shine, a raised calligraphy brush crossing a star in the middle, a laurel wreath around the rim, a small sky-blue gem at the top'],
+    ['gold', 'a radiant gold medal glowing warmly, a raised calligraphy brush crossing a big star in the middle, a full laurel wreath around the rim, a red gem at the top and a little crown above it, sparkles'],
+  ].map(([rank, look]) => ({
+    id: `rank_${rank}`,
+    group: 'versus',
+    prio: 'A',
+    out: `img/versus/rank_${rank}.webp`,
+    kind: 'prop',
+    bgmode: 'white',
+    refs: ['public/img/gacha/ticket.webp'],
+    style: ['GACHA_PROP'],
+    diff: `The item: a round versus-rank medal on a short red-and-navy ribbon — ${look}. Seen straight from the front, chunky and readable at a small size. No letters, no numbers.`,
+    used: `たいせんの ランク（${rank}）の しるし`,
+    note: '白い 背景を import.mjs が 切り抜く（prop）',
+  })),
+];
+
+// ---------------------------------------------------------------------------
 // 町の 人の 表情 — 字が 消えて 困る 顔と、戻って よろこぶ 顔（2026-10-02「もっと 文字が なくて
 // みんな 困って いる 表情に したり 工夫が 欲しい」）。元の 絵は public/img/chara/types。
 // ---------------------------------------------------------------------------
@@ -1295,7 +1364,7 @@ const GACHA_ART = [
     used: 'ガチャを ひく ときに カプセルから 出る お札（字を 書き順どおりに 書く）', note: '白い 背景を import.mjs が 切り抜く（prop）' },
 ];
 
-export const ASSETS = [...NEXMAX, ...GENDAI, ...MUKASHI_FOLK, ...ENEMIES, ...CREATURES, ...BG, ...NANIWA, ...PORT, ...FOOD, ...MIYAKO, ...SHIZUKA, ...NEXMAX_NANIWA, ...FOLK, ...PROLOGUE_ART, ...PROLOGUE_EATEN, ...MAPS, ...ICONS, ...CARDS, ...WEAPONS, ...GEAR_ART, ...FORGED_GEAR_ART, ...GACHA_ART];
+export const ASSETS = [...NEXMAX, ...GENDAI, ...MUKASHI_FOLK, ...ENEMIES, ...CREATURES, ...BG, ...NANIWA, ...PORT, ...FOOD, ...MIYAKO, ...SHIZUKA, ...NEXMAX_NANIWA, ...VERSUS_ART, ...FOLK, ...PROLOGUE_ART, ...PROLOGUE_EATEN, ...MAPS, ...ICONS, ...CARDS, ...WEAPONS, ...GEAR_ART, ...FORGED_GEAR_ART, ...GACHA_ART];
 
 export const GROUPS = {
   nexmax: 'ネクマックス（表情・ポーズ）',
@@ -1311,6 +1380,7 @@ export const GROUPS = {
   bg_miyako: '背景 — 4章 京(みやこ)タウン（電車で 行く 大きい 町）',
   bg_shizuka: '背景 — 5章 シズカタウン（字の ない せかいの 町）',
   nexmax_naniwa: 'ナニワタウンの ネクマックス（新ルートの 立ち絵）',
+  versus: 'たいせん（ぶたい・2P・ランク）',
   folk_naniwa: '町の 人の 表情（困る・よろこぶ）',
   companion_cards: 'なかまの カード ★4・★5',
   weapons: '武器（ネクマックスに 積む）',

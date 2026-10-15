@@ -19,6 +19,9 @@ import type { CompanionView, SkillCut } from '../battle/CompanionFx';
 import { throughWard, versusSkill, versusSkillSays } from './versusSkill';
 import { useStill } from '../../hooks/useStill';
 import { useQuiet } from '../../store/uiStore';
+import { guarded } from './roomRules';
+import type { MountView } from '../battle/WeaponMount';
+import type { Worn } from '../battle/gearLayout';
 
 /** One stamp at a time: a moment between them, so they stay a greeting, not a flood. */
 const STAMP_COOLDOWN_MS = 1500;
@@ -43,6 +46,14 @@ interface Props {
   opponentImg?: string;
   /** 1.0 bare-handed, at most 1.2 (VersusScreen). */
   weaponBonus: number;
+  /** Each side's HP at the start (100, plus the armour and the level when the room counts them). */
+  myMaxHp?: number;
+  theirMaxHp?: number;
+  /** The other side's guard (its shield): taken off this side's hits before they are sent, so both screens agree. */
+  theirGuard?: number;
+  /** This side's weapon on Nexmax's back and its worn gear, when the room counts them. */
+  mount?: MountView | null;
+  worn?: Worn;
   /**
    * The other side's latest write; `n` changes with each one. `self`: it
    * slipped three times and the hit turned back on it (its HP, not this side's).
@@ -88,7 +99,17 @@ const StampBubble = ({ said, className }: { said: { n: number; stamp: number } |
   </AnimatePresence>
 );
 
-export const VersusFight = ({ round, opponentName, opponentImg, weaponBonus, incoming, onHit, onSelfHit, onEnd, onForfeit, onWrite, stampIn, onStamp, myCard = null, skillIn = null, onSkill }: Props) => {
+export const VersusFight = ({
+  round,
+  opponentName,
+  opponentImg,
+  weaponBonus,
+  myMaxHp = VS_MAX_HP,
+  theirMaxHp = VS_MAX_HP,
+  theirGuard = 0,
+  mount = null,
+  worn = {},
+  incoming, onHit, onSelfHit, onEnd, onForfeit, onWrite, stampIn, onStamp, myCard = null, skillIn = null, onSkill }: Props) => {
   const showFurigana = useGameStore((s) => s.settings.furigana);
   const progress = useGameStore((s) => s.progress);
   const recordReview = useGameStore((s) => s.recordReview);
@@ -104,11 +125,11 @@ export const VersusFight = ({ round, opponentName, opponentImg, weaponBonus, inc
 
   // No 称号 popup over a match (AchievementToast).
   useQuiet();
-  const [myHp, setMyHpState] = useState(VS_MAX_HP);
-  const [theirHp, setTheirHpState] = useState(VS_MAX_HP);
+  const [myHp, setMyHpState] = useState(myMaxHp);
+  const [theirHp, setTheirHpState] = useState(theirMaxHp);
   // Mirrors, so a hit is judged outside a state updater (onEnd records the result).
-  const myHpRef = useRef(VS_MAX_HP);
-  const theirHpRef = useRef(VS_MAX_HP);
+  const myHpRef = useRef(myMaxHp);
+  const theirHpRef = useRef(theirMaxHp);
   const ended = useRef(false);
   const [index, setIndex] = useState(0);
   const [slips, setSlips] = useState(0);
@@ -299,7 +320,7 @@ export const VersusFight = ({ round, opponentName, opponentImg, weaponBonus, inc
       setCombo(nextCombo);
       // ちから (わざ) once, then the other side's ward, if it has one.
       if (power !== 1) setPower(1);
-      const struck = writeDamage(mistakes, hinted, weaponBonus, nextCombo, power);
+      const struck = guarded(writeDamage(mistakes, hinted, weaponBonus, nextCombo, power), theirGuard);
       const { damage, warded } = throughWard(struck, theirWards.current.shift() ?? 0);
       if (comboMilestone(nextCombo)) later(() => sfx.combo(comboTier(nextCombo).level), 150);
       else if (isComboBreak(combo, nextCombo)) sfx.comboBreak();
@@ -333,7 +354,7 @@ export const VersusFight = ({ round, opponentName, opponentImg, weaponBonus, inc
           : `${power !== 1 ? `💥 ×${power}！ ` : ''}${clean ? 'かんぺき！ ' : ''}${damage}${warded ? `（${warded} ふせがれた）` : clean ? '' : ' あたえた'}`,
       );
     },
-    [index, target.id, target.char, progress, recordReview, hinted, weaponBonus, onHit, onSelfHit, onWrite, takeHit, say, heroCtl, enemyCtl, end, later, combo, myKind, gaugeFull, comboShield, power],
+    [index, target.id, target.char, progress, recordReview, hinted, weaponBonus, theirGuard, onHit, onSelfHit, onWrite, takeHit, say, heroCtl, enemyCtl, end, later, combo, myKind, gaugeFull, comboShield, power],
   );
 
   /** わざ: the gauge is full and this side's なかま is tapped. */
@@ -369,9 +390,11 @@ export const VersusFight = ({ round, opponentName, opponentImg, weaponBonus, inc
         bossImg={opponentImg}
         field={ARENA}
         bossHp={theirHp}
-        bossMaxHp={VS_MAX_HP}
+        bossMaxHp={theirMaxHp}
         playerHp={myHp}
-        playerMaxHp={VS_MAX_HP}
+        playerMaxHp={myMaxHp}
+        mount={mount}
+        worn={worn}
         rage={slips}
         patience={SLIPS_TO_SELF_HIT}
         target={target}
