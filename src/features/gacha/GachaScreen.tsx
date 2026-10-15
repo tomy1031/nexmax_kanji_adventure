@@ -1,5 +1,7 @@
 import { useState } from 'react';
 import { HubBar } from '../../components/ui/HubBar';
+import { CompanionChip } from '../companion/CompanionChip';
+import { takeAlong } from '../companion/takeAlong';
 import { useMapPath } from '../../lib/nav';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { afterEpisodePath } from '../../data/mojiFlow';
@@ -142,6 +144,7 @@ export const GachaScreen = () => {
   const tickets = useGameStore((s) => s.gachaTickets);
   const spendTicket = useGameStore((s) => s.useGachaTicket);
   const firstDone = useGameStore((s) => s.tutorials.gacha);
+  const activeId = useGameStore((s) => s.activeIndividual);
   const markTutorialSeen = useGameStore((s) => s.markTutorialSeen);
   const [params] = useSearchParams();
   /** Brought here by 1章 4話 with its ticket: point at it, and say what a friend does after. */
@@ -278,6 +281,8 @@ export const GachaScreen = () => {
             </span>
           </h1>
           <span className="flex items-center gap-1">
+            {/* 🤝 who is along, a tap to change (CompanionChip) */}
+            {moji && <CompanionChip compact className="!py-0 !pr-1.5" />}
             {tickets > 0 && (
               <span className="g-chip text-xs tabular-nums" aria-label={`チケット ${tickets}`}>
                 <img src={assetPath('img/gacha/ticket.webp')} alt="" aria-hidden className="h-4 w-auto" /> {tickets}
@@ -654,12 +659,18 @@ export const GachaScreen = () => {
                 <RubyText showFurigana={showFurigana}>{`${firstPulled.card.shortName}が なかまに なりました！`}</RubyText>
               </p>
               <p className="mt-1 text-sm leading-[1.95]">
-                <RubyText showFurigana={showFurigana}>じゅんびで なかまを えらぶと、たたかいで わざを つかいます。</RubyText>
+                <RubyText showFurigana={showFurigana}>いっしょに 行(い)く なかまは、たたかいで わざを つかいます。</RubyText>
               </p>
               <p className="mt-1 text-xs leading-[1.9]" style={{ color: 'var(--ink-2)' }}>
                 <RubyText showFurigana={showFurigana}>{`わざ「${SKILL_INFO[SKILL_OF[firstPulled.card.char]].name}」 ${SKILL_INFO[SKILL_OF[firstPulled.card.char]].icon}`}</RubyText>
               </p>
-              <button type="button" data-tap className="g-btn g-btn-primary mt-3 w-full" onClick={endFirst}>
+              {/* Take the new one along right here (the story's first companion stays otherwise). */}
+              {activeId !== firstPulled.card.id && (
+                <button type="button" data-tap className="g-btn g-btn-accent mt-3 w-full" onClick={() => takeAlong(firstPulled.card.id)}>
+                  🤝 <RubyText showFurigana={showFurigana}>{`${firstPulled.card.shortName}を つれて いく`}</RubyText>
+                </button>
+              )}
+              <button type="button" data-tap className="g-btn g-btn-primary mt-2 w-full" onClick={endFirst}>
                 <RubyText showFurigana={showFurigana}>つぎの 話(わ)へ ▶</RubyText>
               </button>
             </motion.div>

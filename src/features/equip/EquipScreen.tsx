@@ -5,6 +5,7 @@ import { RubyText } from '../../components/ui/Ruby';
 import { GameIcon } from '../../components/ui/GameIcon';
 import { BottomTabs, LogoTitle, TopBar } from '../../components/ui/Chrome';
 import { HubBar } from '../../components/ui/HubBar';
+import { CompanionPick } from '../moji/CompanionPick';
 import { assetPath } from '../../lib/assetPath';
 import { useGameStore } from '../../store/gameStore';
 import { ALL_KANJI } from '../../data/kanji.generated';
@@ -278,6 +279,13 @@ export const EquipScreen = () => {
               <RubyText showFurigana={showFurigana}>✋ がまん</RubyText> ＋{stats.patience}
             </span>
           </div>
+
+          {/* なかま: who comes along — the loadout's fifth part (2026-10-15「仲間の設定をもっとやりやすく」). */}
+          {moji && (
+            <div className="mt-2">
+              <CompanionPick showFurigana={showFurigana} />
+            </div>
+          )}
 
           {/* 一覧 ------------------------------------------------------------ */}
           <div className="mt-3 flex items-center gap-2">

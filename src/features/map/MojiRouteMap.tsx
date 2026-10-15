@@ -26,6 +26,7 @@ import { preloadImages } from '../../lib/preload';
 import { episodeArt } from '../../data/episodeArt';
 import { Feature, isFeatureUnlocked } from '../../data/unlocks';
 import { HubBar } from '../../components/ui/HubBar';
+import { CompanionChip } from '../companion/CompanionChip';
 import { markSeen, readSeen } from '../../lib/featureSeen';
 import { DAILY_TASKS } from '../../data/dailyTasks';
 import { useNexmaxLevel } from '../moji/useNexmaxLevel';
@@ -223,7 +224,7 @@ const PlayerPlate = ({ star4, claimableGems, onOpen }: { star4: boolean; claimab
 
 /** The way-out sign the example has on the left: to the town of the next episode (mojiRoute.ts townOf). */
 const TownSign = ({ town }: { town: { name: string; en: string } }) => (
-  <div aria-hidden className="absolute" style={{ ...fromTop(26, 250, 300, 205), perspective: cq(900) }}>
+  <div aria-hidden className="absolute" style={{ ...fromTop(26, 282, 300, 190), perspective: cq(900) }}>
     <div
       className="flex h-full w-full items-center gap-[2cqw] rounded-[0.8cqw] border-[0.5cqw] border-[#8a6128] bg-[#121218]/95 px-[2.6cqw]"
       style={{ transform: 'rotateY(14deg)', transformOrigin: 'left center', boxShadow: '0 1cqw 3cqw rgba(0,0,0,0.6)' }}
@@ -524,6 +525,10 @@ export const MojiRouteMap = () => {
         <div className="absolute inset-x-0 top-[env(safe-area-inset-top)]">
           <DailyBoard cleared={cleared} showFurigana={showFurigana} onOpen={() => navigate('/daily')} onLocked={() => setLocked('1章(しょう) 3話(わ)の あとで ひらきます')} />
           <PlayerPlate star4={nexmaxClass >= 4} claimableGems={titleClaimable} onOpen={() => setRecord(true)} />
+          {/* 🤝 who is along (2026-10-15「どの仲間を使っているか分かりやすく」): a tap changes it */}
+          <div className="absolute" style={fromTop(12, 168, 330)}>
+            <CompanionChip />
+          </div>
           {/* ⚙ せってい: rarely tapped, so a corner, not a place on the bar */}
           <motion.button type="button" data-tap aria-label="せってい" whileTap={{ scale: 0.92 }} onClick={() => navigate('/settings')} className="absolute" style={fromTop(817, 12, 112, 112)}>
             <img src={nav('gear')} alt="" aria-hidden className="h-full w-full object-contain drop-shadow-[0_0.6cqw_1cqw_rgba(0,0,0,0.55)]" />

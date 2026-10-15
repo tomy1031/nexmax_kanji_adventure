@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { takeAlong } from '../companion/takeAlong';
 import { AnimatePresence, motion } from 'framer-motion';
 import { RubyText } from '../../components/ui/Ruby';
 import { assetPath } from '../../lib/assetPath';
@@ -35,7 +36,6 @@ const SHADOW = { filter: 'brightness(0) opacity(0.28)' } as const;
 export const CompanionBook = ({ showFurigana }: { showFurigana: boolean }) => {
   const owned = useGameStore((s) => s.individuals);
   const active = useGameStore((s) => s.activeIndividual);
-  const setActive = useGameStore((s) => s.setActiveIndividual);
   const bonds = useGameStore((s) => s.bonds);
   const cleared = useGameStore((s) => s.clearedStages);
   const [open, setOpen] = useState<string | null>(null);
@@ -161,7 +161,7 @@ export const CompanionBook = ({ showFurigana }: { showFurigana: boolean }) => {
                                 <RubyText showFurigana={showFurigana}>いっしょ</RubyText>
                               </span>
                             ) : (
-                              <button type="button" className="g-btn g-btn-ghost !min-h-[28px] !px-2 text-[11px]" onClick={() => setActive(c.id)}>
+                              <button type="button" className="g-btn g-btn-ghost !min-h-[28px] !px-2 text-[11px]" onClick={() => takeAlong(c.id)}>
                                 <RubyText showFurigana={showFurigana}>つれて 行(い)く</RubyText>
                               </button>
                             )}
