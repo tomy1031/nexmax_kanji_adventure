@@ -28,6 +28,8 @@ import { tipDue, tipOf, type TipId } from '../../data/fightRules';
 import type { BuffView, CompanionView, SkillCut } from './CompanionFx';
 import {
   computeDamage,
+  continuesFor,
+  countedSlip,
   counterDamage,
   starsFor,
   statsFromGear,
@@ -328,6 +330,10 @@ export const BattleScene = ({
   // Set at the first reading turn, so where the answer sits differs fight to fight.
   const fightSeedRef = useRef(0);
   const [outcome, setOutcome] = useState<Outcome>(null);
+  /** コンティニュー left (lib/battle continuesFor): one a story fight, two a まとめの ボス, none on Hard. */
+  const [continues, setContinues] = useState(() =>
+    continuesFor({ difficulty, finale: stage.id.endsWith('-boss'), tutorial, route: mastery ? 'moji' : 'old' }),
+  );
   // 称号 earned mid-fight wait for the result (AchievementToast).
   useQuiet(outcome == null);
   /** わざ: the gauge, what a used one still holds for the coming writes, the cut-in and the companion's bubble. */
@@ -517,8 +523,19 @@ export const BattleScene = ({
     if (settledRef.current || bossDownRef.current) return;
     writeSlipsRef.current += 1;
     sfx.clang();
-    addSlip();
-  }, [addSlip]);
+    // On the town's route the first slip of a write is free (lib/battle countedSlip): a slipped finger is not a strike.
+    if (!mastery || countedSlip(writeSlipsRef.current)) addSlip();
+  }, [addSlip, mastery]);
+
+  /** コンティニュー: Nexmax gets up with full HP; the opponent's HP, the seals and the turn stay where they were. */
+  const continueFight = () => {
+    setContinues((n) => n - 1);
+    settledRef.current = false;
+    setOutcome(null);
+    setPlayerHp(stats.maxHp);
+    setRage(0);
+    say('💚 コンティニュー！ HP ぜんかい');
+  };
 
   const showStrokeOrder = () => {
     if (settledRef.current || bossDownRef.current || readQ) return;
@@ -877,6 +894,8 @@ export const BattleScene = ({
               onNext={() => onNext?.()}
               onStages={onFinish}
               onRetry={() => onRetry?.()}
+              continues={continues}
+              onContinue={continueFight}
               onPractice={() => (onPractice ? onPractice() : onFinish())}
               onForge={() => (onForge ? onForge() : navigate('/forge'))}
               onFeature={(f) => {
@@ -989,6 +1008,8 @@ export const BattleScene = ({
               onCorrectStroke={(d) => onStroke(d, px)}
               onMistake={handleMistake}
               onComplete={handleComplete}
+              // A stroke missed three times is taken as written (the misses still count): no fight stops on one stroke.
+              forgiveAfter={3}
             />
           )}
           spark={spark}

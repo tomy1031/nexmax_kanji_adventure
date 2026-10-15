@@ -123,6 +123,23 @@ export const counterDamage = (
 /** A write counts as failed — and lets the opponent counter — at three slips. */
 export const isFailedWrite = (mistakes: number): boolean => mistakes >= 3;
 
+/**
+ * コンティニュー (2026-10-15「コンティニューとかも ものによっては 救済が あって いいかも」): after a
+ * loss, Nexmax gets up with full HP and the fight goes on where it was — the
+ * opponent keeps its HP, the seals stay open. A story fight gives one, a まとめの
+ * ボス two; Hard none (its point is to win clean), the tutorial and the old
+ * picture-book arcs none.
+ */
+export const continuesFor = ({ difficulty, finale, tutorial, route }: { difficulty: 'easy' | 'normal' | 'hard'; finale: boolean; tutorial: boolean; route: 'moji' | 'old' }): number =>
+  tutorial || route === 'old' || difficulty === 'hard' ? 0 : finale ? 2 : 1;
+
+/**
+ * Slips on one write that count toward the opponent's strike on the town's
+ * route: all but the first (「何度かに一度は間違える」— one slipped finger is not a
+ * reason to be hit).
+ */
+export const countedSlip = (slipsOnThisWrite: number): boolean => slipsOnThisWrite >= 2;
+
 /** Player HP. Flat for now; individuals differ by role, not by bulk. */
 export const PLAYER_MAX_HP = 100;
 

@@ -60,6 +60,8 @@ export const ResultModal = ({
   hasNext,
   nextLabel,
   loseHint,
+  continues = 0,
+  onContinue,
   easyWin = false,
   onNext,
   onStages,
@@ -91,6 +93,9 @@ export const ResultModal = ({
   nextLabel?: string;
   /** What to do about a loss, when writing more is not the answer (Hard: fewer slips). */
   loseHint?: string;
+  /** コンティニュー left after a loss (lib/battle continuesFor), and getting up to go on. */
+  continues?: number;
+  onContinue?: () => void;
   /** Won on やさしい (with the model): the next step is ふつう, without it. */
   easyWin?: boolean;
   onNext: () => void;
@@ -394,7 +399,24 @@ export const ResultModal = ({
           </>
         ) : (
           <>
-            <button type="button" className="g-btn g-btn-primary g-shine mt-5 w-full !min-h-[56px] text-lg" onClick={onPractice}>
+            {continues > 0 && onContinue && (
+              // コンティニュー: HP full, the fight goes on where it was (lib/battle continuesFor).
+              <button type="button" className="g-btn g-btn-primary g-shine mt-5 w-full !min-h-[60px] text-lg" onClick={onContinue}>
+                <span className="relative z-10 flex flex-col items-center leading-tight">
+                  <span>
+                    ▶ <RubyText showFurigana={showFurigana}>コンティニュー</RubyText>
+                  </span>
+                  <span className="text-xs font-bold opacity-90">
+                    <RubyText showFurigana={showFurigana}>{`💚 HP ぜんかい・つづきから（のこり ${continues}回(かい)）`}</RubyText>
+                  </span>
+                </span>
+              </button>
+            )}
+            <button
+              type="button"
+              className={`g-btn ${continues > 0 && onContinue ? 'g-btn-accent mt-2.5 !min-h-[48px]' : 'g-btn-primary g-shine mt-5 !min-h-[56px]'} w-full text-lg`}
+              onClick={onPractice}
+            >
               <span className="relative z-10 flex items-center gap-2">
                 <GiOpenBook aria-hidden size={22} />
                 <RubyText showFurigana={showFurigana}>れんしゅうする</RubyText>

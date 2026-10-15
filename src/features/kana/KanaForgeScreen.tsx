@@ -9,7 +9,7 @@ import { assetPath } from '../../lib/assetPath';
 import { useBgm, playJingle } from '../../lib/bgm';
 import * as sfx from '../../lib/sfx';
 import { speak } from '../../lib/speech';
-import { KANA_LENIENCY, ROMAJI } from '../../data/kana';
+import { kanaLeniency, ROMAJI } from '../../data/kana';
 import { FIRST_KANA_WEAPON, KANA_WEAPONS, canMakeKanaWeapon, getKanaWeapon, weaponKana, type KanaWeapon } from '../../data/kanaWeapons';
 import { NANIWA_NEXMAX_STAR1, NANIWA_NEXMAX_STAR2 } from '../../data/scripts/naniwaCast';
 import { useGameStore } from '../../store/gameStore';
@@ -103,7 +103,7 @@ const NameWriter = ({ weapon, onDone, onClose }: { weapon: KanaWeapon; onDone: (
           </motion.div>
         ) : (
           <motion.div key={pos} className="g-parchment rounded-2xl p-2" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-            <KanjiWriterCanvas key={`${weapon.name}-${pos}`} char={letters[pos]} size={size} quizMode showSample surface="paper" leniency={KANA_LENIENCY} onComplete={complete} />
+            <KanjiWriterCanvas key={`${weapon.name}-${pos}`} char={letters[pos]} size={size} quizMode showSample surface="paper" leniency={kanaLeniency(letters[pos])} onComplete={complete} />
           </motion.div>
         )}
       </AnimatePresence>

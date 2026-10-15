@@ -64,9 +64,19 @@ export const KANA_REPS = 3;
  * How forgiving stroke matching is for kana (kanji use 1.15). Kana are
  * nearly all curves, and a beginner's loop is never the font's loop; the
  * value is set from simulated shaky writing (kanaStrokes.test.ts): at 1.8
- * a wobbly hand passes 99% of kana writes, at 1.15 about 95% of gentle ones.
+ * a wobbly hand passes 99% of kana writes, at 1.15 about 95% of gentle ones;
+ * 2.2 since 2026-10-15 (below).
  */
-export const KANA_LENIENCY = 1.8;
+export const KANA_LENIENCY = 2.2;
+/**
+ * 2026-10-15「ところどころ くせの ある ひらがなが あったり、『あ』の 判定が 厳しかったり」: measured
+ * with hanzi-writer's matcher on a hand that wobbles (scratch simulation, wobble 55): at 1.8 a
+ * kana took 0.46 misses on average and ふ 5.1・な 2.9・や 1.6; at 2.2 the average halves (0.23).
+ * ふ・な・や keep short strokes the matcher reads strictly, so they get more room still.
+ */
+const KANA_LENIENCY_FOR: Record<string, number> = { ふ: 3, な: 3, や: 3 };
+/** How forgiving the matcher is with one kana. */
+export const kanaLeniency = (kana: string): number => KANA_LENIENCY_FOR[kana] ?? KANA_LENIENCY;
 /** Reps that show the model underneath. */
 export const KANA_SAMPLE_REPS = 2;
 
