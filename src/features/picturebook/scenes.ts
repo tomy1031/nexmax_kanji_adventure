@@ -711,6 +711,8 @@ export const PHOTO_SCENES: Record<string, SceneDef> = {
   // 1章 12話 まとめの ボス: モジクイの 巣（駅の 奥の トンネル）と、灯りが ぜんぶ 戻った 町。
   naniwa_nest: photoScene('img/naniwa/naniwa_nest.webp'),
   naniwa_lights_back: photoScene('img/naniwa/naniwa_lights_back.webp'),
+  // たいせんの ぶたい（2026-10-15、Codex）: 町の 上の まるい ぶたい。
+  vs_arena: photoScene('img/versus/vs_arena.webp'),
   // 1章: ナニワタウン
   naniwa_town: photoScene('img/title/bg.webp'),
   // 1章1話: the station calendar's seven empty panels, 日 月 火 水 木 金 土 (measured on the picture).

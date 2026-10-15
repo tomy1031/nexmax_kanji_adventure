@@ -761,6 +761,22 @@
   }
 }
 
+/* たいせんの VS: 青と 赤の 面を 走る 集中線（VersusFx SpeedLines）。 */
+.vs-speed-r {
+  animation: vs-speed 0.5s linear infinite;
+}
+.vs-speed-l {
+  animation: vs-speed 0.5s linear infinite reverse;
+}
+@keyframes vs-speed {
+  from {
+    background-position: 0 0;
+  }
+  to {
+    background-position: 170px 0;
+  }
+}
+
 /* -----------------------------------------------------------------------------
    動きを減らす設定を尊重する。学習の邪魔をしないほうが大事。
    --------------------------------------------------------------------------- */
