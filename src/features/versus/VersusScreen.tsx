@@ -28,6 +28,7 @@ import { CPU_LEVELS, cpuTurn, type CpuLevel } from './cpu';
 import { SELF_HIT, SLIPS_TO_SELF_HIT, VS_MAX_HP, writeDamage } from './rules';
 import { DEFAULT_RULES, NO_POWER, appliedPower, cleanPower, cleanRules, guarded, powerFrom, roundFor, type RoomRules } from './roomRules';
 import { RoomRulesEditor, RulesCard } from './RulesSheet';
+import { HubBar } from '../../components/ui/HubBar';
 import { ARENA_ART, ArenaBackdrop, Confetti, RankMedal, Spotlight, VsSplash } from './VersusFx';
 import { LogoText } from '../../components/ui/LogoText';
 import { SKILL_INFO, SKILL_OF, type SkillKind } from '../../lib/companionSkill';
@@ -120,6 +121,8 @@ export const VersusScreen = () => {
   const equippedId = useGameStore((s) => s.equippedWeapon);
   const activeIndividual = useGameStore((s) => s.activeIndividual);
   const versus = useGameStore((s) => s.versus);
+  // The town's route: the bottom bar in the lobby (docs/design/23).
+  const onTown = useGameStore((s) => s.lastArc) === 'moji';
   const recordVersus = useGameStore((s) => s.recordVersusResult);
   const equippedGear = useGameStore((s) => s.equippedGear);
   const cleared = useGameStore((s) => s.clearedStages);
@@ -601,6 +604,7 @@ export const VersusScreen = () => {
 
   const rank = rankFor(versus.rating);
   const nextUp = nextRank(versus.rating);
+  const lobby = phase === 'idle' && !cpuMenu && friendMenu === 'closed' && onTown;
   const myArt = artOf(me, false, rules.companion);
   const theirArt = artOf(them, true, rules.companion);
   const theirName = cpu ? `CPU・${CPU_LEVELS[cpuLevel].name}` : nameOf(them, rules.companion);
@@ -672,7 +676,12 @@ export const VersusScreen = () => {
         <RankMedal rating={versus.rating} size={30} showFurigana={showFurigana} />
       </header>
 
-      <main className="mx-auto flex w-full max-w-md flex-1 flex-col items-center justify-end gap-3 px-4 pb-[max(20px,env(safe-area-inset-bottom))]">
+      {/* 下の バー (docs/design/23 §3.2): in the lobby only — not over a room, a sheet, the VS or the result. */}
+      {lobby && <HubBar />}
+      <main
+        className="mx-auto flex w-full max-w-md flex-1 flex-col items-center justify-end gap-3 px-4 pb-[max(20px,env(safe-area-inset-bottom))]"
+        style={lobby ? { paddingBottom: 'calc(92px + env(safe-area-inset-bottom))' } : undefined}
+      >
         {!isVersusConfigured ? (
           <div className="g-novel-night w-full rounded-2xl p-4 text-center text-sm">
             <RubyText showFurigana={showFurigana}>たいせんは いま つかえません。</RubyText>

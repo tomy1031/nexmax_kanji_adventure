@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { HubBar } from '../../components/ui/HubBar';
 import { useMapPath, useSafeBack } from '../../lib/nav';
 import { Backdrop } from '../../components/ui/Backdrop';
 import { NightStreetBackdrop } from '../write/NightStreet';
@@ -71,7 +72,9 @@ export const CollectionScreen = () => {
   }).length;
 
   return (
-    <div className="g-stage min-h-dvh pb-8">
+    <div className={`g-stage min-h-dvh ${moji ? 'pb-28' : 'pb-8'}`}>
+      {/* 下の バー (docs/design/23 §3.2) */}
+      {moji && <HubBar />}
       {/* The world being played behind it: the night town on 文字が 消えた 町 (08 §3.8). */}
       {moji ? <NightStreetBackdrop /> : <Backdrop fixed />}
       <header

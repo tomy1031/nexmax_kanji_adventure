@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { HubBar } from '../../components/ui/HubBar';
 import { useNavigate } from 'react-router-dom';
 import { useSafeBack } from '../../lib/nav';
 import { Backdrop } from '../../components/ui/Backdrop';
@@ -114,7 +115,9 @@ export const WordBook = () => {
   };
 
   return (
-    <div className="g-stage min-h-dvh pb-8">
+    <div className={`g-stage min-h-dvh ${moji ? 'pb-28' : 'pb-8'}`}>
+      {/* 下の バー (docs/design/23 §3.2) */}
+      {moji && <HubBar />}
       {moji ? <NightStreetBackdrop /> : <Backdrop fixed />}
       <header className="g-header sticky top-0 z-20 px-4 pt-[max(12px,env(safe-area-inset-top))] pb-3">
         <div className="flex items-center justify-between">

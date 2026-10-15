@@ -233,8 +233,10 @@ for (const a of ASSETS) {
   } else if (a.kind === 'prop') {
     // keepWhite: glass and paper, whose own white highlights are not background.
     const img = await cutOut(raw, { enclosed: !a.keepWhite });
+    // maxSize: a wide plate or bar shown across the screen (docs/design/23) keeps more of its width.
+    const max = a.maxSize ?? 512;
     await (await img.png().toBuffer().then((b) => sharp(b)))
-      .resize(512, 512, { fit: 'inside', withoutEnlargement: true })
+      .resize(max, max, { fit: 'inside', withoutEnlargement: true })
       .webp({ quality: 88, alphaQuality: 90 })
       .toFile(out);
   } else if (a.kind === 'bg') {

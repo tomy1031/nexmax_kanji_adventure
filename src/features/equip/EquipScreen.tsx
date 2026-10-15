@@ -4,6 +4,7 @@ import { motion } from 'framer-motion';
 import { RubyText } from '../../components/ui/Ruby';
 import { GameIcon } from '../../components/ui/GameIcon';
 import { BottomTabs, LogoTitle, TopBar } from '../../components/ui/Chrome';
+import { HubBar } from '../../components/ui/HubBar';
 import { assetPath } from '../../lib/assetPath';
 import { useGameStore } from '../../store/gameStore';
 import { ALL_KANJI } from '../../data/kanji.generated';
@@ -175,10 +176,10 @@ export const EquipScreen = () => {
   };
 
   return (
-    <div className={`isolate relative min-h-dvh ${moji ? 'pb-8' : 'pb-28'}`}>
+    <div className="isolate relative min-h-dvh pb-28">
       {moji ? <NightStreetBackdrop /> : <PictureBook scene="mukashi_meadow" className="!fixed -z-10" />}
       <div className="relative z-10">
-        <TopBar />
+        <TopBar home={!moji} />
         <div className="mx-auto max-w-md px-3 pt-1">
           <LogoTitle size={30} sub="字(じ)の 力(ちから)で もっと つよく">
             {moji ? 'もちもの' : 'そうび'}
@@ -527,14 +528,14 @@ export const EquipScreen = () => {
             </button>
           )}
 
-          {isFeatureUnlocked(Feature.COLLECTION, cleared) && (
+          {!moji && isFeatureUnlocked(Feature.COLLECTION, cleared) && (
             <button type="button" className="g-btn g-btn-slate mt-4 w-full" onClick={() => navigate('/collection?tab=individuals')}>
               <RubyText showFurigana={showFurigana}>図鑑(ずかん)（なかま）を 見(み)る</RubyText>
             </button>
           )}
         </div>
       </div>
-      {!moji && <BottomTabs current="items" />}
+      {moji ? <HubBar /> : <BottomTabs current="items" />}
       {training && <WeaponTrain recipeId={training} onClose={() => setTraining(null)} />}
     </div>
   );
