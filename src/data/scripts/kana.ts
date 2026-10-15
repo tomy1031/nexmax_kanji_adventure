@@ -1,5 +1,5 @@
 import type { CastMember, NovelLine, NovelScript } from '../../types/novel';
-import { NANIWA_FOLK, NANIWA_NEXMAX } from './naniwaCast';
+import { NANIWA_FOLK, NANIWA_NEXMAX_STAR1, NANIWA_NEXMAX_STAR2 } from './naniwaCast';
 
 /**
  * かな編 ＝ 0章「はじまりの 空港」の 脚本 (08 §3.4, §3.4.2, §3.7).
@@ -25,9 +25,16 @@ import { NANIWA_FOLK, NANIWA_NEXMAX } from './naniwaCast';
 
 /**
  * Nexmax's name was eaten: his plate says ？？？ (with his face) until every
- * letter of ネクマックス is written — at the end of kana-9.
+ * letter of ネクマックス is written — at the end of kana-9. Through the
+ * hiragana he is ★1 (a baby, his letters stolen), through the katakana ★2
+ * (naniwaCast.ts NANIWA_NEXMAX_STAR1/2).
  */
-export const KANA_CAST: CastMember[] = [{ ...NANIWA_NEXMAX, nameChars: 'ネクマックス' }, ...NANIWA_FOLK];
+export const kanaCast = (script: 'hiragana' | 'katakana'): CastMember[] => [
+  { ...(script === 'hiragana' ? NANIWA_NEXMAX_STAR1 : NANIWA_NEXMAX_STAR2), nameChars: 'ネクマックス' },
+  ...NANIWA_FOLK,
+];
+/** The hiragana episodes' cast (kana-1 … 5); kanaCast('katakana') for the rest. */
+export const KANA_CAST: CastMember[] = kanaCast('hiragana');
 
 type Line = NovelLine;
 
