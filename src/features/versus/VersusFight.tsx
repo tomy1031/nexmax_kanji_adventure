@@ -20,6 +20,7 @@ import { throughWard, versusSkill, versusSkillSays } from './versusSkill';
 import { useStill } from '../../hooks/useStill';
 import { useQuiet } from '../../store/uiStore';
 import { guarded } from './roomRules';
+import { GameCall, PinchGlow } from './VersusFx';
 import type { MountView } from '../battle/WeaponMount';
 import type { Worn } from '../battle/gearLayout';
 
@@ -37,8 +38,10 @@ const STAMP_SHOWN_MS = 2200;
  * is who writes better, not who saved more gems.
  */
 
-/** Where the fight happens: the town with every light back on. */
-const ARENA = 'naniwa_lights_back';
+/** Where the fight happens: the round stage above the town (img/versus/vs_arena.webp). */
+const ARENA = 'vs_arena';
+/** How long 「しょうぶ あり！」 holds before the result. */
+const CALL_MS = 1700;
 
 interface Props {
   round: string[];
@@ -183,13 +186,21 @@ export const VersusFight = ({
     setFlashNo((n) => n + 1);
   }, []);
 
+  /** 「しょうぶ あり！」: shown once a side falls, from this side's view (true = won). */
+  const [call, setCall] = useState<boolean | null>(null);
   const end = useCallback(
     (won: boolean, ms: number) => {
       if (ended.current) return;
       ended.current = true;
-      timers.current.push(setTimeout(() => onEnd(won), ms));
+      timers.current.push(
+        setTimeout(() => {
+          setCall(won);
+          sfx.clang();
+        }, ms),
+      );
+      timers.current.push(setTimeout(() => onEnd(won), ms + (still ? 600 : CALL_MS)));
     },
-    [onEnd],
+    [onEnd, still],
   );
 
   const takeHit = useCallback(
@@ -493,6 +504,8 @@ export const VersusFight = ({
         }
       />
       <LightFlow flow={flow} still={still} />
+      <PinchGlow on={call == null && myHp > 0 && myHp <= myMaxHp * 0.25} still={still} />
+      <GameCall show={call != null} won={call === true} still={still} showFurigana={showFurigana} />
     </>
   );
 };
