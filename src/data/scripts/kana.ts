@@ -1,5 +1,6 @@
 import type { CastMember, NovelLine, NovelScript } from '../../types/novel';
 import { NANIWA_FOLK, NANIWA_NEXMAX_STAR1, NANIWA_NEXMAX_STAR2 } from './naniwaCast';
+import { KANA_FOE_CAST } from './kanaFights';
 
 /**
  * かな編 ＝ 0章「はじまりの 空港」の 脚本 (08 §3.4, §3.4.2, §3.7).
@@ -32,6 +33,8 @@ import { NANIWA_FOLK, NANIWA_NEXMAX_STAR1, NANIWA_NEXMAX_STAR2 } from './naniwaC
 export const kanaCast = (script: 'hiragana' | 'katakana'): CastMember[] => [
   { ...(script === 'hiragana' ? NANIWA_NEXMAX_STAR1 : NANIWA_NEXMAX_STAR2), nameChars: 'ネクマックス' },
   ...NANIWA_FOLK,
+  // the shadows of 0章の たたかい (kanaFights.ts)
+  ...KANA_FOE_CAST,
 ];
 /** The hiragana episodes' cast (kana-1 … 5); kanaCast('katakana') for the rest. */
 export const KANA_CAST: CastMember[] = kanaCast('hiragana');

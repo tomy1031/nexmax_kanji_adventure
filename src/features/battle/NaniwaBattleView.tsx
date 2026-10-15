@@ -328,6 +328,17 @@ export interface NaniwaBattleViewProps {
   buffs?: readonly BuffView[];
   /** A kanji just written back out of the opponent (字の ふういん), furigana notation: it flies up to its talisman. `n` is new each time. */
   freed?: { n: number; ruby: string } | null;
+  /**
+   * 0章の たたかい (features/kana/KanaBattle, docs/design/22 §4): Nexmax in his ★1 / ★2
+   * battle picture, his name (？？？ before it comes back), the opponent's name as
+   * kana with romaji, the word to write in place of the reading panel, and what
+   * the speaker key says.
+   */
+  heroImg?: string;
+  heroName?: ReactNode;
+  bossLabel?: ReactNode;
+  panel?: ReactNode;
+  onSpeak?: () => void;
 }
 
 export const NaniwaBattleView = ({
@@ -375,6 +386,11 @@ export const NaniwaBattleView = ({
   seals = [],
   buffs = [],
   freed = null,
+  heroImg,
+  heroName = 'ネクマックス',
+  bossLabel,
+  panel,
+  onSpeak,
 }: NaniwaBattleViewProps) => {
   const fieldPhoto = field ? SCENES[field]?.photo : undefined;
   const colRef = useRef<HTMLDivElement>(null);
@@ -519,7 +535,7 @@ export const NaniwaBattleView = ({
               className="absolute flex items-center justify-center leading-none font-extrabold whitespace-nowrap text-[#2a1a0c]"
               style={{ ...onTop(402, 40, 339, 48), ...MINCHO, fontSize: cq(30) }}
             >
-              <RubyText showFurigana={showFurigana}>{bossName}</RubyText>
+              {bossLabel ?? <RubyText showFurigana={showFurigana}>{bossName}</RubyText>}
             </p>
             <span className="absolute flex items-center justify-center leading-none font-bold" style={{ ...onTop(296, 96, 70, 24), ...MINCHO, fontSize: cq(24) }}>
               HP
@@ -577,7 +593,13 @@ export const NaniwaBattleView = ({
           {/* ネクマックス — stands on the deck, over the frame */}
           <motion.div className="absolute" style={onBottom(55, 374, 379, 505)} animate={heroCtl}>
             <GearBehind worn={worn} layout={LAYOUT_BATTLE} still={still} />
-            <img src={art(star4 ? 'nexmax_brush_star4' : 'nexmax_brush')} alt="" aria-hidden draggable={false} className="relative h-full w-full select-none" />
+            <img
+              src={heroImg ? assetPath(heroImg) : art(star4 ? 'nexmax_brush_star4' : 'nexmax_brush')}
+              alt=""
+              aria-hidden
+              draggable={false}
+              className="relative h-full w-full object-contain object-bottom select-none"
+            />
             <GearFront worn={worn} layout={LAYOUT_BATTLE} still={still} guard={guard} />
             {/* the chest: where the light goes in */}
             <div ref={heroRef} aria-hidden className="absolute h-px w-px" style={{ left: '60%', top: '62%' }} />
@@ -615,7 +637,7 @@ export const NaniwaBattleView = ({
             className="absolute flex items-center justify-center leading-none font-bold tracking-[0.06em] whitespace-nowrap"
             style={{ ...onBottom(45, 818, 240, 44), ...MINCHO, fontSize: cq(28) }}
           >
-            ネクマックス
+            {heroName}
           </p>
           <span className="absolute flex items-center justify-center leading-none font-bold" style={{ ...onBottom(22, 868, 78, 24), ...MINCHO, fontSize: cq(24) }}>
             HP
@@ -631,7 +653,14 @@ export const NaniwaBattleView = ({
           {read && <ReadPanel key={read.n} read={read} showFurigana={showFurigana} still={still} enter={hpDelay + 0.15} />}
           {!read && (
           <>
+          {/* 0章: the word to write, in place of よみ・意味 */}
+          {panel && (
+            <div className="absolute text-[#24180d]" style={{ ...onBottom(134, 912, 672, 165), ...MINCHO }}>
+              {panel}
+            </div>
+          )}
           {/* よみ・意味 */}
+          {!panel && (
           <div className="absolute text-[#24180d]" style={{ ...onBottom(134, 912, 672, 165), ...MINCHO }}>
             <p className="absolute flex items-center gap-[1.2cqw] leading-none" style={{ left: pct(66 / 672), top: pct(28 / 165), height: pct(56 / 165) }}>
               <span className="font-semibold" style={{ fontSize: cq(26) }}>
@@ -666,12 +695,13 @@ export const NaniwaBattleView = ({
               {'★'.repeat(targetStars) + '☆'.repeat(3 - targetStars)}
             </p>
           </div>
+          )}
           <motion.button
             type="button"
             data-tap
             aria-label="よみあげ"
             whileTap={{ scale: 0.92 }}
-            onClick={() => speak(reading)}
+            onClick={() => (onSpeak ? onSpeak() : speak(reading))}
             className="absolute flex items-center justify-center rounded-[22%] border-[0.35cqw] border-[#c9973f]"
             style={{ ...onBottom(843, 945, 84, 80), background: 'linear-gradient(180deg, #2c1d10 0%, #120a04 100%)' }}
           >
