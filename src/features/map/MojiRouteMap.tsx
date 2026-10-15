@@ -17,6 +17,7 @@ import { kanjiRuby } from '../../lib/reading';
 import { MASTERY_REPS, starsOf } from '../../lib/mastery';
 import { assetPath } from '../../lib/assetPath';
 import { getKanaEpisode } from '../../data/kana';
+import { KANA_BOSSES, isKanaBossOpen, type KanaBoss } from '../../data/kanaBattle';
 import { getMojiEpisode } from '../../data/mojiEpisodes';
 import { chapterProgress, continuePathWithFinale, episodePath, isChapterOpen, isEpisodeOpen, nextUpWithFinale } from '../../data/mojiFlow';
 import { finaleNumber, finaleOf, getMojiFinale, isFinaleOpen, isFinaleReady, MOJI_FINALES } from '../../data/mojiFinale';
@@ -27,7 +28,7 @@ import { Feature, isFeatureUnlocked } from '../../data/unlocks';
 import { MULTI_COST, PULL_COST, STEP_UP } from '../../lib/gacha';
 import { isVersusConfigured } from '../../lib/versusConfig';
 import { useStill } from '../../hooks/useStill';
-import { TITLES, earnsTitle, titleFor } from '../../lib/forge/discovery';
+import { ACHIEVEMENTS, claimable, reachedIds } from '../../data/achievements';
 
 /**
  * ステージせんたく — 文字が 消えた 町の 入口 (08 §3.7).
@@ -396,6 +397,43 @@ const FinaleCard = ({
   );
 };
 
+/** 0章の ボス (docs/design/22 §4.2): after its script's episodes, a crown, open once the 5th / 10th is cleared. */
+const KanaBossButton = ({ boss, known, cleared, fresh, onOpen }: { boss: KanaBoss; known: ReadonlySet<string>; cleared: readonly string[]; fresh: string | null; onOpen: () => void }) => {
+  const open = isKanaBossOpen(boss, cleared);
+  const done = cleared.includes(boss.id);
+  return (
+    <button
+      type="button"
+      data-tap
+      data-ep={boss.id}
+      disabled={!open}
+      onClick={onOpen}
+      className="relative flex w-full items-center gap-2 rounded-xl border-2 px-2 py-1.5 text-left disabled:opacity-50"
+      style={{
+        borderColor: fresh === boss.id ? '#e2453c' : done ? '#4f9a3c' : '#8a6bb0',
+        background: done ? 'linear-gradient(160deg,#fffbe8,#ffe7a3)' : 'linear-gradient(160deg,#2a1d4a,#3d2a66)',
+        color: done ? undefined : '#f4ecff',
+      }}
+    >
+      {fresh === boss.id && <span className="absolute -top-2 -right-1 rounded bg-[#e2453c] px-1 text-[10px] font-black text-white">NEW</span>}
+      <img src={assetPath(boss.foe.img)} alt="" aria-hidden className="h-12 w-12 shrink-0 object-contain" />
+      <span className="min-w-0 flex-1">
+        <span className="block text-xs font-black">
+          👑 {boss.script === 'hiragana' ? 'あ〜ん' : 'ア〜ン'} 46 {done ? '✓' : open ? '' : '🔒'}
+        </span>
+        <span className="block text-sm leading-[2] font-black">
+          <KanaText known={known} mode="mask">
+            {boss.title}
+          </KanaText>
+        </span>
+        <span className="block text-[11px] font-bold opacity-80" lang="en">
+          {boss.en}
+        </span>
+      </span>
+    </button>
+  );
+};
+
 const KanaEpisodeButton = ({ ep, known, cleared, fresh, onOpen }: { ep: KanaEpisode; known: ReadonlySet<string>; cleared: readonly string[]; fresh: string | null; onOpen: () => void }) => {
   const open = isKanaEpisodeUnlocked(ep, cleared);
   const done = cleared.includes(ep.id);
@@ -441,12 +479,9 @@ export const MojiRouteMap = () => {
   const cleared = useGameStore((s) => s.clearedStages);
   const progress = useGameStore((s) => s.progress);
   const streak = useGameStore((s) => s.streak);
-  // 称号 (TitlesScreen): the one held now, and how many ◆ are waiting to be taken.
-  const foundWords = useGameStore((s) => s.foundWords);
-  const titleRewards = useGameStore((s) => s.titleRewards);
-  const titleEarned = useMemo(() => Object.values(foundWords).filter(earnsTitle).length, [foundWords]);
-  const title = titleFor(titleEarned);
-  const titleClaimable = TITLES.filter((t) => titleEarned >= t.at && !titleRewards.includes(t.word)).reduce((n, t) => n + t.gems, 0);
+  // 称号 (TitlesScreen, data/achievements.ts): how many are held, and how many ◆ wait to be taken.
+  const titlesGot = useGameStore((s) => reachedIds(s).length);
+  const titleClaimable = useGameStore((s) => claimable(s, s.titleRewards).reduce((n, a) => n + a.gems, 0));
   const known = useKnownKana();
   const owned = useOwnedKanji();
   const [params] = useSearchParams();
@@ -461,9 +496,9 @@ export const MojiRouteMap = () => {
 
   const starsOfEpisode = (chars: string[]) => chars.reduce((n, ch) => n + starsOf(progress[getKanjiByChar(ch)?.id ?? '']?.reps ?? 0), 0);
   const groupOf = (episodeId: string): GroupId | null =>
-    HIRAGANA_EPS.some((e) => e.id === episodeId)
+    HIRAGANA_EPS.some((e) => e.id === episodeId) || episodeId === 'kana-boss-1'
       ? 'hiragana'
-      : KATAKANA_EPS.some((e) => e.id === episodeId)
+      : KATAKANA_EPS.some((e) => e.id === episodeId) || episodeId === 'kana-boss-2'
         ? 'katakana'
         : MOJI_EPISODES.some((e) => e.id === episodeId) || MOJI_FINALES.some((f) => f.id === episodeId)
           ? 'n5'
@@ -547,7 +582,7 @@ export const MojiRouteMap = () => {
   const kanaTotal = KANA_EPISODES.reduce((n, e) => n + e.kana.length, 0);
   const masters = Object.values(progress).filter((p) => (p?.reps ?? 0) >= MASTERY_REPS[2]).length;
   // まとめの ボスも 話（12話 など）: the map numbers it so, the record counts it so.
-  const allEpisodes = [...KANA_EPISODES, ...MOJI_EPISODES, ...MOJI_FINALES].map((e) => e.id);
+  const allEpisodes = [...KANA_EPISODES, ...KANA_BOSSES, ...MOJI_EPISODES, ...MOJI_FINALES].map((e) => e.id);
   const episodesCleared = allEpisodes.filter((id) => cleared.includes(id)).length;
 
   return (
@@ -730,6 +765,11 @@ export const MojiRouteMap = () => {
                         {(sheet === 'hiragana' ? HIRAGANA_EPS : KATAKANA_EPS).map((ep) => (
                           <li key={ep.id}>
                             <KanaEpisodeButton ep={ep} known={known} cleared={cleared} fresh={fresh} onOpen={() => navigate(`/kana/${ep.id}`)} />
+                          </li>
+                        ))}
+                        {KANA_BOSSES.filter((b) => b.script === sheet).map((b) => (
+                          <li key={b.id} className="col-span-2">
+                            <KanaBossButton boss={b} known={known} cleared={cleared} fresh={fresh} onOpen={() => navigate(`/kana/${b.id}`)} />
                           </li>
                         ))}
                       </ol>
@@ -915,7 +955,7 @@ export const MojiRouteMap = () => {
                       ['漢字(かんじ)マスター（★3）', `${masters}`],
                       ['クリアした 話(はなし)', `${episodesCleared} / ${allEpisodes.length}`],
                       ['毎日(まいにち) つづけた 日(ひ)', `${streak.count}`],
-                      ['称号(しょうごう)', title ? title.ruby : '—'],
+                      ['とった 称号(しょうごう)', `${titlesGot} / ${ACHIEVEMENTS.length}`],
                     ] as const
                   ).map(([label, value]) => (
                     <div key={label} className="contents">

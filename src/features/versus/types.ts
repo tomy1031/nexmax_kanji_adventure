@@ -1,4 +1,5 @@
 /** Wire format for versus battles. Ported from kanji_go. */
+import type { RoomRules, VersusPower } from './roomRules';
 
 export const BattleEventType = {
   /** Who is playing: shown on the VS screen, and what the round is chosen from. */
@@ -45,6 +46,8 @@ export interface BattleEvent {
     warded?: number;
     /** With SKILL: which わざ, the card that used it, and its ward (taken off the receiver's next hit). */
     skill?: { kind: string; card: string | null; ward?: number };
+    /** The room's rules (roomRules.ts), with the host's PROFILE and HANDSHAKE. Older versions leave it out. */
+    rules?: RoomRules;
   };
 }
 
@@ -57,6 +60,8 @@ export interface VersusProfile {
   losses: number;
   /** The kanji they have (★1), for choosing a fair round. */
   known: string[];
+  /** Their weapon, guard and HP before the room's rules (roomRules.ts); none from older versions. */
+  power?: VersusPower;
 }
 
 /**
@@ -98,10 +103,10 @@ export const nextRank = (rating: number): { label: string; at: number; from: num
   return { label: RANK_STEPS[i].label, at: RANK_STEPS[i].at, from: i === 0 ? 800 : RANK_STEPS[i - 1].at };
 };
 
-/** Rank badge for a rating. */
-export const rankFor = (rating: number): { label: string; color: string } => {
-  if (rating >= 1400) return { label: '金(きん)', color: '#ffcf4a' };
-  if (rating >= 1200) return { label: '銀(ぎん)', color: '#c7d2dd' };
-  if (rating >= 1050) return { label: '銅(どう)', color: '#d0894f' };
-  return { label: '石(いし)', color: '#93a3b8' };
+/** Rank badge for a rating, with its medal picture (img/versus/rank_*.webp, Codex). */
+export const rankFor = (rating: number): { label: string; color: string; medal: string } => {
+  if (rating >= 1400) return { label: '金(きん)', color: '#ffcf4a', medal: 'img/versus/rank_gold.webp' };
+  if (rating >= 1200) return { label: '銀(ぎん)', color: '#c7d2dd', medal: 'img/versus/rank_silver.webp' };
+  if (rating >= 1050) return { label: '銅(どう)', color: '#d0894f', medal: 'img/versus/rank_bronze.webp' };
+  return { label: '石(いし)', color: '#93a3b8', medal: 'img/versus/rank_stone.webp' };
 };

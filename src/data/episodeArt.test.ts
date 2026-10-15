@@ -14,7 +14,9 @@ describe('episodeArt — what the stage select fetches ahead', () => {
 
   it('includes the opening scene and the portraits of every written episode', () => {
     expect(episodeArt('kana-1')).toContain('img/stageselect/bg_tall.webp');
-    expect(episodeArt('kana-1')).toContain('img/chara/naniwa/nexmax_think.webp');
+    // 0章: ★1 through the hiragana, ★2 through the katakana (docs/design/22 §2).
+    expect(episodeArt('kana-1')).toContain('img/chara/naniwa/nexmax_star1_think.webp');
+    expect(episodeArt('kana-6')).toContain('img/chara/naniwa/nexmax_star2_think.webp');
     expect(episodeArt('moji-1-2')).toContain('img/chara/naniwa/folk_yamada_sad.webp');
     expect(episodeArt('moji-1-1')).toContain('img/battle/frame_top.webp');
   });

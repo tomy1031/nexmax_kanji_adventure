@@ -1,4 +1,5 @@
 import { KANA_EPISODES } from './kana';
+import { KANA_BOSSES, getKanaBoss, isKanaBossOpen, kanaBossAfter } from './kanaBattle';
 import { MOJI_EPISODES, getMojiEpisode, isMojiEpisodeUnlocked, type MojiEpisode } from './mojiEpisodes';
 import { MOJI_FINALES, getMojiFinale, isFinaleOpen, lastEpisodeOf, type MojiFinale } from './mojiFinale';
 import { MOJI_CHAPTERS } from './mojiRoute';
@@ -64,6 +65,13 @@ export const isEpisodeOpen = (ep: MojiEpisode, cleared: readonly string[]): bool
  * and the boss to whatever follows the chapter.
  */
 export const afterEpisode = (id: string, cleared?: readonly string[]): string | null => {
+  // 0章の ボス (docs/design/22 §4.2): after kana-5 and kana-10, like a まとめの ボス — then on as before.
+  const kanaBoss = getKanaBoss(id);
+  if (kanaBoss) return afterEpisode(kanaBoss.after);
+  if (cleared) {
+    const boss = kanaBossAfter(id);
+    if (boss && !cleared.includes(boss.id)) return boss.id;
+  }
   const finale = getMojiFinale(id);
   if (finale) {
     const last = lastEpisodeOf(finale.chapter);
@@ -106,6 +114,10 @@ const chapterOrder = (chapterId: string | undefined) => MOJI_CHAPTERS.find((c) =
  */
 export const nextUpWithFinale = (cleared: readonly string[], startPath: StartPath): string | null => {
   const next = nextUp(cleared, startPath);
+  // 0章: an open kana boss not beaten yet comes before the episodes after it (and before the town, from kana).
+  const kanaBoss = KANA_BOSSES.find((b) => isKanaBossOpen(b, cleared) && !cleared.includes(b.id));
+  if (kanaBoss && next && (next.startsWith('kana-') || (next === ROUTE_ORDER.find(isMoji) && !ROUTE_ORDER.some((id) => isMoji(id) && cleared.includes(id)))))
+    return kanaBoss.id;
   const nextChapter = next ? getMojiEpisode(next)?.chapter : undefined;
   if (next && !nextChapter) return next;
   const boss = MOJI_FINALES.filter((f) => !cleared.includes(f.id) && isFinaleOpen(f, cleared))

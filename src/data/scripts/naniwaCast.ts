@@ -21,6 +21,24 @@ export const NANIWA_NEXMAX: CastMember = {
   },
 };
 
+/**
+ * Nexmax in 0章 (2026-10-15「ひらがなの時のネクマックス（★1文字を奪われて弱体化している、赤ちゃん風）、
+ * カタカナの時のネクマックス（星2ひらがなマスター）のデザインを作ってそれをストーリーのときに使って」):
+ * ★1 through the hiragana — his letters stolen, shrunk to a baby — and ★2
+ * through the katakana, the hiragana won back but his name still missing.
+ * He becomes the usual ★3 when his name comes back at the start of 1章
+ * (docs/design/22). Same expressions as NANIWA_NEXMAX; no waving pose (hello is the normal one).
+ */
+const kanaForm = (star: 1 | 2): CastMember => {
+  const art = (pose: string) => `img/chara/naniwa/nexmax_star${star}_${pose}.webp`;
+  return {
+    ...NANIWA_NEXMAX,
+    sprites: { normal: art('normal'), smile: art('smile'), think: art('think'), determined: art('determined'), hello: art('normal'), guide: art('guide') },
+  };
+};
+export const NANIWA_NEXMAX_STAR1 = kanaForm(1);
+export const NANIWA_NEXMAX_STAR2 = kanaForm(2);
+
 const folk = (name: string) => `img/chara/naniwa/folk_${name}.webp`;
 
 /**

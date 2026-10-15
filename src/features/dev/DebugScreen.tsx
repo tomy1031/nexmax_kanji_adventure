@@ -200,6 +200,7 @@ const StoryTab = () => {
     gacha: 'はじめての ガチャ',
     firstWeapon: 'はじめての 武器',
     classUp: '★4 クラスアップ',
+    star3: '★3 しんか（1章 1話）',
   };
   return (
     <>

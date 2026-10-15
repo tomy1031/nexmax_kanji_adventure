@@ -49,6 +49,17 @@ const OVERRIDES = {
   // 4章: 屋台の 人（白い ひげと はちまき）
   'img/chara/naniwa/folk_yatai_happy.webp': [0.55, 0.2, 0.4],
   'img/chara/naniwa/folk_yatai_trouble.webp': [0.5, 0.22, 0.4],
+  // かな編の ネクマックス ★1・★2（docs/design/22）: ばんそうこう・よだれかけ・筆が 顔に 見える ので、顔の 画面の まん中を 手で。
+  'img/chara/naniwa/nexmax_star1_normal.webp': [0.48, 0.35, 0.97],
+  'img/chara/naniwa/nexmax_star1_smile.webp': [0.52, 0.30, 0.83],
+  'img/chara/naniwa/nexmax_star1_think.webp': [0.54, 0.32, 0.95],
+  'img/chara/naniwa/nexmax_star1_guide.webp': [0.47, 0.29, 0.82],
+  'img/chara/naniwa/nexmax_star1_determined.webp': [0.52, 0.33, 0.89],
+  'img/chara/naniwa/nexmax_star2_normal.webp': [0.53, 0.21, 0.87],
+  'img/chara/naniwa/nexmax_star2_smile.webp': [0.53, 0.20, 0.71],
+  'img/chara/naniwa/nexmax_star2_think.webp': [0.57, 0.22, 0.92],
+  'img/chara/naniwa/nexmax_star2_guide.webp': [0.47, 0.20, 0.71],
+  'img/chara/naniwa/nexmax_star2_determined.webp': [0.54, 0.21, 0.80],
   // モジクイ（docs/design/13）: 肌色が なく、お札や 煙が 顔の 上に ある。1体ずつ 顔の 形が ちがう ので 手で。
   'img/battle/mojikui.webp': [0.43, 0.43, 0.4],
   'img/battle/mojikui_kid.webp': [0.34, 0.42, 0.5],
@@ -97,6 +108,19 @@ const OVERRIDES = {
   'img/battle/mojikui_wave.webp': [0.3, 0.32, 0.4],
   'img/battle/mojikui_curtain.webp': [0.54, 0.28, 0.42],
   'img/battle/mojikui_king.webp': [0.45, 0.27, 0.34],
+  // 0章の かげ（docs/design/22 §4）
+  'img/battle/mojikui_kana_plane.webp': [0.17, 0.52, 0.4],
+  'img/battle/mojikui_kana_petal.webp': [0.3, 0.33, 0.45],
+  'img/battle/mojikui_kana_puppy.webp': [0.33, 0.43, 0.4],
+  'img/battle/mojikui_kana_cloud.webp': [0.4, 0.47, 0.4],
+  'img/battle/mojikui_kana_bat.webp': [0.26, 0.45, 0.38],
+  'img/battle/mojikui_kana_starboss.webp': [0.43, 0.23, 0.4],
+  'img/battle/mojikui_kana_gate.webp': [0.38, 0.36, 0.4],
+  'img/battle/mojikui_kana_moth.webp': [0.48, 0.48, 0.36],
+  'img/battle/mojikui_kana_train.webp': [0.18, 0.55, 0.4],
+  'img/battle/mojikui_kana_gull.webp': [0.43, 0.38, 0.36],
+  'img/battle/mojikui_kana_swirl.webp': [0.37, 0.3, 0.4],
+  'img/battle/mojikui_kana_slurp.webp': [0.62, 0.32, 0.36],
   // カード（docs/design/18 §3）: a held lantern, cup, books, brush or lens reads as the face.
   'img/chara/cards/ENFP-4.webp': [0.5, 0.31, 0.62],
   'img/chara/cards/ENFP-5.webp': [0.56, 0.47, 0.5],

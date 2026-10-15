@@ -215,7 +215,9 @@ for (const a of ASSETS) {
   ensureDir(out);
   if (a.kind === 'chara' && a.matchFrame) {
     const img = await cutOut(raw, { flatWhite: a.flatWhite });
-    await (await onFrameOf(img, a.matchFrame)).webp({ quality: 88, alphaQuality: 90 }).toFile(out);
+    // flop: the same picture facing the other way (たいせんの 2P は 右に 立って 左を 向く).
+    const framed = await onFrameOf(img, a.matchFrame);
+    await (a.flop ? sharp(await framed.png().toBuffer()).flop() : framed).webp({ quality: 88, alphaQuality: 90 }).toFile(out);
   } else if (a.kind === 'chara') {
     const img = await cutOut(raw, a.group === 'enemy' ? { enclosed: true, minArea: 300 } : {});
     await (await img.png().toBuffer().then((b) => sharp(b)))
