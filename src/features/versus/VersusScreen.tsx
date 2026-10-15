@@ -5,7 +5,7 @@ import { useMapPath } from '../../lib/nav';
 import { RubyText } from '../../components/ui/Ruby';
 import { useGameStore } from '../../store/gameStore';
 import { getKanjiByChar } from '../../lib/kanjiDb';
-import { weaponFromRecipe } from '../../lib/forge/recipe';
+import { weaponFromRecipe, weaponWord } from '../../lib/forge/recipe';
 import { preloadCharData } from '../../lib/strokeLoader';
 import { preloadImages } from '../../lib/preload';
 import { assetPath } from '../../lib/assetPath';
@@ -13,18 +13,22 @@ import { isVersusConfigured } from '../../lib/versusConfig';
 import { playJingle, useBgm } from '../../lib/bgm';
 import * as sfx from '../../lib/sfx';
 import { getIndividual } from '../../data/individuals';
-import { MOJI_CHAPTERS } from '../../data/mojiRoute';
+import { getGear } from '../../data/equipment';
+import { PLAYER_MAX_HP, statsFromGear } from '../../lib/battle';
+import { classOf, wornAt } from '../../lib/nexmaxClass';
+import { levelOf, ownedCount } from '../../lib/level';
 import { SCENES } from '../picturebook/scenes';
 import { useOwnedKanji } from '../moji/useOwnedKanji';
 import { useCompactHeight } from '../../hooks/useCompactHeight';
 import { networkManager, MatchCancelledError } from './NetworkManager';
 import { BattleEventType, nextRank, ratingChange, rankFor, type BattleEvent, type VersusProfile } from './types';
-import { pickRound } from './round';
 import { VersusFight } from './VersusFight';
 import KanjiCard from '../zukan/KanjiCard';
 import { charRuby } from '../../lib/reading';
 import { CPU_LEVELS, cpuTurn, type CpuLevel } from './cpu';
-import { SELF_HIT, SLIPS_TO_SELF_HIT, writeDamage } from './rules';
+import { SELF_HIT, SLIPS_TO_SELF_HIT, VS_MAX_HP, writeDamage } from './rules';
+import { DEFAULT_RULES, NO_POWER, appliedPower, cleanPower, cleanRules, guarded, powerFrom, roundFor, type RoomRules } from './roomRules';
+import { RoomRulesEditor, RulesCard } from './RulesSheet';
 import { SKILL_INFO, SKILL_OF, type SkillKind } from '../../lib/companionSkill';
 import { throughWard, versusSkill } from './versusSkill';
 import { useCompoundsVersion } from '../../data/compounds';
@@ -42,10 +46,12 @@ import { useStill } from '../../hooks/useStill';
 
 type Phase = 'idle' | 'searching' | 'matched' | 'fighting' | 'over';
 
-/** The weapon's pull on a hit: at most +20%, so writing well always matters more. */
-const MAX_WEAPON_BONUS = 0.2;
 /** Nexmax himself, when no なかま is chosen. */
 const NEXMAX_ART = 'img/chara/naniwa/nexmax_normal.webp';
+/** The other side's Nexmax in a room without なかま: the same robot in the other colours (2P). */
+const NEXMAX_2P_ART = 'img/versus/nexmax_2p.webp';
+/** …and in the fight, swinging the brush (facing left, where a モジクイ would stand). */
+const NEXMAX_2P_BRUSH_ART = 'img/versus/nexmax_2p_brush.webp';
 const BACKDROP = SCENES.naniwa_lights_back?.photo ?? 'img/title/bg.webp';
 /** How long a room waits for the friend who has its あいことば. */
 const FRIEND_WAIT_MS = 5 * 60 * 1000;
@@ -71,8 +77,16 @@ const useOnline = () => {
 
 /** After this long without a match, the search offers the CPU. */
 const OFFER_CPU_AFTER_S = 8;
-/** 1章's kanji: the round's last resort for two beginners. */
-const BASIC = MOJI_CHAPTERS.find((c) => c.id === 'moji-1')?.kanji ?? [];
+/** The rules the maker chose last time, so the next room starts from them (this device only). */
+const RULES_KEY = 'nexmax-versus-room-rules';
+const savedRules = (): RoomRules => {
+  try {
+    return cleanRules(JSON.parse(localStorage.getItem(RULES_KEY) ?? 'null'));
+  } catch {
+    return DEFAULT_RULES;
+  }
+};
+
 
 /**
  * The other side, when it fights without a なかま: not a second copy of this
@@ -81,8 +95,10 @@ const BASIC = MOJI_CHAPTERS.find((c) => c.id === 'moji-1')?.kanji ?? [];
 const RIVAL = 'ENTJ';
 /** The なかま a profile fights with: its own if it has one we know, else the rival (other side) or none. */
 const companionOf = (p: VersusProfile | null, rival: boolean) => getIndividual(p?.avatar ?? '') ?? (rival ? getIndividual(RIVAL) : undefined);
-const artOf = (p: VersusProfile | null, rival = false) => companionOf(p, rival)?.art ?? NEXMAX_ART;
-const nameOf = (p: VersusProfile | null) => companionOf(p, true)?.shortName ?? 'ネクマックス';
+/** Who stands for a side: its なかま, or Nexmax — both Nexmax (the other in 2P colours) in a room without なかま. */
+const artOf = (p: VersusProfile | null, rival = false, companions = true) =>
+  companions ? (companionOf(p, rival)?.art ?? NEXMAX_ART) : rival ? NEXMAX_2P_ART : NEXMAX_ART;
+const nameOf = (p: VersusProfile | null, companions = true) => (companions ? (companionOf(p, true)?.shortName ?? 'ネクマックス') : 'ネクマックス');
 
 const Avatar = ({ src, mirrored = false, size }: { src: string; mirrored?: boolean; size: number }) => (
   <img
@@ -115,6 +131,10 @@ export const VersusScreen = () => {
   const activeIndividual = useGameStore((s) => s.activeIndividual);
   const versus = useGameStore((s) => s.versus);
   const recordVersus = useGameStore((s) => s.recordVersusResult);
+  const equippedGear = useGameStore((s) => s.equippedGear);
+  const cleared = useGameStore((s) => s.clearedStages);
+  const exp = useGameStore((s) => s.exp);
+  const progress = useGameStore((s) => s.progress);
   const owned = useOwnedKanji();
   const still = useStill();
   // A short phone (SE) keeps the lobby on one screen with a smaller Nexmax.
@@ -158,8 +178,21 @@ export const VersusScreen = () => {
   /** ともだちと: the room's あいことば and whether this side made it. Unrated, like the CPU. */
   const [room, setRoom] = useState<{ code: string; host: boolean } | null>(null);
   /** The ともだちと sheet: choosing, or typing a friend's code. */
-  const [friendMenu, setFriendMenu] = useState<'closed' | 'choose' | 'enter'>('closed');
+  const [friendMenu, setFriendMenu] = useState<'closed' | 'choose' | 'rules' | 'enter'>('closed');
   const [typed, setTyped] = useState('');
+  /**
+   * The match's rules (roomRules.ts): the maker's in a room, the defaults in a
+   * random match or with the CPU. A friend has them once the maker's PROFILE
+   * arrives (`rulesKnown`).
+   */
+  const [rules, setRules] = useState<RoomRules>(DEFAULT_RULES);
+  const rulesRef = useRef<RoomRules>(DEFAULT_RULES);
+  const [rulesKnown, setRulesKnown] = useState(true);
+  const takeRules = (r: RoomRules) => {
+    rulesRef.current = r;
+    setRules(r);
+    setRulesKnown(true);
+  };
 
   useBgm(phase === 'fighting' ? 'boss' : phase === 'over' ? null : 'map');
 
@@ -170,17 +203,29 @@ export const VersusScreen = () => {
     return recipe ? weaponFromRecipe(recipe) : null;
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [weapons, equippedId, wordsV]);
-  /** 1.0 with nothing equipped, at most 1.2 with the best weapon. */
-  const weaponBonus = weapon ? 1 + Math.min(MAX_WEAPON_BONUS, (weapon.attack / 96) * MAX_WEAPON_BONUS) : 1;
+  /** This side's weapon, guard and HP, before the room's rules (sent with its PROFILE). */
+  const power = useMemo(() => {
+    const gear = statsFromGear(
+      Object.values(wornAt(equippedGear, classOf(cleared)))
+        .map((id) => getGear(id))
+        .filter((g) => g != null),
+    );
+    return powerFrom({ weaponAttack: weapon?.attack ?? null, defense: gear.defense, gearHp: gear.maxHp - PLAYER_MAX_HP, level: levelOf(exp, ownedCount(progress)) });
+  }, [weapon, equippedGear, cleared, exp, progress]);
 
   const me: VersusProfile = useMemo(
-    () => ({ avatar: activeIndividual, rating: versus.rating, wins: versus.wins, losses: versus.losses, known: [...owned] }),
-    [activeIndividual, versus, owned],
+    () => ({ avatar: activeIndividual, rating: versus.rating, wins: versus.wins, losses: versus.losses, known: [...owned], power }),
+    [activeIndividual, versus, owned, power],
   );
   const meRef = useRef(me);
   useEffect(() => {
     meRef.current = me;
   }, [me]);
+  /** What counts in this match, for each side: the room's rules over each side's own power. */
+  const mine = appliedPower(power, rules, VS_MAX_HP);
+  const theirs = appliedPower(cpu ? NO_POWER : cleanPower(them?.power), rules, VS_MAX_HP);
+  /** This side's weapon on Nexmax's back and its worn gear, when the room counts them. */
+  const worn = useMemo(() => (rules.gear ? wornAt(equippedGear, classOf(cleared)) : {}), [rules.gear, equippedGear, cleared]);
 
   // --- result -------------------------------------------------------------
   const cpuRef = useRef(false);
@@ -286,14 +331,17 @@ export const VersusScreen = () => {
           if (networkManager.isHosting()) {
             // The guest is here and has said what it knows: choose the round, and repeat it until READY.
             if (roundRef.current) break;
-            const picked = pickRound(meRef.current.known, e.data.profile.known, BASIC);
+            const picked = roundFor(rulesRef.current, meRef.current.known, e.data.profile.known);
             roundRef.current = picked;
             void preloadCharData(picked);
             repeat(
-              () => networkManager.send({ type: BattleEventType.HANDSHAKE, timestamp: Date.now(), data: { kanji: picked, profile: meRef.current } }),
+              () =>
+                networkManager.send({ type: BattleEventType.HANDSHAKE, timestamp: Date.now(), data: { kanji: picked, profile: meRef.current, rules: rulesRef.current } }),
               () => lost('あいてと つながりませんでした。'),
             );
           } else {
+            // The maker's rules come with its PROFILE: the friend sees them while it waits.
+            if (e.data.rules) takeRules(cleanRules(e.data.rules));
             networkManager.send({ type: BattleEventType.PROFILE, timestamp: Date.now(), data: { profile: meRef.current } });
           }
           break;
@@ -304,6 +352,8 @@ export const VersusScreen = () => {
           networkManager.send({ type: BattleEventType.READY, timestamp: Date.now(), data: { profile: meRef.current } });
           if (phaseRef.current !== 'searching') break;
           if (e.data.profile) setThem(e.data.profile);
+          // Older versions send no rules: the defaults, as they play.
+          takeRules(cleanRules(e.data.rules));
           setRound(e.data.kanji);
           void preloadCharData(e.data.kanji);
           setPhase('matched');
@@ -392,7 +442,7 @@ export const VersusScreen = () => {
   const hostHandshake = () =>
     repeat(
       () => {
-        if (!roundRef.current) networkManager.send({ type: BattleEventType.PROFILE, timestamp: Date.now(), data: { profile: meRef.current } });
+        if (!roundRef.current) networkManager.send({ type: BattleEventType.PROFILE, timestamp: Date.now(), data: { profile: meRef.current, rules: rulesRef.current } });
       },
       () => {
         if (!roundRef.current) lost('あいてと つながりませんでした。');
@@ -410,6 +460,7 @@ export const VersusScreen = () => {
     resetMatch();
     setCpu(false);
     setRoom(null);
+    takeRules(DEFAULT_RULES);
     try {
       await networkManager.findOpponent({ onWaiting: setWaiting });
       if (!networkManager.isHosting()) return;
@@ -423,11 +474,16 @@ export const VersusScreen = () => {
     }
   };
 
-  /** ともだちと: make a room (host) or go into a friend's (guest), by its あいことば. */
-  const enterRoom = async (code: string, host: boolean) => {
+  /** ともだちと: make a room (host, with its rules) or go into a friend's (guest, which is sent them), by its あいことば. */
+  const enterRoom = async (code: string, host: boolean, made?: RoomRules) => {
     resetMatch();
     setCpu(false);
     setRoom({ code, host });
+    if (host) takeRules(made ?? rulesRef.current);
+    else {
+      rulesRef.current = DEFAULT_RULES;
+      setRulesKnown(false);
+    }
     try {
       await networkManager.joinRoom(code, host);
       // The maker waits for the friend; the friend waits for the maker to be there.
@@ -469,8 +525,9 @@ export const VersusScreen = () => {
     setCpu(true);
     setRoom(null);
     setFriendMenu('closed');
+    takeRules(DEFAULT_RULES);
     setThem({ avatar: CPU_LEVELS[level].avatar, rating: versus.rating, wins: 0, losses: 0, known: [] });
-    const picked = pickRound(meRef.current.known, meRef.current.known, BASIC);
+    const picked = roundFor(DEFAULT_RULES, meRef.current.known, meRef.current.known);
     void preloadCharData(picked);
     setRound(picked);
     setCount(3);
@@ -495,7 +552,7 @@ export const VersusScreen = () => {
         if (mistakes >= SLIPS_TO_SELF_HIT) {
           setIncoming({ n: hitNo.current, damage: SELF_HIT, self: true });
         } else {
-          const { damage, warded } = throughWard(writeDamage(mistakes, false, 1, 0, power), cpuWards.current.shift() ?? 0);
+          const { damage, warded } = throughWard(guarded(writeDamage(mistakes, false, 1, 0, power), mine.guard), cpuWards.current.shift() ?? 0);
           setIncoming({ n: hitNo.current, damage, warded: warded || undefined });
           gauge += mistakes === 0 ? 2 : mistakes === 1 ? 1 : 0;
         }
@@ -513,7 +570,7 @@ export const VersusScreen = () => {
     };
     next();
     return () => clearTimeout(timer);
-  }, [cpu, phase, versus.rating, cpuLevel]);
+  }, [cpu, phase, versus.rating, cpuLevel, mine.guard]);
 
   // While the ロビー is shown, watch how many are waiting, so a player can see
   // whether a match is likely before tapping (or go to CPU / ともだち instead).
@@ -533,7 +590,7 @@ export const VersusScreen = () => {
   // VS: the two face each other, then 3・2・1.
   useEffect(() => {
     if (phase !== 'matched') return;
-    preloadImages([artOf(them, true), BACKDROP]);
+    preloadImages([artOf(them, true, rules.companion), BACKDROP]);
     sfx.clang();
     const ticks = [1300, 2100, 2900].map((ms, i) =>
       setTimeout(() => {
@@ -547,24 +604,31 @@ export const VersusScreen = () => {
       ticks.forEach(clearTimeout);
       clearTimeout(go);
     };
-  }, [phase, them, still]);
+  }, [phase, them, still, rules.companion]);
 
   const rank = rankFor(versus.rating);
   const nextUp = nextRank(versus.rating);
-  const myArt = artOf(me);
+  const myArt = artOf(me, false, rules.companion);
+  const theirArt = artOf(them, true, rules.companion);
+  const theirName = cpu ? `CPU・${CPU_LEVELS[cpuLevel].name}` : nameOf(them, rules.companion);
 
   if (phase === 'fighting' && round.length) {
     return (
       <VersusFight
         round={round}
-        opponentName={`${cpu ? `CPU・${CPU_LEVELS[cpuLevel].name}` : nameOf(them)} ✍️${Math.min(theirDone, round.length)}/${round.length}`}
-        opponentImg={artOf(them, true)}
-        weaponBonus={weaponBonus}
+        opponentName={`${theirName} ✍️${Math.min(theirDone, round.length)}/${round.length}`}
+        opponentImg={rules.companion || cpu ? theirArt : NEXMAX_2P_BRUSH_ART}
+        weaponBonus={mine.weapon}
+        myMaxHp={mine.maxHp}
+        theirMaxHp={theirs.maxHp}
+        theirGuard={theirs.guard}
+        mount={rules.gear && weapon ? { cls: weapon.weaponClass, element: weapon.element, rarity: weapon.rarity, level: weapon.level ?? 0, word: weaponWord(weapon) } : null}
+        worn={worn}
         incoming={incoming}
         onHit={(damage, index, warded) => {
           if (!cpu) networkManager.send({ type: BattleEventType.HIT, timestamp: Date.now(), data: { damage, index, warded: warded || undefined } });
         }}
-        myCard={activeIndividual ? (getIndividual(activeIndividual) ?? null) : null}
+        myCard={rules.companion && activeIndividual ? (getIndividual(activeIndividual) ?? null) : null}
         skillIn={skillIn}
         onSkill={(kind, ward) => {
           if (cpu) {
@@ -645,7 +709,7 @@ export const VersusScreen = () => {
             </p>
             <div className="flex items-end gap-6">
               <Avatar src={myArt} size={88} />
-              <Avatar src={artOf(them, true)} mirrored size={88} />
+              <Avatar src={theirArt} mirrored size={88} />
             </div>
             {walkover && (
               <p className="text-sm font-bold opacity-90">
@@ -760,6 +824,15 @@ export const VersusScreen = () => {
                       </span>
                     ))}
                   </p>
+                  <div className="mt-2">
+                    {rulesKnown ? (
+                      <RulesCard rules={rules} showFurigana={showFurigana} />
+                    ) : (
+                      <p className="g-pill-night rounded-xl px-3 py-2 text-xs font-bold opacity-85">
+                        📜 <RubyText showFurigana={showFurigana}>へやの ルールを まっています…</RubyText>
+                      </p>
+                    )}
+                  </div>
                   <motion.p
                     animate={still ? undefined : { opacity: [0.55, 1, 0.55] }}
                     transition={{ repeat: Infinity, duration: 1.4 }}
@@ -983,17 +1056,26 @@ export const VersusScreen = () => {
               animate={{ y: 0 }}
               onClick={(e) => e.stopPropagation()}
             >
-              <p className="text-lg font-black">
-                👫 <RubyText showFurigana={showFurigana}>ともだちと たいせん</RubyText>
-              </p>
+              {friendMenu !== 'rules' && (
+                <p className="text-lg font-black">
+                  👫 <RubyText showFurigana={showFurigana}>ともだちと たいせん</RubyText>
+                </p>
+              )}
               {friendMenu === 'choose' ? (
                 <>
                   <p className="mt-1 text-xs opacity-85">
                     <RubyText showFurigana={showFurigana}>4けたの あいことばで、ともだちと だけ たいせん します。</RubyText>
                   </p>
-                  <button type="button" className="g-btn g-btn-primary g-shine mt-3 w-full !min-h-[52px]" onClick={() => void enterRoom(newCode(), true)}>
+                  <button
+                    type="button"
+                    className="g-btn g-btn-primary g-shine mt-3 w-full !min-h-[52px]"
+                    onClick={() => {
+                      sfx.tap();
+                      setFriendMenu('rules');
+                    }}
+                  >
                     <span className="relative z-10">
-                      🔑 <RubyText showFurigana={showFurigana}>あいことばを つくる</RubyText>
+                      🔑 <RubyText showFurigana={showFurigana}>へやを つくる（ルールを きめる）</RubyText>
                     </span>
                   </button>
                   <button
@@ -1007,6 +1089,20 @@ export const VersusScreen = () => {
                     🔢 <RubyText showFurigana={showFurigana}>あいことばを いれる</RubyText>
                   </button>
                 </>
+              ) : friendMenu === 'rules' ? (
+                <RoomRulesEditor
+                  initial={savedRules()}
+                  showFurigana={showFurigana}
+                  onClose={() => setFriendMenu('choose')}
+                  onCreate={(made) => {
+                    try {
+                      localStorage.setItem(RULES_KEY, JSON.stringify(made));
+                    } catch {
+                      // A private window keeps no rules: the next room starts from the defaults.
+                    }
+                    void enterRoom(newCode(), true, made);
+                  }}
+                />
               ) : (
                 <>
                   <p className="mt-2 flex justify-center gap-2" aria-live="polite">
@@ -1037,9 +1133,11 @@ export const VersusScreen = () => {
                   </div>
                 </>
               )}
-              <button type="button" className="mt-3 text-xs font-bold underline opacity-80" onClick={() => setFriendMenu('closed')}>
-                <RubyText showFurigana={showFurigana}>とじる</RubyText>
-              </button>
+              {friendMenu !== 'rules' && (
+                <button type="button" className="mt-3 text-xs font-bold underline opacity-80" onClick={() => setFriendMenu('closed')}>
+                  <RubyText showFurigana={showFurigana}>とじる</RubyText>
+                </button>
+              )}
             </motion.section>
           </motion.div>
         )}
@@ -1065,13 +1163,18 @@ export const VersusScreen = () => {
                 <RankBadge rating={versus.rating} showFurigana={showFurigana} />
               </motion.div>
               <motion.div className="flex flex-col items-center" initial={still ? false : { x: 160, opacity: 0 }} animate={{ x: 0, opacity: 1 }} transition={{ type: 'spring', stiffness: 220, damping: 20, delay: 0.1 }}>
-                <Avatar src={artOf(them, true)} mirrored size={128} />
+                <Avatar src={theirArt} mirrored size={128} />
                 <span className="mt-1 text-sm font-black">
-                  <RubyText showFurigana={showFurigana}>{`あいて・${cpu ? `CPU（${CPU_LEVELS[cpuLevel].name}）` : nameOf(them)}`}</RubyText>
+                  <RubyText showFurigana={showFurigana}>{`あいて・${theirName}`}</RubyText>
                 </span>
                 <RankBadge rating={them?.rating ?? 1000} showFurigana={showFurigana} />
               </motion.div>
             </div>
+            {room && (
+              <div className="absolute top-[max(14px,env(safe-area-inset-top))] w-full max-w-md px-4">
+                <RulesCard rules={rules} showFurigana={showFurigana} compact />
+              </div>
+            )}
             <motion.p
               className="absolute top-[34%] text-7xl font-black italic"
               style={{ color: '#ffd36a', textShadow: '0 4px 0 #8a4b12, 0 0 24px rgba(255,190,80,0.7)' }}
