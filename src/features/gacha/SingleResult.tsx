@@ -7,6 +7,8 @@ import { GachaCard } from './GachaCard';
 import type { Individual } from '../../data/individuals';
 import { SKILL_INFO, SKILL_OF, skillEffect } from '../../lib/companionSkill';
 import { star5PowerOf } from '../../lib/star5Power';
+import { useGameStore } from '../../store/gameStore';
+import { takeAlong } from '../companion/takeAlong';
 
 /**
  * 1回の けっか (docs/design/17 §2.6〜2.7), after the companion has stepped out
@@ -33,6 +35,7 @@ export interface SinglePull {
 
 export const SingleResult = ({ r, showFurigana, still, onClose }: { r: SinglePull; showFurigana: boolean; still: boolean; onClose: () => void }) => {
   const k = kanjiOf(r.card.char);
+  const along = useGameStore((s) => s.activeIndividual) === r.card.id;
   const [step, setStep] = useState<'words' | 'card'>(r.duplicate ? 'card' : 'words');
   const kind = SKILL_OF[r.card.char];
   const info = SKILL_INFO[kind];
@@ -152,9 +155,21 @@ export const SingleResult = ({ r, showFurigana, still, onClose }: { r: SinglePul
       </motion.div>
       <div className="mt-3 flex w-full items-end justify-between gap-2">
         <NexmaxSays text={says} pose="cheer" size={84} />
-        <button type="button" className="g-btn g-btn-primary mb-2 min-w-[120px] flex-1" onClick={onClose}>
+        <div className="mb-2 flex min-w-[140px] flex-1 flex-col gap-2">
+          {/* つれて いく: this card goes into the fights now, with its entrance (JoinCutIn). */}
+          {along ? (
+            <p className="rounded-full bg-[#e8a317] px-3 py-1 text-center text-sm font-black text-white">
+              ✓ <RubyText showFurigana={showFurigana}>いっしょに いる</RubyText>
+            </p>
+          ) : (
+            <button type="button" className="g-btn g-btn-accent w-full" onClick={() => takeAlong(r.card.id)}>
+              🤝 <RubyText showFurigana={showFurigana}>つれて いく</RubyText>
+            </button>
+          )}
+        <button type="button" className="g-btn g-btn-primary w-full" onClick={onClose}>
           OK
         </button>
+        </div>
       </div>
     </div>
   );
