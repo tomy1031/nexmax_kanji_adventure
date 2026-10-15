@@ -11,6 +11,7 @@ import { GEAR, SLOT_LABEL, getGear, itemSlotOf, missingFor, type GearItem, type 
 import { RARITY_LABEL, type Rarity } from '../../lib/forge/weapon';
 import { parseForgedGearId } from '../../lib/forge/gear';
 import { weaponArt, weaponFromRecipe, weaponWord } from '../../lib/forge/recipe';
+import { getKanaWeapon } from '../../data/kanaWeapons';
 import { sortWeapons, useWeaponSort } from '../../lib/forge/weaponSort';
 import { WeaponSortBar, WeaponTags } from './WeaponSortBar';
 import { WeaponMount } from '../battle/WeaponMount';
@@ -86,6 +87,8 @@ export const EquipScreen = () => {
   const progress = useGameStore((s) => s.progress);
   const cleared = useGameStore((s) => s.clearedStages);
   const moji = useGameStore((s) => s.lastArc) === 'moji';
+  // かなの ぶき, shown beside the weapon but never worn in the town (docs/design/22 §5).
+  const kanaWeapon = getKanaWeapon(useGameStore((s) => s.equippedKanaWeapon));
   const exp = useGameStore((s) => s.exp);
   // クラス ★4 (lib/nexmaxClass.ts): the class-up picture and a second accessory.
   const nexmaxClass = classOf(cleared);
@@ -502,6 +505,25 @@ export const EquipScreen = () => {
               onClick={() => navigate(`/forge?${slot === 'weapon' ? '' : `make=${slot}&`}back=${encodeURIComponent('/equip')}`)}
             >
               🔨 <RubyText showFurigana={showFurigana}>{`漢字(かんじ)やさんで ${MAKE_LABEL[slot]}を 作(つく)る（★3の 字(じ) ${masters}）`}</RubyText>
+            </button>
+          )}
+
+          {/* かなの ぶき (docs/design/22 §5): its own place — it works in the kana chapters only. */}
+          {moji && slot === 'weapon' && cleared.includes('kana-2') && (
+            <button
+              type="button"
+              className="g-btn g-btn-night mt-2 w-full !justify-start gap-2 text-left"
+              onClick={() => navigate(`/kana-forge?back=${encodeURIComponent('/equip')}`)}
+            >
+              {kanaWeapon ? <img src={assetPath(kanaWeapon.img)} alt="" aria-hidden className="h-8 w-8 object-contain" /> : <span aria-hidden>⚒️</span>}
+              <span className="flex flex-col">
+                <span className="text-sm font-black">
+                  <RubyText showFurigana={showFurigana}>{`かなの ぶき${kanaWeapon ? `：${kanaWeapon.name}` : ''}`}</RubyText>
+                </span>
+                <span className="text-[11px] font-bold opacity-80">
+                  <RubyText showFurigana={showFurigana}>ひらがな・カタカナの たたかい だけ ・ かなの かじやへ</RubyText>
+                </span>
+              </span>
             </button>
           )}
 

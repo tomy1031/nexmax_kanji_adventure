@@ -140,7 +140,8 @@ export interface GameState {
   /** One-off explainers the player has already been shown. */
   /** intro: むかし編の 0話. prologue: 文字が 消えた 町の プロローグ (08 §10.2). stars: じゅんびの ★の ひみつ. */
   /** classUp: the 「★4 クラスアップ！」 card (docs/design/21), once. star3: Nexmax's ★3 evolution at the start of 1章 (docs/design/22 §3), once. */
-  tutorials: { forge: boolean; intro: boolean; prologue: boolean; stars: boolean; tools: boolean; gacha: boolean; firstWeapon: boolean; classUp: boolean; star3: boolean };
+  /** kanaForge: かなの かじや's first visit, where かさ is made (docs/design/22 §5). */
+  tutorials: { forge: boolean; intro: boolean; prologue: boolean; stars: boolean; tools: boolean; gacha: boolean; firstWeapon: boolean; classUp: boolean; star3: boolean; kanaForge: boolean };
   /** The world last played in — where つづきから, ストーリー and もどる lead back to. */
   lastArc: 'mukashi' | 'gendai' | 'moji';
   /**
@@ -175,6 +176,9 @@ export interface GameState {
   misses: Record<string, number>;
   /** かな編: passing writes per kana (08 §3.4). KANA_REPS makes it known. */
   kana: Record<string, number>;
+  /** かなの ぶき (docs/design/22 §5): the names made in かなの かじや, and the one Nexmax carries into 0章の たたかい. */
+  kanaWeapons: string[];
+  equippedKanaWeapon: string | null;
 }
 
 export interface GameActions {
@@ -252,6 +256,9 @@ export interface GameActions {
   hasKanji: (kanjiId: string) => boolean;
   /** Record one passing write of a kana. Returns the new count. */
   recordKanaRep: (kana: string) => number;
+  /** A kana weapon written into being (its kana are checked by the screen); the first one made is carried. */
+  makeKanaWeapon: (name: string) => void;
+  equipKanaWeapon: (name: string | null) => void;
   resetSave: () => void;
 }
 
@@ -288,7 +295,7 @@ const initialState: GameState = {
   settings: { furigana: true, muted: false, reducedMotion: false, bgmOff: false, english: true },
   fullMotion: false,
   autoVoice: false,
-  tutorials: { forge: false, intro: false, prologue: false, stars: false, tools: false, gacha: false, firstWeapon: false, classUp: false, star3: false },
+  tutorials: { forge: false, intro: false, prologue: false, stars: false, tools: false, gacha: false, firstWeapon: false, classUp: false, star3: false, kanaForge: false },
   // A new player starts on the new route (08 §10.2).
   lastArc: 'moji',
   startPath: null,
@@ -302,6 +309,8 @@ const initialState: GameState = {
   hints: {},
   misses: {},
   kana: {},
+  kanaWeapons: [],
+  equippedKanaWeapon: null,
 };
 
 export const useGameStore = create<GameState & GameActions>()(
@@ -656,6 +665,10 @@ export const useGameStore = create<GameState & GameActions>()(
         set((s) => ({ kana: { ...s.kana, [kana]: n }, writes: s.writes + 1 }));
         return n;
       },
+
+      makeKanaWeapon: (name) =>
+        set((s) => (s.kanaWeapons.includes(name) ? s : { kanaWeapons: [...s.kanaWeapons, name], equippedKanaWeapon: s.equippedKanaWeapon ?? name })),
+      equipKanaWeapon: (name) => set((s) => ({ equippedKanaWeapon: name == null || s.kanaWeapons.includes(name) ? name : s.equippedKanaWeapon })),
 
       hasKanji: (kanjiId) => (get().progress[kanjiId]?.reps ?? 0) >= REPS_TO_OBTAIN,
 

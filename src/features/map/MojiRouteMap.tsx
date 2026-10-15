@@ -761,6 +761,29 @@ export const MojiRouteMap = () => {
                           ? 'The airport, the evening you land — before the train to Naniwa Town. Optional: if you can read kana, Chapter 1 does not need it.'
                           : 'The airport station, at dawn — the train to Naniwa Town.'}
                       </p>
+                      {/* かなの かじや (docs/design/22 §5): open once かさ can be written, after かな 2話. */}
+                      {cleared.includes('kana-2') && (
+                        <button
+                          type="button"
+                          data-tap
+                          onClick={() => navigate('/kana-forge?back=/map/moji')}
+                          className="mb-2 flex w-full items-center gap-2 rounded-xl border-2 border-[#c9973f] px-3 py-1.5 text-left"
+                          style={{ background: 'linear-gradient(160deg,#3a2414,#1c1009)', color: '#fff1cf' }}
+                        >
+                          <span aria-hidden className="text-2xl">
+                            ⚒️
+                          </span>
+                          <span className="min-w-0 flex-1">
+                            <span className="block text-sm leading-[2] font-black">
+                              <KanaText known={known}>かなの かじや</KanaText>
+                            </span>
+                            <span className="block text-[11px] font-bold opacity-80" lang="en">
+                              Write a name, get a weapon — for the kana fights.
+                            </span>
+                          </span>
+                          <span aria-hidden>▶</span>
+                        </button>
+                      )}
                       <ol className="grid grid-cols-2 gap-2">
                         {(sheet === 'hiragana' ? HIRAGANA_EPS : KATAKANA_EPS).map((ep) => (
                           <li key={ep.id}>
