@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { existsSync } from 'node:fs';
 import { HIRAGANA, KATAKANA, KANA_EPISODES } from './kana';
 import { KANA_WORDS, kanaToWrite } from './kanaWords';
-import { KANA_BOSSES, KANA_FOES, KANA_HERO, bossFight, episodeFight, nextWord, stageOf, wordDamage, wordsToOpenAll } from './kanaBattle';
+import { KANA_BOSSES, KANA_FOES, KANA_HERO, bossFight, episodeFight, nextWord, playKanaFight, stageOf, wordDamage, wordsToOpenAll } from './kanaBattle';
 import { SCENES } from '../features/picturebook/scenes';
 
 const knownBy = (order: number) => new Set(KANA_EPISODES.filter((e) => e.order <= order).flatMap((e) => e.kana));
@@ -90,4 +90,54 @@ describe('0章の たたかい (kanaBattle)', () => {
       last = w;
     }
   });
+});
+
+/**
+ * 「何度かに一度は間違える」(2026-10-15): a hand that slips now and then must win
+ * without a continue, and even a clumsy one mostly does. A hand is a number of
+ * slips per kana, drawn so its average is `mean` (most kana clean, some one
+ * slip, a few two or more); the fight is played by the screen's own rules
+ * (playKanaFight).
+ */
+const handOf =
+  (mean: number) =>
+  (_k: string, rnd: () => number): number => {
+    const q = mean / (1 + mean);
+    let m = 0;
+    while (m < 6 && rnd() < q) m++;
+    return m;
+  };
+const seeded = (seed: number) => () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+const winRate = (fight: ReturnType<typeof bossFight>, script: 'hiragana' | 'katakana', mean: number, runs = 200) => {
+  const rnd = seeded(12345);
+  let won = 0;
+  for (let i = 0; i < runs; i++) if (playKanaFight(fight, script, handOf(mean), rnd).won) won++;
+  return won / runs;
+};
+
+describe('0章の たたかい — ミスタッチ前提の バランス (playKanaFight)', () => {
+  it('lets a hand that slips about once in two kana beat both bosses without a continue', () => {
+    for (const b of KANA_BOSSES) {
+      const rate = winRate(bossFight(b), b.script, 0.5);
+      expect(rate, b.id).toBeGreaterThanOrEqual(0.95);
+    }
+  }, 30000);
+
+  it('lets even a clumsy hand (a slip on every kana, on average) win the bosses most of the time', () => {
+    for (const b of KANA_BOSSES) {
+      const rate = winRate(bossFight(b), b.script, 1);
+      expect(rate, b.id).toBeGreaterThanOrEqual(0.8);
+    }
+  }, 30000);
+
+  it('lets a clumsy hand win every episode’s fight', () => {
+    for (const ep of KANA_EPISODES) {
+      const rate = winRate(episodeFight(ep.id), ep.script, 1);
+      expect(rate, ep.id).toBeGreaterThanOrEqual(0.95);
+    }
+  }, 30000);
+
+  it('still asks for writing: a hand that slips three times on every kana does not win a boss', () => {
+    for (const b of KANA_BOSSES) expect(winRate(bossFight(b), b.script, 3, 50), b.id).toBeLessThan(0.5);
+  }, 30000);
 });

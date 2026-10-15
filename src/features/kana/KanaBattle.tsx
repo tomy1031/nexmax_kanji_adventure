@@ -2,9 +2,9 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { AnimatePresence, motion, useAnimationControls } from 'framer-motion';
 import KanjiWriterCanvas, { type KanjiWriterHandle } from '../../components/KanjiWriterCanvas';
 import { NaniwaBattleView, type SealView } from '../battle/NaniwaBattleView';
-import { KANA_LENIENCY, ROMAJI } from '../../data/kana';
+import { kanaLeniency, ROMAJI } from '../../data/kana';
 import { kanaToWrite, type KanaWord } from '../../data/kanaWords';
-import { KANA_HERO, nextWord, stageOf, wordDamage, type KanaFight, type KanaScript } from '../../data/kanaBattle';
+import { KANA_HERO, STAGE_HEAL, cleanWordHeal, nextWord, stageOf, wordDamage, type KanaFight, type KanaScript } from '../../data/kanaBattle';
 import { sealFloor, strikeSealed } from '../../lib/seals';
 import { speak, stopSpeaking } from '../../lib/speech';
 import { assetPath } from '../../lib/assetPath';
@@ -236,14 +236,32 @@ export const KanaBattle = ({ fight, script, field, weapon = null, onWin, onFlee 
     }
   }, [foe.attack, enemyCtl, heroCtl, fieldCtl, say]);
 
+  /** Slips on the kana being written: the first is free (kanaBattle.ts rageOf), the rest count toward the strike. */
+  const slipsHere = useRef(0);
   const handleMistake = useCallback(() => {
     if (end) return;
+    slipsHere.current += 1;
+    if (slipsHere.current < 2) return;
     setRage((r) => {
       const n = r + 1;
       if (n >= foe.patience) later(strikeBack, 250);
       return n;
     });
   }, [end, foe.patience, later, strikeBack]);
+  // A new kana on the board: its slips start over.
+  useEffect(() => {
+    slipsHere.current = 0;
+  }, [word, pos]);
+
+  /** Mend Nexmax by `n` (never past his HP), and say so. */
+  const mend = useCallback((n: number) => {
+    const next = Math.min(hero.hp, myHpRef.current + n);
+    if (next === myHpRef.current) return 0;
+    const healed = next - myHpRef.current;
+    myHpRef.current = next;
+    setMyHp(next);
+    return healed;
+  }, [hero.hp]);
 
   const handleComplete = useCallback(
     ({ totalMistakes }: { totalMistakes: number }) => {
@@ -291,10 +309,17 @@ export const KanaBattle = ({ fight, script, field, weapon = null, onWin, onFlee 
           later(onWin, 2200);
           return;
         }
+        // A word without a slip mends a little; a boss's next stage, a lot (kanaBattle.ts).
+        const healed = all.every((w) => w.mistakes === 0 && !w.hinted) ? mend(cleanWordHeal(hero.hp)) : 0;
+        if (healed) later(() => say(`💚 +${healed}`), 650);
         later(() => {
           const before = stageOf(fight, opened);
           const after = stageOf(fight, open);
-          if (fight.stages.length > 1 && after > before) say(`⭐ ${after + 1} / ${fight.stages.length}`);
+          if (fight.stages.length > 1 && after > before) {
+            const rest = mend(Math.round(hero.hp * STAGE_HEAL));
+            say(`⭐ ${after + 1} / ${fight.stages.length}${rest ? ` 💚 +${rest}` : ''}`);
+            sfx.star(after);
+          }
           setWord(nextWord(fight, open, word));
           setPos(0);
           setWritten([]);
@@ -302,15 +327,11 @@ export const KanaBattle = ({ fight, script, field, weapon = null, onWin, onFlee 
         }, 1300);
       }, 450);
     },
-    [end, solved, recordKanaRep, kana, hinted, written, combo, opened, fight, pos, letters.length, word, weapon, foe.hp, heroCtl, enemyCtl, later, say, onWin],
+    [end, solved, recordKanaRep, kana, hinted, written, combo, opened, fight, pos, letters.length, word, weapon, foe.hp, heroCtl, enemyCtl, later, say, onWin, mend, hero.hp],
   );
 
-  // The seals on show: a boss's current stage only (46 do not fit), an episode's all.
-  const stage = stageOf(fight, opened);
-  const seals: SealView[] = useMemo(
-    () => (fight.stages[stage] ?? fight.seals).map((k) => ({ id: k, char: k, open: opened.has(k) })),
-    [fight, stage, opened],
-  );
+  // Every seal from the start: a boss's 46 as the kana chart (NaniwaBattleView SealChart).
+  const seals: SealView[] = useMemo(() => fight.seals.map((k) => ({ id: k, char: k, open: opened.has(k) })), [fight, opened]);
   const nameBack = ['ネ', 'ク', 'マ', 'ツ', 'ス'].every((k) => known.has(k));
 
   return (
@@ -343,7 +364,9 @@ export const KanaBattle = ({ fight, script, field, weapon = null, onWin, onFlee 
               size={px}
               quizMode
               surface="ink"
-              leniency={KANA_LENIENCY}
+              leniency={kanaLeniency(kana)}
+              // A stroke missed three times is taken as written: a quirky stroke never stops the fight.
+              forgiveAfter={3}
               onMistake={handleMistake}
               onComplete={handleComplete}
             />
@@ -363,12 +386,10 @@ export const KanaBattle = ({ fight, script, field, weapon = null, onWin, onFlee 
         boardRef={boardRef}
         heroRef={heroRef}
         enemyRef={enemyRef}
+        // Looking at the stroke order only softens this kana's blow: no slip counted.
+        hintFree
         onStrokeOrder={() => {
-          // Looking costs: this kana counts as hinted, and one slip.
-          if (!hinted) {
-            setHinted(true);
-            handleMistake();
-          }
+          if (!hinted) setHinted(true);
           writerRef.current?.animateStroke();
         }}
         onFlee={onFlee}
@@ -411,19 +432,27 @@ export const KanaBattle = ({ fight, script, field, weapon = null, onWin, onFlee 
             <p className="text-5xl leading-none">{end === 'won' ? '🎉✨' : '💦'}</p>
             {end === 'lost' && (
               <div className="flex w-full max-w-xs flex-col gap-2">
+                {/* コンティニュー (2026-10-15「コンティニューとかも…救済があっていいかも」): HP full, the fight goes on where it was — the opponent's HP and the open seals stay. As often as needed in 0章. */}
                 <button
                   type="button"
-                  className="g-btn g-btn-primary g-shine w-full !min-h-[56px] text-lg"
+                  className="g-btn g-btn-primary g-shine w-full !min-h-[60px] text-lg"
                   onClick={() => {
                     sfx.tap();
                     myHpRef.current = hero.hp;
                     setMyHp(hero.hp);
                     setRage(0);
+                    slipsHere.current = 0;
                     setEnd(null);
+                    say(`💚 ${hero.hp}`);
                   }}
                 >
-                  <span className="relative z-10">
-                    🔁 <RubyText showFurigana={showFurigana}>もう いちど</RubyText>
+                  <span className="relative z-10 flex flex-col leading-tight">
+                    <span>
+                      ▶ <RubyText showFurigana={showFurigana}>コンティニュー</RubyText>
+                    </span>
+                    <span className="text-xs font-bold opacity-90">
+                      💚 HP 100% ・ <span lang="en">keep going from here</span>
+                    </span>
                   </span>
                 </button>
                 <button type="button" className="g-btn g-btn-night w-full" onClick={onFlee}>

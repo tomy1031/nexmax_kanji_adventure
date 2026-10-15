@@ -6,7 +6,7 @@ import { useCompactHeight } from '../../hooks/useCompactHeight';
 import { StarBurst } from '../../components/ui/StarBurst';
 import * as sfx from '../../lib/sfx';
 import { useGameStore } from '../../store/gameStore';
-import { KANA_LENIENCY, KANA_REPS, KANA_SAMPLE_REPS, ROMAJI } from '../../data/kana';
+import { kanaLeniency, KANA_REPS, KANA_SAMPLE_REPS, ROMAJI } from '../../data/kana';
 import SignLight, { type SignLightHandle } from '../write/SignLight';
 import { NightStreetBackdrop, SignStreet } from '../write/NightStreet';
 import { TownBackdrop, TownShot } from '../write/TownBackdrop';
@@ -172,7 +172,7 @@ export const KanaDrill = ({ kana, onDone, onExit, scene }: KanaDrillProps) => {
               showSample={showSample}
               onWritten={handleWritten}
               onLit={handleLit}
-              leniency={KANA_LENIENCY}
+              leniency={kanaLeniency(current)}
             />
           </div>
           <div className="absolute top-3 -right-1 flex translate-x-1/2 flex-col gap-2">

@@ -117,6 +117,60 @@ export interface SealView {
  * Once they all are, the row folds into one 🔓 a moment later: the kanji the
  * fight asks again must not stand there to copy (手本なしで 書く).
  */
+/**
+ * A boss that holds every kana of a script (0章, docs/design/22 §4.2): all 46
+ * shown from the start as the kana chart — five to a row, や・わ rows with
+ * their gaps — on the left of the sky, each lighting up as it is written
+ * (2026-10-15「全てのひらがなを網羅するなら最初から全て表示してほしい」).
+ */
+/** The kana chart's shape: per row, which of its five places hold a kana. */
+const CHART_ROWS = [[0, 1, 2, 3, 4], [0, 1, 2, 3, 4], [0, 1, 2, 3, 4], [0, 1, 2, 3, 4], [0, 1, 2, 3, 4], [0, 1, 2, 3, 4], [0, 1, 2, 3, 4], [0, 2, 4], [0, 1, 2, 3, 4], [0, 4], [0]];
+const SEAL_CHART_MIN = 17;
+const SealChart = ({ seals, still }: { seals: readonly SealView[]; still: boolean }) => {
+  // The 46 of a script take the chart's shape; any other long list, rows of five.
+  const rows = seals.length === 46 ? CHART_ROWS : Array.from({ length: Math.ceil(seals.length / 5) }, (_, r) => [0, 1, 2, 3, 4].slice(0, Math.min(5, seals.length - r * 5)));
+  const chip = 34;
+  const gap = 4;
+  const left = seals.filter((x) => !x.open).length;
+  let i = 0;
+  return (
+    <div
+      className="absolute rounded-[1.4cqw] border-[0.3cqw] border-[#8a6bb0]/70 bg-[#140c22]/70 p-[0.8cqw]"
+      style={onTop(14, 168, 5 * (chip + gap) + 12, rows.length * (chip + gap) + 12)}
+      role="img"
+      aria-label={left > 0 ? `あいての 字 あと ${left}` : 'あいての 字 ぜんぶ もどった'}
+    >
+      {rows.map((cols, r) =>
+        cols.map((c) => {
+          const x = seals[i++];
+          if (!x) return null;
+          return (
+            <motion.span
+              key={x.id}
+              className="absolute flex items-center justify-center rounded-[0.5cqw] border-[0.25cqw] leading-none font-black"
+              style={{
+                left: cq(6 + c * (chip + gap)),
+                top: cq(6 + r * (chip + gap)),
+                width: cq(chip),
+                height: cq(chip),
+                fontSize: cq(24),
+                ...(x.open
+                  ? { background: 'linear-gradient(180deg,#fffaf0,#f1e2bf)', borderColor: '#f2c45a', color: '#24180d', boxShadow: `0 0 ${cq(10)} rgba(255,211,106,0.85)` }
+                  : { background: 'rgba(58,35,80,0.85)', borderColor: 'rgba(138,107,176,0.7)', color: 'rgba(217,196,255,0.55)' }),
+              }}
+              initial={false}
+              animate={x.open ? (still ? { opacity: 1 } : { scale: [1.7, 1], rotate: [-12, 0] }) : { scale: 1 }}
+              transition={{ type: 'spring', stiffness: 380, damping: 14 }}
+            >
+              <RubyText showFurigana>{x.char}</RubyText>
+            </motion.span>
+          );
+        }),
+      )}
+    </div>
+  );
+};
+
 const SealRow = ({ seals, still }: { seals: readonly SealView[]; still: boolean }) => {
   const left = seals.filter((x) => !x.open).length;
   const w = Math.min(50, Math.floor(560 / seals.length) - 6);
@@ -498,7 +552,8 @@ export const NaniwaBattleView = ({
           </div>
 
           {/* COMBO: the count on the left of the sky, a band across at 3・5・7・10 */}
-          <div className="absolute z-10" style={{ left: pct(30 / W), top: pct(150 / TOP_H) }}>
+          {/* (beside the kana chart, when a boss holds all 46) */}
+          <div className="absolute z-10" style={{ left: pct((seals.length >= SEAL_CHART_MIN ? 236 : 30) / W), top: pct(150 / TOP_H) }}>
             <ComboMeter combo={combo} showPct={comboPct} still={still} />
           </div>
           <ComboBanner combo={combo} still={still} />
@@ -567,7 +622,8 @@ export const NaniwaBattleView = ({
                 />
               ))}
             </div>
-            {seals.length > 0 && <SealRow seals={seals} still={still} />}
+            {seals.length > 0 && seals.length < SEAL_CHART_MIN && <SealRow seals={seals} still={still} />}
+            {seals.length >= SEAL_CHART_MIN && <SealChart seals={seals} still={still} />}
           </div>
         </motion.div>
 
