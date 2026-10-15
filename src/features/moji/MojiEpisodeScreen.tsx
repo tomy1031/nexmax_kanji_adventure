@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCompanionFx } from '../../store/companionFx';
 import { Navigate, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import NovelScene from '../novel/NovelScene';
@@ -476,6 +477,8 @@ const EpisodePlayer = ({ id }: { id: string }) => {
     setFight(hard ? hardFight(ep, s) : null);
     setRematch(isHardOpen(ep.id, s.clearedStages));
     setBattleKey((n) => n + 1);
+    // Who comes along, for a moment as the fight starts (companionFx).
+    if (s.activeIndividual) useCompanionFx.getState().showJoin(s.activeIndividual, true);
   };
 
   useEffect(() => {
@@ -725,6 +728,7 @@ const FinalePlayer = ({ id }: { id: string }) => {
     setRematch(isHardOpen(f.id, s.clearedStages));
     setPool(finalePool(f, s.progress));
     setBattleKey((n) => n + 1);
+    if (s.activeIndividual) useCompanionFx.getState().showJoin(s.activeIndividual, true);
   };
 
   useEffect(() => {

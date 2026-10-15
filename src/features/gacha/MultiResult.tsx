@@ -6,6 +6,8 @@ import { assetPath } from '../../lib/assetPath';
 import type { Individual } from '../../data/individuals';
 import type { SinglePull } from './SingleResult';
 import { GachaCard } from './GachaCard';
+import { useGameStore } from '../../store/gameStore';
+import { takeAlong } from '../companion/takeAlong';
 
 /**
  * 10回の けっか (docs/design/17 §3.4, 18 §4), after the cards have come out
@@ -32,6 +34,7 @@ export const MultiResult = ({
   again: { cost: number; go: () => void } | null;
 }) => {
   const fresh = results.filter((r) => !r.duplicate).length;
+  const along = useGameStore((s) => s.activeIndividual);
   // Four to a row: a quarter of the width less the gaps, and three rows that fit the height.
   const [cardW] = useState(() => Math.floor(Math.min((Math.min(window.innerWidth, 448) - 32 - 3 * 8) / 4, (window.innerHeight * 0.6) / 3 / 1.5)));
   const [plateW] = useState(() => Math.min(window.innerWidth - 24, 360));
@@ -52,8 +55,15 @@ export const MultiResult = ({
 
       <div className="relative flex w-full flex-wrap justify-center gap-2">
         {results.map((r, i) => (
-          <motion.div
+          <motion.button
+            type="button"
             key={`${r.card.id}-${i}`}
+            aria-label={`${r.card.shortName} つれて いく`}
+            aria-pressed={r.card.id === along}
+            // A tap takes this one along (JoinCutIn): the best of the ten is one tap from the fights.
+            onClick={() => takeAlong(r.card.id)}
+            className="relative rounded-lg"
+            style={r.card.id === along ? { boxShadow: '0 0 0 3px #ffd36a, 0 0 14px rgba(255,211,106,0.8)' } : undefined}
             initial={{ opacity: 0, y: still ? 0 : -40, scale: still ? 1 : 0.6 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             transition={{ delay: still ? 0 : i * 0.06, type: 'spring', stiffness: 260, damping: 20 }}
@@ -68,7 +78,12 @@ export const MultiResult = ({
               badge={r.duplicate ? (r.bondTo ? `♥${r.bondTo}` : `◆${r.refund}`) : undefined}
               pickup={isPickup(r.card)}
             />
-          </motion.div>
+            {r.card.id === along && (
+              <span className="absolute -top-2 left-1/2 -translate-x-1/2 rounded-full bg-[#e8a317] px-1.5 text-[10px] leading-[1.7] font-black whitespace-nowrap text-white shadow">
+                ✓ <RubyText showFurigana={showFurigana}>いっしょ</RubyText>
+              </span>
+            )}
+          </motion.button>
         ))}
       </div>
 
@@ -84,6 +99,9 @@ export const MultiResult = ({
         </RubyText>
       </p>
 
+      <p className="relative mt-1 text-center text-[11px] font-bold text-[#ffe9a8]">
+        🤝 <RubyText showFurigana={showFurigana}>カードを おすと、いっしょに つれて いけます</RubyText>
+      </p>
       <div className="relative mt-1 flex w-full justify-start">
         <NexmaxSays text={fresh ? 'すてきな なかまに 出会(であ)えたね！' : 'きずなが ふかまったね！'} pose="cheer" size={64} flip />
       </div>
