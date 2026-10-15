@@ -139,8 +139,8 @@ export interface GameState {
   autoVoice: boolean;
   /** One-off explainers the player has already been shown. */
   /** intro: むかし編の 0話. prologue: 文字が 消えた 町の プロローグ (08 §10.2). stars: じゅんびの ★の ひみつ. */
-  /** classUp: the 「★4 クラスアップ！」 card (docs/design/21), once. */
-  tutorials: { forge: boolean; intro: boolean; prologue: boolean; stars: boolean; tools: boolean; gacha: boolean; firstWeapon: boolean; classUp: boolean };
+  /** classUp: the 「★4 クラスアップ！」 card (docs/design/21), once. star3: Nexmax's ★3 evolution at the start of 1章 (docs/design/22 §3), once. */
+  tutorials: { forge: boolean; intro: boolean; prologue: boolean; stars: boolean; tools: boolean; gacha: boolean; firstWeapon: boolean; classUp: boolean; star3: boolean };
   /** The world last played in — where つづきから, ストーリー and もどる lead back to. */
   lastArc: 'mukashi' | 'gendai' | 'moji';
   /**
@@ -288,7 +288,7 @@ const initialState: GameState = {
   settings: { furigana: true, muted: false, reducedMotion: false, bgmOff: false, english: true },
   fullMotion: false,
   autoVoice: false,
-  tutorials: { forge: false, intro: false, prologue: false, stars: false, tools: false, gacha: false, firstWeapon: false, classUp: false },
+  tutorials: { forge: false, intro: false, prologue: false, stars: false, tools: false, gacha: false, firstWeapon: false, classUp: false, star3: false },
   // A new player starts on the new route (08 §10.2).
   lastArc: 'moji',
   startPath: null,

@@ -68,6 +68,20 @@ export const MOJI1_PRELUDE: NovelScript = {
   ],
 };
 
+/**
+ * ★3 (docs/design/22 §3, 2026-10-15「N5の最初で名前を取り戻して星3になるイベントを作って」): after 1章
+ * 1話's meeting, where the light of the written letters goes into Nexmax
+ * (「✍️ → 💡 → 🤖」), his name comes back whole and he grows into ★3
+ * (EvolveScene). 1課's pattern only: 〜は 〜です.
+ */
+export const STAR3_LINES: { text: string; en: string }[] = [
+  { text: 'あなたの 字(じ)の ひかりです。', en: 'The light of your letters…' },
+  { text: 'ぼくの なまえは ネクマックスです！', en: 'My name is Nexmax — all of it, back again!' },
+  { text: 'ネクマックス ★3です！ ありがとう！', en: 'Nexmax, ★3! Thank you!' },
+];
+/** First, for a player who skipped 0章 (MOJI1_PRELUDE): he was still ★1. */
+export const STAR3_SKIPPED_LINE = { text: 'あなたが なまえを かきました。', en: 'You wrote my name back.' };
+
 export const MOJI1_SCRIPTS: Record<string, EpisodeScript> = {
   'moji-1-1': {
     intro: {

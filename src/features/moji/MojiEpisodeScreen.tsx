@@ -42,6 +42,11 @@ import { ClassUpNotice } from './NexmaxClass';
 import { useNexmaxClass } from './useNexmaxClass';
 import { useOwnedKanji } from './useOwnedKanji';
 import { faceStyle } from '../../lib/faceCrop';
+import { EvolveScene } from '../../components/ui/EvolveScene';
+import { NANIWA_NEXMAX_STAR1, NANIWA_NEXMAX_STAR2 } from '../../data/scripts/naniwaCast';
+import { STAR3_LINES, STAR3_SKIPPED_LINE } from '../../data/scripts/moji1';
+import { SCENES } from '../picturebook/scenes';
+import { useStill } from '../../hooks/useStill';
 
 /**
  * 文字が 消えた 町 — one episode (08 §4.2.1, §4.2.2, §3.8):
@@ -65,7 +70,7 @@ import { faceStyle } from '../../lib/faceCrop';
  * (KanjiBackText).
  */
 
-type Phase = 'prelude' | 'intro' | 'write' | 'encounter' | 'ready' | 'practice' | 'battle' | 'outro' | 'words' | 'end';
+type Phase = 'prelude' | 'intro' | 'write' | 'encounter' | 'evolve' | 'ready' | 'practice' | 'battle' | 'outro' | 'words' | 'end';
 
 const SCRIPTS = MOJI_SCRIPTS;
 const CAST = [...MOJI_CAST];
@@ -427,6 +432,24 @@ const EpisodePlayer = ({ id }: { id: string }) => {
     const saw = useGameStore.getState().clearedStages;
     return ep.id === 'moji-1-1' && !saw.includes('kana-10') && !saw.includes(ep.id) ? 'prelude' : 'intro';
   });
+  /**
+   * ★3 (docs/design/22 §3): the first time through 1章 1話, Nexmax comes in
+   * the form 0章 left him in — ★2, or ★1 for a player who skipped 0章 — and
+   * the letters' light at the meeting makes him ★3. Fixed on arrival.
+   */
+  const [evolveFrom] = useState<1 | 2 | null>(() => {
+    const s = useGameStore.getState();
+    if (ep.id !== 'moji-1-1' || s.tutorials.star3 || s.clearedStages.includes(ep.id)) return null;
+    return s.clearedStages.includes('kana-10') ? 2 : 1;
+  });
+  const [evolved, setEvolved] = useState(false);
+  const markTutorialSeen = useGameStore((s) => s.markTutorialSeen);
+  const still = useStill();
+  const cast = useMemo(() => {
+    if (!evolveFrom || evolved) return CAST;
+    const form = evolveFrom === 2 ? NANIWA_NEXMAX_STAR2 : NANIWA_NEXMAX_STAR1;
+    return CAST.map((c) => (c.id === 'nexmax' ? { ...c, sprites: form.sprites } : c));
+  }, [evolveFrom, evolved]);
   const [idx, setIdx] = useState(0);
   const [practice, setPractice] = useState<KanjiData | null>(null);
   const [battleKey, setBattleKey] = useState(0);
@@ -504,13 +527,13 @@ const EpisodePlayer = ({ id }: { id: string }) => {
   const view = (() => {
     switch (phase) {
       case 'prelude':
-        return <NovelScene look="night" bgm="sad" key="prelude" script={MOJI1_PRELUDE} cast={CAST} chapter={label} renderText={renderText} onFinish={() => setPhase('intro')} />;
+        return <NovelScene look="night" bgm="sad" key="prelude" script={MOJI1_PRELUDE} cast={cast} chapter={label} renderText={renderText} onFinish={() => setPhase('intro')} />;
       case 'intro':
         return (
           <NovelScene look="night" bgm="sad" holdLetters={ep.kanji}
             key="intro"
             script={lines.intro}
-            cast={CAST}
+            cast={cast}
             chapter={label}
             renderText={renderText}
             onFinish={() => setPhase(queue.length ? 'write' : 'encounter')}
@@ -534,7 +557,42 @@ const EpisodePlayer = ({ id }: { id: string }) => {
         );
       }
       case 'encounter':
-        return <NovelScene look="night" bgm="tension" key="encounter" script={lines.encounter} cast={CAST} chapter={label} renderText={renderText} onFinish={toReady} />;
+        return (
+          <NovelScene
+            look="night"
+            bgm="tension"
+            key="encounter"
+            script={lines.encounter}
+            cast={cast}
+            chapter={label}
+            renderText={renderText}
+            onFinish={evolveFrom && !evolved ? () => setPhase('evolve') : toReady}
+          />
+        );
+      case 'evolve': {
+        // The letters' light goes into Nexmax: his name comes back whole, ★3 (docs/design/22 §3).
+        const from = (evolveFrom === 2 ? NANIWA_NEXMAX_STAR2 : NANIWA_NEXMAX_STAR1).sprites.normal;
+        return (
+          <EvolveScene
+            key="evolve"
+            from={from}
+            to="img/chara/naniwa/nexmax_smile.webp"
+            stars={3}
+            title="★3 しんか！"
+            name="ネクマックス"
+            backdrop={SCENES[ep.bg]?.photo}
+            lines={evolveFrom === 1 ? [STAR3_SKIPPED_LINE, ...STAR3_LINES] : STAR3_LINES}
+            renderText={renderText}
+            showFurigana={showFurigana}
+            still={still}
+            onDone={() => {
+              markTutorialSeen('star3');
+              setEvolved(true);
+              toReady();
+            }}
+          />
+        );
+      }
       case 'ready':
         return (
           <ReadyScreen
@@ -602,7 +660,7 @@ const EpisodePlayer = ({ id }: { id: string }) => {
           />
         );
       case 'outro':
-        return <NovelScene look="night" key="outro" script={lines.outro} cast={CAST} chapter={label} renderText={renderText} onFinish={finish} />;
+        return <NovelScene look="night" key="outro" script={lines.outro} cast={cast} chapter={label} renderText={renderText} onFinish={finish} />;
       case 'words':
         return <TownWords scene={ep.bg} words={townWords} onNext={proceed} />;
       case 'end':
