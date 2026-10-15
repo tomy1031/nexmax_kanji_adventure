@@ -6,7 +6,7 @@ import { useGameStore } from '../../store/gameStore';
 import { getKanaEpisode } from '../../data/kana';
 import { afterEpisode } from '../../data/mojiFlow';
 import { PhaseDoors } from '../../components/ui/Doors';
-import { KANA_CAST, KANA_SCRIPTS } from '../../data/scripts/kana';
+import { KANA_SCRIPTS, kanaCast } from '../../data/scripts/kana';
 import KanaDrill from './KanaDrill';
 import KanaText from './KanaText';
 import { useKnownKana } from './useKnownKana';
@@ -30,6 +30,8 @@ const EpisodePlayer = ({ id }: { id: string }) => {
   const known = useKnownKana();
   const clearStage = useGameStore((s) => s.clearStage);
   const [phase, setPhase] = useState<Phase>('intro');
+  // ★1 through the hiragana, ★2 through the katakana (naniwaCast.ts).
+  const cast = kanaCast(ep.script);
 
   useEffect(() => {
     void preloadCharData(ep.kana);
@@ -86,7 +88,7 @@ const EpisodePlayer = ({ id }: { id: string }) => {
             bgm="sad"
             holdLetters={ep.kana}
             script={lines.intro}
-            cast={KANA_CAST}
+            cast={cast}
             chapter={chapter}
             renderText={renderText}
             renderPlain={renderPlain}
@@ -104,7 +106,7 @@ const EpisodePlayer = ({ id }: { id: string }) => {
           <NovelScene
             key="outro"
             script={lines.outro}
-            cast={KANA_CAST}
+            cast={cast}
             chapter={chapter}
             renderText={renderText}
             renderPlain={renderPlain}

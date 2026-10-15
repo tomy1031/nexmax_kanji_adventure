@@ -158,6 +158,31 @@ on his shoulders, elbows and boots, a small golden star-shaped crest on top of h
 chest mark glowing a warm gold. Everything else stays as in the first reference. Kid-friendly. No readable letters.
 The chest mark must always be visible and unobstructed.`,
 
+  // かな編の ネクマックス（2026-10-15）: 字を うばわれて 小さく なった ★1（ひらがな）と ★2（カタカナ）。
+  NEXMAX_STAR1: `Form: his ★1 form. His letters and his name were stolen, so he has shrunk into a tiny, weakened BABY robot.
+He is still clearly the same character as the references (the same sky-blue helmet head with ear pods, the big white
+face-screen, the navy double-peak "M" chest mark), but baby-like: an even bigger round head on a tiny soft round body
+(about 1.6 heads tall in total), short chubby stubby arms and legs, tiny round mitten hands, smaller rounder ear pods,
+extra-big shiny eyes. A little curled sprout antenna on top of the helmet, like a baby's curl of hair. A small soft
+pale-yellow baby bib tied around his neck that sits ABOVE the chest mark and never covers it. His sky-blue is a little
+paler and dusty, as if drained, and the chest mark is faded grey and unlit (no glow). A small sticking plaster on one
+side of the helmet. NO satchel, no bag. Endearing and fragile, but plucky.`,
+
+  NEXMAX_STAR2: `Form: his ★2 form. He has won back the hiragana and has grown into a small KID robot, but his name is still
+missing. He is clearly the same character as the references (the same sky-blue helmet head with ear pods, the big white
+face-screen, the navy double-peak "M" chest mark), only a little younger than his usual self: about 1.8 heads tall, a
+slightly bigger head and shorter limbs than usual, bright sky-blue again. A small orange neckerchief tied at the neck
+(it never covers the chest mark). The chest mark glows with a soft pale light, half awake. Instead of the brown
+satchel, a small yellow canvas kids' shoulder bag on a strap, with a big rectangular name tag hanging from it: the tag
+is BLANK with a few dark empty holes in it (no letters at all). A small calligraphy brush tucked behind one ear pod.
+Cheerful, confident, a little cheeky.`,
+
+  // ★1・★2 の 表情ちがい: もとの ★3 の 絵と 同じ ポーズで、2枚目の 姿に する。
+  NEXMAX_FORM_SAME: `Character: redraw the pose and expression of the FIRST reference image — the same pose, gesture, facing
+and camera angle, the same glossy anime game rendering with a clean dark outline — but the character must be exactly
+the small robot of the SECOND reference image (its body proportions, size, colours and every accessory), not the one
+in the first. Kid-friendly. No readable letters. The chest mark must always be visible and unobstructed.`,
+
   // たいせんの 2P（2026-10-15）: なかま なしの へやで、あいての ネクマックスを 色ちがいに する。
   NEXMAX_2P_SAME: `Character: redraw exactly the picture in the reference image — the same small robot, the same pose, the same
 props, the same camera angle, framing and proportions, the same glossy anime game rendering with a clean dark outline.
@@ -741,6 +766,68 @@ const NEXMAX_NANIWA = [
     note: '1枚目と 同じ ポーズ。import.mjs が 白い 背景を 切り抜き、1枚目の 絵の 大きさと 位置に 合わせる（matchFrame）',
   })),
 ];
+
+// ---------------------------------------------------------------------------
+// かな編の ネクマックス（2026-10-15「ひらがなの時のネクマックス（★1文字を奪われて弱体化している、赤ちゃん風）、
+// カタカナの時のネクマックス（星2ひらがなマスター）のデザインを作ってそれをストーリーのときに使って」）。
+// まず ふだんの 絵（normal）を 作り、ほかの 表情は それと ★3 の 同じ 表情の 絵から 作る（姿が そろう）。
+// 1章の はじめに 名前が もどって ★3（いつもの nexmax_normal）に なる（docs/design/22）。
+// ---------------------------------------------------------------------------
+
+const KANA_POSES = {
+  smile: 'よろこぶ・ほめる',
+  think: 'こまる・かなしい・ふしぎ',
+  guide: 'あんない（「うえ！👆」「かいて！」）',
+  determined: 'いそぐ・がんばる',
+};
+const KANA_BATTLE = {
+  star1: 'Pose: a battle stance facing RIGHT: he holds a chunky wax crayon as long as his arm in both tiny hands like a sword, wobbly but brave, one stubby foot forward, brows set, a determined little pout; a few crayon-coloured sparkles fly from the crayon tip.',
+  star2: 'Pose: a dynamic battle stance facing RIGHT, swinging a small calligraphy brush up and over his head with both hands; a small arc of glowing blue ink swirls behind him with a few splashes; a cheeky, determined grin.',
+};
+const kanaForm = (star, label) => [
+  {
+    id: `nexmax_${star}_normal`,
+    group: 'nexmax_naniwa',
+    prio: 'A',
+    out: `img/chara/naniwa/nexmax_${star}_normal.webp`,
+    kind: 'chara',
+    bgmode: 'white',
+    refs: ['public/img/chara/naniwa/nexmax_normal.webp', NX_PAINTED],
+    style: ['NEXMAX_PAINTED', star === 'star1' ? 'NEXMAX_STAR1' : 'NEXMAX_STAR2', 'CHARA_OUT'],
+    diff: 'Pose and expression: standing relaxed and friendly, arms loosely at his sides, a gentle smile, looking at the viewer.',
+    used: `${label}の ふだん（お話の 立ち絵・名札の 顔）`,
+    note: '白い 背景を import.mjs が 切り抜く。ほかの 表情は この 絵を 2枚目の 参照に する',
+  },
+  ...Object.entries(KANA_POSES).map(([pose, used]) => ({
+    id: `nexmax_${star}_${pose}`,
+    group: 'nexmax_naniwa',
+    prio: 'A',
+    out: `img/chara/naniwa/nexmax_${star}_${pose}.webp`,
+    kind: 'chara',
+    bgmode: 'white',
+    refs: [`public/img/chara/naniwa/nexmax_${pose}.webp`, `public/img/chara/naniwa/nexmax_${star}_normal.webp`],
+    style: ['NEXMAX_FORM_SAME', star === 'star1' ? 'NEXMAX_STAR1' : 'NEXMAX_STAR2', 'CHARA_OUT'],
+    diff: 'Pose and expression: exactly as in the first reference image.',
+    used: `${label}の ${used}`,
+    note: '1枚目の ポーズで、2枚目の 姿',
+  })),
+  {
+    id: `nexmax_${star}_battle`,
+    group: 'nexmax_naniwa',
+    prio: 'A',
+    out: `img/battle/nexmax_${star}_battle.webp`,
+    kind: 'chara',
+    bgmode: 'white',
+    refs: ['public/img/battle/nexmax_brush.webp', `public/img/chara/naniwa/nexmax_${star}_normal.webp`],
+    style: ['NEXMAX_FORM_SAME', star === 'star1' ? 'NEXMAX_STAR1' : 'NEXMAX_STAR2', 'CHARA_OUT'],
+    diff: KANA_BATTLE[star],
+    used: `${label}の たたかい（かなの バトルの ネクマックス）`,
+    ...(star === 'star2' ? { flatWhite: true } : {}),
+    note: '1枚目は 向きと 動きの 参考。持ち物は diff の とおり',
+  },
+];
+
+const NEXMAX_KANA = [...kanaForm('star1', 'ひらがな編（★1）'), ...kanaForm('star2', 'カタカナ編（★2）')];
 
 // ---------------------------------------------------------------------------
 // たいせん（2026-10-15「対戦画面のUIをもう少しテイストに合わせて、かつスマブラのように盛り上がる感じで。
@@ -1364,7 +1451,7 @@ const GACHA_ART = [
     used: 'ガチャを ひく ときに カプセルから 出る お札（字を 書き順どおりに 書く）', note: '白い 背景を import.mjs が 切り抜く（prop）' },
 ];
 
-export const ASSETS = [...NEXMAX, ...GENDAI, ...MUKASHI_FOLK, ...ENEMIES, ...CREATURES, ...BG, ...NANIWA, ...PORT, ...FOOD, ...MIYAKO, ...SHIZUKA, ...NEXMAX_NANIWA, ...VERSUS_ART, ...FOLK, ...PROLOGUE_ART, ...PROLOGUE_EATEN, ...MAPS, ...ICONS, ...CARDS, ...WEAPONS, ...GEAR_ART, ...FORGED_GEAR_ART, ...GACHA_ART];
+export const ASSETS = [...NEXMAX, ...GENDAI, ...MUKASHI_FOLK, ...ENEMIES, ...CREATURES, ...BG, ...NANIWA, ...PORT, ...FOOD, ...MIYAKO, ...SHIZUKA, ...NEXMAX_NANIWA, ...NEXMAX_KANA, ...VERSUS_ART, ...FOLK, ...PROLOGUE_ART, ...PROLOGUE_EATEN, ...MAPS, ...ICONS, ...CARDS, ...WEAPONS, ...GEAR_ART, ...FORGED_GEAR_ART, ...GACHA_ART];
 
 export const GROUPS = {
   nexmax: 'ネクマックス（表情・ポーズ）',

@@ -1,6 +1,7 @@
 import type { CastMember, NovelScript } from '../types/novel';
 import { SCENES } from '../features/picturebook/scenes';
-import { KANA_CAST, KANA_SCRIPTS } from './scripts/kana';
+import { KANA_SCRIPTS, kanaCast } from './scripts/kana';
+import { getKanaEpisode } from './kana';
 import { MOJI1_PRELUDE } from './scripts/moji1';
 import { MOJI_CAST, MOJI_SCRIPTS } from './mojiScripts';
 import { getMojiEpisode } from './mojiEpisodes';
@@ -35,7 +36,7 @@ const scriptArt = (scripts: NovelScript[], cast: CastMember[]): string[] => {
 export const episodeArt = (id: string, { star4 = false }: { star4?: boolean } = {}): string[] => {
   const battle = battleUi(star4);
   const kana = KANA_SCRIPTS[id];
-  if (kana) return [...new Set(scriptArt([kana.intro, kana.outro], KANA_CAST))];
+  if (kana) return [...new Set(scriptArt([kana.intro, kana.outro], kanaCast(getKanaEpisode(id)?.script ?? 'hiragana')))];
   const finale = getMojiFinale(id);
   if (finale) {
     const story = MOJI_FINALE_SCRIPTS[id];
