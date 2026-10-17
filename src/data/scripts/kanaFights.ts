@@ -1,5 +1,6 @@
 import type { CastMember, NovelScript } from '../../types/novel';
 import { KANA_BOSSES, KANA_FOES } from '../kanaBattle';
+import type { BossShow } from '../../lib/bossShow';
 
 /**
  * 0章の たたかいの お話 (docs/design/22 §4): after each episode's writing, the
@@ -78,9 +79,11 @@ export const KANA_ENCOUNTERS: Record<string, NovelScript> = Object.fromEntries([
   ]),
 ]);
 
-interface BossScript {
+export interface BossScript {
   intro: NovelScript;
   outro: NovelScript;
+  /** ボスの 見せ場 (lib/bossShow.ts, docs/design/24): the lines mid-fight, the phase-2 picture, the finishing word. */
+  show?: BossShow;
   /** For the hiragana boss: the lines after its fight, once Nexmax has grown (EvolveScene) — before the outro. */
   evolve?: { text: string; en: string }[];
 }
@@ -98,6 +101,26 @@ export const KANA_BOSS_SCRIPTS: Record<string, BossScript> = {
         { speaker: 'nexmax', sprite: 'nexmax:determined', text: 'ぜんぶ かえして！ ✍️💡 → 💥' },
         { text: 'All of them. Every hiragana I have learned. This is the test.', ja: 'ぜんぶの ひらがな。わたしが かいた もじ ぜんぶです。' },
       ],
+    },
+    // ボスの 見せ場（docs/design/24）: 2つめ・3つめの 段で お話、とどめは この かげが たべた「ほし」。
+    show: {
+      trait: { icon: '🌟', ja: 'くいしんぼう', en: 'greedy guts' },
+      beats: [
+        [
+          { speaker: 'foe_kana-boss-1', text: '😠🌟💦' },
+          { text: 'Stars are leaking out of its belly — every word I write cracks it a little more.', ja: 'おなかから ほしが でて います。わたしが かくと、おなかに ひびが はいります。' },
+          { speaker: 'nexmax', text: 'もっと かく！ ✍️' },
+        ],
+        [
+          { speaker: 'foe_kana-boss-1', text: '😡💢 ガオー！' },
+          { text: 'It roars and beats its wings. The last row of hiragana is still inside it.', ja: 'かげが「ガオー！」。さいごの ひらがなは まだ おなかの なかです。' },
+          { speaker: 'nexmax', text: 'こわく ない！ 💪' },
+        ],
+      ],
+      phase2Img: 'img/battle/mojikui_kana_starboss_angry.webp',
+      finisher: 'ほし',
+      finisherWord: { emoji: '⭐', en: 'star' },
+      finisherLine: { speaker: 'nexmax', text: 'さいごは「ほし」！ ⭐' },
     },
     evolve: [
       { text: 'ひらがな ぜんぶ！', en: 'Every hiragana — back!' },
@@ -119,6 +142,26 @@ export const KANA_BOSS_SCRIPTS: Record<string, BossScript> = {
     },
   },
   'kana-boss-2': {
+    // ボスの 見せ場（docs/design/24）: とどめは かな 9話で もどった なまえ「ネクマックス」（なまえが ないと、ちからが でない）。
+    show: {
+      trait: { icon: '🍜', ja: 'よくばり', en: 'greedy' },
+      beats: [
+        [
+          { speaker: 'foe_kana-boss-2', text: '🍜😠 ズズッ！' },
+          { text: 'Katakana are spilling over the rim of the bowl.', ja: 'ちゃわんから カタカナが こぼれて います。' },
+          { speaker: 'nexmax', text: 'あと すこし！ ✌️' },
+        ],
+        [
+          { speaker: 'foe_kana-boss-2', text: '😡🥢 ぜんぶ ぼくの！' },
+          { text: 'It hugs the bowl and swings its chopsticks like a sword.', ja: 'モジクイは ちゃわんを だいて、はしを ふります。' },
+          { speaker: 'nexmax', text: 'ぼくの なまえの ちから！ 💪' },
+        ],
+      ],
+      phase2Img: 'img/battle/mojikui_kana_slurp_angry.webp',
+      finisher: 'ネクマックス',
+      finisherWord: { emoji: '🤖', en: 'Nexmax' },
+      finisherLine: { speaker: 'nexmax', text: 'さいごは「ネクマックス」！ ぼくの なまえ！' },
+    },
     intro: {
       stageId: 'kana-boss-2',
       lines: [
