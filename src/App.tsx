@@ -20,6 +20,7 @@ import EquipScreen from './features/equip/EquipScreen';
 import ZukanScreen from './features/zukan/ZukanScreen';
 import { UpdateWatcher } from './components/UpdateWatcher';
 import { AchievementToast } from './components/AchievementToast';
+import { JoinCutIn } from './features/companion/JoinCutIn';
 
 /**
  * Screens outside 文字が 消えた 町 — the older arcs (closing), versus, the word
@@ -55,6 +56,7 @@ const chunks = {
   words: () => import('./features/words/WordBook'),
   titles: () => import('./features/words/TitlesScreen'),
   tutorial: () => import('./features/tutorial/TutorialStage'),
+  kanaForge: () => import('./features/kana/KanaForgeScreen'),
 };
 const ArcSelect = lazy(orReload(chunks.arcSelect));
 const StageSelect = lazy(orReload(chunks.stageSelect));
@@ -66,6 +68,7 @@ const VersusScreen = lazy(orReload(chunks.versus));
 const WordBook = lazy(orReload(chunks.words));
 const TitlesScreen = lazy(orReload(chunks.titles));
 const TutorialStage = lazy(orReload(chunks.tutorial));
+const KanaForgeScreen = lazy(orReload(chunks.kanaForge));
 // For testing only (せってい → この ゲームに ついて ×7): not warmed with the rest.
 const DebugScreen = lazy(orReload(() => import('./features/dev/DebugScreen')));
 
@@ -176,6 +179,7 @@ const App = () => {
     <HashRouter>
       <UpdateWatcher />
       <AchievementToast />
+      <JoinCutIn />
       <ArcTheme />
       <RotateHint />
       <ScreenDoors>
@@ -195,6 +199,7 @@ const App = () => {
             <Route path="/tutorial" element={<Later><TutorialStage /></Later>} />
             <Route path="/prologue" element={<PrologueScreen />} />
             <Route path="/kana/:id" element={<KanaEpisode />} />
+            <Route path="/kana-forge" element={<Later><KanaForgeScreen /></Later>} />
             <Route path="/moji/:id" element={<MojiEpisodeScreen />} />
             <Route path="/equip" element={<EquipScreen />} />
             <Route path="/zukan" element={<ZukanScreen />} />

@@ -100,7 +100,9 @@ export const MOJI5_SCRIPTS: Record<string, EpisodeScript> = {
         { bg: 'shizuka_station', fx: ['darkclouds'], sprite: 'mojikui_pillow:normal', glyph: '⛲ 💨', text: 'モジクイは 町(まち)の ひろばへ にげました。', en: 'The Mojikui fled to the town square.' },
         { fx: ['spring'], sprite: 'none', glyph: '🌧️ ➡️ 🌙', text: 'ふだが もどりました！ 雨(あめ)が 降(ふ)らなく なりました。', en: 'The signs came back! The rain has stopped.' },
         { speaker: 'ekichou', sprite: 'ekichou:happy', glyph: '😮 ✨', text: 'あれ？ わたしは 寝(ね)て いましたか？ ありがとう ございます！', en: 'Huh? Was I asleep? Thank you!' },
-        { speaker: 'ekichou', sprite: 'ekichou:happy', glyph: '👑 💬', text: '王(おう)さまは「この 町(まち)の 字(じ)も、ぜんぶ 食(た)べます」と 言(い)いました。それから、みんな 寝(ね)ました。', en: 'The King said, "I will eat this town\'s letters too." Then everyone fell asleep.' },
+        // Long ago (2026-10-17): the town had letters once — they come back (もどりました) — but the boy of 2話
+        // has never seen any, and the gardener of 5話 still remembers spring.
+        { speaker: 'ekichou', sprite: 'ekichou:happy', glyph: '👑 💬 🌑', text: 'ずっと まえ、王(おう)さまは「この 町(まち)の 字(じ)を、ぜんぶ 食(た)べます」と 言(い)いました。それから、町(まち)は ずっと 夜(よる)です。', en: 'Long ago, the King said, "I will eat all of this town\'s letters." It has been night here ever since.' },
         { speaker: 'nexmax', sprite: 'nexmax:think', text: '王(おう)さまは どこに いますか？', en: 'Where is the King?' },
         { speaker: 'ekichou', sprite: 'ekichou:happy', glyph: '🏯', text: '町(まち)の 中(なか)の 大(おお)きい しろに います。', en: 'In the big castle in the middle of the town.' },
         { speaker: 'nexmax', sprite: 'nexmax:determined', glyph: '⛲ 👉', text: 'ひろばへ 行(い)きましょう！', en: "Let's go to the square!" },
@@ -485,14 +487,16 @@ export const MOJI5_FINALE: FinaleScript = {
       { speaker: 'mojikui_king', sprite: 'mojikui_king:small', glyph: '👥💬 👾', text: 'みんなは 字(じ)で 話(はな)して いました。わたしは ずっと ひとりでした。', en: 'Everyone talked in letters. I was always alone.' },
       { speaker: 'nexmax', sprite: 'nexmax:smile', glyph: '👤 ✍️', text: 'ぼくの ともだちも、はじめは 字(じ)が わかりませんでした。', en: "My friend here didn't understand letters at first either." },
       { speaker: 'nexmax', sprite: 'nexmax:smile', glyph: '✍️ ✍️ ✍️ ➡️ 💡', text: 'でも、毎(まい)日(にち) 書(か)きました。そして、たくさん わかりました！', en: 'But they wrote every day. And now they understand so much!' },
-      { speaker: 'sora', sprite: 'sora:happy', glyph: '✉️ 👧', text: 'わたしも、手(て)紙(がみ)を 書(か)いたら、ともだちが できたよ！', en: 'When I wrote a letter, I made a friend!' },
-      { speaker: 'hana', sprite: 'hana:happy', glyph: '📝 🍜', text: 'わたしも、メニューの 字(じ)を 書(か)いたら、みんなが 来(き)て くれたよ！', en: 'When I wrote the menu, everyone came to eat!' },
+      // As it happened: Nexmax wrote to Sora (3章 1話), she read it and came, and met Hana (4章 1話);
+      // the menus' letters came back and everyone ate Hana's ramen (3章 まとめの ボス).
+      { speaker: 'sora', sprite: 'sora:happy', glyph: '✉️ 👧 👧', text: 'わたしも、ネクマックスの 手(て)紙(がみ)を 読(よ)んだら、新(あたら)しい ともだちが できたよ！', en: "When I read Nexmax's letter, I made a new friend!" },
+      { speaker: 'hana', sprite: 'hana:happy', glyph: '📋 ✨ 🍜', text: 'わたしも、メニューに 字(じ)が もどったら、みんなが ラーメンを 食(た)べに 来(き)て くれたよ！', en: 'When the letters came back to the menus, everyone came to eat my ramen!' },
       { speaker: 'nexmax', sprite: 'nexmax:determined', glyph: '✍️ 👑', text: '王(おう)さまも、いっしょに 書(か)きましょう！', en: "King, let's write together!" },
       { speaker: 'mojikui_king', sprite: 'mojikui_king:small', glyph: '🥺', text: '……わたしも 書(か)いても いいですか？', en: '…May I write too?' },
       { speaker: 'nexmax', sprite: 'nexmax:smile', glyph: '友(とも)', text: 'はい！ この 字(じ)を 書(か)いて ください。「友(とも)だち」の「友(とも)」です。', en: 'Of course! Please write this letter. It is "tomo" — as in tomodachi, friend.' },
       { sprite: 'mojikui_king:happy', glyph: '✍️ 友(とも) ✨', text: '王(おう)さまは、ゆっくり、ゆっくり 書(か)きました。', en: 'Slowly, very slowly, the King wrote.' },
       { speaker: 'mojikui_king', sprite: 'mojikui_king:happy', text: '友(とも)……。わたしの はじめての 字(じ)です！', en: 'Tomo… My very first letter!' },
-      { bg: 'shizuka_dawn', fx: ['spring'], sprite: 'mojikui_king:happy', glyph: '🌅 ✨', text: '夜(よる)が 終(お)わりました。字(じ)の ない せかいに、はじめて 朝(あさ)が 来(き)ました！', en: 'The night is over. For the first time, morning has come to the world without letters!' },
+      { bg: 'shizuka_dawn', fx: ['spring'], sprite: 'mojikui_king:happy', glyph: '🌅 ✨', text: '夜(よる)が 終(お)わりました。この 町(まち)に、また 朝(あさ)が 来(き)ました！', en: 'The night is over. At last, morning has come to this town again!' },
       { glyph: '🏘️ 🪧 🎶 ✨', text: '町(まち)の ふだにも、本(ほん)にも、歌(うた)にも、字(じ)が もどりました。', en: 'Letters came back to the town signs, the books and the songs.' },
       { fx: ['sparkle'], sprite: 'nexmax:think', glyph: '🤖 💛', text: '……あっ！ ネクマックスの むねが、金(きん)いろに ひかります。', en: "…Oh! Nexmax's chest is shining gold." },
       { fx: ['sparkle'], sprite: 'nexmax:star4', glyph: '★★★★', text: 'あなたが 書(か)いた 220字(じ)の ちからで、ネクマックスが ★4に なりました！', en: 'With the power of the 220 letters you wrote, Nexmax became ★4!' },

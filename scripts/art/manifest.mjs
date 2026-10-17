@@ -191,6 +191,22 @@ Only change his colours to his rival "player 2" palette: every part that is ligh
 chest mark stays clearly visible in navy. The face-screen stays white, the eyes stay black. Anything that glows blue
 (ink, light) glows warm orange-gold instead. Kid-friendly. No readable letters. The chest mark is never covered.`,
 
+  // ハブの 下の バーの アイコン（docs/design/23）: 1つの 円に 1つの しるし。名前は ゲームが 書く。
+  NAV_ICON: `One round menu icon for the bottom bar of a kids' kanji game set in a steampunk harbor town at night, in exactly
+the polished, glossy anime game-art rendering of the round medallions in the reference image: a thick polished brass rim
+with small rivets, a deep dark-brown tooled-leather disc inside, and on the disc ONE simple, bold symbol (described below)
+in warm cream-gold with a soft amber glow. Seen exactly straight from the front, a perfect circle, the symbol centered and
+filling about 60% of the disc, readable at 44 pixels. No pure white anywhere in the icon. Output: 1024x1024 PNG, plain pure
+white (#FFFFFF) background with nothing else on it, no ground shadow, no text, no letters, no numbers, no kanji, no logo.`,
+
+  // かなの ぶき（docs/design/22 §5）: 0章の 小さい ネクマックス（★1・★2）が 持つ、おもちゃの ような ぶき。
+  KANA_WEAPON: `One toy-like weapon for a tiny cute robot in a kids' kana game — draw ONLY the item, no robot, no hands, no
+person. Chunky, rounded, friendly and a little bit magical, in the same polished, glossy anime game-art rendering as the
+reference image: soft shading, a clean dark outline, rich warm colours. Somewhere on it a small round glass charm glows
+with soft warm light (where the written letters' light goes). Shown alone, diagonal, floating, centered, readable at a
+small size. Output: 1024x1024 PNG, plain pure white (#FFFFFF) background with nothing else on it, no shadow on the
+ground, no text, no letters, no numbers, no logo.`,
+
   // ナニワタウンの 町の 人: public/img/chara/types の ロボットを そのまま、表情と しぐさだけ 変える。
   FOLK_PAINTED: `Character: exactly the robot in the reference image — the same body shape, colors, antenna,
 accessories and outfit, the same glossy 3D-like Japanese anime game rendering with soft shading. Only the pose and
@@ -910,6 +926,70 @@ const VERSUS_ART = [
 ];
 
 // ---------------------------------------------------------------------------
+// 動線（docs/design/23、2026-10-15「フッターの内容やガチャの表示箇所など、動線があまり使いにくい」）:
+// 下の バーの アイコン・鍵・台、ハブの 上の 札と ⚙、主役の 板。文字は ゲームが 書く。
+// ---------------------------------------------------------------------------
+const MENU_REF = 'public/img/stageselect/menu.webp';
+const navIcon = (id, out, diff, used, refs = [MENU_REF]) => ({
+  id, group: 'nav', prio: 'A', out: `img/nav/${out}.webp`, kind: 'prop', bgmode: 'white', refs, style: ['NAV_ICON'], diff, used,
+  note: '白い 背景を import.mjs が 切り抜く（prop）',
+});
+const NAV_ART = [
+  navIcon('nav_stage', 'stage',
+    'The symbol: a bold four-pointed compass star with a small paper airplane flying across it. This is the HOME button in the middle of the bar, so make it grander than the others: a second thin gold ring around the rim, a small gear crest on top of the rim and a warmer glow on the disc.',
+    '下の バーの まんなか「ステージ」（ハブへ）'),
+  navIcon('nav_items', 'items',
+    "The symbol: a chunky adventurer's backpack with buckled straps and a small wrench tucked into its side pocket.",
+    '下の バー「もちもの」'),
+  navIcon('nav_gacha', 'gacha',
+    'The symbol: three blank cards fanned out like a hand of cards, the middle one in front, rising out of a small burst of light, with a small eight-pointed star above them. The cards are blank — no pictures, no letters. Not a book.',
+    '下の バー「ガチャ」', [MENU_REF, 'public/img/gacha/card_back_4.webp']),
+  navIcon('nav_zukan', 'zukan',
+    'The symbol: a thick open book seen from the front with a ribbon bookmark hanging from it and a small round magnifying glass leaning on its right page. The pages are blank.',
+    '下の バー「ずかん」'),
+  navIcon('nav_versus', 'versus',
+    'The symbol: two calligraphy brushes crossed in an X over a small zigzag lightning bolt; the tip of one brush glows sky-blue and the tip of the other glows warm coral red.',
+    '下の バー「たいせん」', [MENU_REF, 'public/img/versus/rank_gold.webp']),
+  navIcon('hud_gear', 'gear',
+    'The symbol: a bold eight-tooth gear with a round hole in its middle. A plainer rim than the others — it sits small in the top corner of the screen.',
+    'ハブの 右上 ⚙ せってい'),
+  { id: 'nav_lock', group: 'nav', prio: 'A', out: 'img/nav/lock.webp', kind: 'prop', bgmode: 'white', refs: [MENU_REF], style: ['GACHA_PROP'],
+    diff: 'The item: a small chunky closed padlock of polished brass, seen straight from the front, with a dark keyhole, two tiny rivets and a short rounded shackle. Simple and readable at 24 pixels.',
+    used: 'まだ ひらいて いない バーの 場所・まいにちの 掲示板（右下に かさねる）', note: '白い 背景を import.mjs が 切り抜く（prop）' },
+  { id: 'hud_plate', group: 'nav', prio: 'A', out: 'img/nav/plate.webp', kind: 'prop', bgmode: 'white', refs: ['public/img/title/btn_continue_blue.webp'], style: ['GACHA_PROP'],
+    diff: 'The item: a small horizontal player plate about 2.2 times wider than tall, seen straight from the front: on its left end a round polished brass socket holding an empty deep navy disc (a face picture goes there), joined to a short deep navy enamel panel with a thin gold border, a few rivets and a tiny gear at its right end. Everything is blank — no letters, no numbers.',
+    used: 'ハブの 左上（ネクマックスの 顔・Lv・クラス → せいせき）', note: '白い 背景を import.mjs が 切り抜く（prop）。まるの 中に 顔を ゲームが 入れる' },
+  { id: 'hub_go_plate', maxSize: 1300, group: 'nav', prio: 'A', out: 'img/nav/go_plate.webp', kind: 'prop', bgmode: 'white', refs: ['public/img/title/btn_continue_blue.webp'], style: ['GACHA_PROP'],
+    diff: 'The item: exactly the blue button plate of the reference image — the same polished brass frame, the same gears and compass medallion at the left end, the same royal-blue enamel face with a faint texture and the same round brass knob at the right end — but longer, about 4.6 times wider than tall, and with its blue face completely BLANK: no letters at all.',
+    used: 'ハブの 主役「▶ つぎの 話」（バーの すぐ 上）', note: '画面で 720〜860px の はば。prop の 512 では ぼける（下の 注）' },
+  { id: 'hub_bar', maxSize: 1300, group: 'nav', prio: 'A', out: 'img/nav/bar.webp', kind: 'prop', bgmode: 'white', refs: [MENU_REF], style: ['GACHA_PROP'],
+    diff: 'The item: a long horizontal bar for the bottom edge of a phone screen, about 5.5 times wider than tall, seen straight from the front: a dark tooled-leather middle with a faint pattern of tiny stars and dotted routes like an old map, framed above and below by polished brass rails with rivets, with small gears and a little lantern ornament at both ends. Completely empty: no round sockets, no icons, no letters.',
+    used: '下の バーの 台（アイコンを 上に ならべる）', note: '画面で 横 いっぱい。prop の 512 では ぼける（下の 注）' },
+];
+
+// ---------------------------------------------------------------------------
+// かなの ぶき（2026-10-15「ひらがな、カタカナ編でもひらがな武器を作れるように…この武器はひらがな、カタカナの時だけ使える」、
+// docs/design/22 §5）: 名前を かなで 書いて 作る ぶき。0章の たたかい だけ。src/data/kanaWeapons.ts。
+// ---------------------------------------------------------------------------
+
+const KANA_WEAPON_ART = [
+  { id: 'kanaweapon_kasa', group: 'kana_weapons', prio: 'A', out: 'img/kanaweapon/kasa.webp', kind: 'prop', bgmode: 'white', refs: ['public/img/battle/nexmax_star1_battle.webp'], style: ['KANA_WEAPON'], diff: 'The item: a sturdy kids umbrella used as a sword: a closed sky-blue umbrella with yellow polka dots, a curved wooden handle and a round brass tip.', used: 'かなの ぶき「かさ」', note: '白い 背景を import.mjs が 切り抜く（prop）' },
+  { id: 'kanaweapon_ono', group: 'kana_weapons', prio: 'A', out: 'img/kanaweapon/ono.webp', kind: 'prop', bgmode: 'white', refs: ['public/img/battle/nexmax_star1_battle.webp'], style: ['KANA_WEAPON'], diff: 'The item: a small friendly hand axe: a rounded wooden handle wrapped in red cloth, a chunky curved head of polished steel with a brass rim.', used: 'かなの ぶき「おの」', note: '白い 背景を import.mjs が 切り抜く（prop）' },
+  { id: 'kanaweapon_tsue', group: 'kana_weapons', prio: 'A', out: 'img/kanaweapon/tsue.webp', kind: 'prop', bgmode: 'white', refs: ['public/img/battle/nexmax_star1_battle.webp'], style: ['KANA_WEAPON'], diff: 'The item: a short magic staff: a twisting wooden staff with a curl at the top holding a glowing round crystal, a little blue ribbon tied on it.', used: 'かなの ぶき「つえ」', note: '白い 背景を import.mjs が 切り抜く（prop）' },
+  { id: 'kanaweapon_katana', group: 'kana_weapons', prio: 'A', out: 'img/kanaweapon/katana.webp', kind: 'prop', bgmode: 'white', refs: ['public/img/battle/nexmax_star1_battle.webp'], style: ['KANA_WEAPON'], diff: 'The item: a short toy katana: a gently curved blade of shining steel, a round gold guard and a blue-and-white wrapped grip, in a lacquered dark-blue scabbard half drawn.', used: 'かなの ぶき「かたな」', note: '白い 背景を import.mjs が 切り抜く（prop）' },
+  { id: 'kanaweapon_hasami', group: 'kana_weapons', prio: 'A', out: 'img/kanaweapon/hasami.webp', kind: 'prop', bgmode: 'white', refs: ['public/img/battle/nexmax_star1_battle.webp'], style: ['KANA_WEAPON'], diff: 'The item: a pair of oversized rounded craft scissors with bright orange loop handles and short safe blunt blades, a little sparkle on the edge.', used: 'かなの ぶき「はさみ」', note: '白い 背景を import.mjs が 切り抜く（prop）' },
+  { id: 'kanaweapon_muchi', group: 'kana_weapons', prio: 'A', out: 'img/kanaweapon/muchi.webp', kind: 'prop', bgmode: 'white', refs: ['public/img/battle/nexmax_star1_battle.webp'], style: ['KANA_WEAPON'], diff: 'The item: a playful whip: a short padded handle in green leather with a long springy coiled cord ending in a small round pom-pom.', used: 'かなの ぶき「むち」', note: '白い 背景を import.mjs が 切り抜く（prop）' },
+  { id: 'kanaweapon_yari', group: 'kana_weapons', prio: 'A', out: 'img/kanaweapon/yari.webp', kind: 'prop', bgmode: 'white', refs: ['public/img/battle/nexmax_star1_battle.webp'], style: ['KANA_WEAPON'], diff: 'The item: a short spear: a smooth wooden shaft with a red tassel below a leaf-shaped polished blade with a brass collar.', used: 'かなの ぶき「やり」', note: '白い 背景を import.mjs が 切り抜く（prop）' },
+  { id: 'kanaweapon_yumi', group: 'kana_weapons', prio: 'A', out: 'img/kanaweapon/yumi.webp', kind: 'prop', bgmode: 'white', refs: ['public/img/battle/nexmax_star1_battle.webp'], style: ['KANA_WEAPON'], diff: 'The item: a small bow: a curved wooden bow with gold tips and a taut white string, one arrow with blue feathers and a round soft tip resting on it.', used: 'かなの ぶき「ゆみ」', note: '白い 背景を import.mjs が 切り抜く（prop）' },
+  { id: 'kanaweapon_naifu', group: 'kana_weapons', prio: 'A', out: 'img/kanaweapon/naifu.webp', kind: 'prop', bgmode: 'white', refs: ['public/img/battle/nexmax_star1_battle.webp'], style: ['KANA_WEAPON'], diff: 'The item: a chunky toy knife: a short rounded blade with no sharp point, a bright red grip with a small brass rivet, like a camping knife for kids.', used: 'かなの ぶき「ナイフ」', note: '白い 背景を import.mjs が 切り抜く（prop）' },
+  { id: 'kanaweapon_yoyo', group: 'kana_weapons', prio: 'A', out: 'img/kanaweapon/yoyo.webp', kind: 'prop', bgmode: 'white', refs: ['public/img/battle/nexmax_star1_battle.webp'], style: ['KANA_WEAPON'], diff: 'The item: a big shiny yo-yo used as a weapon: two glossy coral-red halves with a gold ring, a looping white string, little motion sparkles.', used: 'かなの ぶき「ヨーヨー」', note: '白い 背景を import.mjs が 切り抜く（prop）' },
+  { id: 'kanaweapon_tomahoku', group: 'kana_weapons', prio: 'A', out: 'img/kanaweapon/tomahoku.webp', kind: 'prop', bgmode: 'white', refs: ['public/img/battle/nexmax_star1_battle.webp'], style: ['KANA_WEAPON'], diff: 'The item: a small tomahawk throwing axe: a short wooden handle with feathers and beads tied on, a rounded stone-grey head with a brass band.', used: 'かなの ぶき「トマホーク」', note: '白い 背景を import.mjs が 切り抜く（prop）' },
+  { id: 'kanaweapon_hanma', group: 'kana_weapons', prio: 'A', out: 'img/kanaweapon/hanma.webp', kind: 'prop', bgmode: 'white', refs: ['public/img/battle/nexmax_star1_battle.webp'], style: ['KANA_WEAPON'], diff: 'The item: a big squeaky toy hammer: a chunky round head in red and yellow with a star on each face, a short striped handle.', used: 'かなの ぶき「ハンマー」', note: '白い 背景を import.mjs が 切り抜く（prop）' },
+  { id: 'kanaweapon_ransu', group: 'kana_weapons', prio: 'A', out: 'img/kanaweapon/ransu.webp', kind: 'prop', bgmode: 'white', refs: ['public/img/battle/nexmax_star1_battle.webp'], style: ['KANA_WEAPON'], diff: 'The item: a jousting lance: a long cone of polished white and blue with gold spiral stripes and a round hand guard.', used: 'かなの ぶき「ランス」', note: '白い 背景を import.mjs が 切り抜く（prop）' },
+  { id: 'kanaweapon_misairu', group: 'kana_weapons', prio: 'A', out: 'img/kanaweapon/misairu.webp', kind: 'prop', bgmode: 'white', refs: ['public/img/battle/nexmax_star1_battle.webp'], style: ['KANA_WEAPON'], diff: 'The item: a cute toy missile: a rounded rocket in white and orange with fins, a smiling round nose cone and a soft puff of smoke at the tail.', used: 'かなの ぶき「ミサイル」', note: '白い 背景を import.mjs が 切り抜く（prop）' },
+];
+
+// ---------------------------------------------------------------------------
 // 町の 人の 表情 — 字が 消えて 困る 顔と、戻って よろこぶ 顔（2026-10-02「もっと 文字が なくて
 // みんな 困って いる 表情に したり 工夫が 欲しい」）。元の 絵は public/img/chara/types。
 // ---------------------------------------------------------------------------
@@ -1470,7 +1550,7 @@ const GACHA_ART = [
     used: 'ガチャを ひく ときに カプセルから 出る お札（字を 書き順どおりに 書く）', note: '白い 背景を import.mjs が 切り抜く（prop）' },
 ];
 
-export const ASSETS = [...NEXMAX, ...GENDAI, ...MUKASHI_FOLK, ...ENEMIES, ...CREATURES, ...BG, ...NANIWA, ...PORT, ...FOOD, ...MIYAKO, ...SHIZUKA, ...NEXMAX_NANIWA, ...NEXMAX_KANA, ...VERSUS_ART, ...FOLK, ...PROLOGUE_ART, ...PROLOGUE_EATEN, ...MAPS, ...ICONS, ...CARDS, ...WEAPONS, ...GEAR_ART, ...FORGED_GEAR_ART, ...GACHA_ART];
+export const ASSETS = [...NEXMAX, ...GENDAI, ...MUKASHI_FOLK, ...ENEMIES, ...CREATURES, ...BG, ...NANIWA, ...PORT, ...FOOD, ...MIYAKO, ...SHIZUKA, ...NEXMAX_NANIWA, ...NEXMAX_KANA, ...VERSUS_ART, ...NAV_ART, ...KANA_WEAPON_ART, ...FOLK, ...PROLOGUE_ART, ...PROLOGUE_EATEN, ...MAPS, ...ICONS, ...CARDS, ...WEAPONS, ...GEAR_ART, ...FORGED_GEAR_ART, ...GACHA_ART];
 
 export const GROUPS = {
   nexmax: 'ネクマックス（表情・ポーズ）',
@@ -1487,6 +1567,8 @@ export const GROUPS = {
   bg_shizuka: '背景 — 5章 シズカタウン（字の ない せかいの 町）',
   nexmax_naniwa: 'ナニワタウンの ネクマックス（新ルートの 立ち絵）',
   versus: 'たいせん（ぶたい・2P・ランク）',
+  nav: '下の バーと ハブの 上（動線）',
+  kana_weapons: 'かなの ぶき（0章）',
   folk_naniwa: '町の 人の 表情（困る・よろこぶ）',
   companion_cards: 'なかまの カード ★4・★5',
   weapons: '武器（ネクマックスに 積む）',

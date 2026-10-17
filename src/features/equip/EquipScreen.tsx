@@ -4,6 +4,8 @@ import { motion } from 'framer-motion';
 import { RubyText } from '../../components/ui/Ruby';
 import { GameIcon } from '../../components/ui/GameIcon';
 import { BottomTabs, LogoTitle, TopBar } from '../../components/ui/Chrome';
+import { HubBar } from '../../components/ui/HubBar';
+import { CompanionPick } from '../moji/CompanionPick';
 import { assetPath } from '../../lib/assetPath';
 import { useGameStore } from '../../store/gameStore';
 import { ALL_KANJI } from '../../data/kanji.generated';
@@ -11,6 +13,7 @@ import { GEAR, SLOT_LABEL, getGear, itemSlotOf, missingFor, type GearItem, type 
 import { RARITY_LABEL, type Rarity } from '../../lib/forge/weapon';
 import { parseForgedGearId } from '../../lib/forge/gear';
 import { weaponArt, weaponFromRecipe, weaponWord } from '../../lib/forge/recipe';
+import { getKanaWeapon } from '../../data/kanaWeapons';
 import { sortWeapons, useWeaponSort } from '../../lib/forge/weaponSort';
 import { WeaponSortBar, WeaponTags } from './WeaponSortBar';
 import { WeaponMount } from '../battle/WeaponMount';
@@ -86,6 +89,8 @@ export const EquipScreen = () => {
   const progress = useGameStore((s) => s.progress);
   const cleared = useGameStore((s) => s.clearedStages);
   const moji = useGameStore((s) => s.lastArc) === 'moji';
+  // かなの ぶき, shown beside the weapon but never worn in the town (docs/design/22 §5).
+  const kanaWeapon = getKanaWeapon(useGameStore((s) => s.equippedKanaWeapon));
   const exp = useGameStore((s) => s.exp);
   // クラス ★4 (lib/nexmaxClass.ts): the class-up picture and a second accessory.
   const nexmaxClass = classOf(cleared);
@@ -172,10 +177,10 @@ export const EquipScreen = () => {
   };
 
   return (
-    <div className={`isolate relative min-h-dvh ${moji ? 'pb-8' : 'pb-28'}`}>
+    <div className="isolate relative min-h-dvh pb-28">
       {moji ? <NightStreetBackdrop /> : <PictureBook scene="mukashi_meadow" className="!fixed -z-10" />}
       <div className="relative z-10">
-        <TopBar />
+        <TopBar home={!moji} />
         <div className="mx-auto max-w-md px-3 pt-1">
           <LogoTitle size={30} sub="字(じ)の 力(ちから)で もっと つよく">
             {moji ? 'もちもの' : 'そうび'}
@@ -274,6 +279,13 @@ export const EquipScreen = () => {
               <RubyText showFurigana={showFurigana}>✋ がまん</RubyText> ＋{stats.patience}
             </span>
           </div>
+
+          {/* なかま: who comes along — the loadout's fifth part (2026-10-15「仲間の設定をもっとやりやすく」). */}
+          {moji && (
+            <div className="mt-2">
+              <CompanionPick showFurigana={showFurigana} />
+            </div>
+          )}
 
           {/* 一覧 ------------------------------------------------------------ */}
           <div className="mt-3 flex items-center gap-2">
@@ -505,14 +517,33 @@ export const EquipScreen = () => {
             </button>
           )}
 
-          {isFeatureUnlocked(Feature.COLLECTION, cleared) && (
+          {/* かなの ぶき (docs/design/22 §5): its own place — it works in the kana chapters only. */}
+          {moji && slot === 'weapon' && cleared.includes('kana-2') && (
+            <button
+              type="button"
+              className="g-btn g-btn-night mt-2 w-full !justify-start gap-2 text-left"
+              onClick={() => navigate(`/kana-forge?back=${encodeURIComponent('/equip')}`)}
+            >
+              {kanaWeapon ? <img src={assetPath(kanaWeapon.img)} alt="" aria-hidden className="h-8 w-8 object-contain" /> : <span aria-hidden>⚒️</span>}
+              <span className="flex flex-col">
+                <span className="text-sm font-black">
+                  <RubyText showFurigana={showFurigana}>{`かなの ぶき${kanaWeapon ? `：${kanaWeapon.name}` : ''}`}</RubyText>
+                </span>
+                <span className="text-[11px] font-bold opacity-80">
+                  <RubyText showFurigana={showFurigana}>ひらがな・カタカナの たたかい だけ ・ かなの かじやへ</RubyText>
+                </span>
+              </span>
+            </button>
+          )}
+
+          {!moji && isFeatureUnlocked(Feature.COLLECTION, cleared) && (
             <button type="button" className="g-btn g-btn-slate mt-4 w-full" onClick={() => navigate('/collection?tab=individuals')}>
               <RubyText showFurigana={showFurigana}>図鑑(ずかん)（なかま）を 見(み)る</RubyText>
             </button>
           )}
         </div>
       </div>
-      {!moji && <BottomTabs current="items" />}
+      {moji ? <HubBar /> : <BottomTabs current="items" />}
       {training && <WeaponTrain recipeId={training} onClose={() => setTraining(null)} />}
     </div>
   );

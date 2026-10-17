@@ -1,4 +1,7 @@
 import { useState } from 'react';
+import { HubBar } from '../../components/ui/HubBar';
+import { CompanionChip } from '../companion/CompanionChip';
+import { takeAlong } from '../companion/takeAlong';
 import { useMapPath } from '../../lib/nav';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { afterEpisodePath } from '../../data/mojiFlow';
@@ -88,6 +91,8 @@ export const GachaScreen = () => {
   const navigate = useNavigate();
   const mapPath = useMapPath();
   const showFurigana = useGameStore((s) => s.settings.furigana);
+  // The town's route: the bottom bar (docs/design/23); the closing arcs keep their own way back.
+  const moji = useGameStore((s) => s.lastArc) === 'moji';
   const gems = useGameStore((s) => s.gems);
   const owned = useGameStore((s) => s.individuals);
   const pity = useGameStore((s) => s.pityCount);
@@ -139,6 +144,7 @@ export const GachaScreen = () => {
   const tickets = useGameStore((s) => s.gachaTickets);
   const spendTicket = useGameStore((s) => s.useGachaTicket);
   const firstDone = useGameStore((s) => s.tutorials.gacha);
+  const activeId = useGameStore((s) => s.activeIndividual);
   const markTutorialSeen = useGameStore((s) => s.markTutorialSeen);
   const [params] = useSearchParams();
   /** Brought here by 1章 4話 with its ticket: point at it, and say what a friend does after. */
@@ -257,7 +263,9 @@ export const GachaScreen = () => {
   const isFeaturedCard = (c: Individual) => featuredOf(bannerId, c.rarity, week, met, boost).some((f) => f.id === c.id);
 
   return (
-    <div className="relative min-h-dvh bg-[#0d0618] pb-8">
+    <div className={`relative min-h-dvh bg-[#0d0618] ${moji ? 'pb-28' : 'pb-8'}`}>
+      {/* 下の バー (docs/design/23 §3.2) */}
+      {moji && <HubBar />}
       {/* The gacha square at dusk (docs/design/18 §5). */}
       <img src={assetPath('img/gacha/pickup_bg.webp')} alt="" aria-hidden className="pointer-events-none fixed inset-0 h-full w-full object-cover" />
       <div aria-hidden className="pointer-events-none fixed inset-0" style={{ background: 'linear-gradient(180deg, rgba(13,6,24,0.55), rgba(13,6,24,0.15) 30%, rgba(13,6,24,0.35) 65%, rgba(13,6,24,0.8))' }} />
@@ -273,6 +281,8 @@ export const GachaScreen = () => {
             </span>
           </h1>
           <span className="flex items-center gap-1">
+            {/* 🤝 who is along, a tap to change (CompanionChip) */}
+            {moji && <CompanionChip compact className="!py-0 !pr-1.5" />}
             {tickets > 0 && (
               <span className="g-chip text-xs tabular-nums" aria-label={`チケット ${tickets}`}>
                 <img src={assetPath('img/gacha/ticket.webp')} alt="" aria-hidden className="h-4 w-auto" /> {tickets}
@@ -401,25 +411,6 @@ export const GachaScreen = () => {
             </motion.button>
           )}
 
-          {freeToday && (
-            // One free pull a day (2026-10-07): the reason to open the gacha today.
-            <motion.button
-              type="button"
-              data-tap
-              className="g-btn mt-3 w-full !min-h-[56px] text-base"
-              style={{ background: 'linear-gradient(180deg,#9df0b0,#3fae5a)', color: '#0f2a14', borderColor: '#e3ffe8' }}
-              disabled={busy}
-              onClick={doFree}
-              animate={still ? undefined : { scale: [1, 1.03, 1] }}
-              transition={{ duration: 1.4, repeat: Infinity }}
-            >
-              <span aria-hidden className="text-2xl">
-                🎁
-              </span>
-              <RubyText showFurigana={showFurigana}>きょうの 1回(かい) むりょう！</RubyText>
-            </motion.button>
-          )}
-
           {bannerId === 'stepup' && (
             // The three steps, the one the next ten are on lit.
             <div className="mt-3 flex gap-1" aria-label={`ステップ ${stepUp + 1}`}>
@@ -440,28 +431,53 @@ export const GachaScreen = () => {
             </div>
           )}
 
-          {/* 1回 and 10回, side by side (ステップアップ: ten only). */}
-          <div className="mt-3 flex gap-2">
-            {bannerId !== 'stepup' && (
-            <button type="button" className="relative flex h-16 flex-1 items-center justify-center disabled:opacity-45" disabled={!canSingle} onClick={doSingle}>
-              <img src={assetPath('img/gacha/btn_blue.webp')} alt="" aria-hidden className="absolute inset-0 h-full w-full" />
-              <span className="g-outline-text relative flex flex-col leading-tight font-black text-white">
-                <span className="text-lg">
-                  <RubyText showFurigana={showFurigana}>1回(かい) ひく</RubyText>
+          {/* The pull buttons stay above the bottom bar while the rest scrolls (docs/design/23 §3.4). */}
+          <div
+            className={moji ? 'sticky z-10 rounded-2xl pt-1 pb-2' : ''}
+            style={moji ? { bottom: 'calc(84px + env(safe-area-inset-bottom))', background: 'linear-gradient(180deg, rgba(13,6,24,0) 0%, rgba(13,6,24,0.85) 30%)' } : undefined}
+          >
+          {freeToday && (
+              // One free pull a day (2026-10-07): the reason to open the gacha today.
+              <motion.button
+                type="button"
+                data-tap
+                className="g-btn mt-3 w-full !min-h-[56px] text-base"
+                style={{ background: 'linear-gradient(180deg,#9df0b0,#3fae5a)', color: '#0f2a14', borderColor: '#e3ffe8' }}
+                disabled={busy}
+                onClick={doFree}
+                animate={still ? undefined : { scale: [1, 1.03, 1] }}
+                transition={{ duration: 1.4, repeat: Infinity }}
+              >
+                <span aria-hidden className="text-2xl">
+                  🎁
                 </span>
-                <span className="text-xs">◆{banner.single}</span>
-              </span>
-            </button>
+                <RubyText showFurigana={showFurigana}>きょうの 1回(かい) むりょう！</RubyText>
+              </motion.button>
             )}
-            <button type="button" className="relative flex h-16 flex-1 items-center justify-center disabled:opacity-45" disabled={!canMulti} onClick={doMulti}>
-              <img src={assetPath('img/gacha/btn_gold.webp')} alt="" aria-hidden className="absolute inset-0 h-full w-full" />
-              <span className="relative flex flex-col leading-tight font-black text-[#3a2414]">
-                <span className="text-lg">
-                  <RubyText showFurigana={showFurigana}>10回(かい) ひく</RubyText>
+  
+          {/* 1回 and 10回, side by side (ステップアップ: ten only). */}
+            <div className="mt-3 flex gap-2">
+              {bannerId !== 'stepup' && (
+              <button type="button" className="relative flex h-16 flex-1 items-center justify-center disabled:opacity-45" disabled={!canSingle} onClick={doSingle}>
+                <img src={assetPath('img/gacha/btn_blue.webp')} alt="" aria-hidden className="absolute inset-0 h-full w-full" />
+                <span className="g-outline-text relative flex flex-col leading-tight font-black text-white">
+                  <span className="text-lg">
+                    <RubyText showFurigana={showFurigana}>1回(かい) ひく</RubyText>
+                  </span>
+                  <span className="text-xs">◆{banner.single}</span>
                 </span>
-                <span className="text-xs">◆{banner.multi}</span>
-              </span>
-            </button>
+              </button>
+              )}
+              <button type="button" className="relative flex h-16 flex-1 items-center justify-center disabled:opacity-45" disabled={!canMulti} onClick={doMulti}>
+                <img src={assetPath('img/gacha/btn_gold.webp')} alt="" aria-hidden className="absolute inset-0 h-full w-full" />
+                <span className="relative flex flex-col leading-tight font-black text-[#3a2414]">
+                  <span className="text-lg">
+                    <RubyText showFurigana={showFurigana}>10回(かい) ひく</RubyText>
+                  </span>
+                  <span className="text-xs">◆{banner.multi}</span>
+                </span>
+              </button>
+            </div>
           </div>
           <p className="g-outline-text mt-1 text-xs font-black text-[#ffe9a8]">
             <RubyText showFurigana={showFurigana}>{bannerId === 'stepup' ? `こんどの 10回(かい)：${stepText(stepUp)}` : '10回(かい)で ★4 いじょうが かならず 1まい！'}</RubyText>
@@ -643,12 +659,18 @@ export const GachaScreen = () => {
                 <RubyText showFurigana={showFurigana}>{`${firstPulled.card.shortName}が なかまに なりました！`}</RubyText>
               </p>
               <p className="mt-1 text-sm leading-[1.95]">
-                <RubyText showFurigana={showFurigana}>じゅんびで なかまを えらぶと、たたかいで わざを つかいます。</RubyText>
+                <RubyText showFurigana={showFurigana}>いっしょに 行(い)く なかまは、たたかいで わざを つかいます。</RubyText>
               </p>
               <p className="mt-1 text-xs leading-[1.9]" style={{ color: 'var(--ink-2)' }}>
                 <RubyText showFurigana={showFurigana}>{`わざ「${SKILL_INFO[SKILL_OF[firstPulled.card.char]].name}」 ${SKILL_INFO[SKILL_OF[firstPulled.card.char]].icon}`}</RubyText>
               </p>
-              <button type="button" data-tap className="g-btn g-btn-primary mt-3 w-full" onClick={endFirst}>
+              {/* Take the new one along right here (the story's first companion stays otherwise). */}
+              {activeId !== firstPulled.card.id && (
+                <button type="button" data-tap className="g-btn g-btn-accent mt-3 w-full" onClick={() => takeAlong(firstPulled.card.id)}>
+                  🤝 <RubyText showFurigana={showFurigana}>{`${firstPulled.card.shortName}を つれて いく`}</RubyText>
+                </button>
+              )}
+              <button type="button" data-tap className="g-btn g-btn-primary mt-2 w-full" onClick={endFirst}>
                 <RubyText showFurigana={showFurigana}>つぎの 話(わ)へ ▶</RubyText>
               </button>
             </motion.div>

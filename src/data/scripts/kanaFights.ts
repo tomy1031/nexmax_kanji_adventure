@@ -108,8 +108,13 @@ export const KANA_BOSS_SCRIPTS: Record<string, BossScript> = {
       lines: [
         { bg: 'naniwa_runway_night', text: 'What is left of the shadow — small again — scurries off toward the station.', ja: 'ちいさく なった かげは、えきの ほうへ にげました。' },
         { speaker: 'nexmax', sprite: 'nexmax:smile', text: 'まだ なまえは ない。でも、ちからが すこし もどった！ 💪' },
-        { text: 'Still no name — but some of his strength is back. His name was in the other letters: katakana.', ja: 'まだ なまえは ありません。でも、すこし つよく なりました。なまえは もう ひとつの もじ、カタカナです。' },
+        { text: 'Still no name — but some of his strength is back.', ja: 'まだ なまえは ありません。でも、すこし つよく なりました。' },
         { speaker: 'nexmax', sprite: 'nexmax:guide', text: 'えき！ いこう！ 👉' },
+        // Dawn at the airport station, after the night on the runway (kana-5 ends at night). That his
+        // name is in katakana is found out in kana-6, on his badge.
+        { bg: 'naniwa_station', text: 'At dawn we reach the airport station. But every sign here is written in sharper, different letters.', ja: 'あさ、くうこうの えきに きました。でも、ここの かんばんは ほかの もじです。' },
+        { speaker: 'nexmax', sprite: 'nexmax:think', text: 'ここは カタカナの えき。' },
+        { text: 'ここは …の えき koko wa …no eki. This is the something station. Letters I can\'t read yet.', ja: 'ここは ……の えき。なにかの えきです。この もじは まだ わかりません。' },
       ],
     },
   },
@@ -117,11 +122,13 @@ export const KANA_BOSS_SCRIPTS: Record<string, BossScript> = {
     intro: {
       stageId: 'kana-boss-2',
       lines: [
-        { bg: 'naniwa_last_car', text: 'Thud. Something drops back into the last car: the Mojikui, with a huge bowl of glowing letters in its arms.', ja: 'ドン！ さいごの しゃりょうに モジクイが もどって きました。ひかる もじの おおきい ちゃわんを もって います。' },
+        // Straight on from kana-10's end: the Mojikui still holds its bowl. His name is not in it —
+        // it came back in kana-9.
+        { bg: 'naniwa_last_car', text: 'The Mojikui lifts the bowl to its mouth. It is going to slurp up every katakana at once!', ja: 'モジクイが ちゃわんを くちへ。カタカナを ぜんぶ たべます！' },
         { speaker: 'foe_kana-boss-2', sprite: 'foe_kana-boss-2:normal', text: '🍜😋 ズルズル……' },
-        { text: 'It came back for the katakana — the station, the tickets, his name, all of it in that bowl.', ja: 'カタカナを たべに きました。えきの もじも、キップも、なまえも、ぜんぶ ちゃわんの なか。' },
         { speaker: 'nexmax', sprite: 'nexmax:determined', text: 'モジクイ！ ぜんぶ かえして！' },
         { speaker: 'nexmax', sprite: 'nexmax:guide', text: 'かきます！ ✍️💡 → 💥' },
+        { text: 'All of them. Every katakana I have learned. This is the test.', ja: 'ぜんぶの カタカナ。わたしが かいた もじ ぜんぶです。' },
       ],
     },
     outro: {
@@ -129,9 +136,18 @@ export const KANA_BOSS_SCRIPTS: Record<string, BossScript> = {
       lines: [
         { bg: 'naniwa_last_car', text: 'The bowl tips over and every katakana pours out like a waterfall of light.', ja: 'ちゃわんが ひっくりかえって、カタカナが ぜんぶ でて きました。ひかりの たきです。' },
         { speaker: 'foe_kana-boss-2', sprite: 'foe_kana-boss-2:normal', text: '💦💦 にげます！' },
-        { text: 'It dives out of the window, toward the lights of the town on the hill.', ja: 'モジクイは まどから そとへ。うえの まちへ にげました。' },
+        { text: 'It dives out of the window and flees ahead, into the town on the hill.', ja: 'モジクイは まどから そとへ。うえの まちへ にげました。' },
         { speaker: 'nexmax', sprite: 'nexmax:smile', text: 'カタカナ ぜんぶ！ ✌️' },
-        { speaker: 'nexmax', sprite: 'nexmax:determined', text: 'つぎは ナニワタウン！' },
+        // The end of 0章: the train reaches Naniwa Town (until 2026-10-17 the end of kana-10, which
+        // the boss followed — the Mojikui fled twice).
+        { bg: 'naniwa_train', glyph: 'ナニワタウン', text: 'The train comes off the bridge. Over the station ahead hangs a big sign — and I can read every letter of it.', ja: 'えきに おおきい かんばんが あります。もう ぜんぶの もじが わかります！' },
+        { speaker: 'nexmax', sprite: 'nexmax:smile', text: 'うえの まちは、ナニワタウン！' },
+        { text: 'ナニワタウン Naniwa Taun — Naniwa Town. That is the town up on the hill.', ja: 'ナニワタウン。あれが うえの まちです。' },
+        { speaker: 'nexmax', sprite: 'nexmax:think', text: 'ナニワタウンで、かんじが きえて いる。' },
+        { text: 'In Naniwa Town, the kanji are disappearing.', ja: 'ナニワタウンには、かんじが ありません。' },
+        { speaker: 'nexmax', sprite: 'nexmax:smile', text: 'あなたは もう、ひらがなも カタカナも わかる。' },
+        { speaker: 'nexmax', text: 'ありがとう。つぎは かんじ！ 🙆‍♂️' },
+        { text: 'ありがとう. This time I understood every word.', ja: 'ありがとう。いまは ぜんぶの ことばが わかります。' },
       ],
     },
   },

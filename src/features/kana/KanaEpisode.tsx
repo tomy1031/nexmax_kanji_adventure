@@ -18,6 +18,7 @@ import { SCENES } from '../picturebook/scenes';
 import { EvolveScene } from '../../components/ui/EvolveScene';
 import { useStill } from '../../hooks/useStill';
 import KanaBattle from './KanaBattle';
+import { getKanaWeapon } from '../../data/kanaWeapons';
 
 /**
  * かな編 1話ぶん: お話 → その話の かなを 書く → 出会い → たたかい「きいて かく」→ お話
@@ -77,6 +78,8 @@ const EpisodePlayer = ({ id }: { id: string }) => {
   // ★1 through the hiragana, ★2 through the katakana (naniwaCast.ts).
   const cast = kanaCast(ep.script);
   const encounter = KANA_ENCOUNTERS[id];
+  // かなの ぶき: carried into 0章の たたかい only (docs/design/22 §5).
+  const weapon = getKanaWeapon(useGameStore((s) => s.equippedKanaWeapon)) ?? null;
 
   useEffect(() => {
     void preloadCharData(ep.kana);
@@ -89,6 +92,11 @@ const EpisodePlayer = ({ id }: { id: string }) => {
     // 0章 runs on into 1章: after kana-10 comes the town's first episode (data/mojiFlow.ts);
     // after kana-5 and kana-10, the script's boss first, until it is beaten.
     const next = afterEpisode(id, useGameStore.getState().clearedStages);
+    // かさ can be written after かな 2話: the first visit to かなの かじや (docs/design/22 §5), then on.
+    if (id === 'kana-2' && !useGameStore.getState().tutorials.kanaForge) {
+      navigate(`/kana-forge?first=1${next ? `&next=${next}` : ''}`);
+      return;
+    }
     navigate(next ? `/map/moji?new=${next}` : '/map/moji');
   };
   // A replay with every kana here already written goes from the story straight on.
@@ -133,10 +141,10 @@ const EpisodePlayer = ({ id }: { id: string }) => {
             onFinish={() => setPhase('battle')}
           />
         ) : (
-          <KanaBattle key="battle" fight={episodeFight(id)} script={ep.script} field={lines.intro.lines[0].bg ?? ''} onWin={() => setPhase('outro')} onFlee={leave} />
+          <KanaBattle key="battle" fight={episodeFight(id)} script={ep.script} field={lines.intro.lines[0].bg ?? ''} weapon={weapon} onWin={() => setPhase('outro')} onFlee={leave} />
         );
       case 'battle':
-        return <KanaBattle key="battle" fight={episodeFight(id)} script={ep.script} field={lines.intro.lines[0].bg ?? ''} onWin={() => setPhase('outro')} onFlee={leave} />;
+        return <KanaBattle key="battle" fight={episodeFight(id)} script={ep.script} field={lines.intro.lines[0].bg ?? ''} weapon={weapon} onWin={() => setPhase('outro')} onFlee={leave} />;
       case 'outro':
         return (
           <NovelScene
@@ -174,6 +182,7 @@ const BossPlayer = ({ boss }: { boss: KanaBoss }) => {
   const lines = KANA_BOSS_SCRIPTS[boss.id];
   const cast = kanaCast(boss.script);
   const [fight] = useState(() => bossFight(boss));
+  const weapon = getKanaWeapon(useGameStore((s) => s.equippedKanaWeapon)) ?? null;
   // ★1 → ★2 only the first time the hiragana boss falls.
   const [firstWin] = useState(() => !useGameStore.getState().clearedStages.includes(boss.id));
   useEffect(() => {
@@ -206,7 +215,7 @@ const BossPlayer = ({ boss }: { boss: KanaBoss }) => {
       case 'intro':
         return novel('intro', lines.intro, () => setPhase('battle'));
       case 'battle':
-        return <KanaBattle key="battle" fight={fight} script={boss.script} field={boss.bg} onWin={() => setPhase(lines.evolve && firstWin ? 'evolve' : 'outro')} onFlee={leave} />;
+        return <KanaBattle key="battle" fight={fight} script={boss.script} field={boss.bg} weapon={weapon} onWin={() => setPhase(lines.evolve && firstWin ? 'evolve' : 'outro')} onFlee={leave} />;
       case 'evolve':
         return (
           <EvolveScene

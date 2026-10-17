@@ -49,6 +49,13 @@ interface KanjiWriterCanvasProps {
   autoRestart?: boolean;
   /** Stroke-matching strictness; defaults to TUNING.leniency. Kana pass a looser one. */
   leniency?: number;
+  /**
+   * After this many misses on one stroke, the stroke is taken as written and
+   * the quiz goes on (hanzi-writer markStrokeCorrectAfterMisses). The story's
+   * fights pass 3, so a quirky stroke or a slipped finger never stops a fight
+   * (2026-10-15「多少はミスタッチ前提でゲームバランスを作ることが大切」). The misses still count.
+   */
+  forgiveAfter?: number;
 }
 
 export interface KanjiWriterHandle {
@@ -70,6 +77,7 @@ const KanjiWriterCanvas = forwardRef<KanjiWriterHandle, KanjiWriterCanvasProps>(
       surface = 'paper',
       autoRestart = true,
       leniency,
+      forgiveAfter,
     },
     ref,
   ) => {
@@ -128,6 +136,7 @@ const KanjiWriterCanvas = forwardRef<KanjiWriterHandle, KanjiWriterCanvasProps>(
           // After two misses on one stroke hanzi-writer flashes the correct
           // stroke, so a stuck learner always has a way forward.
           showHintAfterMisses: 2,
+          ...(forgiveAfter ? { markStrokeCorrectAfterMisses: forgiveAfter } : {}),
           onCorrectStroke: (data) => callbacksRef.current.onCorrectStroke?.(data as Record<string, unknown>),
           onMistake: (data) => callbacksRef.current.onMistake?.(data as Record<string, unknown>),
           onComplete: (summary) => {
@@ -220,7 +229,7 @@ const KanjiWriterCanvas = forwardRef<KanjiWriterHandle, KanjiWriterCanvasProps>(
         isQuizActiveRef.current = false;
         target.innerHTML = '';
       };
-    }, [char, size, quizMode, rock, neon, ink, autoRestart, leniency]);
+    }, [char, size, quizMode, rock, neon, ink, autoRestart, leniency, forgiveAfter]);
 
     // Sample (手本) layer — independent of the quiz so toggling it mid-rep
     // does not reset the learner's progress on the current character.

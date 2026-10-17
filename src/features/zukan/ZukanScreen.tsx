@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { HubBar } from '../../components/ui/HubBar';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { RubyText } from '../../components/ui/Ruby';
 import { KanjiWord } from '../../components/ui/Readings';
@@ -43,6 +44,8 @@ const Stars = ({ n }: { n: number }) => (
 export const ZukanScreen = () => {
   const navigate = useNavigate();
   const showFurigana = useGameStore((s) => s.settings.furigana);
+  // The town's route: the bottom bar (docs/design/23); the closing arcs keep their own way back.
+  const moji = useGameStore((s) => s.lastArc) === 'moji';
   const progress = useGameStore((s) => s.progress);
   const cleared = useGameStore((s) => s.clearedStages);
   const known = useKnownKana();
@@ -57,7 +60,9 @@ export const ZukanScreen = () => {
   const kanaDone = [...HIRAGANA, ...KATAKANA].filter((k) => known.has(k)).length;
 
   return (
-    <div className="isolate relative min-h-dvh pb-8">
+    <div className={`isolate relative min-h-dvh ${moji ? 'pb-28' : 'pb-8'}`}>
+      {/* 下の バー (docs/design/23 §3.2) */}
+      {moji && <HubBar />}
       <NightStreetBackdrop />
       {card && (
         <KanjiCard
@@ -68,7 +73,7 @@ export const ZukanScreen = () => {
           position={at >= 0 ? `${at + 1} / ${order.length}` : undefined}
         />
       )}
-      <TopBar title="ずかん" />
+      <TopBar title="ずかん" home={!moji} />
       <div className="mx-auto flex max-w-md flex-col gap-3 px-3 pt-3">
         <div role="tablist" className="flex gap-2">
           {(

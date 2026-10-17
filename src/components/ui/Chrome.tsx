@@ -33,7 +33,8 @@ export const PillButton = ({
 );
 
 /** もどる (left) and ホーム (right), with an optional title plate between. */
-export const TopBar = ({ onBack, title }: { onBack?: () => void; title?: string }) => {
+/** `home={false}` on a screen with the bottom bar (HubBar), whose ステージ goes home already (docs/design/23 §3.2). */
+export const TopBar = ({ onBack, title, home = true }: { onBack?: () => void; title?: string; home?: boolean }) => {
   const navigate = useNavigate();
   const safeBack = useSafeBack();
   // ホーム is the map of the world being played (08 §3.8), not the title —
@@ -50,9 +51,13 @@ export const TopBar = ({ onBack, title }: { onBack?: () => void; title?: string 
           <RubyText showFurigana={showFurigana}>{title}</RubyText>
         </div>
       )}
-      <PillButton icon="♛" onClick={() => navigate(mapPath)}>
-        ホーム
-      </PillButton>
+      {home ? (
+        <PillButton icon="♛" onClick={() => navigate(mapPath)}>
+          ホーム
+        </PillButton>
+      ) : (
+        <span aria-hidden className="w-[84px]" />
+      )}
     </header>
   );
 };

@@ -172,18 +172,20 @@ describe('duplicates', () => {
 describe('町の 人は お話で 会ってから (2026-10-05)', () => {
   const ch1 = (n: number) => Array.from({ length: n }, (_, i) => `moji-1-${i + 1}`);
 
-  it('meets each town person in the episode where they first speak', async () => {
+  it('meets each town person in the episode where they first speak — or a later one they speak in', async () => {
     const { MOJI_SCRIPTS } = await import('../data/mojiScripts');
     const { MOJI_EPISODES } = await import('../data/mojiEpisodes');
     const speaks = (ep: string, who: string) => {
       const s = MOJI_SCRIPTS[ep];
       return [s.intro, s.encounter, s.outro].some((part) => part.lines.some((l) => l.speaker === who));
     };
+    // Later only where the card would say what the story has not got to yet (2026-10-17).
+    const LATER: Record<string, string> = { sora: 'moji-2-6', hana: 'moji-3-3' };
     for (const c of CARDS.filter((x) => x.kind === 'town')) {
       expect(c.meets, c.id).toBeDefined();
-      const at = MOJI_EPISODES.findIndex((e) => e.id === c.meets);
+      const first = MOJI_EPISODES.find((e) => speaks(e.id, c.char))?.id;
       expect(speaks(c.meets!, c.char), `${c.id} in ${c.meets}`).toBe(true);
-      for (const e of MOJI_EPISODES.slice(0, at)) expect(speaks(e.id, c.char), `${c.id} already in ${e.id}`).toBe(false);
+      expect(c.meets, c.id).toBe(LATER[c.char] ?? first);
     }
   });
 
@@ -204,12 +206,20 @@ describe('町の 人は お話で 会ってから (2026-10-05)', () => {
   });
 
   it('lets them come once their episode is cleared', () => {
-    const met = (c: (typeof CARDS)[number]) => isMet(c, [...ch1(11), 'moji-1-boss', 'moji-2-1', 'moji-2-2', 'moji-2-3']);
+    const met = (c: (typeof CARDS)[number]) => isMet(c, [...ch1(11), 'moji-1-boss', 'moji-2-1', 'moji-2-2', 'moji-2-3', 'moji-2-4', 'moji-2-5', 'moji-2-6']);
     const seen = new Set<string>();
     const rnd = seeded(3);
     for (let i = 0; i < 400; i++) seen.add(pull('town', [], 0, 0, rnd, false, met).card.char);
     expect(seen.has('sora')).toBe(true);
     expect(seen.has('usher')).toBe(false);
+  });
+
+  it('keeps ソラ back until マル is found (2章 6話) and ハナ until her name comes back (3章 3話)', () => {
+    const card = (id: string) => CARDS.find((c) => c.id === id)!;
+    expect(isMet(card('sora'), ['moji-2-3', 'moji-2-4', 'moji-2-5'])).toBe(false);
+    expect(isMet(card('sora'), ['moji-2-6'])).toBe(true);
+    expect(isMet(card('hana'), ['moji-3-2'])).toBe(false);
+    expect(isMet(card('hana'), ['moji-3-3'])).toBe(true);
   });
 });
 
