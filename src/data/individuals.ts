@@ -57,8 +57,11 @@ export interface Individual {
   /** Percent bonus to attack when holding a favoured weapon. */
   bonus: number;
   /**
-   * A town person's first episode (the story meets them there): the gacha
-   * keeps them, and their dressed cards, back until it is cleared (lib/gacha.ts isMet).
+   * The episode a town person joins the gacha after: the first one they speak
+   * in (the story meets them there), or a later one they speak in when what
+   * their card says only comes true there — ソラ's dog マル is found in 2章 6話,
+   * ハナ's name comes back in 3章 3話 (2026-10-17). The gacha keeps them, and
+   * their dressed cards, back until it is cleared (lib/gacha.ts isMet).
    */
   meets?: string;
 }
@@ -329,11 +332,12 @@ export const TOWN: readonly Individual[] = [
   town('baker', 'アサヒ', 'パン屋(や)さん', 'まいあさ おいしい パンを やきます。', WeaponClass.HAMMER, Element.KA, 'moji-1-9'),
   town('keeper', 'トキ', '時(と)計(けい)台(だい)の 番(ばん)人(にん)', '町(まち)の 時間(じかん)を まもります。', WeaponClass.AXE, Element.DO, 'moji-1-8'),
   // 2章 ミナトタウン（docs/design/13）: はじめての ともだち ソラと、町で 会う 二人。
-  town('sora', 'ソラ', '港(みなと)町(まち)の 子(こ)', 'ミナトタウンの 子(こ)。えいがと 英(えい)語(ご)が 好(す)き。', WeaponClass.BOW, Element.SUI, 'moji-2-3'),
+  // ソラは 3話で 会うが、ガチャは 犬の マルが 見つかる 6話から（セリフ「マルも いっしょです！」。2026-10-17）。
+  town('sora', 'ソラ', '港(みなと)町(まち)の 子(こ)', 'ミナトタウンの 子(こ)。えいがと 英(えい)語(ご)が 好(す)き。', WeaponClass.BOW, Element.SUI, 'moji-2-6'),
   town('usher', 'セイラ', '映(えい)画(が)館(かん)の 人(ひと)', 'むかしの ゆめは えいがスター。', WeaponClass.DAGGER, Element.KOU, 'moji-2-10'),
   town('photographer', 'マコト', '写(しゃ)真(しん)屋(や)さん', 'お茶(ちゃ)も 出(だ)す しゃしんやさん。', WeaponClass.STAFF, Element.AN, 'moji-2-9'),
-  // 3章 マンプクタウン（docs/design/14）: 料理人に なりたい ハナ。
-  town('hana', 'ハナ', '料(りょう)理(り)人(にん)の たまご', 'りょうりにんが ゆめの 12さい。ラーメンが 好(す)き。', WeaponClass.DAGGER, Element.KA, 'moji-3-2'),
+  // 3章 マンプクタウン（docs/design/14）: 料理人に なりたい ハナ。2話で 会うが、ガチャは 名前が わかる 3話から（2026-10-17）。
+  town('hana', 'ハナ', '料(りょう)理(り)人(にん)の たまご', 'りょうりにんが ゆめの 12さい。ラーメンが 好(す)き。', WeaponClass.DAGGER, Element.KA, 'moji-3-3'),
 ];
 
 /**
