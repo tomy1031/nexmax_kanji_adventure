@@ -30,6 +30,11 @@ const W = 96;
 
 /** By hand, for pictures the search gets wrong: [x, y, size] as shares of the picture's width / height / width. */
 const OVERRIDES = {
+  // ボスの 2段目（docs/design/24）: 光の すじや 札が 顔に 見える ので、顔を 手で。
+  'img/battle/mojikui_boss_angry.webp': [0.38, 0.19, 0.3],
+  'img/battle/mojikui_king_waver.webp': [0.44, 0.25, 0.3],
+  'img/battle/mojikui_kana_starboss_angry.webp': [0.5, 0.24, 0.42],
+  'img/battle/mojikui_kana_slurp_angry.webp': [0.61, 0.36, 0.32],
   // A held card or sign, or a raised hand, reads as the face.
   'img/chara/naniwa/folk_ropeway_happy.webp': [0.52, 0.26, 0.4],
   'img/chara/naniwa/folk_ropeway_trouble.webp': [0.57, 0.24, 0.38],

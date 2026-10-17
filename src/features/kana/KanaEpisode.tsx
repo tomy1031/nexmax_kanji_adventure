@@ -19,6 +19,7 @@ import { EvolveScene } from '../../components/ui/EvolveScene';
 import { useStill } from '../../hooks/useStill';
 import KanaBattle from './KanaBattle';
 import { getKanaWeapon } from '../../data/kanaWeapons';
+import { kanaToWrite } from '../../data/kanaWords';
 
 /**
  * かな編 1話ぶん: お話 → その話の かなを 書く → 出会い → たたかい「きいて かく」→ お話
@@ -185,9 +186,22 @@ const BossPlayer = ({ boss }: { boss: KanaBoss }) => {
   // ★1 → ★2 only the first time the hiragana boss falls.
   const [firstWin] = useState(() => !useGameStore.getState().clearedStages.includes(boss.id));
   useEffect(() => {
-    void preloadCharData(fight.seals);
-  }, [fight]);
+    // The finishing word too (ボスの 見せ場): ネクマックス holds a ッ, which no seal does.
+    const finisher = lines.show ? kanaToWrite({ kana: lines.show.finisher, emoji: '', en: '' }) : [];
+    void preloadCharData([...fight.seals, ...finisher]);
+  }, [fight, lines.show]);
   const chapter = { label: boss.script === 'hiragana' ? 'ひらがな 👑' : 'カタカナ 👑', title: boss.en };
+  // ボスの 見せ場 (docs/design/24): who speaks in its lines is the fight's cast (Nexmax as he is during it).
+  const bossShow = lines.show
+    ? {
+        show: lines.show,
+        cast: kanaBossCast(boss.script, 'intro'),
+        castId: `foe_${boss.id}`,
+        label: boss.script === 'hiragana' ? 'ひらがなの ボス' : 'カタカナの ボス',
+        renderText,
+        renderPlain,
+      }
+    : undefined;
   const leave = () => navigate('/map/moji');
   const finish = () => {
     clearStage(boss.id);
@@ -215,7 +229,18 @@ const BossPlayer = ({ boss }: { boss: KanaBoss }) => {
       case 'intro':
         return novel('intro', lines.intro, () => setPhase('battle'));
       case 'battle':
-        return <KanaBattle key="battle" fight={fight} script={boss.script} field={boss.bg} weapon={weapon} onWin={() => setPhase(lines.evolve && firstWin ? 'evolve' : 'outro')} onFlee={leave} />;
+        return (
+          <KanaBattle
+            key="battle"
+            fight={fight}
+            script={boss.script}
+            field={boss.bg}
+            weapon={weapon}
+            boss={bossShow}
+            onWin={() => setPhase(lines.evolve && firstWin ? 'evolve' : 'outro')}
+            onFlee={leave}
+          />
+        );
       case 'evolve':
         return (
           <EvolveScene

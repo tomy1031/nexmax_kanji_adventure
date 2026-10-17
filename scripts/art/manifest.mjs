@@ -631,6 +631,22 @@ const CREATURES = [
     style: ['CREATURE_SAME'],
     note: '1章 2話の モジクイ（mojikui.webp）と 同じ 者。白い 背景を import.mjs が 切り抜く',
   },
+  // ボスの 2段目（2026-10-17「ボス戦に関して、盛り上がるストーリーや演出を」）: たたかいの HP 1/3 で 絵が かわる。
+  // もとの 絵と 同じ 者・同じ 枠（matchFrame）で、表情と ポーズだけ。大モジクイの 怒りは 1〜4章で 共通。
+  ...[
+    ['mojikui_boss_angry', 'mojikui_boss', 'the same GREAT Mojikui as the reference, now furious: the letters it ate are being taken back from it.', 'the same towering swirl of black-violet ink smoke and royal ink cloak as the reference, rearing up even taller, tendrils flung wide, its ink smoke flaring up like dark flames, thin cracks of golden light breaking through its body where letters escape.', 'the same three violet slit-pupil eyes now blazing and narrowed, the same crescent grin turned into a wide snarl of pointed (not gory) teeth, brows slammed down in rage, the crown knocked askew.', 'royal violet and gold, with an angry crimson glow.', 'a few golden letter-motes bursting OUT of it (abstract, not readable), some of its blank trophies slipping from its tendrils.', '1〜4章 まとめの ボス「大モジクイ」の 2段目（HP 1/3 から）'],
+    ['mojikui_king_waver', 'mojikui_king', 'the same KING of the Mojikui as the reference, in the middle of the battle, starting to waver: the cold, gloomy mask is cracking and its loneliness shows.', 'the same vast starry night-black robe and the same throne of blank books as the reference, but the King half rising from the throne, one wide sleeve lifted toward its face, the starlight in its robe flickering and fraying at the edges.', 'the same pale golden eyes, now wide and trembling, one tear running down, the small mouth slightly open as if about to say something; the crown tilted.', 'midnight black-violet, starlight gold and pale moon silver.', 'the same crescent-moon sceptre lowered, a few golden letter-motes drifting OUT of the robe toward the viewer (abstract, not readable).', '5章 まとめの ボス「モジクイの 王」の 2段目（HP 1/3 から・まよう 王）'],
+    ['mojikui_kana_starboss_angry', 'mojikui_kana_starboss', 'the same BIG star-eating shadow as the reference, now furious and desperate.', 'the same huge round night-sky body, its little bat-like wings spread wide and flapping hard, its round belly glowing brighter and cracking as the stars and letter-motes inside push to get out.', 'the same glowing golden eyes with star highlights, now glaring, the greedy grin turned into a big wide roar with rounded teeth, brows deeply furrowed.', 'midnight blue, starlight gold and runway-light red.', 'stars and tiny golden letter-motes escaping from the cracks in its belly (no readable characters), runway lamps flickering inside.', 'ひらがなの ボス「ほしを たべた おおかげ」の 2段目（3つめの 段から）'],
+    ['mojikui_kana_slurp_angry', 'mojikui_kana_slurp', 'the same Mojikui as the reference in the last car of the train, now angry that its feast is being taken back.', 'the same plump creature, standing up on its seat, hugging the huge glowing noodle bowl tight under one arm and waving the big chopsticks like a sword.', 'the same face as the reference, eyes wide open and glaring, cheeks puffed, one noodle still hanging from its mouth, little puffs of steam shooting from its head in anger.', 'the same colours as the reference.', 'katakana-shaped golden motes slipping out of the bowl (abstract, not readable), the napkin around its neck knocked askew.', 'カタカナの ボス「モジクイ」の 2段目（3つめの 段から）'],
+  ].map(([id, base, personality, body, face, accent, props, used]) => ({
+    ...mojikui(id, personality, body, face, accent, props, used),
+    refs: [`public/img/battle/${base}.webp`],
+    style: ['CREATURE_SAME'],
+    matchFrame: `public/img/battle/${base}.webp`,
+    // ink swirls trap white background between them (the matchFrame path does not clear enclosed white).
+    flatWhite: true,
+    note: `${base} と 同じ 者・同じ 枠（matchFrame）。白い 背景を import.mjs が 切り抜く（flatWhite で すきまの 白も）`,
+  })),
 ];
 
 const NANIWA = [
