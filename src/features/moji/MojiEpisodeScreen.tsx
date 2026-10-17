@@ -435,13 +435,15 @@ const EpisodePlayer = ({ id }: { id: string }) => {
   });
   /**
    * ★3 (docs/design/22 §3): the first time through 1章 1話, Nexmax comes in
-   * the form 0章 left him in — ★2, or ★1 for a player who skipped 0章 — and
-   * the letters' light at the meeting makes him ★3. Fixed on arrival.
+   * the form 0章 left him in — ★2 once the hiragana boss has made him so
+   * (even if 0章 was left before its end), or ★1 for a player who skipped
+   * 0章 — and the letters' light at the meeting makes him ★3. Fixed on arrival.
    */
   const [evolveFrom] = useState<1 | 2 | null>(() => {
     const s = useGameStore.getState();
     if (ep.id !== 'moji-1-1' || s.tutorials.star3 || s.clearedStages.includes(ep.id)) return null;
-    return s.clearedStages.includes('kana-10') ? 2 : 1;
+    // kana-10 too: a save from before the bosses (2026-10-15) finished 0章 without them.
+    return s.clearedStages.includes('kana-boss-1') || s.clearedStages.includes('kana-10') ? 2 : 1;
   });
   const [evolved, setEvolved] = useState(false);
   const markTutorialSeen = useGameStore((s) => s.markTutorialSeen);
@@ -573,7 +575,7 @@ const EpisodePlayer = ({ id }: { id: string }) => {
           />
         );
       case 'evolve': {
-        // The letters' light goes into Nexmax: his name comes back whole, ★3 (docs/design/22 §3).
+        // The letters' light goes into Nexmax and becomes his strength: ★3 (docs/design/22 §3; his name came back in かな 9話).
         const from = (evolveFrom === 2 ? NANIWA_NEXMAX_STAR2 : NANIWA_NEXMAX_STAR1).sprites.normal;
         return (
           <EvolveScene
