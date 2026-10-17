@@ -71,13 +71,16 @@ export const MOJI1_PRELUDE: NovelScript = {
 /**
  * ★3 (docs/design/22 §3, 2026-10-15「N5の最初で名前を取り戻して星3になるイベントを作って」): after 1章
  * 1話's meeting, where the light of the written letters goes into Nexmax
- * (「✍️ → 💡 → 🤖」), his name comes back whole and he grows into ★3
+ * (「✍️ → 💡 → 🤖」), that light becomes his strength and he grows into ★3
  * (EvolveScene). 1課's pattern only: 〜は 〜です.
+ *
+ * His name is not what comes back here: it came back whole in かな 9話 (or,
+ * for a player who skipped 0章, in MOJI1_PRELUDE). Until 2026-10-17 these
+ * lines said it came back again (「前後関係の 見直し」).
  */
 export const STAR3_LINES: { text: string; en: string }[] = [
-  { text: 'あなたの 字(じ)の ひかりです。', en: 'The light of your letters…' },
-  { text: 'ぼくの なまえは ネクマックスです！', en: 'My name is Nexmax — all of it, back again!' },
-  { text: 'ネクマックス ★3です！ ありがとう！', en: 'Nexmax, ★3! Thank you!' },
+  { text: 'あなたの 字(じ)の ひかりは、ぼくの ちからです。', en: 'The light of your letters is my strength.' },
+  { text: 'ぼくは ネクマックス ★3です！ ありがとう！', en: "I'm Nexmax — ★3 now! Thank you!" },
 ];
 /** First, for a player who skipped 0章 (MOJI1_PRELUDE): he was still ★1. */
 export const STAR3_SKIPPED_LINE = { text: 'あなたが なまえを かきました。', en: 'You wrote my name back.' };
@@ -141,7 +144,8 @@ export const MOJI1_SCRIPTS: Record<string, EpisodeScript> = {
       lines: [
         { bg: 'naniwa_station_square', glyph: '山(やま)田(だ)', text: 'なまえが ひかります。💡', en: "Yamada-san's name lights up." },
         { fx: ['darkclouds'], speaker: 'mojikui', sprite: 'mojikui:normal', text: 'その なまえ、たべます！ 😈', en: "That name — I'll eat it!" },
-        { speaker: 'nexmax', sprite: 'nexmax:determined', text: 'ちずの うしろの かげ……モジクイです！', en: 'The shadow behind the map — a Mojikui!' },
+        // あの: the Mojikui of 0章's last car (docs/design/22 §4.2), or of MOJI1_PRELUDE for a player who skipped 0章.
+        { speaker: 'nexmax', sprite: 'nexmax:determined', text: 'ちずの うしろの かげ……あの モジクイです！', en: "The shadow behind the map — it's that Mojikui again!" },
         { speaker: 'yamada', sprite: 'yamada:sad', text: '……！ 😱', en: 'Yamada-san freezes.' },
         { speaker: 'nexmax', sprite: 'nexmax:guide', glyph: '✍️ → 💡 → 🤖', text: 'あなたは かきます。ぼくが たたかいます！', en: "You write. I'll fight — I'll protect you!" },
       ],
@@ -266,12 +270,13 @@ export const MOJI1_SCRIPTS: Record<string, EpisodeScript> = {
     outro: {
       stageId: 'moji-1-5',
       lines: [
-        { bg: 'naniwa_market', fx: ['darkclouds'], sprite: 'mojikui_price:normal', glyph: '🌉 💨', text: 'モジクイは つぎの まちへ にげました。', en: 'The Mojikui fled to the next district.' },
+        // Still Naniwa Town (6〜11話): the school is across the bridge, not in the next town (2026-10-17).
+        { bg: 'naniwa_market', fx: ['darkclouds'], sprite: 'mojikui_price:normal', glyph: '🌉 🏫 💨', text: 'モジクイは まちの がっこうへ にげました。', en: "The Mojikui fled over the bridge, to the town's school." },
         { fx: ['spring'], sprite: 'vendor:happy', glyph: '百(ひゃく) 千(せん) 万(まん) 円(えん)', text: 'ねふだが もどりました！', en: 'The price tags came back!' },
         { speaker: 'vendor', sprite: 'vendor:happy', glyph: '🍎 = 百(ひゃく)円(えん)', text: 'りんごは 百(ひゃく)円(えん)です！', en: 'Apples are 100 yen!' },
         { speaker: 'nexmax', sprite: 'nexmax:smile', text: 'いくらですか？ ……百(ひゃく)円(えん)！ わかりました！ 🙆‍♂️', en: 'How much? …100 yen! I can read it!' },
         { speaker: 'nexmax', sprite: 'nexmax:guide', glyph: '📖 ✨', text: 'ずかんに、ぶきと なかまが あります！', en: 'The collection is open: your weapons and companions are in the picture book!' },
-        { speaker: 'nexmax', sprite: 'nexmax:determined', glyph: '🌉 👉', text: 'モジクイは どこですか？ いきましょう！', en: "Where is the Mojikui? Let's go!" },
+        { speaker: 'nexmax', sprite: 'nexmax:determined', glyph: '🌉 🏫 👉', text: 'がっこうへ いきましょう！', en: "Let's go to the school!" },
       ],
     },
   },

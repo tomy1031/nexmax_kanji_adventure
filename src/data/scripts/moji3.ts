@@ -174,7 +174,8 @@ export const MOJI3_SCRIPTS: Record<string, EpisodeScript> = {
         { speaker: 'nexmax', sprite: 'nexmax:think', glyph: '☁️ 👾', text: 'モジクイが、そらの 字(じ)も 食(た)べました。', en: "The Mojikui ate the sky's letters too." },
         { glyph: '🏬 🪧❓ 🪧❓', text: 'おみせの みちの 入(いり)口(ぐち)と 出(で)口(ぐち)の ふだが ありません。', en: "The arcade's entrance and exit signs are gone." },
         { speaker: 'delivery', sprite: 'delivery:trouble', glyph: '🍜 📦', text: 'ラーメンです！ 入(いり)口(ぐち)は どこですか？ わかりません！ 💦', en: "Ramen delivery! Where's the entrance? I can't tell!" },
-        { glyph: '🚲💨 🛑❓', text: 'みちの「止(と)まれ」も ありません。自(じ)転(てん)車(しゃ)が 止(と)まりません！', en: 'The STOP on the road is gone too. The bicycles don’t stop!' },
+        // Not the 「止まれ」 sign itself: that is 7章's story (33課, the imperative of signs; 2026-10-17).
+        { glyph: '🚲💨 🪧❓', text: 'みちの ふだも ありません。自(じ)転(てん)車(しゃ)が 止(と)まりません！', en: 'The road signs are gone too. The bicycles don’t stop!' },
         { text: '止(と)まります、雨(あめ)、入(はい)ります、出(で)ます……かんじが ありませんから、わかりません。', en: 'tomarimasu, ame, hairimasu, demasu… no kanji, so nobody understands.' },
         { glyph: '☂️ 👀', text: '……クルクル。さかさまの かさが……！', en: 'Round and round… an upside-down umbrella…!' },
         WRITE,
@@ -266,6 +267,8 @@ export const MOJI3_FINALE: FinaleScript = {
       { speaker: 'chef', sprite: 'chef:happy', glyph: '🍜 👑', text: 'おいしい！ 大(たい)会(かい)で いちばんの ラーメンです！', en: 'Delicious! The best ramen of the contest!' },
       { speaker: 'hana', sprite: 'hana:happy', glyph: '👧 🤝 🤖', text: 'ネクマックス、ありがとう。わたしも いっしょに 行(い)きたいです！', en: 'Thank you, Nexmax. I want to come with you!' },
       { speaker: 'nexmax', sprite: 'nexmax:smile', glyph: '🚃 👉 🏙️', text: 'はい！ いっしょに となりの 町(まち)を 回(まわ)りましょう！', en: "Yes! Let's go round the next town together!" },
+      // How Sora knows where to come in 4章 1話: the letter of 1話 went before anyone knew of the next town.
+      { speaker: 'nexmax', sprite: 'nexmax:guide', glyph: '✉️ 👧 🚃 🏙️', text: 'ソラにも 手(て)紙(がみ)を 送(おく)りましょう。「となりの 大(おお)きい 町(まち)で 会(あ)いましょう」。', en: 'Let\'s write to Sora too: "See you in the big town next door!"' },
     ],
   },
 };

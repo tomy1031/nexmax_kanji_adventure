@@ -26,8 +26,8 @@ export const NANIWA_NEXMAX: CastMember = {
  * カタカナの時のネクマックス（星2ひらがなマスター）のデザインを作ってそれをストーリーのときに使って」):
  * ★1 through the hiragana — his letters stolen, shrunk to a baby — and ★2
  * through the katakana, the hiragana won back but his name still missing.
- * He becomes the usual ★3 when his name comes back at the start of 1章
- * (docs/design/22). Same expressions as NANIWA_NEXMAX; no waving pose (hello is the normal one).
+ * His name comes back in かな 9話; he becomes the usual ★3 at the start of
+ * 1章, when the light of the written kanji becomes his strength (docs/design/22). Same expressions as NANIWA_NEXMAX; no waving pose (hello is the normal one).
  */
 const kanaForm = (star: 1 | 2): CastMember => {
   const art = (pose: string) => `img/chara/naniwa/nexmax_star${star}_${pose}.webp`;

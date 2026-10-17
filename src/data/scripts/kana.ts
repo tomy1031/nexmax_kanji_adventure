@@ -8,7 +8,10 @@ import { KANA_FOE_CAST } from './kanaFights';
  * 2026-10-01: ナニワタウンへ 向かう 前の 話（前日譚）に 語り直した。舞台は
  * 森と 村から、主人公が 降りた ばかりの 空港へ: 展望デッキ → 屋上の 庭 →
  * 待合 → 駅への 連絡通路 → 夜の 滑走路 → 空港の 駅 → 海を わたる 電車。
- * 10話の 終わりで「うえの まち」の 名前「ナニワタウン」が ぜんぶ 読める。
+ * カタカナの ボス（10話の あと）の 終わりで「うえの まち」の 名前「ナニワタウン」が ぜんぶ 読める。
+ * 2つの ボスは 話の 間に 入る（kanaFights.ts）: 5話は 夜の 滑走路で 終わり、ひらがなの ボスの あとに
+ * 夜明けの 空港の 駅へ。10話は モジクイが ちゃわんを かかえた ところで 終わり、カタカナの ボスの あとに
+ * モジクイが 町へ にげて、電車が ナニワタウンに 着く（2026-10-17 前後関係の 見直し）。
  *
  * 2026-09-26 の 指定で 作り直した:
  *  - ネクマックスは **戻った かなで しか 話せない**。まだ 書いて いない かなは
@@ -181,9 +184,8 @@ export const KANA_SCRIPTS: Record<string, KanaScript> = Object.fromEntries([
       { text: 'ありがとう arigatou. That is what he tried to say at the very beginning. Thank you.', ja: 'ありがとう。いちばん はじめの「あ□□□う」です。' },
       { speaker: 'nexmax', text: 'でんしゃは あさ。' },
       { text: 'で de — that is て with two little dots. でんしゃ densha… the train, in the morning.', ja: 'で。「て」に ちいさい てんが ふたつ。でんしゃ…… あさの でんしゃです。' },
-      { text: 'At dawn we reach the airport station. But every sign here is written in sharper, different letters.', ja: 'あさ、くうこうの えきに きました。でも、ここの かんばんは ほかの もじです。' },
-      { speaker: 'nexmax', sprite: 'nexmax:think', text: 'ここは カタカナの えき。' },
-      { text: 'ここは …の えき koko wa …no eki. This is the something station. Letters I can\'t read yet.', ja: 'ここは ……の えき。なにかの えきです。この もじは まだ わかりません。' },
+      // The night is not over: the hiragana boss comes next, still on the runway (kanaFights.ts),
+      // and its story ends at dawn at the airport station.
     ],
   ),
   script(
@@ -275,16 +277,13 @@ export const KANA_SCRIPTS: Record<string, KanaScript> = Object.fromEntries([
       { speaker: 'nexmax', sprite: 'nexmax:guide', text: '✍️💡🪧 かきます！ さいごの カタカナ！' },
     ],
     [
-      { fx: ['heal'], text: 'The Mojikui chokes, and kana burst out of it like confetti.', ja: 'モジクイが「ゴホッ！」。かなが たくさん そとへ でます。' },
-      { text: 'But it leaps through the window and flees ahead, into the town on the hill.', ja: 'でも、モジクイは まどから そとへ。うえの まちへ いきました。' },
-      { bg: 'naniwa_train', glyph: 'ナニワタウン', text: 'The train comes off the bridge. Over the station ahead hangs a big sign — and I can read every letter of it.', ja: 'えきに おおきい かんばんが あります。もう ぜんぶの もじが わかります！' },
-      { speaker: 'nexmax', sprite: 'nexmax:smile', text: 'うえの まちは、ナニワタウン！' },
-      { text: 'ナニワタウン Naniwa Taun — Naniwa Town. That is the town up on the hill.', ja: 'ナニワタウン。あれが うえの まちです。' },
-      { speaker: 'nexmax', sprite: 'nexmax:think', text: 'ナニワタウンで、かんじが きえて いる。' },
-      { text: 'In Naniwa Town, the kanji are disappearing.', ja: 'ナニワタウンには、かんじが ありません。' },
-      { speaker: 'nexmax', sprite: 'nexmax:smile', text: 'あなたは もう、ひらがなも カタカナも わかる。' },
-      { speaker: 'nexmax', text: 'ありがとう。つぎは かんじ！ 🙆‍♂️' },
-      { text: 'ありがとう. This time I understood every word.', ja: 'ありがとう。いまは ぜんぶの ことばが わかります。' },
+      { fx: ['heal'], text: 'The Mojikui chokes, and a few kana burst out of it like confetti.', ja: 'モジクイが「ゴホッ！」。かなが すこし そとへ でます。' },
+      { text: 'But its arms are still wrapped around a huge bowl of glowing letters.', ja: 'でも、モジクイの てには、ひかる もじの おおきい ちゃわんが あります。' },
+      { speaker: 'nexmax', sprite: 'nexmax:think', text: 'ちゃわんの なかに、カタカナが ぜんぶ！' },
+      { text: 'The station\'s letters, the tickets — every katakana it ate is in that bowl.', ja: 'えきの もじも、キップも。たべた カタカナは ぜんぶ あの ちゃわんの なかです。' },
+      { speaker: 'nexmax', sprite: 'nexmax:determined', text: 'まだ おわりじゃ ない！ ✊' },
+      // The katakana boss comes next, in this car; its story ends with the Mojikui fleeing
+      // and the train reaching Naniwa Town (kanaFights.ts, docs/design/22 §4.2).
     ],
   ),
 ]);
