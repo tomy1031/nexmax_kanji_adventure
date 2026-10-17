@@ -9,6 +9,7 @@ import { canSpeak, speak, stopSpeaking } from '../../lib/speech';
 import { useGameStore } from '../../store/gameStore';
 import PictureBook from '../picturebook/PictureBook';
 import { SCENES } from '../picturebook/scenes';
+import { glyphIsSigns } from '../picturebook/signReading';
 import { TypeReveal } from '../../components/ui/TypeReveal';
 import { NamePlate } from './NamePlate';
 import { useKnownLetters } from '../picturebook/useKnownLetters';
@@ -189,8 +190,9 @@ export const NovelScene = ({ script, cast, onFinish, chapter, renderText, speech
   const speaker = line?.speaker ? castById.get(line.speaker) : undefined;
   const plain = renderPlain ?? renderText;
   /**
-   * The letters of the big glyph are lit signs in this very scene: the town
-   * already shows them, so the glyph is not drawn a second time over it.
+   * The letters of the big glyph are lit signs in this very scene, read as the
+   * signs read them: the town already shows them, so the glyph is not drawn a
+   * second time over it.
    * (Letters still missing keep their glyph — that is how the gap is shown.)
    */
   const knownLetters = useKnownLetters();
@@ -198,8 +200,9 @@ export const NovelScene = ({ script, cast, onFinish, chapter, renderText, speech
   const glyphOnSigns = useMemo(() => {
     const spots = SCENES[bg]?.signs?.spots;
     if (!glyph || !spots) return false;
+    // Only when the signs say just that, readings and all: 山(やま)田(だ) is not the map's 田(た).
     const chars = [...stripRuby(glyph).replace(/\s/g, '')];
-    return chars.length > 0 && chars.every((c) => knownLetters.has(c) && !holdLetters?.includes(c) && spots.some((s) => s.char === c));
+    return glyphIsSigns(glyph, spots) && chars.every((c) => knownLetters.has(c) && !holdLetters?.includes(c));
   }, [bg, glyph, knownLetters, holdLetters]);
 
   const [spriteId, spriteExpr] = sprite?.split(':') ?? [];

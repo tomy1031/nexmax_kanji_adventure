@@ -1,6 +1,6 @@
 import { motion } from 'framer-motion';
 import { RubyText } from '../../components/ui/Ruby';
-import { charRuby } from '../../lib/reading';
+import { signRuby } from './signReading';
 import { useGameStore } from '../../store/gameStore';
 import { useKnownLetters } from './useKnownLetters';
 
@@ -30,6 +30,8 @@ import { useKnownLetters } from './useKnownLetters';
 export interface SignSpot {
   /** The letter that belongs here. */
   char: string;
+  /** Its reading here, when the story reads it otherwise than usual: the calendar's 水 is すい (signReading.ts). */
+  reading?: string;
   x: number;
   y: number;
   w: number;
@@ -80,7 +82,7 @@ const Spot = ({ spot, lit, style, k, ox, oy }: { spot: SignSpot; lit: boolean; s
       >
         {/* A kanji keeps its reading over it, small, like every kanji in the game. */}
         <span className="leading-[1.35] font-bold text-[#3b1f00] [&_rt]:text-[#5a3410]" style={{ fontSize: h * 0.5 }}>
-          <RubyText showFurigana={furigana}>{charRuby(spot.char)}</RubyText>
+          <RubyText showFurigana={furigana}>{signRuby(spot)}</RubyText>
         </span>
       </motion.div>
     </div>

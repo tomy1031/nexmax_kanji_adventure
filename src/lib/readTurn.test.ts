@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { READ_HIT_SHARE, isReadTurn, pickThrown, readAnswer, readChoices, readDamage, readQuestion } from './readTurn';
+import { READ_HIT_SHARE, isReadTurn, pickThrown, readAloud, readAnswer, readChoices, readDamage, readQuestion } from './readTurn';
+import { kunForm, primaryForm } from './reading';
 import { MOJI_EPISODES } from '../data/mojiEpisodes';
 import { getKanjiByChar } from './kanjiDb';
 import { ALL_KANJI } from '../data/kanji.generated';
@@ -19,13 +20,28 @@ describe('読む ターン', () => {
     expect(readAnswer(k('山'))).toBe('やま');
   });
 
+  it('asks a kun reading with its okurigana, as the word is known: 小 is ちい(さい), said ちいさい (2026-10-10)', () => {
+    expect(readAnswer(k('小'))).toBe('ちい(さい)');
+    expect(readAloud(readAnswer(k('小')))).toBe('ちいさい');
+    // No choice is a bare stem the learner never says alone (ちい, たか, やす).
+    for (const x of n5) {
+      const { okuri } = primaryForm(x);
+      if (okuri) expect(kunForm(readAnswer(x)).okuri, x.char).toBe(okuri);
+    }
+    for (const c of readChoices(k('小'), [...'高安大小新'].map(k), n5, 3)) {
+      const f = kunForm(c);
+      const owner = [...'高安大小新'].map(k).find((x) => primaryForm(x).stem === f.stem);
+      if (owner) expect(f.okuri, c).toBe(primaryForm(owner).okuri);
+    }
+  });
+
   it('offers four different readings, the answer among them, all in hiragana', () => {
     for (let seed = 1; seed < 30; seed++) {
       const choices = readChoices(k('火'), pool, n5, seed);
       expect(choices).toHaveLength(4);
       expect(new Set(choices).size).toBe(4);
       expect(choices).toContain(readAnswer(k('火')));
-      for (const c of choices) expect(c).toMatch(/^[ぁ-ゖー]+$/);
+      for (const c of choices) expect(c).toMatch(/^[ぁ-ゖー]+(\([ぁ-ゖー]+\))?$/);
     }
   });
 

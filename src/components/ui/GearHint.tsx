@@ -5,7 +5,7 @@ import { GameIcon } from './GameIcon';
 import { useGameStore } from '../../store/gameStore';
 import { ALL_KANJI } from '../../data/kanji.generated';
 import { gearInView, nextGearHint } from '../../data/equipment';
-import { charRuby } from '../../lib/reading';
+import { charRubyIn } from '../../lib/wordReading';
 import { REPS_TO_OBTAIN } from '../../types/kanji';
 
 /**
@@ -58,7 +58,7 @@ export const GearHint = ({ stageId }: { stageId: string }) => {
         <RubyText showFurigana={showFurigana}>
           {ready
             ? `「${hint.item.name}」が 作(つく)れる！`
-            : `${hint.missing.map((c) => `「${charRuby(c)}」`).join('')}を 手(て)に 入(い)れると「${hint.item.name}」が 作(つく)れる`}
+            : `${hint.missing.map((c) => `「${charRubyIn(hint.item.name, c)}」`).join('')}を 手(て)に 入(い)れると「${hint.item.name}」が 作(つく)れる`}
         </RubyText>
       </span>
       <span className="shrink-0 text-lg" aria-hidden>

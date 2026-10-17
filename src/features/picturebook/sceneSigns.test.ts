@@ -4,6 +4,11 @@ import { SCENES } from './scenes';
 import { MOJI_EPISODES } from '../../data/mojiEpisodes';
 import { KANA_EPISODES } from '../../data/kana';
 import { KANA_SCRIPTS } from '../../data/scripts/kana';
+import { MOJI1_PRELUDE } from '../../data/scripts/moji1';
+import { MOJI_SCRIPTS } from '../../data/mojiScripts';
+import { MOJI_FINALE_SCRIPTS } from '../../data/mojiFinaleScripts';
+import { parseRuby } from '../../lib/ruby';
+import { glyphIsSigns, signReading, signRuby } from './signReading';
 
 const withSigns = Object.entries(SCENES).filter(([, def]) => def.signs);
 
@@ -61,5 +66,36 @@ describe('signs stay on screen', () => {
     }
     // Not cut sideways: nothing to slide.
     expect(signPageX(signs, 375, 375)).toBeNull();
+  });
+});
+
+describe('a sign reads its letter as the story does there (2026-10-10「読みが 合わない…ほかに ないか」)', () => {
+  it('lets the signs stand for a big glyph only when they say the same, readings and all', () => {
+    const calendar = SCENES.naniwa_town_station.signs!.spots;
+    expect(glyphIsSigns('日(にち) 月(げつ) 火(か) 水(すい) 木(もく)', calendar)).toBe(true);
+    // The calendar's 水 is すい (水曜日): a 水(みず) glyph is drawn, not left to the sign.
+    expect(glyphIsSigns('水(みず)', calendar)).toBe(false);
+    // 山田さん's name is やまだ; the map's 田 is た.
+    expect(glyphIsSigns('山(やま)田(だ)', SCENES.naniwa_station_square.signs!.spots)).toBe(false);
+  });
+
+  it('gives a letter the story lists in a scene the reading its sign shows there', () => {
+    const scripts = [MOJI1_PRELUDE, ...Object.values(MOJI_SCRIPTS).flatMap((s) => [s.intro, s.encounter, s.outro]), ...Object.values(MOJI_FINALE_SCRIPTS).flatMap((f) => (f ? [f.intro, f.outro] : []))];
+    const bad: string[] = [];
+    for (const s of scripts) {
+      let scene = '';
+      for (const l of s.lines) {
+        if (l.bg) scene = l.bg;
+        const spots = SCENES[scene]?.signs?.spots ?? [];
+        const segs = parseRuby(l.glyph ?? '');
+        segs.forEach((seg, i) => {
+          // A letter on its own — not part of a word (山(やま)田(だ), 主(しゅ)食(しょく)) — that has a sign here.
+          const alone = !segs[i - 1]?.reading && !segs[i + 1]?.reading;
+          const spot = spots.find((p) => p.char === seg.text);
+          if (seg.reading && alone && spot && signReading(spot) !== seg.reading) bad.push(`${s.stageId} ${scene}: ${seg.text}(${seg.reading}), sign ${signRuby(spot)}`);
+        });
+      }
+    }
+    expect(bad).toEqual([]);
   });
 });
