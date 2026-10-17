@@ -36,6 +36,12 @@ export const kanaCast = (script: 'hiragana' | 'katakana'): CastMember[] => [
   // the shadows of 0章の たたかい (kanaFights.ts)
   ...KANA_FOE_CAST,
 ];
+/**
+ * A 0章 boss's story. The hiragana boss's win grows Nexmax into ★2 (EvolveScene),
+ * so its closing story shows him at ★2 — on a replay too, as he is ★2 by then.
+ */
+export const kanaBossCast = (script: 'hiragana' | 'katakana', part: 'intro' | 'outro'): CastMember[] =>
+  kanaCast(part === 'outro' ? 'katakana' : script);
 /** The hiragana episodes' cast (kana-1 … 5); kanaCast('katakana') for the rest. */
 export const KANA_CAST: CastMember[] = kanaCast('hiragana');
 
