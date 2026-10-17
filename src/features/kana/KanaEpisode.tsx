@@ -6,7 +6,7 @@ import { useGameStore } from '../../store/gameStore';
 import { getKanaEpisode } from '../../data/kana';
 import { afterEpisode } from '../../data/mojiFlow';
 import { PhaseDoors } from '../../components/ui/Doors';
-import { KANA_SCRIPTS, kanaCast } from '../../data/scripts/kana';
+import { KANA_SCRIPTS, kanaBossCast, kanaCast } from '../../data/scripts/kana';
 import KanaDrill from './KanaDrill';
 import KanaText from './KanaText';
 import { useKnownKana } from './useKnownKana';
@@ -180,7 +180,6 @@ const BossPlayer = ({ boss }: { boss: KanaBoss }) => {
   const still = useStill();
   const [phase, setPhase] = useState<BossPhase>('intro');
   const lines = KANA_BOSS_SCRIPTS[boss.id];
-  const cast = kanaCast(boss.script);
   const [fight] = useState(() => bossFight(boss));
   const weapon = getKanaWeapon(useGameStore((s) => s.equippedKanaWeapon)) ?? null;
   // ★1 → ★2 only the first time the hiragana boss falls.
@@ -195,12 +194,13 @@ const BossPlayer = ({ boss }: { boss: KanaBoss }) => {
     const next = afterEpisode(boss.id, useGameStore.getState().clearedStages);
     navigate(next ? `/map/moji?new=${next}` : '/map/moji');
   };
-  const novel = (key: string, script: typeof lines.intro, onFinish: () => void) => (
+  // ★1 before the hiragana boss, ★2 once it has fallen (kanaBossCast).
+  const novel = (key: 'intro' | 'outro', script: typeof lines.intro, onFinish: () => void) => (
     <NovelScene
       key={key}
       bgm={key === 'intro' ? 'tension' : undefined}
       script={script}
-      cast={cast}
+      cast={kanaBossCast(boss.script, key)}
       chapter={chapter}
       renderText={renderText}
       renderPlain={renderPlain}

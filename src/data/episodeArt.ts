@@ -1,6 +1,6 @@
 import type { CastMember, NovelScript } from '../types/novel';
 import { SCENES } from '../features/picturebook/scenes';
-import { KANA_SCRIPTS, kanaCast } from './scripts/kana';
+import { KANA_SCRIPTS, kanaBossCast, kanaCast } from './scripts/kana';
 import { getKanaEpisode } from './kana';
 import { KANA_FOES, KANA_HERO, getKanaBoss } from './kanaBattle';
 import { KANA_BOSS_SCRIPTS, KANA_ENCOUNTERS } from './scripts/kanaFights';
@@ -48,7 +48,8 @@ export const episodeArt = (id: string, { star4 = false }: { star4?: boolean } = 
   if (kanaBoss) {
     const story = KANA_BOSS_SCRIPTS[id];
     const scene = SCENES[kanaBoss.bg]?.photo;
-    return [...new Set([...(story ? scriptArt([story.intro, story.outro], kanaCast(kanaBoss.script)) : []), ...(scene ? [scene] : []), KANA_HERO[kanaBoss.script].img, kanaBoss.foe.img, ...battle])];
+    const art = story ? [...scriptArt([story.intro], kanaBossCast(kanaBoss.script, 'intro')), ...scriptArt([story.outro], kanaBossCast(kanaBoss.script, 'outro'))] : [];
+    return [...new Set([...art, ...(scene ? [scene] : []), KANA_HERO[kanaBoss.script].img, kanaBoss.foe.img, ...battle])];
   }
   const finale = getMojiFinale(id);
   if (finale) {
