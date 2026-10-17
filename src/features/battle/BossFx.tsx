@@ -248,23 +248,25 @@ export const BossBeat = ({
                 </p>
               )}
             </div>
-            {line.en && (
-              <button
-                type="button"
-                className="g-pill-night shrink-0 self-end px-2 py-0.5 text-xs font-black"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setEn((v) => !v);
-                }}
-              >
-                EN
-              </button>
-            )}
+            <div className="flex shrink-0 flex-col items-end justify-between gap-2 self-stretch">
+              <span className="text-xs font-bold text-white/70" aria-hidden>
+                {lines.length > 1 ? `${i + 1} / ${lines.length} ▶` : '▶'}
+              </span>
+              {line.en && (
+                <button
+                  type="button"
+                  className="g-pill-night px-2 py-0.5 text-xs font-black"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setEn((v) => !v);
+                  }}
+                >
+                  EN
+                </button>
+              )}
+            </div>
           </motion.div>
         </AnimatePresence>
-        <p className="mt-2 text-center text-xs font-bold text-white/70" aria-hidden>
-          {lines.length > 1 ? `${i + 1} / ${lines.length} ▶` : '▶'}
-        </p>
       </motion.div>
     </motion.div>
   );

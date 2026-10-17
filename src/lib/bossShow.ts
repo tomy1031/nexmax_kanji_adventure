@@ -67,7 +67,9 @@ export const finisherSliver = (max: number): number => Math.max(1, Math.round(ma
 
 /**
  * A blow on a boss with a finisher: one that would end the fight before the
- * finisher has been written leaves the sliver instead, and calls it.
+ * finisher has been written leaves the sliver instead, and calls it. Never
+ * more than it had (a blow never heals it): from below the sliver it keeps
+ * what it had, less one, and at least one.
  */
-export const holdForFinisher = (hpAfter: number, max: number, finisherDone: boolean): { hp: number; call: boolean } =>
-  hpAfter > 0 || finisherDone ? { hp: hpAfter, call: false } : { hp: finisherSliver(max), call: true };
+export const holdForFinisher = (hpBefore: number, hpAfter: number, max: number, finisherDone: boolean): { hp: number; call: boolean } =>
+  hpAfter > 0 || finisherDone ? { hp: hpAfter, call: false } : { hp: Math.max(1, Math.min(finisherSliver(max), hpBefore - 1)), call: true };

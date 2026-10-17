@@ -23,11 +23,16 @@ describe('ボスの 見せ場 (lib/bossShow.ts)', () => {
   });
 
   it('never lets an ordinary blow end the fight before the finisher: it leaves a sliver and calls it', () => {
-    expect(holdForFinisher(0, 160, false)).toEqual({ hp: finisherSliver(160), call: true });
+    expect(holdForFinisher(40, 0, 160, false)).toEqual({ hp: finisherSliver(160), call: true });
     expect(finisherSliver(160)).toBe(5);
     expect(finisherSliver(10)).toBe(1);
-    expect(holdForFinisher(30, 160, false)).toEqual({ hp: 30, call: false });
+    expect(holdForFinisher(60, 30, 160, false)).toEqual({ hp: 30, call: false });
     // Once the finisher is written, the blow ends it.
-    expect(holdForFinisher(0, 160, true)).toEqual({ hp: 0, call: false });
+    expect(holdForFinisher(5, 0, 160, true)).toEqual({ hp: 0, call: false });
+  });
+
+  it('never heals the boss: from below the sliver it keeps what it had, less one, and at least one', () => {
+    expect(holdForFinisher(3, 0, 160, false)).toEqual({ hp: 2, call: true });
+    expect(holdForFinisher(1, 0, 160, false)).toEqual({ hp: 1, call: true });
   });
 });
