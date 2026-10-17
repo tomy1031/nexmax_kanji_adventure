@@ -167,6 +167,19 @@ export const GachaScreen = () => {
     navigate(afterEpisodePath(UNLOCKED_ON_MOJI.gacha, useGameStore.getState().clearedStages) ?? mapPath);
   };
   const canMulti = gems >= banner.multi && !busy;
+  /** The ticket button's look: on the page, and in the first time's guide. */
+  const ticketStyle = { background: 'linear-gradient(180deg,#ffe39a,#e8a317)', color: '#3a2414', borderColor: '#fff3b0' };
+  const ticketFace = (
+    <>
+      <img src={assetPath('img/gacha/ticket.webp')} alt="" aria-hidden className="h-10 w-auto" />
+      <span className="flex flex-col leading-tight">
+        <RubyText showFurigana={showFurigana}>チケットで 1回(かい) ひく</RubyText>
+        <span className="text-xs font-bold opacity-80">
+          <RubyText showFurigana={showFurigana}>{first ? '★4 いじょう かくてい！' : `のこり ${tickets}まい`}</RubyText>
+        </span>
+      </span>
+    </>
+  );
 
   /** Into the save: new cards join, duplicates raise きずな or give gems back. */
   const apply = (rs: PullResult[]): Shown[] =>
@@ -394,20 +407,14 @@ export const GachaScreen = () => {
             <motion.button
               type="button"
               data-tap
-              className={`g-btn mt-4 w-full !min-h-[68px] text-lg ${first ? 'relative z-[45]' : ''}`}
-              style={{ background: 'linear-gradient(180deg,#ffe39a,#e8a317)', color: '#3a2414', borderColor: '#fff3b0' }}
+              className="g-btn mt-4 w-full !min-h-[68px] text-lg"
+              style={ticketStyle}
               disabled={busy}
               onClick={doTicket}
               animate={first ? { scale: [1, 1.04, 1] } : undefined}
               transition={{ duration: 1.2, repeat: Infinity }}
             >
-              <img src={assetPath('img/gacha/ticket.webp')} alt="" aria-hidden className="h-10 w-auto" />
-              <span className="flex flex-col leading-tight">
-                <RubyText showFurigana={showFurigana}>チケットで 1回(かい) ひく</RubyText>
-                <span className="text-xs font-bold opacity-80">
-                  <RubyText showFurigana={showFurigana}>{first ? '★4 いじょう かくてい！' : `のこり ${tickets}まい`}</RubyText>
-                </span>
-              </span>
+              {ticketFace}
             </motion.button>
           )}
 
@@ -631,21 +638,28 @@ export const GachaScreen = () => {
         )}
       </AnimatePresence>
 
-      {/* はじめての ガチャ: everything dim but the ticket, and a hand at it (docs/design/16 §3). */}
+      {/* はじめての ガチャ: everything dim, and a hand at the ticket (docs/design/16 §3). The ticket
+          button is in the guide itself: on a phone the one on the page is far below the screen, and
+          the guide took every tap (2026-10-18「モーダルが タップしても 消えない」). A tap anywhere on it
+          is that pull too — the one thing asked here. */}
       <AnimatePresence>
         {first && tickets > 0 && !summon && !results && (
-          <motion.div key="coach" className="fixed inset-0 z-40 bg-black/60" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-            <div className="g-parchment absolute inset-x-6 top-[max(70px,12dvh)] mx-auto max-w-sm px-4 py-3 text-center">
-              <p className="text-base leading-[2] font-black">
+          <motion.div key="coach" className="fixed inset-0 z-40 bg-black/60" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={doTicket}>
+            <div role="dialog" aria-modal="true" aria-labelledby="coach-title" className="g-parchment absolute inset-x-6 top-[max(70px,12dvh)] mx-auto max-w-sm px-4 py-3 text-center">
+              <p id="coach-title" className="text-base leading-[2] font-black">
                 <img src={assetPath('img/gacha/ticket.webp')} alt="" aria-hidden className="mr-1 inline h-6 w-auto align-middle" />
                 <RubyText showFurigana={showFurigana}>チケットで なかまを よびましょう！</RubyText>
               </p>
               <p className="text-sm leading-[1.9]" style={{ color: 'var(--ink-2)' }}>
                 <RubyText showFurigana={showFurigana}>はじめての 1回(かい)は ★4 いじょうが 出(で)ます。</RubyText>
               </p>
-              <motion.p aria-hidden className="mt-1 text-3xl" animate={{ y: [0, 8, 0] }} transition={{ duration: 0.9, repeat: Infinity }}>
+              <motion.p aria-hidden className="mt-1 text-3xl leading-none" animate={{ y: [0, 8, 0] }} transition={{ duration: 0.9, repeat: Infinity }}>
                 👇
               </motion.p>
+              {/* Its tap goes up to the guide's, which pulls. */}
+              <button type="button" data-tap className="g-btn mt-2 w-full !min-h-[64px] text-lg" style={ticketStyle}>
+                {ticketFace}
+              </button>
             </div>
           </motion.div>
         )}
