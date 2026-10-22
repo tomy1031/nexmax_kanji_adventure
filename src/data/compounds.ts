@@ -2,6 +2,7 @@ import { useSyncExternalStore } from 'react';
 import type { Compound } from '../types/forge';
 import type { JlptLevel } from '../types/kanji';
 import { CORE_PACKED } from './compounds.generated';
+import { extraCompounds } from './compoundsExtra';
 
 /**
  * The real words the forge recognises (熟語), built by scripts/build_compounds.mjs.
@@ -12,6 +13,9 @@ import { CORE_PACKED } from './compounds.generated';
  * main.tsx), so the first screen does not wait for them. Anything that
  * caches the table keys its cache on compoundsVersion(), and screens that
  * show words re-render through useCompoundsVersion() when the rest arrives.
+ *
+ * With the rest come the words the dictionary pass misses (compoundsExtra.ts:
+ * 百円・五時・十人, 自分・高校); where the dictionary has a word, its entry stays.
  */
 
 const parse = (packed: string): Compound[] =>
@@ -40,13 +44,25 @@ export const compoundsVersion = (): number => version;
 
 let loading: Promise<void> | null = null;
 
-/** Fetch the rest of the words (once). Safe to call from anywhere. */
+/**
+ * Fetch the rest of the words (once). Safe to call from anywhere. A fetch that
+ * fails (the network, an old chunk after an update) is tried again on the next
+ * call — the forge asks when it opens — instead of leaving the core alone for
+ * the whole session, which judged real words 言葉には なりません.
+ */
 export const loadMoreCompounds = (): Promise<void> => {
-  loading ??= import('./compounds.more.generated').then((m) => {
-    all = [...getCompounds(), ...parse(m.MORE_PACKED)];
-    version = 1;
-    listeners.forEach((l) => l());
-  });
+  loading ??= import('./compounds.more.generated').then(
+    (m) => {
+      const known = [...getCompounds(), ...parse(m.MORE_PACKED)];
+      const words = new Set(known.map((c) => c.word));
+      all = [...known, ...extraCompounds().filter((c) => !words.has(c.word))];
+      version = 1;
+      listeners.forEach((l) => l());
+    },
+    () => {
+      loading = null;
+    },
+  );
   return loading;
 };
 

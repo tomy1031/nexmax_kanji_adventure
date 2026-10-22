@@ -53,6 +53,36 @@ describe('the forge’s words (2026-10-04「今の 5倍は ある。会社員と
       }
     });
 
+    it('knows numbers with counters, and everyday words the dictionary drops (2026-10-22「正しい 漢字が 正しくない の 表示の まま」)', () => {
+      const reading: Record<string, string> = {
+        百円: 'ひゃくえん',
+        五時: 'ごじ',
+        十人: 'じゅうにん',
+        三百: 'さんびゃく',
+        六本: 'ろっぽん',
+        四日: 'よっか',
+        八分: 'はっぷん',
+        三階: 'さんがい',
+        一万円: 'いちまんえん',
+        何月: 'なんがつ',
+        自分: 'じぶん',
+        高校: 'こうこう',
+      };
+      for (const [w, r] of Object.entries(reading)) {
+        const weapon = forgeWeapon(kanji(w))!;
+        expect(weapon.compound?.reading, w).toBe(r);
+      }
+      // Not a number word: the order still matters.
+      expect(forgeWeapon(kanji('円百'))!.compound).toBeNull();
+    });
+
+    it('keeps the dictionary’s entry where it has the word', () => {
+      const by = new Map(getCompounds().map((c) => [c.word, c]));
+      expect(by.get('一日')?.reading).toBe('いちにち');
+      expect(by.get('十分')?.reading).toBe('じゅうぶん');
+      expect(by.get('一番')?.gloss).toBe('best');
+    });
+
     it('shows the learner core first on a kanji’s card', () => {
       const owned = new Set([...'会社員日本人']);
       const first = cardWords('社', owned, 3);
