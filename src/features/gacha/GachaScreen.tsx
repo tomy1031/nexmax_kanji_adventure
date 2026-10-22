@@ -722,34 +722,38 @@ export const GachaScreen = () => {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            // The result reads on its own: the screen behind goes almost dark.
-            className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-[#0d0618]/95 px-4 py-6"
+            // The result reads on its own: the screen behind goes almost dark. Taller than a
+            // small phone (ten cards on an SE: 2026-10-22「結果画面が スクロールできない」), it scrolls;
+            // shorter, it stays in the middle.
+            className="fixed inset-0 z-50 overflow-y-auto overscroll-contain bg-[#0d0618]/95"
           >
-            {isMulti ? (
-              !seq && (
-              <MultiResult
-                results={results}
-                still={still}
-                showFurigana={showFurigana}
-                isPickup={isFeaturedCard}
-                onClose={close}
-                again={
-                  canMulti
-                    ? {
-                        cost: banner.multi,
-                        go: () => {
-                          close();
-                          doMulti();
-                        },
-                      }
-                    : null
-                }
-              />
-              )
-            ) : (
-              // After the companion has come out of their character (KanjiReveal), not under it.
-              !seq && <SingleResult r={results[0]} showFurigana={showFurigana} still={still} onClose={close} />
-            )}
+            <div className="flex min-h-full flex-col items-center justify-center px-4 pt-[max(24px,env(safe-area-inset-top))] pb-[max(24px,env(safe-area-inset-bottom))]">
+              {isMulti ? (
+                !seq && (
+                <MultiResult
+                  results={results}
+                  still={still}
+                  showFurigana={showFurigana}
+                  isPickup={isFeaturedCard}
+                  onClose={close}
+                  again={
+                    canMulti
+                      ? {
+                          cost: banner.multi,
+                          go: () => {
+                            close();
+                            doMulti();
+                          },
+                        }
+                      : null
+                  }
+                />
+                )
+              ) : (
+                // After the companion has come out of their character (KanjiReveal), not under it.
+                !seq && <SingleResult r={results[0]} showFurigana={showFurigana} still={still} onClose={close} />
+              )}
+            </div>
           </motion.div>
         )}
       </AnimatePresence>

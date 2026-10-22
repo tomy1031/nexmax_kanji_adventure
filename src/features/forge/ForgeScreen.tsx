@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import type { ReactNode } from 'react';
 import { useSafeBack } from '../../lib/nav';
 import { useNavigate, useSearchParams } from 'react-router-dom';
@@ -49,7 +49,7 @@ import { isForgeOpen, practiceTarget } from '../../data/mojiFlow';
 /** はじめての 武器 (docs/design/16 §2): the pair the story names in 1章 2話, made together once. */
 const FIRST_PAIR = [...'火山'];
 import { useBgm } from '../../lib/bgm';
-import { useCompoundsVersion } from '../../data/compounds';
+import { loadMoreCompounds, useCompoundsVersion } from '../../data/compounds';
 import * as sfx from '../../lib/sfx';
 import { useStill } from '../../hooks/useStill';
 
@@ -378,7 +378,11 @@ export const ForgeScreen = () => {
   const foundSet = useMemo(() => new Set(Object.keys(foundWords)), [foundWords]);
 
   // The forge's words beyond the core arrive just after start (data/compounds.ts): read again then.
+  // If that fetch failed, it is tried again here.
   const wordsV = useCompoundsVersion();
+  useEffect(() => {
+    void loadMoreCompounds();
+  }, []);
   const preview = useMemo(() => {
     if (!target) return null;
     if (target === 'weapon') {
