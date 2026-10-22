@@ -3,6 +3,7 @@ import { forgeWeapon, forgeSingleBlade, weaponOf, discoverableCompounds, ICON_PO
 import { MOJI_EPISODES } from '../../data/mojiEpisodes';
 import { elementOf, Element, effectiveness } from './elements';
 import { getKanjiByChar } from '../kanjiDb';
+import { slotReadings } from '../wordReading';
 
 const k = (char: string) => {
   const found = getKanjiByChar(char);
@@ -284,5 +285,21 @@ describe('太刀 — the one-kanji blade of 0話', () => {
   it('is what a one-kanji recipe resolves to, and the real forge still refuses one', () => {
     expect(weaponOf([k('一')])?.name).toBe('一(いち)の 太刀(たち)');
     expect(forgeWeapon([k('一')])).toBeNull();
+  });
+});
+
+describe('a made-up weapon’s name (2026-10-10)', () => {
+  it('reads its kanji as 漢字やさん’s slots show them: 社 is しゃ, not やしろ, and never katakana', () => {
+    const route = [...new Set(MOJI_EPISODES.flatMap((e) => e.kanji))];
+    const bad: string[] = [];
+    for (const a of route.slice(0, 40))
+      for (const b of route.slice(0, 40)) {
+        const w = forgeWeapon([k(a), k(b)]);
+        if (!w || w.compound) continue;
+        const want = `${a}${b}(${slotReadings([a, b]).join('')})`;
+        if (!w.name.startsWith(want) || /[ァ-ヶ]\)/.test(w.name.split('の')[0])) bad.push(w.name);
+      }
+    expect(bad).toEqual([]);
+    expect(forgeWeapon([k('社'), k('山')])?.name.startsWith('社山(しゃやま)')).toBe(true);
   });
 });

@@ -4,7 +4,8 @@ import KanjiWriterCanvas from '../../components/KanjiWriterCanvas';
 import { RubyText } from '../../components/ui/Ruby';
 import { useGameStore } from '../../store/gameStore';
 import { getKanjiById } from '../../lib/kanjiDb';
-import { kanjiRuby, primaryReading } from '../../lib/reading';
+import { primaryReading } from '../../lib/reading';
+import { slotReadings } from '../../lib/wordReading';
 import { FORGE_LEVEL_STEPS, FORGE_MAX, forgeLevel, pointsToNext, weaponFromRecipe, weaponWord } from '../../lib/forge/recipe';
 import { WeaponMount } from '../battle/WeaponMount';
 import * as sfx from '../../lib/sfx';
@@ -26,6 +27,8 @@ export const WeaponTrain = ({ recipeId, onClose }: { recipeId: string; onClose: 
   const [canToday] = useState(() => useGameStore.getState().canTrainToday(recipeId));
   const kanji = useMemo(() => (recipe ? recipe.kanjiIds.map((id) => getKanjiById(id)).filter((k) => k != null) : []), [recipe]);
   const weapon = recipe ? weaponFromRecipe(recipe) : null;
+  /** Each kanji's reading in the weapon's word (友人 → ゆう・じん), as the よみ under them says. */
+  const inWord = useMemo(() => slotReadings(kanji.map((k) => k.char), weapon?.compound), [kanji, weapon?.compound]);
 
   const [idx, setIdx] = useState(0);
   const [gained, setGained] = useState(0);
@@ -140,7 +143,7 @@ export const WeaponTrain = ({ recipeId, onClose }: { recipeId: string; onClose: 
             <p className="mt-1 flex items-end gap-1 text-3xl font-black">
               {kanji.map((k, i) => (
                 <span key={k.id} className={i === idx ? 'inline-flex h-10 w-10 items-center justify-center rounded-lg border-2 border-dashed border-[#ffd36a] text-base' : ''}>
-                  {i === idx ? '？' : <RubyText showFurigana={showFurigana}>{kanjiRuby(k)}</RubyText>}
+                  {i === idx ? '？' : <RubyText showFurigana={showFurigana}>{inWord[i] ? `${k.char}(${inWord[i]})` : k.char}</RubyText>}
                 </span>
               ))}
             </p>
