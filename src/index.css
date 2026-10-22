@@ -290,10 +290,10 @@
     font-weight: 800;
     line-height: 1.4;
     cursor: pointer;
-    transition:
-      transform 0.08s ease,
-      box-shadow 0.08s ease,
-      filter 0.15s ease;
+    /* 沈むのは 一瞬で（transform と filter は transition しない）。iPhone（WebKit）は transform・filter が
+       動く あいだだけ ボタンを 別の 層に 移し、重なる 部品も まきこんで 描きなおすので、押す たびと
+       はなす たびに 部品が 一瞬 消えて 見えた（2026-10-18「タップする たびに 画面が チカチカ」）。 */
+    transition: box-shadow 0.08s ease;
   }
 
   .g-btn:active:not(:disabled) {

@@ -214,7 +214,8 @@ for (const a of ASSETS) {
   const out = `public/${a.out}`;
   ensureDir(out);
   if (a.kind === 'chara' && a.matchFrame) {
-    const img = await cutOut(raw, { flatWhite: a.flatWhite });
+    // A creature's phase-2 picture (docs/design/24) clears white shut inside its ink, as the creatures do below.
+    const img = await cutOut(raw, { flatWhite: a.flatWhite, ...(a.group === 'enemy' ? { enclosed: true, minArea: 300 } : {}) });
     // flop: the same picture facing the other way (たいせんの 2P は 右に 立って 左を 向く).
     const framed = await onFrameOf(img, a.matchFrame);
     await (a.flop ? sharp(await framed.png().toBuffer()).flop() : framed).webp({ quality: 88, alphaQuality: 90 }).toFile(out);

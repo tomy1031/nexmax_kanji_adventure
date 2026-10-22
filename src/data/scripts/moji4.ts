@@ -327,4 +327,20 @@ export const MOJI4_FINALE: FinaleScript = {
       { speaker: 'hana', sprite: 'hana:happy', glyph: '👧 👧 🤖', text: 'みんなで 行(い)きましょう！', en: "Let's all go together!" },
     ],
   },
+  // ボスの 見せ場（docs/design/24）: ソラと ハナ（ともだちどうしは ふつうの 言い方）。とどめは 町の あかりの「明」。
+  show: {
+    beats: [
+      [
+        { speaker: 'mojikui_boss', text: 'あかりが……もどって いる？ 😠', en: 'The lights… are coming back?' },
+        { speaker: 'sora', text: 'ほら、町(まち)が 明(あか)るい！', en: 'Look, the town is bright!' },
+      ],
+      [
+        { speaker: 'mojikui_boss', text: 'まだです！ わたしは まけません！ 😡', en: "Not yet! I won't lose!" },
+        { speaker: 'hana', text: 'わたしたちも いっしょだよ！ がんばって！', en: "We're with you! You can do it!" },
+      ],
+    ],
+    phase2Img: 'img/battle/mojikui_boss_angry.webp',
+    finisher: '明(あか)',
+    finisherLine: { speaker: 'nexmax', text: 'さいごは「明(あか)るい」の 字(じ)です！', en: 'The last one is the letter of "bright"!' },
+  },
 };

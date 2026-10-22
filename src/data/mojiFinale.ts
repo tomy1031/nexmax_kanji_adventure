@@ -1,6 +1,7 @@
 import { Element } from '../lib/forge/elements';
 import type { KanjiData, KanjiProgress } from '../types/kanji';
 import type { NovelScript } from '../types/novel';
+import type { BossShow } from '../lib/bossShow';
 import { getKanjiByChar } from '../lib/kanjiDb';
 import { rustLevel } from '../lib/srs';
 import { MASTERY_REPS } from '../lib/mastery';
@@ -170,4 +171,6 @@ export const finalePool = (f: MojiFinale, progress: FinaleProgress, now?: number
 export interface FinaleScript {
   intro: NovelScript;
   outro: NovelScript;
+  /** ボスの 見せ場 (lib/bossShow.ts, docs/design/24): the lines mid-fight, the phase-2 picture, the finisher. */
+  show?: BossShow;
 }

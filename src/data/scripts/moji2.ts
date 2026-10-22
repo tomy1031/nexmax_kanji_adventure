@@ -451,4 +451,20 @@ export const MOJI2_FINALE: FinaleScript = {
       { speaker: 'nexmax', sprite: 'nexmax:determined', glyph: '⛴️ 👉 🍜', text: 'つぎは あの まちへ 行(い)きましょう！', en: "Next, let's go to that town!" },
     ],
   },
+  // ボスの 見せ場（docs/design/24）: ソラが いっしょ。とどめは 霧が 晴れて 見える「見」。
+  show: {
+    beats: [
+      [
+        { speaker: 'mojikui_boss', text: 'また 字(じ)が にげます……！ 😠', en: 'My letters are escaping again…!' },
+        { speaker: 'sora', text: 'きりが すこし はれました！', en: 'The fog is clearing a little!' },
+      ],
+      [
+        { speaker: 'mojikui_boss', text: 'だめです！ この まちは ずっと きりです！ 😡', en: 'No! This town stays in the fog forever!' },
+        { speaker: 'sora', text: 'こわく ないです！ わたしも ここに います！', en: "I'm not scared! I'm here too!" },
+      ],
+    ],
+    phase2Img: 'img/battle/mojikui_boss_angry.webp',
+    finisher: '見(み)',
+    finisherLine: { speaker: 'nexmax', text: 'さいごは「見(み)」！ とうだいから まちを 見(み)ましょう！', en: "The last one is \"mi\", to see — let's look out over the town from the lighthouse!" },
+  },
 };

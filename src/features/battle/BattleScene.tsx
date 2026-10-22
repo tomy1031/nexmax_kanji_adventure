@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence, useAnimationControls } from 'framer-motion';
 import type { StageDef } from '../../data/stages';
@@ -7,7 +7,7 @@ import KanjiWriterCanvas, { type KanjiWriterHandle } from '../../components/Kanj
 import { RubyText } from '../../components/ui/Ruby';
 import { useCanvasSize } from '../../hooks/useCanvasSize';
 import { useGameStore } from '../../store/gameStore';
-import { getKanjiById } from '../../lib/kanjiDb';
+import { getKanjiByChar, getKanjiById } from '../../lib/kanjiDb';
 import { getIndividual } from '../../data/individuals';
 import { type Weapon } from '../../lib/forge/weapon';
 import { weaponFromRecipe, weaponWord } from '../../lib/forge/recipe';
@@ -57,6 +57,10 @@ import { useCompoundsVersion } from '../../data/compounds';
 import { askFrom, sealFloor, strikeSealed } from '../../lib/seals';
 import { useStill } from '../../hooks/useStill';
 import { useQuiet } from '../../store/uiStore';
+import { useCompanionFx } from '../../store/companionFx';
+import type { CastMember } from '../../types/novel';
+import { beatsReached, finisherChars, holdForFinisher, type BossShow } from '../../lib/bossShow';
+import { BossBeat, BossVsIntro, FinisherCall, FinisherFlash } from './BossFx';
 
 /** How long a fight tip stays up. */
 const TIP_MS = 4200;
@@ -130,7 +134,23 @@ interface BattleSceneProps {
    * when absent; Hard passes the ones it sized its HP for.
    */
   seals?: readonly KanjiData[];
+  /**
+   * まとめの ボス (lib/bossShow.ts, docs/design/24): the VS call instead of
+   * 「たたかい 開始！」, the lines at 2/3 and 1/3 of its HP, and the finisher —
+   * it never falls to an ordinary write. New route only; absent for the episodes.
+   */
+  boss?: {
+    show: BossShow;
+    /** Who may speak in its lines, and the boss's own id among them. */
+    cast: readonly CastMember[];
+    castId: string;
+    /** The story's text: furigana, with the kanji written back (KanjiBackText). */
+    renderText: (text: string) => ReactNode;
+  };
 }
+
+/** What stops the fight for a moment: a boss's line (by beat) or its finisher's call. */
+type Cut = { kind: 'beat'; index: number } | { kind: 'finisher' };
 
 type Outcome = { kind: 'win'; stars: 1 | 2 | 3 } | { kind: 'lose' } | null;
 
@@ -193,6 +213,7 @@ export const BattleScene = ({
   difficulty = 'normal',
   clearLine,
   seals,
+  boss,
 }: BattleSceneProps) => {
   // The new route's Mojikui fights have their own, bigger tune.
   useBgm(mastery ? 'boss' : 'battle');
@@ -397,6 +418,46 @@ export const BattleScene = ({
   const enemyCtl = useAnimationControls();
   const fieldCtl = useAnimationControls();
 
+  // ボスの 見せ場 (lib/bossShow.ts): the VS call — after the companion's 「いっしょに たたかいます！」, at most 3 s —,
+  // the lines (cuts) one after another, the phase-2 picture from the second, and the finisher.
+  const joinUp = useCompanionFx((st) => st.join != null);
+  const [joinTimedOut, setJoinTimedOut] = useState(false);
+  useEffect(() => {
+    if (!boss) return;
+    const t = setTimeout(() => setJoinTimedOut(true), 3000);
+    return () => clearTimeout(t);
+    // Once, as the fight opens.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+  const joinWaited = !joinUp || joinTimedOut;
+  const [introDone, setIntroDone] = useState(!boss);
+  const [cuts, setCuts] = useState<Cut[]>([]);
+  const beatsShown = useRef(0);
+  // The phase-2 picture from the moment the second beat opens.
+  const [phase2Done, setPhase2Done] = useState(false);
+  const phase2 = phase2Done || (cuts[0]?.kind === 'beat' && cuts[0].index === 1);
+  /** The finisher: being written (its kanji on the board), then written. */
+  const finisherRef = useRef<'off' | 'write' | 'done'>('off');
+  const [finisherOn, setFinisherOn] = useState(false);
+  const [flashOn, setFlashOn] = useState(false);
+  const finisherKanji = useMemo(() => (boss ? (getKanjiByChar(finisherChars(boss.show.finisher)) ?? null) : null), [boss]);
+  /** The lines this blow has reached, and the finisher's call if it left the boss a sliver — shown as the light lands. */
+  const queueCuts = useCallback(
+    (hpAfter: number, call: boolean, delay: number) => {
+      if (!boss) return;
+      const due: Cut[] = beatsReached(stage.boss.hp, hpAfter, beatsShown.current).map((index) => ({ kind: 'beat' as const, index }));
+      beatsShown.current += due.length;
+      if (call) {
+        due.push({ kind: 'finisher' });
+        finisherRef.current = 'write';
+        setFinisherOn(true);
+        setRage(0);
+      }
+      if (due.length) flowTimers.current.push(setTimeout(() => !settledRef.current && setCuts((c) => [...c, ...due]), delay));
+    },
+    [boss, stage.boss.hp],
+  );
+
   // Which kanji the opponent asks for. On the new route it is the least
   // known one, chosen once per turn (the count moves as the learner writes).
   const askedRef = useRef<Record<string, number>>({});
@@ -410,7 +471,9 @@ export const BattleScene = ({
   const [weakestId, setWeakestId] = useState<string | null>(() =>
     mastery ? (pickWeakest(askFrom(kanjiPool, sealIds, []), repsNow, {}, null)?.id ?? null) : null,
   );
-  const target = mastery ? (kanjiPool.find((k) => k.id === weakestId) ?? kanjiPool[0]) : kanjiPool[turn % kanjiPool.length];
+  // The finisher's kanji once it is called (it may be from an earlier chapter: 5章's 友).
+  const target =
+    finisherOn && finisherKanji ? finisherKanji : mastery ? (kanjiPool.find((k) => k.id === weakestId) ?? kanjiPool[0]) : kanjiPool[turn % kanjiPool.length];
   const ownsTarget = target ? progress[target.id]?.obtainedAt != null : false;
   const targetStars: Stars = target ? starsOf(progress[target.id]?.reps ?? 0) : 0;
 
@@ -418,8 +481,8 @@ export const BattleScene = ({
   // わざ has been explained once, what it is there for (2026-10-07「サポートキャラの
   // いる 意味が 伝わりにくい」).
   useEffect(() => {
-    if (!skillKind || !individual) return;
-    const t = setTimeout(() => companionSay(linesFor(individual).start), 1600);
+    if (!introDone || !skillKind || !individual) return;
+    const t = setTimeout(() => companionSay(linesFor(individual).start), boss ? 300 : 1600);
     const why = useGameStore.getState().tipsSeen.includes('skill')
       ? 0
       : window.setTimeout(() => {
@@ -430,9 +493,9 @@ export const BattleScene = ({
       clearTimeout(t);
       clearTimeout(why);
     };
-    // Once per fight.
+    // Once per fight, once the intro (the band, or a boss's VS call) is over.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [introDone]);
 
   const settle = useCallback(
     (kind: 'win' | 'lose', mistakes: number, hpLeft: number) => {
@@ -489,7 +552,8 @@ export const BattleScene = ({
    * so is struck less — which is the whole point (docs/design/07 §2).
    */
   const addSlip = useCallback(() => {
-    if (settledRef.current || bossDownRef.current) return;
+    // The boss reels under the finisher: no slip counts toward a strike.
+    if (settledRef.current || bossDownRef.current || finisherRef.current !== 'off') return;
     const next = rage + 1;
     if (next < patience) {
       setRage(next);
@@ -540,6 +604,8 @@ export const BattleScene = ({
 
   const showStrokeOrder = () => {
     if (settledRef.current || bossDownRef.current || readQ) return;
+    // The finisher is traced: its stroke order is free to look at.
+    if (finisherRef.current === 'write') return writerRef.current?.animateStroke();
     // ヒント: a free look for this character — no slip, no half.
     if (!hinted && (freeLookRef.current || buffs.freeLooks > 0)) {
       if (!freeLookRef.current) {
@@ -564,6 +630,29 @@ export const BattleScene = ({
   const handleComplete = useCallback(
     (summary: { totalMistakes: number }) => {
       if (settledRef.current || bossDownRef.current) return;
+      // とどめ: the finisher written — the pillar of light, and the boss falls. It was traced over its model,
+      // so it is not a write of the kanji (no ★, no review).
+      if (finisherRef.current === 'write') {
+        finisherRef.current = 'done';
+        writeSlipsRef.current = 0;
+        bossDownRef.current = true;
+        const left = bossHp;
+        const land = still ? 200 : 750;
+        setFlashOn(true);
+        sfx.beam();
+        void heroCtl.start({ scale: [1, 1.14, 1], transition: { duration: 0.8 } });
+        atImpact(() => {
+          // Its own light says とどめ: not the 字の わざ band of a ★3 hit.
+          setHit({ n: turn, damage: left });
+          setBossHp(0);
+          void enemyCtl.start({ x: [0, 20, -14, 0], transition: { duration: 0.9 } });
+          say(`✨ とどめ！ ${left} ダメージ`);
+        }, land);
+        atImpact(() => setFlashOn(false), land + 1000);
+        if (skillKind && individual) companionSay(linesFor(individual).win);
+        settleTimer.current = setTimeout(() => settle('win', totalMistakes, playerHp), land + 1000 + WIN_DELAY_MASTERY_MS);
+        return;
+      }
       const mistakes = Math.max(summary.totalMistakes, writeSlipsRef.current);
       writeSlipsRef.current = 0;
       const lookedFree = freeLookRef.current;
@@ -636,6 +725,8 @@ export const BattleScene = ({
       const nextBroken = target && sealIds.includes(target.id) && !broken.includes(target.id) ? [...broken, target.id] : broken;
       const sealsLeft = sealIds.length - nextBroken.length;
       const blow = strikeSealed(bossHp, result.damage, sealFloor(stage.boss.hp, sealIds.length, sealsLeft));
+      // A boss never falls to an ordinary write: the blow that would leaves it a sliver and calls the finisher.
+      const held = boss ? holdForFinisher(bossHp, blow.hp, stage.boss.hp, false) : { hp: blow.hp, call: false };
       if (nextBroken !== broken) {
         // The kanji comes back out of the opponent when the light lands, flies to its talisman, and it opens.
         const ruby = target ? taughtRuby(target) : '';
@@ -650,7 +741,7 @@ export const BattleScene = ({
         });
       }
       if (blow.held) tellTip('seal');
-      const struck = { n: turn, damage: blow.dealt, critical };
+      const struck = { n: turn, damage: bossHp - held.hp, critical };
 
       if (mastery) {
         // The light: from the board into Nexmax, then out at the opponent.
@@ -684,15 +775,17 @@ export const BattleScene = ({
         else if (starUp) sfx.star(starUp - 1);
       }
 
-      const nextBossHp = blow.hp;
+      const nextBossHp = held.hp;
       setBossHp(nextBossHp);
 
       // 得意な 武器: the companion's bonus, said out loud so it is seen to count.
       const favoured = result.favoured && individual ? `（とくい ＋${individual.bonus}%）` : '';
       if (result.favoured && individual) helped.current.favoured += 1;
-      const dealt = blow.dealt;
+      const dealt = bossHp - held.hp;
       say(
-        blow.held
+        held.call
+          ? `✨ とどめの 一字(いちじ)！ ${dealt} ダメージ`
+          : blow.held
           ? `🔒 あと ${sealsLeft}字(じ)！ ${dealt} ダメージ`
           : sealIds.length > 0 && sealsLeft === 0 && nextBroken !== broken && nextBossHp > 0
             ? `🔓 字(じ)が ぜんぶ もどった！ ${dealt} ダメージ`
@@ -719,6 +812,13 @@ export const BattleScene = ({
         settleTimer.current = setTimeout(() => settle('win', nextMistakes, playerHp), mastery ? WIN_DELAY_MASTERY_MS : 650);
         return;
       }
+      // ボスの 見せ場: its lines as the light lands (later after a 字の わざ's flash), then the finisher if called —
+      // which takes the next turn: no other kanji, no reading turn.
+      queueCuts(nextBossHp, held.call, IMPACT_MS + (critical ? 900 : 350));
+      if (held.call) {
+        setTurn((t) => t + 1);
+        return;
+      }
 
       if (mastery && target) {
         askedRef.current[target.id] = (askedRef.current[target.id] ?? 0) + 1;
@@ -742,7 +842,7 @@ export const BattleScene = ({
       tutorial, totalMistakes, target, progress, recordReview, recordRep, weapon, individual, stage.boss,
       rust, bossHp, playerHp, settle, heroCtl, enemyCtl, turn, stats.attackPct, ownsTarget, hinted,
       mastery, targetStars, kanjiPool, combo, say, difficulty, skillKind, gaugeFull, buffs, companionSay, tellTip, star5,
-      sealIds, broken, easy, gauge,
+      sealIds, broken, easy, gauge, boss, queueCuts, still,
     ],
   );
 
@@ -795,24 +895,27 @@ export const BattleScene = ({
       const sealsLeft = sealIds.length - broken.length;
       // A reading gives no kanji back: the seals still hold.
       const blow = strikeSealed(bossHp, Math.round(readDamage(clean.damage) * (star5?.readingMul ?? 1)), sealFloor(stage.boss.hp, sealIds.length, sealsLeft));
-      const damage = blow.dealt;
+      // As a write: a boss is left a sliver, and the finisher called.
+      const held = boss ? holdForFinisher(bossHp, blow.hp, stage.boss.hp, false) : { hp: blow.hp, call: false };
+      const damage = bossHp - held.hp;
       void heroCtl.start({ x: [0, -12, 0], rotate: [0, -6, 0], transition: { duration: 0.4 } });
       void enemyCtl.start({ x: [0, 14, -8, 0], transition: { duration: 0.45, delay: IMPACT_MS / 1000 } });
       atImpact(() => sfx.hit(), IMPACT_MS - 120);
       atImpact(() => setHit({ n: turn, damage }));
       // The bar follows hpDelay, so it drops with the number.
-      const nextBossHp = blow.hp;
+      const nextBossHp = held.hp;
       setBossHp(nextBossHp);
       if (blow.held) tellTip('seal');
-      say(blow.held ? `🔒 あと ${sealsLeft}字(じ)！ ${damage} ダメージ` : `はね返(かえ)した！ ${damage} ダメージ`);
+      say(held.call ? `✨ とどめの 一字(いちじ)！ ${damage} ダメージ` : blow.held ? `🔒 あと ${sealsLeft}字(じ)！ ${damage} ダメージ` : `はね返(かえ)した！ ${damage} ダメージ`);
       if (nextBossHp <= 0) {
         bossDownRef.current = true;
         settleTimer.current = setTimeout(() => settle('win', totalMistakes, playerHp), WIN_DELAY_MASTERY_MS);
         return;
       }
+      queueCuts(nextBossHp, held.call, IMPACT_MS + 350);
       atImpact(finishRead, IMPACT_MS + 600);
     },
-    [mastery, readQ, readPicked, say, addSlip, gainExp, weapon, individual, stage.boss.element, stage.boss.hp, rust, stats.attackPct, heroCtl, enemyCtl, turn, bossHp, settle, totalMistakes, playerHp, finishRead, combo, skillKind, gaugeFull, star5, sealIds, broken, tellTip, gauge],
+    [mastery, readQ, readPicked, say, addSlip, gainExp, weapon, individual, stage.boss.element, stage.boss.hp, rust, stats.attackPct, heroCtl, enemyCtl, turn, bossHp, settle, totalMistakes, playerHp, finishRead, combo, skillKind, gaugeFull, star5, sealIds, broken, tellTip, gauge, boss, queueCuts],
   );
 
   // What this clear opens. One per stage at most, announced with a line of
@@ -940,7 +1043,7 @@ export const BattleScene = ({
 
   /** わざ: the gauge is full and the companion is tapped. */
   const fireSkill = () => {
-    if (!skillKind || !individual || gauge < gaugeFull || settledRef.current || bossDownRef.current) return;
+    if (!skillKind || !individual || gauge < gaugeFull || settledRef.current || bossDownRef.current || finisherRef.current !== 'off') return;
     const e = skillEffect(skillKind, individual.rarity, useGameStore.getState().bonds?.[individual.id] ?? 0);
     const info = SKILL_INFO[skillKind];
     const does = info.says(e);
@@ -983,10 +1086,10 @@ export const BattleScene = ({
   if (mastery) {
     return (
       <>
-        <BattleIntro bossName={stage.boss.name} difficulty={difficulty} showFurigana={showFurigana} />
+        {!boss && <BattleIntro bossName={stage.boss.name} difficulty={difficulty} showFurigana={showFurigana} />}
         <NaniwaBattleView
           bossName={stage.boss.name}
-          bossImg={stage.boss.img}
+          bossImg={boss && phase2 ? boss.show.phase2Img : stage.boss.img}
           field={stage.bg}
           bossHp={bossHp}
           bossMaxHp={stage.boss.hp}
@@ -1005,7 +1108,8 @@ export const BattleScene = ({
               char={target.char}
               size={px}
               quizMode
-              showSample={easy}
+              // The finisher is traced over its model: the moment is the blow, not the test.
+              showSample={easy || finisherOn}
               surface="ink"
               onCorrectStroke={(d) => onStroke(d, px)}
               onMistake={handleMistake}
@@ -1036,13 +1140,64 @@ export const BattleScene = ({
           heroRef={heroRef}
           enemyRef={enemyRef}
           onStrokeOrder={showStrokeOrder}
-          hintFree={hinted || freeLookNow || buffs.freeLooks > 0}
+          hintFree={hinted || freeLookNow || buffs.freeLooks > 0 || finisherOn}
           onFlee={onFlee}
           read={readQ ? { ...readQ, n: turn, picked: readPicked, onPick: handleReadPick, onNext: finishRead } : null}
           seals={sealIds.map((id) => ({ id, char: kanjiPool.find((k) => k.id === id)?.char ?? '', open: broken.includes(id) }))}
           freed={freed}
           buffs={buffViews}
         />
+        {boss && (
+          <AnimatePresence>
+            {joinWaited && !introDone && (
+              <BossVsIntro
+                key="vs"
+                label={<RubyText showFurigana={showFurigana}>{`${difficulty === 'hard' ? '👹 ハード ・ ' : difficulty === 'easy' ? '🌱 やさしい ・ ' : ''}まとめの ボス`}</RubyText>}
+                hero={{ img: nexmaxClass >= 4 ? 'img/chara/naniwa/nexmax_star4.webp' : 'img/chara/naniwa/nexmax_determined.webp', plate: 'ネクマックス' }}
+                boss={{ img: stage.boss.img ?? '', plate: <RubyText showFurigana={showFurigana}>{stage.boss.name}</RubyText> }}
+                trait={{
+                  icon: boss.show.trait?.icon ?? '👑',
+                  ja: <RubyText showFurigana={showFurigana}>{boss.show.trait?.ja ?? ''}</RubyText>,
+                  en: boss.show.trait?.en ?? '',
+                }}
+                still={still}
+                onDone={() => setIntroDone(true)}
+              />
+            )}
+            {cuts[0]?.kind === 'beat' && (
+              <BossBeat
+                key={`beat-${cuts[0].index}`}
+                lines={boss.show.beats[cuts[0].index]}
+                cast={boss.cast}
+                renderText={boss.renderText}
+                faceOf={(who) => (who === boss.castId ? (cuts[0]?.kind === 'beat' && cuts[0].index === 1 ? boss.show.phase2Img : stage.boss.img) : boss.cast.find((c) => c.id === who)?.sprites.normal)}
+                angry={cuts[0].index === 1}
+                still={still}
+                onDone={() => {
+                  if (cuts[0]?.kind === 'beat' && cuts[0].index === 1) setPhase2Done(true);
+                  setCuts((c) => c.slice(1));
+                }}
+              />
+            )}
+            {cuts[0]?.kind === 'finisher' && (
+              <FinisherCall
+                key="finisher"
+                label={<LogoText showFurigana={showFurigana}>とどめの 一字(いちじ)！</LogoText>}
+                finisher={
+                  <span className="leading-none font-black" style={{ fontSize: 'min(26vw, 110px)' }}>
+                    <RubyText showFurigana={showFurigana}>{boss.show.finisher}</RubyText>
+                  </span>
+                }
+                line={boss.show.finisherLine}
+                renderText={boss.renderText}
+                faceOf={(who) => boss.cast.find((c) => c.id === who)?.sprites.normal}
+                still={still}
+                onDone={() => setCuts((c) => c.slice(1))}
+              />
+            )}
+            {flashOn && <FinisherFlash key="flash" still={still} />}
+          </AnimatePresence>
+        )}
         {overlays}
       </>
     );

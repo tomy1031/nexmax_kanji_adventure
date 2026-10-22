@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { AnimatePresence, motion, useAnimationControls } from 'framer-motion';
 import KanjiWriterCanvas, { type KanjiWriterHandle } from '../../components/KanjiWriterCanvas';
 import { NaniwaBattleView, type SealView } from '../battle/NaniwaBattleView';
@@ -18,6 +18,9 @@ import type { KanjiData } from '../../types/kanji';
 import KanaText from './KanaText';
 import type { KanaWeapon } from '../../data/kanaWeapons';
 import { useKnownKana } from './useKnownKana';
+import type { CastMember } from '../../types/novel';
+import { beatsOfStages, holdForFinisher, type BossShow } from '../../lib/bossShow';
+import { BossBeat, BossVsIntro, FinisherCall, FinisherFlash } from '../battle/BossFx';
 
 /**
  * 0章の たたかい「きいて かく」 (docs/design/22 §4, 2026-10-15「ひらがなの時も敵キャラクターを作って
@@ -46,7 +49,24 @@ interface Props {
   weapon?: KanaWeapon | null;
   onWin: () => void;
   onFlee: () => void;
+  /**
+   * 0章の ボス (lib/bossShow.ts, docs/design/24): the VS call, the lines as its
+   * 2nd and 3rd stage open, and the finishing word. Absent for the episodes' shadows.
+   */
+  boss?: {
+    show: BossShow;
+    /** Who may speak in its lines (kanaCast) and the boss's own id there. */
+    cast: readonly CastMember[];
+    castId: string;
+    /** ひらがなの ボス / カタカナの ボス, kana. */
+    label: string;
+    renderText: (text: string) => ReactNode;
+    renderPlain: (text: string) => ReactNode;
+  };
 }
+
+/** What stops the fight for a moment: a boss's line (by beat) or its finisher's call. */
+type Cut = { kind: 'beat'; index: number } | { kind: 'finisher' };
 
 /** One written kana of the current word: its slips, and whether the stroke order was looked at. */
 interface Written {
@@ -105,7 +125,8 @@ const WordPanel = ({ word, pos, written, solved, still }: { word: KanaWord; pos:
           </span>
         ) : (
           <span lang="en" className="leading-none font-black text-[#6b5a48]" style={{ fontSize: cq(cell * 0.36), fontFamily: 'var(--font-body)' }}>
-            {ROMAJI[c] ?? c}
+            {/* A kana with no romaji of its own (the small ッ of the finishing word ネクマックス) shows itself. */}
+            {ROMAJI[c] || c}
           </span>
         )}
       </motion.span>
@@ -140,7 +161,7 @@ const WordPanel = ({ word, pos, written, solved, still }: { word: KanaWord; pos:
   );
 };
 
-export const KanaBattle = ({ fight, script, field, weapon = null, onWin, onFlee }: Props) => {
+export const KanaBattle = ({ fight, script, field, weapon = null, onWin, onFlee, boss }: Props) => {
   useBgm('boss');
   useQuiet();
   const still = useStill();
@@ -180,6 +201,21 @@ export const KanaBattle = ({ fight, script, field, weapon = null, onWin, onFlee 
   const [tip, setTip] = useState<{ n: number; icons: string; text: string } | null>(null);
   /** Each finished word swings the kana weapon. */
   const [swing, setSwing] = useState(0);
+  // ボスの 見せ場: the VS call first; the lines (cuts) one after another, then the fight goes on (`afterCuts`).
+  const [introDone, setIntroDone] = useState(!boss);
+  const [cuts, setCuts] = useState<Cut[]>([]);
+  const afterCuts = useRef<() => void>(() => {});
+  const beatsShown = useRef(0);
+  // The phase-2 picture from the moment the second beat opens.
+  const [phase2Done, setPhase2Done] = useState(false);
+  /** The finishing word: called (its band is up), being written, written. */
+  const finisherRef = useRef<'off' | 'write' | 'done'>('off');
+  const [finishing, setFinishing] = useState(false);
+  const [flashOn, setFlashOn] = useState(false);
+  /** The boss's stage as the current word began: a stage opened by any kana of the word counts (kanaBattle.ts playKanaFight). */
+  const stageAtWord = useRef(0);
+  const phase2 = phase2Done || (cuts[0]?.kind === 'beat' && cuts[0].index === 1);
+  const bossImg = boss && phase2 ? boss.show.phase2Img : foe.img;
   const timers = useRef<ReturnType<typeof setTimeout>[]>([]);
   const later = useCallback((fn: () => void, ms: number) => timers.current.push(setTimeout(fn, ms)), []);
   useEffect(() => {
@@ -199,10 +235,23 @@ export const KanaBattle = ({ fight, script, field, weapon = null, onWin, onFlee 
 
   // Each new word is said aloud (the device's voice), then may be heard again with the speaker key.
   useEffect(() => {
-    if (end) return;
+    if (end || !introDone || cuts.length) return;
     const t = setTimeout(() => speak(word.kana), 500);
     return () => clearTimeout(t);
-  }, [word, end]);
+  }, [word, end, introDone, cuts.length]);
+
+  /** Stop for these cuts, then `then`. */
+  const playCuts = useCallback((list: Cut[], then: () => void) => {
+    if (!list.length) return then();
+    afterCuts.current = then;
+    setCuts(list);
+  }, []);
+  const nextCut = () => {
+    const [done, ...rest] = cuts;
+    if (done?.kind === 'beat' && done.index === 1) setPhase2Done(true);
+    setCuts(rest);
+    if (!rest.length) afterCuts.current();
+  };
 
   // The first fight of 0章: how it goes, once.
   useEffect(() => {
@@ -221,6 +270,8 @@ export const KanaBattle = ({ fight, script, field, weapon = null, onWin, onFlee 
   }, []);
 
   const strikeBack = useCallback(() => {
+    // The boss reels under the finisher: nothing strikes back now.
+    if (finisherRef.current !== 'off') return;
     const next = Math.max(0, myHpRef.current - foe.attack);
     myHpRef.current = next;
     setMyHp(next);
@@ -239,7 +290,7 @@ export const KanaBattle = ({ fight, script, field, weapon = null, onWin, onFlee 
   /** Slips on the kana being written: the first is free (kanaBattle.ts rageOf), the rest count toward the strike. */
   const slipsHere = useRef(0);
   const handleMistake = useCallback(() => {
-    if (end) return;
+    if (end || finisherRef.current !== 'off') return;
     slipsHere.current += 1;
     if (slipsHere.current < 2) return;
     setRage((r) => {
@@ -266,7 +317,9 @@ export const KanaBattle = ({ fight, script, field, weapon = null, onWin, onFlee 
   const handleComplete = useCallback(
     ({ totalMistakes }: { totalMistakes: number }) => {
       if (end || solved) return;
-      if (totalMistakes <= 2) recordKanaRep(kana);
+      // The finishing word is traced, and may hold a kana never drilled (ッ): not a write of the kana.
+      const finisherWrite = finisherRef.current === 'write';
+      if (totalMistakes <= 2 && !finisherWrite) recordKanaRep(kana);
       const mine = { mistakes: totalMistakes, hinted };
       const all = [...written, mine];
       setWritten(all);
@@ -290,20 +343,46 @@ export const KanaBattle = ({ fight, script, field, weapon = null, onWin, onFlee 
       // The word is whole: its picture, its sound — and the blow.
       setSolved(true);
       speak(word.kana);
-      const damage = wordDamage(all, weapon?.power ?? 1);
       setSwing((n) => n + 1);
+      // とどめ: the finishing word written — the pillar of light, and it falls.
+      if (finisherWrite) {
+        finisherRef.current = 'done';
+        setFinishing(false);
+        const left = foeHpRef.current;
+        sfx.beam();
+        void heroCtl.start({ x: [0, 24, 0], scale: [1, 1.15, 1], transition: { duration: 0.7 } });
+        setFlashOn(true);
+        later(() => {
+          foeHpRef.current = 0;
+          setFoeHp(0);
+          setHit({ n: Date.now(), damage: left });
+          void enemyCtl.start({ x: [0, 20, -14, 0], opacity: [1, 1, 0.4], transition: { duration: 0.9 } });
+          say(`${word.emoji} ${left}`);
+        }, still ? 200 : 750);
+        later(() => {
+          setFlashOn(false);
+          setEnd('won');
+          if (!playJingle()) sfx.fanfare();
+          later(onWin, 2200);
+        }, still ? 900 : 1900);
+        return;
+      }
+      const damage = wordDamage(all, weapon?.power ?? 1);
       const floor = sealFloor(foe.hp, fight.seals.length, fight.seals.filter((s) => !open.has(s)).length);
       const struck = strikeSealed(foeHpRef.current, damage, floor);
+      // A boss never falls to an ordinary word: the blow that would leaves it a sliver and calls the finisher.
+      const held = boss ? holdForFinisher(foeHpRef.current, struck.hp, foe.hp, false) : { hp: struck.hp, call: false };
+      const dealt = foeHpRef.current - held.hp;
       sfx.beam();
       void heroCtl.start({ x: [0, 18, 0], scale: [1, 1.08, 1], transition: { duration: 0.5 } });
       later(() => {
         sfx.hit();
         void enemyCtl.start({ x: [0, 16, -10, 0], transition: { duration: 0.45 } });
-        foeHpRef.current = struck.hp;
-        setFoeHp(struck.hp);
-        setHit({ n: Date.now(), damage: struck.dealt, critical: all.every((w) => w.mistakes === 0 && !w.hinted) });
-        say(`${word.emoji} ${struck.dealt}${struck.held ? ' 🔒' : ''}`);
-        if (struck.hp === 0) {
+        foeHpRef.current = held.hp;
+        setFoeHp(held.hp);
+        setHit({ n: Date.now(), damage: dealt, critical: all.every((w) => w.mistakes === 0 && !w.hinted) });
+        say(`${word.emoji} ${dealt}${struck.held ? ' 🔒' : ''}`);
+        if (held.hp === 0) {
           setEnd('won');
           if (!playJingle()) sfx.fanfare();
           later(onWin, 2200);
@@ -313,21 +392,34 @@ export const KanaBattle = ({ fight, script, field, weapon = null, onWin, onFlee 
         const healed = all.every((w) => w.mistakes === 0 && !w.hinted) ? mend(cleanWordHeal(hero.hp)) : 0;
         if (healed) later(() => say(`💚 +${healed}`), 650);
         later(() => {
-          const before = stageOf(fight, opened);
+          // As the word began, not as its last kana did: a stage opened by an earlier kana of the word counts too.
+          const before = stageAtWord.current;
           const after = stageOf(fight, open);
           if (fight.stages.length > 1 && after > before) {
             const rest = mend(Math.round(hero.hp * STAGE_HEAL));
             say(`⭐ ${after + 1} / ${fight.stages.length}${rest ? ` 💚 +${rest}` : ''}`);
             sfx.star(after);
           }
-          setWord(nextWord(fight, open, word));
-          setPos(0);
-          setWritten([]);
-          setSolved(false);
+          stageAtWord.current = after;
+          // ボスの 見せ場: its lines as its stages open, then — if this word left it a sliver — the finisher.
+          const due: Cut[] = boss ? beatsOfStages(before, after, beatsShown.current).map((index) => ({ kind: 'beat' as const, index })) : [];
+          beatsShown.current += due.length;
+          if (held.call) due.push({ kind: 'finisher' });
+          playCuts(due, () => {
+            if (held.call && boss) {
+              finisherRef.current = 'write';
+              setFinishing(true);
+              setRage(0);
+              setWord({ kana: boss.show.finisher, emoji: boss.show.finisherWord?.emoji ?? '✨', en: boss.show.finisherWord?.en ?? '' });
+            } else setWord(nextWord(fight, open, word));
+            setPos(0);
+            setWritten([]);
+            setSolved(false);
+          });
         }, 1300);
       }, 450);
     },
-    [end, solved, recordKanaRep, kana, hinted, written, combo, opened, fight, pos, letters.length, word, weapon, foe.hp, heroCtl, enemyCtl, later, say, onWin, mend, hero.hp],
+    [end, solved, recordKanaRep, kana, hinted, written, combo, opened, fight, pos, letters.length, word, weapon, foe.hp, heroCtl, enemyCtl, later, say, onWin, mend, hero.hp, boss, playCuts, still],
   );
 
   // Every seal from the start: a boss's 46 as the kana chart (NaniwaBattleView SealChart).
@@ -339,7 +431,7 @@ export const KanaBattle = ({ fight, script, field, weapon = null, onWin, onFlee 
       <NaniwaBattleView
         bossName={foe.name}
         bossLabel={<KanaText known={known}>{foe.name}</KanaText>}
-        bossImg={foe.img}
+        bossImg={bossImg}
         field={field}
         bossHp={foeHp}
         bossMaxHp={foe.hp}
@@ -363,6 +455,8 @@ export const KanaBattle = ({ fight, script, field, weapon = null, onWin, onFlee 
               char={kana}
               size={px}
               quizMode
+              // The finishing word is traced over its model: the moment is the blow, not the test.
+              showSample={finishing}
               surface="ink"
               leniency={kanaLeniency(kana)}
               // A stroke missed three times is taken as written: a quirky stroke never stops the fight.
@@ -412,6 +506,52 @@ export const KanaBattle = ({ fight, script, field, weapon = null, onWin, onFlee 
           ) : undefined
         }
       />
+      {/* ボスの 見せ場 (docs/design/24): the VS call, its lines mid-fight, the finisher's call and its light. */}
+      {boss && (
+        <AnimatePresence>
+          {!introDone && (
+            <BossVsIntro
+              key="vs"
+              label={<KanaText known={known}>{boss.label}</KanaText>}
+              hero={{ img: hero.img, plate: nameBack ? 'ネクマックス' : '？？？' }}
+              boss={{ img: foe.img, plate: <KanaText known={known}>{foe.name}</KanaText> }}
+              trait={{ icon: boss.show.trait?.icon ?? '👑', ja: <KanaText known={known}>{boss.show.trait?.ja ?? ''}</KanaText>, en: boss.show.trait?.en ?? '' }}
+              still={still}
+              onDone={() => setIntroDone(true)}
+            />
+          )}
+          {cuts[0]?.kind === 'beat' && (
+            <BossBeat
+              key={`beat-${cuts[0].index}`}
+              lines={boss.show.beats[cuts[0].index]}
+              cast={boss.cast}
+              renderText={boss.renderText}
+              renderPlain={boss.renderPlain}
+              faceOf={(who) => (who === boss.castId ? (cuts[0]?.kind === 'beat' && cuts[0].index === 1 ? boss.show.phase2Img : bossImg) : boss.cast.find((c) => c.id === who)?.sprites.normal)}
+              angry={cuts[0].index === 1}
+              still={still}
+              onDone={nextCut}
+            />
+          )}
+          {cuts[0]?.kind === 'finisher' && (
+            <FinisherCall
+              key="finisher"
+              label={<KanaText known={known}>とどめ！</KanaText>}
+              finisher={
+                <span className="leading-none font-black" style={{ fontSize: 'min(16vw, 72px)' }}>
+                  {boss.show.finisher}
+                </span>
+              }
+              line={boss.show.finisherLine}
+              renderText={boss.renderText}
+              faceOf={(who) => boss.cast.find((c) => c.id === who)?.sprites.normal}
+              still={still}
+              onDone={nextCut}
+            />
+          )}
+          {flashOn && <FinisherFlash key="flash" still={still} />}
+        </AnimatePresence>
+      )}
       {/* The end: a win runs on into the story; a loss offers another go. */}
       <AnimatePresence>
         {end && (
@@ -422,7 +562,7 @@ export const KanaBattle = ({ fight, script, field, weapon = null, onWin, onFlee 
             animate={{ opacity: 1 }}
           >
             <motion.img
-              src={assetPath(end === 'won' ? hero.img : foe.img)}
+              src={assetPath(end === 'won' ? hero.img : bossImg)}
               alt=""
               aria-hidden
               className="h-40 w-auto object-contain drop-shadow-[0_8px_20px_rgba(0,0,0,0.6)]"

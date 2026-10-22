@@ -532,4 +532,20 @@ export const MOJI1_FINALE: FinaleScript = {
       { speaker: 'nexmax', sprite: 'nexmax:determined', glyph: '⛴️ 👉 🌫️', text: 'つぎは あの まちへ 行(い)きましょう！', en: "Next, let's go to that town!" },
     ],
   },
+  // ボスの 見せ場（docs/design/24）: HP 2/3・1/3 で お話、とどめは さいしょに 書いた 字「日」（1章 1話）。
+  show: {
+    beats: [
+      [
+        { speaker: 'mojikui_boss', text: 'なに？ わたしの あわが……！ 😠', en: 'What? My bubbles…!' },
+        { speaker: 'nexmax', text: 'まちの 字(じ)は、まちの ものです！ ✊', en: "The town's letters belong to the town!" },
+      ],
+      [
+        { speaker: 'mojikui_boss', text: 'ぐぬぬ……！ ぜんぶ たべます！ 😡', en: "Grrr…! I'll eat them all!" },
+        { speaker: 'nexmax', text: 'あと すこしです！ かきましょう！', en: "Almost there! Let's write!" },
+      ],
+    ],
+    phase2Img: 'img/battle/mojikui_boss_angry.webp',
+    finisher: '日(ひ)',
+    finisherLine: { speaker: 'nexmax', text: 'さいごは「日(ひ)」！ さいしょに かいた 字(じ)です！', en: 'The last one is "hi", the sun — the very first letter you wrote!' },
+  },
 };

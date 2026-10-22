@@ -271,4 +271,20 @@ export const MOJI3_FINALE: FinaleScript = {
       { speaker: 'nexmax', sprite: 'nexmax:guide', glyph: '✉️ 👧 🚃 🏙️', text: 'ソラにも 手(て)紙(がみ)を 送(おく)りましょう。「となりの 大(おお)きい 町(まち)で 会(あ)いましょう」。', en: 'Let\'s write to Sora too: "See you in the big town next door!"' },
     ],
   },
+  // ボスの 見せ場（docs/design/24）: ハナが いっしょ。とどめは ハナの 名前の 字「花」（3章 3話）。
+  show: {
+    beats: [
+      [
+        { speaker: 'mojikui_boss', text: 'わたしの メニューが……！ 😠', en: 'My menus…!' },
+        { speaker: 'hana', text: 'だめです！ メニューは みんなの ものです！', en: 'No! The menus belong to everyone!' },
+      ],
+      [
+        { speaker: 'mojikui_boss', text: 'ステージも ラーメンも、ぜんぶ 食(た)べます！ 😡', en: "The stage, the ramen — I'll eat it all!" },
+        { speaker: 'hana', text: 'ネクマックス、がんばって ください！', en: 'Nexmax, you can do it!' },
+      ],
+    ],
+    phase2Img: 'img/battle/mojikui_boss_angry.webp',
+    finisher: '花(はな)',
+    finisherLine: { speaker: 'nexmax', text: 'さいごは「花(はな)」！ 花(はな)さんの なまえの 字(じ)です！', en: "The last one is \"hana\", flower — the letter of Hana's name!" },
+  },
 };

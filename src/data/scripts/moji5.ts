@@ -493,7 +493,7 @@ export const MOJI5_FINALE: FinaleScript = {
       { speaker: 'hana', sprite: 'hana:happy', glyph: '📋 ✨ 🍜', text: 'わたしも、メニューに 字(じ)が もどったら、みんなが ラーメンを 食(た)べに 来(き)て くれたよ！', en: 'When the letters came back to the menus, everyone came to eat my ramen!' },
       { speaker: 'nexmax', sprite: 'nexmax:determined', glyph: '✍️ 👑', text: '王(おう)さまも、いっしょに 書(か)きましょう！', en: "King, let's write together!" },
       { speaker: 'mojikui_king', sprite: 'mojikui_king:small', glyph: '🥺', text: '……わたしも 書(か)いても いいですか？', en: '…May I write too?' },
-      { speaker: 'nexmax', sprite: 'nexmax:smile', glyph: '友(とも)', text: 'はい！ この 字(じ)を 書(か)いて ください。「友(とも)だち」の「友(とも)」です。', en: 'Of course! Please write this letter. It is "tomo" — as in tomodachi, friend.' },
+      { speaker: 'nexmax', sprite: 'nexmax:smile', glyph: '友(とも)', text: 'はい！ ぼくたちが さいごに 書(か)いた この 字(じ)を 書(か)いて ください。「友(とも)だち」の「友(とも)」です。', en: 'Of course! Please write the letter we wrote last. It is "tomo" — as in tomodachi, friend.' },
       { sprite: 'mojikui_king:happy', glyph: '✍️ 友(とも) ✨', text: '王(おう)さまは、ゆっくり、ゆっくり 書(か)きました。', en: 'Slowly, very slowly, the King wrote.' },
       { speaker: 'mojikui_king', sprite: 'mojikui_king:happy', text: '友(とも)……。わたしの はじめての 字(じ)です！', en: 'Tomo… My very first letter!' },
       { bg: 'shizuka_dawn', fx: ['spring'], sprite: 'mojikui_king:happy', glyph: '🌅 ✨', text: '夜(よる)が 終(お)わりました。この 町(まち)に、また 朝(あさ)が 来(き)ました！', en: 'The night is over. At last, morning has come to this town again!' },
@@ -505,5 +505,22 @@ export const MOJI5_FINALE: FinaleScript = {
       { fx: ['darkclouds'], sprite: 'nexmax:think', glyph: '📱 👾 💨', text: '……その とき、小(ちい)さい かげが、スマホの 中(なか)へ 入(はい)りました。', en: 'Just then, a tiny shadow slipped into a smartphone.' },
       { speaker: 'nexmax', sprite: 'nexmax:think', glyph: '📱 ❓', text: 'あれは……？ まだ モジクイが います！', en: 'What was that…? There is still a Mojikui out there!' },
     ],
+  },
+  // ボスの 見せ場（docs/design/24）: たたかいの 中で 王が まよいはじめる。とどめは「友」（2章 8話の 字）。
+  // この あと お話で 王も はじめての 字「友」を 書く。
+  show: {
+    beats: [
+      [
+        { speaker: 'mojikui_king', text: '字(じ)が わたしの 中(なか)から 出(で)ます……。どうして？', en: 'The letters are leaving me… Why?' },
+        { speaker: 'sora', text: '字(じ)は みんなの ものだよ！', en: 'Letters belong to everyone!' },
+      ],
+      [
+        { speaker: 'mojikui_king', text: 'みんなの 字(じ)は……あたたかいと 思(おも)います……。', en: "Everyone's letters… I think they're warm…" },
+        { speaker: 'hana', text: '王(おう)さま、ひとりじゃ ないよ！', en: "Your Majesty, you're not alone!" },
+      ],
+    ],
+    phase2Img: 'img/battle/mojikui_king_waver.webp',
+    finisher: '友(とも)',
+    finisherLine: { speaker: 'nexmax', text: '王(おう)さま、見(み)て ください。さいごの 字(じ)は「友(とも)」です！', en: 'Your Majesty, look. The last letter is "tomo" — friend!' },
   },
 };

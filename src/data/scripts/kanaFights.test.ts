@@ -2,7 +2,8 @@ import { describe, expect, it } from 'vitest';
 import { KANA_EPISODES } from '../kana';
 import { KANA_BOSSES } from '../kanaBattle';
 import { KANA_BOSS_SCRIPTS, KANA_ENCOUNTERS } from './kanaFights';
-import { kanaCast } from './kana';
+import { kanaBossCast, kanaCast } from './kana';
+import { NANIWA_NEXMAX_STAR1, NANIWA_NEXMAX_STAR2 } from './naniwaCast';
 import { SCENES } from '../../features/picturebook/scenes';
 
 /** 0章の たたかいの お話 keep 0章's rules (kana.test.ts): kana and pictures from Nexmax, English thoughts with kana Japanese. */
@@ -50,5 +51,13 @@ describe('0章の たたかいの お話 (kanaFights)', () => {
     }
     for (const b of Object.values(KANA_BOSS_SCRIPTS)) if (!b.intro.lines[0].bg || !b.outro.lines[0].bg) bad.push('a boss story opens without a scene');
     expect(bad).toEqual([]);
+  });
+
+  it('shows Nexmax at ★2 after the hiragana boss: he grew when it fell (docs/design/22 §4.2)', () => {
+    const nexmax = (script: 'hiragana' | 'katakana', part: 'intro' | 'outro') => kanaBossCast(script, part).find((c) => c.id === 'nexmax')?.sprites;
+    expect(nexmax('hiragana', 'intro')).toEqual(NANIWA_NEXMAX_STAR1.sprites);
+    expect(nexmax('hiragana', 'outro')).toEqual(NANIWA_NEXMAX_STAR2.sprites);
+    expect(nexmax('katakana', 'intro')).toEqual(NANIWA_NEXMAX_STAR2.sprites);
+    expect(nexmax('katakana', 'outro')).toEqual(NANIWA_NEXMAX_STAR2.sprites);
   });
 });

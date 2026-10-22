@@ -47,6 +47,7 @@ import { faceStyle } from '../../lib/faceCrop';
 import { EvolveScene } from '../../components/ui/EvolveScene';
 import { NANIWA_NEXMAX_STAR1, NANIWA_NEXMAX_STAR2 } from '../../data/scripts/naniwaCast';
 import { STAR3_LINES, STAR3_SKIPPED_LINE } from '../../data/scripts/moji1';
+import { finisherChars } from '../../lib/bossShow';
 import { SCENES } from '../picturebook/scenes';
 import { useStill } from '../../hooks/useStill';
 
@@ -735,14 +736,20 @@ const FinalePlayer = ({ id }: { id: string }) => {
   };
 
   useEffect(() => {
-    void preloadCharData(shown.map((k) => k.char));
-  }, [shown]);
+    // The finisher too (ボスの 見せ場): it may be a kanji of an earlier chapter (5章's 友).
+    void preloadCharData([...shown.map((k) => k.char), ...(script?.show ? [finisherChars(script.show.finisher)] : [])]);
+  }, [shown, script]);
   useEffect(() => {
     if (hardNow) void preloadCharData(hardNow.pool.slice(0, 20).map((k) => k.char));
   }, [hardNow]);
 
   const renderText = useCallback((text: string) => <KanjiBackText owned={owned}>{text}</KanjiBackText>, [owned]);
   const label = { label: `${chapter.order}章(しょう) ${finaleNumber(f)}話(わ)`, title: f.title };
+  // ボスの 見せ場 (docs/design/24): its nature is the one じゅんび shows (MojiBoss.trait).
+  const bossShow = useMemo(
+    () => (script?.show ? { show: { ...script.show, trait: script.show.trait ?? f.boss.trait }, cast: CAST, castId: f.boss.img?.includes('king') ? 'mojikui_king' : 'mojikui_boss', renderText } : undefined),
+    [script, f.boss, renderText],
+  );
   const back = params.get('back');
   const leave = () => navigate(back?.startsWith('/') ? back : '/map/moji');
   const toReady = () => setPhase('ready');
@@ -813,6 +820,7 @@ const FinalePlayer = ({ id }: { id: string }) => {
             difficulty={fight ? 'hard' : difficulty === 'easy' ? 'easy' : 'normal'}
             mastery
             clearLine={`${chapter.order}章(しょう)「${chapter.title}」 クリア！`}
+            boss={bossShow}
             onFinish={leave}
             onFlee={toReady}
             onNext={fight && rematch ? toReady : script ? () => setPhase('outro') : finish}

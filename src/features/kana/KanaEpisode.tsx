@@ -6,7 +6,7 @@ import { useGameStore } from '../../store/gameStore';
 import { getKanaEpisode } from '../../data/kana';
 import { afterEpisode } from '../../data/mojiFlow';
 import { PhaseDoors } from '../../components/ui/Doors';
-import { KANA_SCRIPTS, kanaCast } from '../../data/scripts/kana';
+import { KANA_SCRIPTS, kanaBossCast, kanaCast } from '../../data/scripts/kana';
 import KanaDrill from './KanaDrill';
 import KanaText from './KanaText';
 import { useKnownKana } from './useKnownKana';
@@ -19,6 +19,7 @@ import { EvolveScene } from '../../components/ui/EvolveScene';
 import { useStill } from '../../hooks/useStill';
 import KanaBattle from './KanaBattle';
 import { getKanaWeapon } from '../../data/kanaWeapons';
+import { kanaToWrite } from '../../data/kanaWords';
 
 /**
  * かな編 1話ぶん: お話 → その話の かなを 書く → 出会い → たたかい「きいて かく」→ お話
@@ -180,27 +181,40 @@ const BossPlayer = ({ boss }: { boss: KanaBoss }) => {
   const still = useStill();
   const [phase, setPhase] = useState<BossPhase>('intro');
   const lines = KANA_BOSS_SCRIPTS[boss.id];
-  const cast = kanaCast(boss.script);
   const [fight] = useState(() => bossFight(boss));
   const weapon = getKanaWeapon(useGameStore((s) => s.equippedKanaWeapon)) ?? null;
   // ★1 → ★2 only the first time the hiragana boss falls.
   const [firstWin] = useState(() => !useGameStore.getState().clearedStages.includes(boss.id));
   useEffect(() => {
-    void preloadCharData(fight.seals);
-  }, [fight]);
+    // The finishing word too (ボスの 見せ場): ネクマックス holds a ッ, which no seal does.
+    const finisher = lines.show ? kanaToWrite({ kana: lines.show.finisher, emoji: '', en: '' }) : [];
+    void preloadCharData([...fight.seals, ...finisher]);
+  }, [fight, lines.show]);
   const chapter = { label: boss.script === 'hiragana' ? 'ひらがな 👑' : 'カタカナ 👑', title: boss.en };
+  // ボスの 見せ場 (docs/design/24): who speaks in its lines is the fight's cast (Nexmax as he is during it).
+  const bossShow = lines.show
+    ? {
+        show: lines.show,
+        cast: kanaBossCast(boss.script, 'intro'),
+        castId: `foe_${boss.id}`,
+        label: boss.script === 'hiragana' ? 'ひらがなの ボス' : 'カタカナの ボス',
+        renderText,
+        renderPlain,
+      }
+    : undefined;
   const leave = () => navigate('/map/moji');
   const finish = () => {
     clearStage(boss.id);
     const next = afterEpisode(boss.id, useGameStore.getState().clearedStages);
     navigate(next ? `/map/moji?new=${next}` : '/map/moji');
   };
-  const novel = (key: string, script: typeof lines.intro, onFinish: () => void) => (
+  // ★1 before the hiragana boss, ★2 once it has fallen (kanaBossCast).
+  const novel = (key: 'intro' | 'outro', script: typeof lines.intro, onFinish: () => void) => (
     <NovelScene
       key={key}
       bgm={key === 'intro' ? 'tension' : undefined}
       script={script}
-      cast={cast}
+      cast={kanaBossCast(boss.script, key)}
       chapter={chapter}
       renderText={renderText}
       renderPlain={renderPlain}
@@ -215,7 +229,18 @@ const BossPlayer = ({ boss }: { boss: KanaBoss }) => {
       case 'intro':
         return novel('intro', lines.intro, () => setPhase('battle'));
       case 'battle':
-        return <KanaBattle key="battle" fight={fight} script={boss.script} field={boss.bg} weapon={weapon} onWin={() => setPhase(lines.evolve && firstWin ? 'evolve' : 'outro')} onFlee={leave} />;
+        return (
+          <KanaBattle
+            key="battle"
+            fight={fight}
+            script={boss.script}
+            field={boss.bg}
+            weapon={weapon}
+            boss={bossShow}
+            onWin={() => setPhase(lines.evolve && firstWin ? 'evolve' : 'outro')}
+            onFlee={leave}
+          />
+        );
       case 'evolve':
         return (
           <EvolveScene
