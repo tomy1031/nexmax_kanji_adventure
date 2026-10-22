@@ -39,7 +39,7 @@ export const MultiResult = ({
   const [cardW] = useState(() => Math.floor(Math.min((Math.min(window.innerWidth, 448) - 32 - 3 * 8) / 4, (window.innerHeight * 0.6) / 3 / 1.5)));
   const [plateW] = useState(() => Math.min(window.innerWidth - 24, 360));
   return (
-    <div className="relative flex h-full w-full max-w-md flex-col items-center justify-center">
+    <div className="relative flex w-full max-w-md flex-col items-center justify-center">
       <img src={assetPath('img/gacha/pickup_bg.webp')} alt="" aria-hidden className="pointer-events-none fixed inset-0 h-full w-full object-cover opacity-35" />
       <motion.div
         className="relative mb-3 flex items-center justify-center"
